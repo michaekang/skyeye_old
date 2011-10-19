@@ -19,7 +19,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 //#include "armdefs.h"
 #include "skyeye_device.h"
@@ -29,6 +28,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "skyeye_nandflash.h"
 
 extern void nandflash_s3c2410_init(struct device_module_set *mod_set);
+extern void nandflash_s3c6410_init(struct device_module_set *mod_set);
 
 static int
 do_nandflash_option (skyeye_option_t * this_option, int num_params,
@@ -40,6 +40,7 @@ static void
 nandflash_init (struct device_module_set *mod_set)
 {
 	nandflash_s3c2410_init (mod_set);
+	nandflash_s3c6410_init (mod_set);
 }
 
 nandflash_module_option * get_nandflashmd(char *name)
@@ -103,6 +104,7 @@ nandflash_setup (struct device_desc *dev, void *option)
 	return ret;
 
 }
+
 static struct device_module_set nandflash_mod_set = {
 	.name = "nandflash",
 	.count = 0,
@@ -122,6 +124,7 @@ nandflash_register ()
 			    nandflash_mod_set.name);
 	register_option("nandflash", do_nandflash_option, "");
 }
+
 int
 do_nandflash_option (skyeye_option_t * this_option, int num_params,
 		 const char *params[])
