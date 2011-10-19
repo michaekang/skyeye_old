@@ -29,7 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 /*
  * Standard NAND flash commands
  */
- #define NAND_CMD_NONE              -1
+#define NAND_CMD_NONE              -1
 #define NAND_CMD_READ0		0
 #define NAND_CMD_READ1		1
 #define NAND_CMD_PAGEPROG	0x10
@@ -41,6 +41,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define NAND_CMD_READID		0x90
 #define NAND_CMD_ERASE2		0xd0
 #define NAND_CMD_RESET		0xff
+
+/* Extended commands for large page devices */
+#define NAND_CMD_READSTART  0x30
 
 typedef enum {
 	NF_LOW,
@@ -96,6 +99,7 @@ void nandflash_sb_uninstall(struct nandflash_device* dev);
 void  nandflash_sb_setup(struct nandflash_device* dev);
 static nandflash_module_option nandflash_module_data[]={
 	{"K9F1208U0B",512,16,32,4096,{0xEC,0x76,0xA5,0xC0,0x0},nandflash_sb_setup,nandflash_sb_uninstall},
+	{"K9F1G08U0B",2048,64,64,1024,{0x90,0xF1,0x00,0x95,0x40},nandflash_sb_setup,nandflash_sb_uninstall},
 };
 struct flash_option
 {
