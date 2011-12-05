@@ -213,7 +213,10 @@ unsigned int DPO(ArithmeticShiftRightByRegister)(arm_processor *cpu, unsigned in
 		cpu->shifter_carry_out = BIT(rm, BITS(rs, 0, 7) - 1);
 	} else {
 		if (BITS(rs, 0, 7) == 32) {
-			shifter_operand = 0;
+			if (rm < 0x80000000)
+				shifter_operand = 0x0;
+			else
+				shifter_operand = 0xFFFFFFFF;
 			cpu->shifter_carry_out = BIT(rm, 31);
 		} else {
 			shifter_operand = 0xFFFFFFFF;
