@@ -585,11 +585,16 @@ cpu_run(cpu_t *cpu)
 void
 cpu_flush(cpu_t *cpu)
 {
-	cpu->dyncom_engine->exec_engine->freeMachineCodeForFunction(cpu->dyncom_engine->cur_func);
-	cpu->dyncom_engine->cur_func->eraseFromParent();
+	//cpu->dyncom_engine->exec_engine->freeMachineCodeForFunction(cpu->dyncom_engine->cur_func);
+	//cpu->dyncom_engine->cur_func->eraseFromParent();
 
 	cpu->dyncom_engine->functions = 0;
-
+	
+	funcbb_map::const_reverse_iterator i = cpu->dyncom_engine->func_bb.rbegin();
+	for(; i != cpu->dyncom_engine->func_bb.rend(); i++){
+		cpu->dyncom_engine->exec_engine->freeMachineCodeForFunction(i->first);
+		i->first->eraseFromParent();
+	}
 	// reset bb caching mapping
 	cpu->dyncom_engine->func_bb.clear();
 
