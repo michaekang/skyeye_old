@@ -429,7 +429,13 @@ typedef struct dyncom_engine{
 	#define MAX_ARCH_FUNC_NUM 5
 	Value *ptr_arch_func[MAX_ARCH_FUNC_NUM];
 	void *arch_func[MAX_ARCH_FUNC_NUM];
-}dyncom_engine_t;
+} dyncom_engine_t;
+
+enum {
+	CALLOUT_DEBUG,
+	CALLOUT_SYSCALL,
+	MAX_DYNCOM_CALLOUT
+};
 
 typedef struct cpu {
 	cpu_archinfo_t info;

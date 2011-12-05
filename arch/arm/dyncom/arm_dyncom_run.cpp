@@ -68,7 +68,7 @@ void arm_switch_mode(cpu_t *cpu);
 extern const char* arm_regstr[MAX_REG_NUM];
 
 enum{
-	ARM_DYNCOM_CALLOUT_UNDEF = 2,
+	ARM_DYNCOM_CALLOUT_UNDEF = MAX_DYNCOM_CALLOUT,
 	ARM_DYNCOM_MAX_CALLOUT
 };
 
