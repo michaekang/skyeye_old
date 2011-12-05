@@ -3218,12 +3218,6 @@ enum {
 	KEEP_GOING,
 	FETCH_EXCEPTION
 };
-struct instruction_set_encoding_item {
-        const char *name;
-        int attribute_value;
-        int version;
-        int content[12];//12 is the max number
-};
 
 typedef struct instruction_set_encoding_item ISEITEM;
 
@@ -3958,7 +3952,8 @@ void InterpreterMainLoop(cpu_t *core)
 //	#define UPDATE_CFLAG(dst, lop, rop)	(cpu->CFlag = ((ISNEG(lop) && ISPOS(rop)) ||                        \
 								(ISNEG(lop) && ISPOS(dst)) ||                       \
 								(ISPOS(rop) && ISPOS(dst))))
-	#define UPDATE_CFLAG(dst, lop, rop)	(cpu->CFlag = (dst < lop))
+	#define UPDATE_CFLAG(dst, lop, rop)	(cpu->CFlag = ((dst < lop) || (dst < rop)))
+	#define UPDATE_CFLAG_CARRY_FROM_ADD(lop, rop, flag)	(cpu->CFlag = (((uint64_t) lop + (uint64_t) rop + (uint64_t) flag) > 0xffffffff) )
 	#define UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop)	(cpu->CFlag = (lop >= rop))
 	#define UPDATE_CFLAG_WITH_NOT(dst, lop, rop)	(cpu->CFlag = !(dst < lop))
 	#define UPDATE_CFLAG_WITH_SC		cpu->CFlag = cpu->shifter_carry_out
@@ -4059,7 +4054,7 @@ void InterpreterMainLoop(cpu_t *core)
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
-				UPDATE_CFLAG(dst, lop, rop);
+				UPDATE_CFLAG_CARRY_FROM_ADD(lop, rop, cpu->CFlag);
 				UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
 			}
 			if (inst_cream->Rd == 15) {
@@ -5174,9 +5169,9 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
 //				UPDATE_CFLAG(dst, lop, rop);
-				UPDATE_CFLAG_WITH_NOT(dst, rop, lop);
+				UPDATE_CFLAG_NOT_BORROW_FROM(rop, lop);
 //				cpu->CFlag = !((ISNEG(lop) && ISPOS(rop)) || (ISNEG(lop) && ISPOS(dst)) || (ISPOS(rop) && ISPOS(dst)));
-				UPDATE_VFLAG((int)dst, (int)rop, (int)lop);
+				UPDATE_VFLAG_OVERFLOW_FROM((int)dst, (int)rop, (int)lop);
 			}
 			if (inst_cream->Rd == 15) {
 				goto DISPATCH;
@@ -5211,7 +5206,7 @@ void InterpreterMainLoop(cpu_t *core)
 //				UPDATE_CFLAG(dst, lop, rop);
 				UPDATE_CFLAG_NOT_BORROW_FROM(rop, lop);
 //				cpu->CFlag = !((ISNEG(lop) && ISPOS(rop)) || (ISNEG(lop) && ISPOS(dst)) || (ISPOS(rop) && ISPOS(dst)));
-				UPDATE_VFLAG((int)dst, (int)rop, (int)lop);
+				UPDATE_VFLAG_OVERFLOW_FROM(dst, rop, lop);
 			}
 			if (inst_cream->Rd == 15) {
 				goto DISPATCH;
@@ -5685,13 +5680,18 @@ void InterpreterMainLoop(cpu_t *core)
 			unsigned long long int rm = RM;
 			unsigned long long int rs = RS;
 			unsigned long long int rst = rm * rs;
-//			printf("rm : [%llx] rs : [%llx] rst [%llx]\n", RM, RS, rst);
-			rst += RDLO + (RDHI << 32);
+			unsigned long long int add = ((unsigned long long) RDHI)<<32;
+			add += RDLO;
+			//printf("rm[%llx] * rs[%llx] = rst[%llx] | add[%llx]\n", RM, RS, rst, add);
+			rst += add;
 			RDLO = BITS(rst,  0, 31);
 			RDHI = BITS(rst, 32, 63);
-
-			cpu->NFlag = BIT(RDHI, 31);
-			cpu->ZFlag = (RDHI == 0 && RDLO == 0);
+			
+			if (inst_cream->S)
+			{
+				cpu->NFlag = BIT(RDHI, 31);
+				cpu->ZFlag = (RDHI == 0 && RDLO == 0);
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(umlal_inst));
