@@ -681,7 +681,43 @@ ARMul_MCR (ARMul_State * state, ARMword instr, ARMword source)
 	}
 
 	if (cpab == ARMul_CANT) {
-		printf ("SKYEYE ARMul_MCR, CANT, UndefinedInstr  CPnum is %x, source %x\n", CPNum, source);
+		printf ("SKYEYE ARMul_MCR, CANT, UndefinedInstr %x CPnum is %x, source %x\n", instr, CPNum, source);
+		ARMul_Abort (state, ARMul_UndefinedInstrV);
+	}
+	else {
+		BUSUSEDINCPCN;
+		ARMul_Ccycles (state, 1, 0);
+	}
+}
+
+/* This function does the Busy-Waiting for an MCRR instruction.  */
+
+void
+ARMul_MCRR (ARMul_State * state, ARMword instr, ARMword source1, ARMword source2)
+{
+	unsigned cpab;
+
+	if (!CP_ACCESS_ALLOWED (state, CPNum)) {
+		ARMul_UndefInstr (state, instr);
+		return;
+	}
+
+	cpab = (state->MCRR[CPNum]) (state, ARMul_FIRST, instr, source1, source2);
+
+	while (cpab == ARMul_BUSY) {
+		ARMul_Icycles (state, 1, 0);
+
+		if (IntPending (state)) {
+			cpab = (state->MCRR[CPNum]) (state, ARMul_INTERRUPT,
+						    instr, 0, 0);
+			return;
+		}
+		else
+			cpab = (state->MCRR[CPNum]) (state, ARMul_BUSY, instr,
+						    source1, source2);
+	}
+	if (cpab == ARMul_CANT) {
+		printf ("In %s, CoProcesscor returned CANT, CPnum is %x, instr %x, source %x %x\n", __FUNCTION__, CPNum, instr, source1, source2);
 		ARMul_Abort (state, ARMul_UndefinedInstrV);
 	}
 	else {
@@ -731,6 +767,46 @@ ARMul_MRC (ARMul_State * state, ARMword instr)
 	}
 
 	return result;
+}
+
+/* This function does the Busy-Waiting for an MRRC instruction. (to verify) */
+
+void
+ARMul_MRRC (ARMul_State * state, ARMword instr, ARMword * dest1, ARMword * dest2)
+{
+	unsigned cpab;
+	ARMword result1 = 0;
+	ARMword result2 = 0;
+
+	if (!CP_ACCESS_ALLOWED (state, CPNum)) {
+		ARMul_UndefInstr (state, instr);
+		return;
+	}
+
+	cpab = (state->MRRC[CPNum]) (state, ARMul_FIRST, instr, &result1, &result2);
+	while (cpab == ARMul_BUSY) {
+		ARMul_Icycles (state, 1, 0);
+		if (IntPending (state)) {
+			cpab = (state->MRRC[CPNum]) (state, ARMul_INTERRUPT,
+						    instr, 0, 0);
+			return;
+		}
+		else
+			cpab = (state->MRRC[CPNum]) (state, ARMul_BUSY, instr,
+						    &result1, &result2);
+	}
+	if (cpab == ARMul_CANT) {
+		printf ("In %s, CoProcesscor returned CANT, CPnum is %x, instr %x\n", __FUNCTION__, CPNum, instr);
+		ARMul_Abort (state, ARMul_UndefinedInstrV);
+	}
+	else {
+		BUSUSEDINCPCN;
+		ARMul_Ccycles (state, 1, 0);
+		ARMul_Icycles (state, 1, 0);
+	}
+	
+	*dest1 = result1;
+	*dest2 = result2;
 }
 
 /* This function does the Busy-Waiting for an CDP instruction.  */

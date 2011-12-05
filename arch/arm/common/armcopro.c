@@ -107,6 +107,24 @@ NoCoPro4W (ARMul_State * state ATTRIBUTE_UNUSED,
 	return ARMul_CANT;
 }
 
+static unsigned
+NoCoPro5R (ARMul_State * state ATTRIBUTE_UNUSED,
+	   unsigned a ATTRIBUTE_UNUSED,
+	   ARMword b ATTRIBUTE_UNUSED, 
+	   ARMword c ATTRIBUTE_UNUSED, ARMword d ATTRIBUTE_UNUSED)
+{
+	return ARMul_CANT;
+}
+
+static unsigned
+NoCoPro5W (ARMul_State * state ATTRIBUTE_UNUSED,
+	   unsigned a ATTRIBUTE_UNUSED,
+	   ARMword b ATTRIBUTE_UNUSED,
+	   ARMword * c ATTRIBUTE_UNUSED, ARMword * d ATTRIBUTE_UNUSED )
+{
+	return ARMul_CANT;
+}
+
 /* The XScale Co-processors.  */
 
 /* Coprocessor 15:  System Control.  */
@@ -639,18 +657,18 @@ ARMul_CoProInit (ARMul_State * state)
 	   CDP routine, Read Reg routine, Write Reg routine).  */
 	if (state->is_ep9312) {
 		ARMul_CoProAttach (state, 4, NULL, NULL, DSPLDC4, DSPSTC4,
-				   DSPMRC4, DSPMCR4, DSPCDP4, NULL, NULL);
+				   DSPMRC4, DSPMCR4, NULL, NULL, DSPCDP4, NULL, NULL);
 		ARMul_CoProAttach (state, 5, NULL, NULL, DSPLDC5, DSPSTC5,
-				   DSPMRC5, DSPMCR5, DSPCDP5, NULL, NULL);
+				   DSPMRC5, DSPMCR5, NULL, NULL, DSPCDP5, NULL, NULL);
 		ARMul_CoProAttach (state, 6, NULL, NULL, NULL, NULL,
-				   DSPMRC6, DSPMCR6, DSPCDP6, NULL, NULL);
+				   DSPMRC6, DSPMCR6, NULL, NULL, DSPCDP6, NULL, NULL);
 	}
 	else {
 		ARMul_CoProAttach (state, 4, NULL, NULL, ValLDC, ValSTC,
-				   ValMRC, ValMCR, ValCDP, NULL, NULL);
+				   ValMRC, ValMCR, NULL, NULL, ValCDP, NULL, NULL);
 
 		ARMul_CoProAttach (state, 5, NULL, NULL, NULL, NULL,
-				   ValMRC, ValMCR, IntCDP, NULL, NULL);
+				   ValMRC, ValMCR, NULL, NULL, IntCDP, NULL, NULL);
 	}
 
 	if (state->is_XScale) {
@@ -658,34 +676,43 @@ ARMul_CoProInit (ARMul_State * state)
 		if (state->is_pxa27x) {
 			ARMul_CoProAttach (state, 6, NULL, NULL,
 					   NULL, NULL, xscale_cp6_mrc,
-					   NULL, NULL, NULL, NULL);
+					   NULL, NULL, NULL, NULL, NULL, NULL);
 		}
 		//chy 2005-09-19 end------------- 
 		ARMul_CoProAttach (state, 13, xscale_cp13_init,
 				   xscale_cp13_exit, xscale_cp13_ldc,
 				   xscale_cp13_stc, xscale_cp13_mrc,
-				   xscale_cp13_mcr, xscale_cp13_cdp,
+				   xscale_cp13_mcr, NULL, NULL, xscale_cp13_cdp,
 				   xscale_cp13_read_reg,
 				   xscale_cp13_write_reg);
 
 		ARMul_CoProAttach (state, 14, xscale_cp14_init,
 				   xscale_cp14_exit, xscale_cp14_ldc,
 				   xscale_cp14_stc, xscale_cp14_mrc,
-				   xscale_cp14_mcr, xscale_cp14_cdp,
+				   xscale_cp14_mcr, NULL, NULL, xscale_cp14_cdp,
 				   xscale_cp14_read_reg,
 				   xscale_cp14_write_reg);
 		//chy: 2003-08-24.
 		ARMul_CoProAttach (state, 15, xscale_cp15_init,
 				   xscale_cp15_exit, xscale_cp15_ldc,
 				   xscale_cp15_stc, xscale_cp15_mrc,
-				   xscale_cp15_mcr, xscale_cp15_cdp,
+				   xscale_cp15_mcr, NULL, NULL, xscale_cp15_cdp,
 				   xscale_cp15_read_reg,
 				   xscale_cp15_write_reg);
+	}
+	else if (state->is_v6) {
+		ARMul_CoProAttach (state, 10, VFPInit, NULL, VFPLDC, VFPSTC,
+				   VFPMRC, VFPMCR, VFPMRRC, VFPMCRR, VFPCDP, NULL, NULL);
+		ARMul_CoProAttach (state, 11, VFPInit, NULL, VFPLDC, VFPSTC,
+				   VFPMRC, VFPMCR, VFPMRRC, VFPMCRR, VFPCDP, NULL, NULL);
+		
+		ARMul_CoProAttach (state, 15, MMUInit, NULL, NULL, NULL,
+				   MMUMRC, MMUMCR, NULL, NULL, NULL, NULL, NULL);
 	}
 	else {			//all except xscale
 		ARMul_CoProAttach (state, 15, MMUInit, NULL, NULL, NULL,
 				   //                  MMUMRC, MMUMCR, NULL, MMURead, MMUWrite);
-				   MMUMRC, MMUMCR, NULL, NULL, NULL);
+				   MMUMRC, MMUMCR, NULL, NULL, NULL, NULL, NULL);
 	}
 //chy 2003-09-03 do it in future!!!!????
 #if 0
@@ -701,9 +728,9 @@ ARMul_CoProInit (ARMul_State * state)
 	//-----------------------------------------------------------------------------
 	//chy 2004-05-25, found the user/system code visit CP 1,2, so I add below code.
 	ARMul_CoProAttach (state, 1, NULL, NULL, NULL, NULL,
-			   ValMRC, ValMCR, NULL, NULL, NULL);
+			   ValMRC, ValMCR, NULL, NULL, NULL, NULL, NULL);
 	ARMul_CoProAttach (state, 2, NULL, NULL, ValLDC, ValSTC,
-			   NULL, NULL, NULL, NULL, NULL);
+			   NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 	//------------------------------------------------------------------------------
 	/* No handlers below here.  */
 
@@ -741,6 +768,8 @@ ARMul_CoProAttach (ARMul_State * state,
 		   ARMul_STCs * stc,
 		   ARMul_MRCs * mrc,
 		   ARMul_MCRs * mcr,
+		   ARMul_MRRCs * mrrc,
+		   ARMul_MCRRs * mcrr,
 		   ARMul_CDPs * cdp,
 		   ARMul_CPReads * read, ARMul_CPWrites * write)
 {
@@ -756,6 +785,10 @@ ARMul_CoProAttach (ARMul_State * state,
 		state->MRC[number] = mrc;
 	if (mcr != NULL)
 		state->MCR[number] = mcr;
+	if (mrrc != NULL)
+		state->MRRC[number] = mrrc;
+	if (mcrr != NULL)
+		state->MCRR[number] = mcrr;
 	if (cdp != NULL)
 		state->CDP[number] = cdp;
 	if (read != NULL)
@@ -769,7 +802,7 @@ ARMul_CoProDetach (ARMul_State * state, unsigned number)
 {
 	ARMul_CoProAttach (state, number, NULL, NULL,
 			   NoCoPro4R, NoCoPro4W, NoCoPro4W, NoCoPro4R,
-			   NoCoPro3R, NULL, NULL);
+			   NoCoPro5W, NoCoPro5R, NoCoPro3R, NULL, NULL);
 
 	state->CPInit[number] = NULL;
 	state->CPExit[number] = NULL;

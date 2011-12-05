@@ -142,6 +142,10 @@ typedef unsigned ARMul_MRCs (ARMul_State * state, unsigned type,
 			     ARMword instr, ARMword * value);
 typedef unsigned ARMul_MCRs (ARMul_State * state, unsigned type,
 			     ARMword instr, ARMword value);
+typedef unsigned ARMul_MRRCs (ARMul_State * state, unsigned type,
+			     ARMword instr, ARMword * value1, ARMword * value2);
+typedef unsigned ARMul_MCRRs (ARMul_State * state, unsigned type,
+			     ARMword instr, ARMword value1, ARMword value2);
 typedef unsigned ARMul_CDPs (ARMul_State * state, unsigned type,
 			     ARMword instr);
 typedef unsigned ARMul_CPReads (ARMul_State * state, unsigned reg,
@@ -214,18 +218,27 @@ struct ARMul_State
 	ARMword Emulate;	/* to start and stop emulation */
 	unsigned EndCondition;	/* reason for stopping */
 	unsigned ErrorCode;	/* type of illegal instruction */
+
+	/* Order of the following register should not be modified */
 	ARMword Reg[16];	/* the current register file */
 	ARMword Cpsr;		/* the current psr */
 	ARMword Spsr_copy;
 	ARMword phys_pc;
 	ARMword Reg_usr[2];
-    ARMword Reg_svc[2]; /* R13_SVC R14_SVC */
-    ARMword Reg_abort[2]; /* R13_ABORT R14_ABORT */
-    ARMword Reg_undef[2]; /* R13 UNDEF R14 UNDEF */
-    ARMword Reg_irq[2];   /* R13_IRQ R14_IRQ */
-    ARMword Reg_firq[7];  /* R8---R14 FIRQ */
+	ARMword Reg_svc[2]; /* R13_SVC R14_SVC */
+	ARMword Reg_abort[2]; /* R13_ABORT R14_ABORT */
+	ARMword Reg_undef[2]; /* R13 UNDEF R14 UNDEF */
+	ARMword Reg_irq[2];   /* R13_IRQ R14_IRQ */
+	ARMword Reg_firq[7];  /* R8---R14 FIRQ */
 	ARMword Spsr[7];	/* the exception psr's */
-	ARMword CP15[MAX_REG_NUM - CP15_BASE];
+	ARMword CP15[VFP_BASE - CP15_BASE];
+	ARMword VFP[3]; /* FPSID, FPSCR, and FPEXC */
+	/* VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).
+	   VFPv3-D32/ASIMD may have up to 32 doubleword registers (D0-D31),
+		and only 32 singleword registers are accessible (S0-S31). */
+	ARMword ExtReg[64];	
+	/* ---- End of the ordered registers ---- */
+	
 	ARMword RegBank[7][16];	/* all the registers */
 	//chy:2003-08-19, used in arm xscale
 	/* 40 bit accumulator.  We always keep this 64 bits wide,
@@ -268,6 +281,8 @@ struct ARMul_State
 	ARMul_STCs *STC[16];	/* STC instruction */
 	ARMul_MRCs *MRC[16];	/* MRC instruction */
 	ARMul_MCRs *MCR[16];	/* MCR instruction */
+	ARMul_MRRCs *MRRC[16];	/* MRRC instruction */
+	ARMul_MCRRs *MCRR[16];	/* MCRR instruction */
 	ARMul_CDPs *CDP[16];	/* CDP instruction */
 	ARMul_CPReads *CPRead[16];	/* Read CP register */
 	ARMul_CPWrites *CPWrite[16];	/* Write CP register */
@@ -699,6 +714,7 @@ extern void ARMul_CoProAttach (ARMul_State * state, unsigned number,
 			       ARMul_CPInits * init, ARMul_CPExits * exit,
 			       ARMul_LDCs * ldc, ARMul_STCs * stc,
 			       ARMul_MRCs * mrc, ARMul_MCRs * mcr,
+			       ARMul_MRRCs * mrrc, ARMul_MCRRs * mcrr,
 			       ARMul_CDPs * cdp,
 			       ARMul_CPReads * read, ARMul_CPWrites * write);
 extern void ARMul_CoProDetach (ARMul_State * state, unsigned number);

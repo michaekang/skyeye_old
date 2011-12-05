@@ -545,10 +545,12 @@ extern ARMword ARMul_GetSPSR (ARMul_State *, ARMword);
 extern void ARMul_Abort26 (ARMul_State *, ARMword);
 extern void ARMul_Abort32 (ARMul_State *, ARMword);
 extern ARMword ARMul_MRC (ARMul_State *, ARMword);
+extern void ARMul_MRRC (ARMul_State *, ARMword, ARMword *, ARMword *);
 extern void ARMul_CDP (ARMul_State *, ARMword);
 extern void ARMul_LDC (ARMul_State *, ARMword, ARMword);
 extern void ARMul_STC (ARMul_State *, ARMword, ARMword);
 extern void ARMul_MCR (ARMul_State *, ARMword, ARMword);
+extern void ARMul_MCRR (ARMul_State *, ARMword, ARMword, ARMword);
 extern void ARMul_SetSPSR (ARMul_State *, ARMword, ARMword);
 extern ARMword ARMul_SwitchMode (ARMul_State *, ARMword, ARMword);
 extern ARMword ARMul_Align (ARMul_State *, ARMword, ARMword);
@@ -568,8 +570,8 @@ extern unsigned ARMul_CoProInit (ARMul_State *);
 extern void ARMul_CoProExit (ARMul_State *);
 extern void ARMul_CoProAttach (ARMul_State *, unsigned, ARMul_CPInits *,
 			       ARMul_CPExits *, ARMul_LDCs *, ARMul_STCs *,
-			       ARMul_MRCs *, ARMul_MCRs *, ARMul_CDPs *,
-			       ARMul_CPReads *, ARMul_CPWrites *);
+			       ARMul_MRCs *, ARMul_MCRs *, ARMul_MRRCs *, ARMul_MCRRs *, 
+			       ARMul_CDPs *, ARMul_CPReads *, ARMul_CPWrites *);
 extern void ARMul_CoProDetach (ARMul_State *, unsigned);
 extern ARMword read_cp15_reg (unsigned, unsigned, unsigned);
 

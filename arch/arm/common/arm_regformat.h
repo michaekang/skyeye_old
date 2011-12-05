@@ -79,6 +79,11 @@ enum arm_regno{
 	CP15_WFAR,
 	CP15_IFAR,
 	CP15_THREAD_URO,
+	/* VFP registers */
+	VFP_BASE,
+	VFP_FPSID = VFP_BASE,
+	VFP_FPSCR,
+	VFP_FPEXC,
 #endif	
 	MAX_REG_NUM,
 };
