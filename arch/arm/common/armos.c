@@ -33,6 +33,7 @@ fun, and definign VAILDATE will define SWI 1 to enter SVC mode, and SWI
 #include "dyncom/defines.h"
 #include <sys/utsname.h>
 #include <sys/times.h>
+#include <sys/time.h>
 #include "skyeye_pref.h" /* temporary */
 #include "portable/portable.h"
 #ifndef __USE_LARGEFILE64
@@ -314,11 +315,11 @@ ARMul_OSHandleSWI (ARMul_State * state, ARMword number)
 		uint32_t dest = state->Reg[0];
 		struct tms now;
 		struct target_tms32 nowret;
-		//printf("Times size is %x and %x\n", sizeof(now), sizeof(nowret));
+
 		uint32_t ret = times(&now);
 
 		if (ret == -1){
-			printf("syscall %s error %d\n", "SWI_Times", ret);
+			debug("syscall %s error %d\n", "SWI_Times", ret);
 			state->Reg[0] = ret;
 			return FALSE;
 		}
@@ -330,13 +331,49 @@ ARMul_OSHandleSWI (ARMul_State * state, ARMword number)
 
 		uint32_t offset;
 		for (offset = 0; offset < sizeof(nowret); offset++) {
-			bus_write(8, dest + offset, *((uint8_t *) &now + offset));
+			bus_write(8, dest + offset, *((uint8_t *) &nowret + offset));
 		}
 
 		state->Reg[0] = ret;
 		return TRUE;
 		}
+	
+	case SWI_Gettimeofday: {
+		uint32_t dest1 = state->Reg[0];
+		uint32_t dest2 = state->Reg[1]; // Unsure of this
+		struct timeval val;
+		struct timezone zone;
+		struct target_timeval32 valret;
+		struct target_timezone32 zoneret;
+	
+		uint32_t ret = gettimeofday(&val, &zone);
+		valret.tv_sec = val.tv_sec;
+		valret.tv_usec = val.tv_usec;
+		zoneret.tz_dsttime = zoneret.tz_dsttime;
+		zoneret.tz_minuteswest = zoneret.tz_minuteswest;
 
+		if (ret == -1){
+			debug("syscall %s error %d\n", "SWI_Gettimeofday", ret);
+			state->Reg[0] = ret;
+			return FALSE;
+		}
+		
+		uint32_t offset;
+		if (dest1) {
+			for (offset = 0; offset < sizeof(valret); offset++) {
+				bus_write(8, dest1 + offset, *((uint8_t *) &valret + offset));
+			}
+			state->Reg[0] = ret;
+		}
+		if (dest2) {
+			for (offset = 0; offset < sizeof(zoneret); offset++) {
+				bus_write(8, dest2 + offset, *((uint8_t *) &zoneret + offset));
+			}
+			state->Reg[0] = ret;
+		}
+
+		return TRUE;
+	}
 	case SWI_Brk:
 		/* initialize brk value */
 		/* suppose that brk_static doesn't reach 0xffffffff... */
@@ -384,6 +421,19 @@ ARMul_OSHandleSWI (ARMul_State * state, ARMword number)
 	case SWI_Munmap:
 		state->Reg[0] = 0;
 		return TRUE;
+		
+	case SWI_Mmap2:{
+		int addr = state->Reg[0];
+		int len = state->Reg[1];
+		int prot = state->Reg[2];
+		int flag = state->Reg[3];
+		int fd = state->Reg[4];
+		int offset = state->Reg[5] * 4096; /* page offset */
+		mmap_area_t *area = new_mmap_area(addr, len);
+		state->Reg[0] = area->bank.addr;
+		
+		return TRUE;
+	}
 
 	case SWI_Breakpoint:
 		//chy 2005-09-12 change below line
@@ -459,7 +509,8 @@ ARMul_OSHandleSWI (ARMul_State * state, ARMword number)
 			uint32_t dest = state->Reg[1];
 			uint32_t fd = state->Reg[0];
 			struct stat64 statbuf;
-			struct target_stat64 statret; 
+			struct target_stat64 statret;
+			memset(&statret, 0, sizeof(struct target_stat64));
 			uint32_t ret = fstat64(fd, &statbuf);
 
 			if (ret == -1){

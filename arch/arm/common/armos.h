@@ -55,8 +55,8 @@ static char mmap_mem_read(short size, int addr, uint32_t * value);
 #define SWI_Brk			   0x2d
 
 #define SWI_Mmap                   0x5a
-#define SWI_Munmap                   0x5b
-
+#define SWI_Munmap                 0x5b
+#define SWI_Mmap2                  0xc0
 
 #define SWI_GetUID32               0xc7
 #define SWI_GetGID32               0xc8
@@ -77,6 +77,7 @@ static char mmap_mem_read(short size, int addr, uint32_t * value);
 #define SWI_Uname		   0x7a
 #define SWI_Fcntl                  0xdd 
 #define SWI_Fstat64  		   0xc5
+#define SWI_Gettimeofday           0x4e
 #define SWI_Set_tls                0xf0005
 
 #define SWI_Breakpoint             0x180000	/* see gdb's tm-arm.h */
@@ -103,8 +104,10 @@ struct target_stat64 {
 	uint32_t	st_gid;
 	unsigned short	st_rdev;
 	unsigned char	__pad3[10];
+	unsigned char	__pad31[4];
 	long long	st_size;
 	uint32_t	st_blksize;
+	unsigned char	__pad32[4];
 	uint32_t	st_blocks;
 	uint32_t	__pad4;
 	uint32_t	st32_atime;
@@ -122,3 +125,14 @@ struct target_tms32 {
     uint32_t tms_cutime;
     uint32_t tms_cstime;
 };
+
+struct target_timeval32 {
+	uint32_t tv_sec;     /* seconds */
+	uint32_t tv_usec;    /* microseconds */
+};
+
+struct target_timezone32 {
+	int32_t tz_minuteswest;     /* minutes west of Greenwich */
+	int32_t tz_dsttime;         /* type of DST correction */
+};
+
