@@ -33,6 +33,34 @@ extern void switch_mode(arm_core_t *core, uint32_t mode);
 
 typedef arm_core_t arm_processor;
 typedef unsigned int (*shtop_fp_t)(arm_processor *cpu, unsigned int sht_oper);
+/* FIXME, we temporarily think thumb instruction is always 16 bit */
+static inline uint32 GET_INST_SIZE(arm_core_t* core){
+	return core->TFlag? 2 : 4;
+}
+
+/**
+* @brief Read R15 and forced R15 to wold align
+*
+* @param core
+* @param Rn
+*
+* @return 
+*/
+static inline uint32 CHECK_READ_REG15_WA(arm_core_t* core, int Rn){
+	return (Rn == 15)? ((core->Reg[15] & ~0x3) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
+}
+
+/**
+* @brief Read R15
+*
+* @param core
+* @param Rn
+*
+* @return 
+*/
+static inline uint32 CHECK_READ_REG15(arm_core_t* core, int Rn){
+	return (Rn == 15)? ((core->Reg[15] & ~0x1) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
+}
 
 unsigned int DPO(Immediate)(arm_processor *cpu, unsigned int sht_oper)
 {
@@ -54,8 +82,8 @@ unsigned int DPO(Immediate)(arm_processor *cpu, unsigned int sht_oper)
 unsigned int DPO(Register)(arm_processor *cpu, unsigned int sht_oper)
 {
 //	printf("in %s\n", __FUNCTION__);
-	unsigned int rm = cpu->Reg[RM];
-	if (RM == 15) rm += 8;
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	//if (RM == 15) rm += 8;
 	unsigned int shifter_operand = rm;
 	cpu->shifter_carry_out = cpu->CFlag;
 	return shifter_operand;
@@ -65,8 +93,8 @@ unsigned int DPO(LogicalShiftLeftByImmediate)(arm_processor *cpu, unsigned int s
 {
 //	printf("in %s\n", __FUNCTION__);
 	int shift_imm = BITS(sht_oper, 7, 11);
-	unsigned int rm = cpu->Reg[RM];
-	if (RM == 15) rm += 8;
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	//if (RM == 15) rm += 8;
 	unsigned int shifter_operand;
 	if (shift_imm == 0) {
 		shifter_operand = rm;
@@ -82,10 +110,10 @@ unsigned int DPO(LogicalShiftLeftByRegister)(arm_processor *cpu, unsigned int sh
 {
 //	printf("in %s\n", __FUNCTION__);
 	int shifter_operand;
-	unsigned int rm = cpu->Reg[RM];
-	unsigned int rs = cpu->Reg[RS];
-	if (RM == 15) rm += 8;
-	if (RS == 15) rs += 8;
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	unsigned int rs = CHECK_READ_REG15(cpu, RS);
+	//if (RM == 15) rm += 8;
+	//if (RS == 15) rs += 8;
 	if (BITS(rs, 0, 7) == 0) {
 		shifter_operand = rm;
 		cpu->shifter_carry_out = cpu->CFlag;
@@ -105,8 +133,9 @@ unsigned int DPO(LogicalShiftLeftByRegister)(arm_processor *cpu, unsigned int sh
 unsigned int DPO(LogicalShiftRightByImmediate)(arm_processor *cpu, unsigned int sht_oper)
 {
 //	printf("in %s\n", __FUNCTION__);
-	unsigned int rm = cpu->Reg[RM];
-	if (RM == 15) rm += 8;
+	//unsigned int rm = cpu->Reg[RM];
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	//if (RM == 15) rm += 8;
 	unsigned int shifter_operand;
 	int shift_imm = BITS(sht_oper, 7, 11);
 	if (shift_imm == 0) {
@@ -122,10 +151,10 @@ unsigned int DPO(LogicalShiftRightByImmediate)(arm_processor *cpu, unsigned int 
 unsigned int DPO(LogicalShiftRightByRegister)(arm_processor *cpu, unsigned int sht_oper)
 {
 //	printf("in %s\n", __FUNCTION__);
-	unsigned int rs = cpu->Reg[RS];
-	unsigned int rm = cpu->Reg[RM];
-	if (RS == 15) rs += 8;
-	if (RM == 15) rm += 8;
+	unsigned int rs = CHECK_READ_REG15(cpu, RS);
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	//if (RS == 15) rs += 8;
+	//if (RM == 15) rm += 8;
 	unsigned int shifter_operand;
 	if (BITS(rs, 0, 7) == 0) {
 		shifter_operand = rm;
@@ -146,8 +175,9 @@ unsigned int DPO(LogicalShiftRightByRegister)(arm_processor *cpu, unsigned int s
 unsigned int DPO(ArithmeticShiftRightByImmediate)(arm_processor *cpu, unsigned int sht_oper)
 {
 //	printf("in %s\n", __FUNCTION__);
-	unsigned int rm = cpu->Reg[RM];
-	if (RM == 15) rm += 8;
+	//unsigned int rm = cpu->Reg[RM];
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	//if (RM == 15) rm += 8;
 	unsigned int shifter_operand;
 	int shift_imm = BITS(sht_oper, 7, 11);
 	if (shift_imm == 0) {
@@ -168,10 +198,12 @@ unsigned int DPO(ArithmeticShiftRightByImmediate)(arm_processor *cpu, unsigned i
 unsigned int DPO(ArithmeticShiftRightByRegister)(arm_processor *cpu, unsigned int sht_oper)
 {
 //	printf("in %s\n", __FUNCTION__);
-	unsigned int rs = cpu->Reg[RS];
-	unsigned int rm = cpu->Reg[RM];
-	if (RS == 15) rs += 8;
-	if (RM == 15) rm += 8;
+	//unsigned int rs = cpu->Reg[RS];
+	unsigned int rs = CHECK_READ_REG15(cpu, RS);
+	//unsigned int rm = cpu->Reg[RM];
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	//if (RS == 15) rs += 8;
+	//if (RM == 15) rm += 8;
 	unsigned int shifter_operand;
 	if (BITS(rs, 0, 7) == 0) {
 		shifter_operand = rm;
@@ -195,8 +227,9 @@ unsigned int DPO(RotateRightByImmediate)(arm_processor *cpu, unsigned int sht_op
 {
 //	printf("in %s\n", __FUNCTION__);
 	unsigned int shifter_operand;
-	unsigned int rm = cpu->Reg[RM];
-	if (RM == 15) rm += 8;
+	//unsigned int rm = cpu->Reg[RM];
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	//if (RM == 15) rm += 8;
 	int shift_imm = BITS(sht_oper, 7, 11);
 	if (shift_imm == 0) {
 		shifter_operand = (cpu->CFlag << 31) | 
@@ -212,10 +245,10 @@ unsigned int DPO(RotateRightByImmediate)(arm_processor *cpu, unsigned int sht_op
 unsigned int DPO(RotateRightByRegister)(arm_processor *cpu, unsigned int sht_oper)
 {
 //	printf("in %s\n", __FUNCTION__);
-	unsigned int rm = cpu->Reg[RM];
-	if (RM == 15) rm += 8;
-	unsigned int rs = cpu->Reg[RS];
-	if (RS == 15) rs += 8;
+	unsigned int rm = CHECK_READ_REG15(cpu, RM);
+	//if (RM == 15) rm += 8;
+	unsigned int rs = CHECK_READ_REG15(cpu, RS);
+	//if (RS == 15) rs += 8;
 	unsigned int shifter_operand;
 	if (BITS(rs, 0, 7) == 0) {
 		shifter_operand = rm;
@@ -303,11 +336,11 @@ fault_t LnSWoUB(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned
 	unsigned int addr;
 	fault_t fault;
 	if (U_BIT) {
-		addr = cpu->Reg[Rn] + OFFSET_12;
+		addr = CHECK_READ_REG15_WA(cpu, Rn) + OFFSET_12;
 	} else {
-		addr = cpu->Reg[Rn] - OFFSET_12;
+		addr = CHECK_READ_REG15_WA(cpu, Rn) - OFFSET_12;
 	}
-	if (Rn == 15) addr += 8;
+	//if (Rn == 15) rn += 8;
 	if (cpu->icounter == 249111596) {
 		printf("in %s\n", __FUNCTION__);
 		printf("RN:%d\n", Rn);
@@ -325,10 +358,10 @@ fault_t LnSWoUB(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned 
 	fault_t fault;
 	unsigned int Rn = BITS(inst, 16, 19);
 	unsigned int Rm = BITS(inst, 0, 3);
-	unsigned int rn = cpu->Reg[Rn];
-	if (Rn == 15) rn += 8;
-	unsigned int rm = cpu->Reg[Rm];
-	if (Rm == 15) rm += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
+	unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
+	//if (Rm == 15) rm += 8;
 	unsigned int addr;
 	if (U_BIT) {
 		addr = rn + rm;
@@ -344,8 +377,8 @@ fault_t LnSWoUB(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, uns
 {
 	fault_t fault;
 	unsigned int Rn = BITS(inst, 16, 19);
-	unsigned int addr = cpu->Reg[Rn];
-	if (Rn == 15) addr += 8;
+	unsigned int addr = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) addr += 8;
 
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
@@ -365,13 +398,15 @@ fault_t LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsi
 	unsigned int Rn = BITS(inst, 16, 19);
 	unsigned int addr;
 	if (U_BIT) {
-		addr = cpu->Reg[Rn] + OFFSET_12;
+		addr = CHECK_READ_REG15_WA(cpu, Rn) + OFFSET_12;
 	} else {
-		addr = cpu->Reg[Rn] - OFFSET_12;
+		addr = CHECK_READ_REG15(cpu, Rn) - OFFSET_12;
 	}
+	#if 0
 	if (Rn == 15) {
 		addr += 8;
 	}
+	#endif
 
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
@@ -394,14 +429,14 @@ fault_t MLnS(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned in
 
 	unsigned int offset_8 = (immedH << 4) | immedL;
 	if (U_BIT) {
-		addr = cpu->Reg[Rn] + offset_8;
+		addr = CHECK_READ_REG15_WA(cpu, Rn) + offset_8;
 	} else
-		addr = cpu->Reg[Rn] - offset_8;
-
+		addr = CHECK_READ_REG15_WA(cpu, Rn) - offset_8;
+	#if 0
 	if (Rn == 15) {
 		addr += 8;
 	}
-
+	#endif
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
 	return fault;
@@ -413,10 +448,10 @@ fault_t MLnS(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int
 	unsigned int addr;
 	unsigned int Rn = BITS(inst, 16, 19);
 	unsigned int Rm = BITS(inst,  0,  3);
-	unsigned int rn = cpu->Reg[Rn];
-	unsigned int rm = cpu->Reg[Rm];
-	if (Rn == 15) rn += 8;
-	if (Rm == 15) rm += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
+	//if (Rn == 15) rn += 8;
+	//if (Rm == 15) rm += 8;
 	if (U_BIT) {
 		addr = rn + rm;
 	} else
@@ -434,8 +469,8 @@ fault_t MLnS(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigne
 	unsigned int immedH = BITS(inst,  8, 11);
 	unsigned int immedL = BITS(inst,  0,  3);
 	unsigned int addr;
-	unsigned int rn = cpu->Reg[Rn];
-	if (Rn == 15) rn += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
 
 //	printf("in %s\n", __FUNCTION__);
 	unsigned int offset_8 = (immedH << 4) | immedL;
@@ -493,8 +528,8 @@ fault_t LdnStM(DecrementBefore)(arm_processor *cpu, unsigned int inst, unsigned 
 		if(i & 1) count ++;
 		i = i >> 1;
 	}
-	unsigned int rn = cpu->Reg[Rn];
-	if (Rn == 15) rn += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
 	unsigned int start_addr = rn - count * 4;
 
 	virt_addr = start_addr;
@@ -513,8 +548,8 @@ fault_t LdnStM(IncrementBefore)(arm_processor *cpu, unsigned int inst, unsigned 
 	fault_t fault;
 	unsigned int Rn = BITS(inst, 16, 19);
 	unsigned int i = BITS(inst, 0, 15);
-	unsigned int rn = cpu->Reg[Rn];
-	if (Rn == 15) rn += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
 	unsigned int start_addr = rn + 4;
 
 	virt_addr = start_addr;
@@ -537,8 +572,8 @@ fault_t LdnStM(IncrementAfter)(arm_processor *cpu, unsigned int inst, unsigned i
 	fault_t fault;
 	unsigned int Rn = BITS(inst, 16, 19);
 	unsigned int i = BITS(inst, 0, 15);
-	unsigned int rn = cpu->Reg[Rn];
-	if (Rn == 15) rn += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
 	unsigned int start_addr = rn;
 
 	virt_addr = start_addr;
@@ -566,8 +601,8 @@ fault_t LdnStM(DecrementAfter)(arm_processor *cpu, unsigned int inst, unsigned i
 		if(i & 1) count ++;
 		i = i >> 1;
 	}
-	unsigned int rn = cpu->Reg[Rn];
-	if (Rn == 15) rn += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
 	unsigned int start_addr = rn - count * 4 + 4;
 
 	virt_addr = start_addr;
@@ -593,10 +628,10 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
 	unsigned int index;
 	unsigned int addr;
 
-	unsigned int rm = cpu->Reg[Rm];
-	if (Rm == 15) rm += 8;
-	unsigned int rn = cpu->Reg[Rn];
-	if (Rn == 15) rn += 8;
+	unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
+	//if (Rm == 15) rm += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
 	switch (shift) {
 	case 0:
 		//DEBUG_MSG;
@@ -956,6 +991,14 @@ typedef struct _uxtb_inst {
 	unsigned int Rm;
 	unsigned int rotate;
 } uxtb_inst;
+
+typedef struct _b_2_thumb {
+	unsigned int imm;
+}b_2_thumb;
+typedef struct _b_cond_thumb {
+	unsigned int imm;
+	unsigned int cond;
+}b_cond_thumb;
 
 typedef struct _bl_1_thumb {
 	unsigned int imm;
@@ -2556,7 +2599,22 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(strbt)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(strd)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(strd)(unsigned int inst, int index){
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
+	ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+
+	inst_base->cond = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+
+	inst_cream->inst = inst;
+	inst_cream->get_addr = get_calc_addr_op(inst);
+
+	if (BITS(inst, 12, 15) == 15) {
+		inst_base->br = INDIRECT_BRANCH;
+	}
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(strex)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
@@ -2762,6 +2820,31 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(umull)(unsigned int inst, int index)
 
 	if (CHECK_RM || CHECK_RS) 
 		inst_base->load_r15 = 1;
+	return inst_base;
+}
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(b_2_thumb)(unsigned int tinst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(b_2_thumb));
+	b_2_thumb *inst_cream = (b_2_thumb *)inst_base->component;
+
+	inst_cream->imm =((tinst & 0x3FF) << 1) | ((tinst & (1 << 10)) ? 0xFFFFF800 : 0);
+	printf("In %s, tinst=0x%x, imm=0x%x\n", __FUNCTION__, tinst, inst_cream->imm);
+	inst_base->idx = index;
+	inst_base->br	 = DIRECT_BRANCH;
+	return inst_base;
+}
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(b_cond_thumb)(unsigned int tinst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(b_cond_thumb));
+	b_cond_thumb *inst_cream = (b_cond_thumb *)inst_base->component;
+
+	inst_cream->imm = (((tinst & 0x7F) << 1) | ((tinst & (1 << 7)) ?	0xFFFFFF00 : 0));
+	inst_cream->cond = ((tinst >> 8) & 0xf);
+	printf("In %s, tinst=0x%x, imm=0x%x, cond=0x%x\n", __FUNCTION__, tinst, inst_cream->imm, inst_cream->cond);
+	inst_base->idx = index;
+	inst_base->br	 = DIRECT_BRANCH;
 	return inst_base;
 }
 
@@ -2972,6 +3055,8 @@ const transop_fp_t arm_instruction_trans[] = {
 	INTERPRETER_TRANSLATE(uxtab16),
 	INTERPRETER_TRANSLATE(uxtb16),
 	/* All the thumb instructions should be placed the end of table */
+	INTERPRETER_TRANSLATE(b_2_thumb), 
+	INTERPRETER_TRANSLATE(b_cond_thumb), 
 	INTERPRETER_TRANSLATE(bl_1_thumb), 
 	INTERPRETER_TRANSLATE(bl_2_thumb),
 	INTERPRETER_TRANSLATE(blx_1_thumb)
@@ -3043,6 +3128,27 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *a
 
 		switch((tinstr & 0xF800) >> 11){
 		/* we will translate the thumb instruction directly here */
+		/* we will translate the thumb instruction directly here */
+		case 26:
+		case 27:
+			if (((tinstr & 0x0F00) != 0x0E00) && ((tinstr & 0x0F00) != 0x0F00)){
+				uint32 cond = (tinstr & 0x0F00) >> 8;
+				inst_index = table_length - 4;
+				//printf("In %s, tinstr=0x%x, blx 1 thumb index=%d\n", __FUNCTION__, tinstr, inst_index);
+				*ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
+			}
+			else{
+			/* something wrong */
+				printf("In %s, thumb decoder error\n", __FUNCTION__);
+			}
+			break;
+		case 28:
+			/* Branch 2, unconditional branch */
+			inst_index = table_length - 5;
+			//printf("In %s, tinstr=0x%x, blx 1 thumb index=%d\n", __FUNCTION__, tinstr, inst_index);
+			*ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
+			break;
+
 		case 8:
 		case 29:
 			/* For BLX 1 thumb instruction*/
@@ -3795,11 +3901,6 @@ static bool InAPrivilegedMode(arm_core_t *core)
 {
 	return (core->Mode != USER32MODE);
 }
-/* FIXME, we temporarily think thumb instruction is always 16 bit */
-static inline uint32 GET_INST_SIZE(arm_core_t* cpu){
-	return cpu->TFlag? 2 : 4;
-}
-
 						#if 0                                                              
 						if (cpu->icounter > 12170500) {                                    
 							printf("%s\n", arm_instruction[inst_base->idx].name);      
@@ -3883,7 +3984,7 @@ void InterpreterMainLoop(cpu_t *core)
 		&&UADD16_INST,&&UADD8_INST,&&UADDSUBX_INST,&&UHADD16_INST,&&UHADD8_INST,&&UHADDSUBX_INST,&&UHSUB16_INST,&&UHSUB8_INST,
 		&&UHSUBADDX_INST,&&UMAAL_INST,&&UMLAL_INST,&&UMULL_INST,&&UQADD16_INST,&&UQADD8_INST,&&UQADDSUBX_INST,&&UQSUB16_INST,
 		&&UQSUB8_INST,&&UQSUBADDX_INST,&&USAD8_INST,&&USADA8_INST,&&USAT_INST,&&USAT16_INST,&&USUB16_INST,&&USUB8_INST,
-		&&USUBADDX_INST,&&UXTAB16_INST,&&UXTB16_INST,&&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,&&INIT_INST_LENGTH,&&END
+		&&USUBADDX_INST,&&UXTAB16_INST,&&UXTB16_INST,&&B_2_THUMB, &&B_COND_THUMB, &&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,&&INIT_INST_LENGTH,&&END
 	};
 
 	int ptr;
@@ -4077,7 +4178,7 @@ void InterpreterMainLoop(cpu_t *core)
 			unsigned int inst = inst_cream->inst;
 			if (BITS(inst, 20, 27) == 0x12 && BITS(inst, 4, 7) == 0x3) {
 				//LINK_RTN_ADDR;
-				cpu->Reg[14] = (cpu->Reg[15] + 4) ;
+				cpu->Reg[14] = (cpu->Reg[15] + GET_INST_SIZE(cpu)) | 0x1 ;
 				cpu->Reg[15] = cpu->Reg[BITS(inst, 0, 3)] & 0xfffffffe;
 				cpu->TFlag = cpu->Reg[BITS(inst, 0, 3)] & 0x1;
 			} else {
@@ -4268,7 +4369,7 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-//			printf("in ldm_inst\n");
+			printf("in ldm_inst\n");
 			int i;
 			unsigned int ret;
 			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
@@ -4323,9 +4424,10 @@ void InterpreterMainLoop(cpu_t *core)
 							goto MMU_EXCEPTION;
 						}
 						/* For armv5t, should enter thumb when bits[0] is non-zero. */
-						if(i == 15 && (ret & 0x1)){
-							cpu->TFlag = 1;
+						if(i == 15){
+							cpu->TFlag = ret & 0x1;
 							ret &= 0xFFFFFFFE;
+							//printf("In %s, TFlag ret=0x%x\n", __FUNCTION__, ret);
 						}
 
 						cpu->Reg[i] = ret;
@@ -4342,7 +4444,7 @@ void InterpreterMainLoop(cpu_t *core)
 				}
 			}
 			if (BIT(inst, 15)) {
-//				printf("new pc is %x\n", cpu->Reg[15]);
+				printf("new pc is %x\n", cpu->Reg[15]);
 				goto DISPATCH;
 			}
 		}
@@ -4388,11 +4490,8 @@ void InterpreterMainLoop(cpu_t *core)
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				/* For armv5t, should enter thumb when bits[0] is non-zero. */
-				if(value & 0x1){
-					cpu->TFlag = 1;	
-					cpu->Reg[15] &= 0xFFFFFFFE;
-				}
-
+				cpu->TFlag = value & 0x1;
+				cpu->Reg[15] &= 0xFFFFFFFE;
 				goto DISPATCH;
 			}
 		}
@@ -4786,6 +4885,8 @@ void InterpreterMainLoop(cpu_t *core)
 					} else if (CRn == 5 && CRm == 0 && OPCODE_2 == 1) {
 						//LET(RD, R(CP15_INSTR_FAULT_STATUS));
 						RD = cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)];
+					} else if (CRn == 13 && CRm == 0 && OPCODE_2 == 3) {
+						RD = cpu->CP15[CP15(CP15_THREAD_URO)];
 					}
 					else {
 						printf("mrc is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
@@ -5576,18 +5677,37 @@ void InterpreterMainLoop(cpu_t *core)
 		FETCH_INST;
 		GOTO_NEXT_INST;
 	}
+	B_2_THUMB:
+	{
+		INC_ICOUNTER;
+		b_2_thumb *inst_cream = (b_2_thumb *)inst_base->component;
+		cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
+		//printf(" BL_1_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
+		goto DISPATCH;
+	}
+	B_COND_THUMB:
+	{
+		INC_ICOUNTER;
+		b_cond_thumb *inst_cream = (b_cond_thumb *)inst_base->component;
+		if(CondPassed(cpu, inst_cream->cond))
+			cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
+		else
+			cpu->Reg[15] += 2;
+		//printf(" B_COND_THUMB: imm=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[15]);
+		goto DISPATCH;
+	}
 	BL_1_THUMB:
 	{
+		INC_ICOUNTER;
 		bl_1_thumb *inst_cream = (bl_1_thumb *)inst_base->component;
 		cpu->Reg[14] = cpu->Reg[15] + 4 + inst_cream->imm;
 		cpu->Reg[15] += 2;
 		//printf(" BL_1_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
-		INC_PC(sizeof(bl_1_thumb));
-		FETCH_INST;
-		GOTO_NEXT_INST;
+		goto DISPATCH;
 	}
 	BL_2_THUMB:
 	{
+		INC_ICOUNTER;
 		bl_2_thumb *inst_cream = (bl_2_thumb *)inst_base->component;
 		int tmp = ((cpu->Reg[15] + 2) | 1);
 		cpu->Reg[15] =
@@ -5597,7 +5717,9 @@ void InterpreterMainLoop(cpu_t *core)
 		goto DISPATCH;
 	}
 	BLX_1_THUMB:
-	{	/* BLX 1 for armv5t and above */
+	{	
+		/* BLX 1 for armv5t and above */
+		INC_ICOUNTER;
 		uint32 tmp = cpu->Reg[15];
 		blx_1_thumb *inst_cream = (blx_1_thumb *)inst_base->component;
 		cpu->Reg[15] = (cpu->Reg[14] + inst_cream->imm) & 0xFFFFFFFC;
@@ -5606,7 +5728,7 @@ void InterpreterMainLoop(cpu_t *core)
 		//(state->Reg[14] + ((tinstr & 0x07FF) << 1)) & 0xFFFFFFFC;
 		/* switch to arm state from thumb state */
 		cpu->TFlag = 0;
-		printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r15=0x%x, \n", inst_cream->imm, cpu->Reg[15]);
+		//printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r15=0x%x, \n", inst_cream->imm, cpu->Reg[15]);
 		goto DISPATCH;
 	}
 
