@@ -20,8 +20,12 @@
 
 /* Note: this file handles interface with arm core and vfp registers */
 
+/* Opens debug for classic interpreter only */
+//#define DEBUG
+
 #include "armdefs.h"
 #include "vfp/vfp.h"
+#include <skyeye_log.h>
 
 ARMul_State* persistent_state; /* function calls from SoftFloat lib don't have an access to ARMul_state. */
 
@@ -58,7 +62,7 @@ VFPMRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value)
 		#include "vfp/vfpinstr.c"
 		#undef VFP_MRC_TRANS
 	}
-	printf("VFPMRC: can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n", 
+	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n", 
 	       instr, CoProc, OPC_1, Rt, CRn, CRm, OPC_2);
 }
 
@@ -82,7 +86,7 @@ VFPMCR (ARMul_State * state, unsigned type, ARMword instr, ARMword value)
 		#include "vfp/vfpinstr.c"
 		#undef VFP_MCR_TRANS
 	}
-	printf("VFPMCR: can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n", 
+	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n", 
 	       instr, CoProc, OPC_1, Rt, CRn, CRm, OPC_2);
 }
 
@@ -102,7 +106,7 @@ VFPMRRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value1, AR
 		#include "vfp/vfpinstr.c"
 		#undef VFP_MRRC_TRANS
 	}
-	printf("VFPMRRC: can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n", 
+	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n", 
 	       instr, CoProc, OPC_1, Rt, Rt2, CRm);
 }
 
@@ -126,7 +130,7 @@ VFPMCRR (ARMul_State * state, unsigned type, ARMword instr, ARMword value1, ARMw
 		#include "vfp/vfpinstr.c"
 		#undef VFP_MCRR_TRANS
 	}
-	printf("VFPMCRR: can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n", 
+	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n", 
 	       instr, CoProc, OPC_1, Rt, Rt2, CRm);
 }
 
@@ -148,18 +152,18 @@ VFPSTC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value)
 	/* VSTM */
 	if ( (P|U|D|W) == 0 )
 	{
-		printf("In %s, UNDEFINED\n", __FUNCTION__); exit(-1);
+		skyeye_log(Debug_log, __FUNCTION__, "In %s, UNDEFINED\n", __FUNCTION__); exit(-1);
 	}
 	if (CoProc == 10 || CoProc == 11)
 	{
 		#if 1
 		if (P == 0 && U == 0 && W == 0)
 		{
-			printf("VSTM Related encodings\n"); exit(-1);
+			skyeye_log(Debug_log, __FUNCTION__, "VSTM Related encodings\n"); exit(-1);
 		}
 		if (P == U && W == 1)
 		{
-			printf("VSTM is UNDEFINED\n"); exit(-1);
+			skyeye_log(Debug_log, __FUNCTION__, "UNDEFINED\n"); exit(-1);
 		}
 		#endif
 
@@ -167,7 +171,7 @@ VFPSTC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value)
 		#include "vfp/vfpinstr.c"
 		#undef VFP_STC_TRANS
 	}
-	printf("VFPSTC: can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n", 
+	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n", 
 	       instr, CoProc, CRd, Rn, imm8, P, U, D, W);
 }
 
@@ -188,7 +192,7 @@ VFPLDC (ARMul_State * state, unsigned type, ARMword instr, ARMword value)
 	
 	if ( (P|U|D|W) == 0 )
 	{
-		printf("In %s, UNDEFINED\n", __FUNCTION__); exit(-1);
+		skyeye_log(Debug_log, __FUNCTION__, "In %s, UNDEFINED\n", __FUNCTION__); exit(-1);
 	}
 	if (CoProc == 10 || CoProc == 11)
 	{
@@ -196,7 +200,7 @@ VFPLDC (ARMul_State * state, unsigned type, ARMword instr, ARMword value)
 		#include "vfp/vfpinstr.c"
 		#undef VFP_LDC_TRANS
 	}
-	printf("VFPLDC: can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n", 
+	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n", 
 	       instr, CoProc, CRd, Rn, imm8, P, U, D, W);
 }
 
@@ -232,7 +236,7 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 
 		return ARMul_DONE;
 	}
-	printf("VFPCDP: can't identify %x\n", instr);
+	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x\n", instr);
 }
 
 
@@ -282,13 +286,13 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 /* Miscellaneous functions */
 int32_t vfp_get_float(unsigned int reg)
 {
-	vfpdebug("VFP get float: s%d=[%08x]\n", reg, persistent_state->ExtReg[reg]);
+	DBG("VFP get float: s%d=[%08x]\n", reg, persistent_state->ExtReg[reg]);
 	return persistent_state->ExtReg[reg];
 }
 
 void vfp_put_float(int32_t val, unsigned int reg)
 {
-	vfpdebug("VFP put float: s%d <= [%08x]\n", reg, val);
+	DBG("VFP put float: s%d <= [%08x]\n", reg, val);
 	persistent_state->ExtReg[reg] = val;
 }
 
@@ -296,13 +300,13 @@ uint64_t vfp_get_double(unsigned int reg)
 {
 	uint64_t result;
 	result = ((uint64_t) persistent_state->ExtReg[reg*2+1])<<32 | persistent_state->ExtReg[reg*2];
-	vfpdebug("VFP get double: s[%d-%d]=[%016llx]\n", reg*2+1, reg*2, result);
+	DBG("VFP get double: s[%d-%d]=[%016llx]\n", reg*2+1, reg*2, result);
 	return result;
 }
 
 void vfp_put_double(uint64_t val, unsigned int reg)
 {
-	vfpdebug("VFP put double: s[%d-%d] <= [%08x-%08x]\n", reg*2+1, reg*2, (uint32_t) (val>>32), (uint32_t) (val & 0xffffffff));
+	DBG("VFP put double: s[%d-%d] <= [%08x-%08x]\n", reg*2+1, reg*2, (uint32_t) (val>>32), (uint32_t) (val & 0xffffffff));
 	persistent_state->ExtReg[reg*2] = (uint32_t) (val & 0xffffffff);
 	persistent_state->ExtReg[reg*2+1] = (uint32_t) (val>>32);
 }
@@ -319,13 +323,7 @@ void vfp_raise_exceptions(u32 exceptions, u32 inst, u32 fpscr)
 	vfpdebug("VFP: raising exceptions %08x\n", exceptions);
 
 	if (exceptions == VFP_EXCEPTION_ERROR) {
-		vfpdebug("unhandled bounce %x\n", inst);
-		exit(-1);
-		return;
-	}
-
-	if (exceptions == VFP_EXCEPTION_ERROR) {
-		vfpdebug("unhandled bounce %x\n", inst);
+		skyeye_log(Debug_log, __FUNCTION__, "unhandled bounce %x\n", inst);
 		exit(-1);
 		return;
 	}

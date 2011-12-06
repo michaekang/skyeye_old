@@ -21,6 +21,8 @@
 #ifndef __VFP_H__
 #define __VFP_H__
 
+#define vfpdebug //printf
+
 #include "vfp/vfp_helper.h" /* for references to cdp SoftFloat functions */
 
 unsigned VFPInit (ARMul_State *state);
@@ -70,8 +72,6 @@ unsigned VFPCDP (ARMul_State * state, unsigned type, ARMword instr);
 #define VFP_FPSCR_OFC 1<<2	/* Overflow cum exc */
 #define VFP_FPSCR_DZC 1<<1	/* Division by Zero cum exc */
 #define VFP_FPSCR_IOC 1<<0	/* Invalid Operation cum exc */
-
-#define vfpdebug //printf
 
 /* Inline instructions. Note: Used in a cpp file as well */
 #ifdef __cplusplus

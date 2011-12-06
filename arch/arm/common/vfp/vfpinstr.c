@@ -75,6 +75,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VMLA :\n");
+		
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -92,6 +94,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0 && (OPC_2 & 0x2) == 0)
+{
+	DBG("VMLA :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -99,14 +107,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -164,6 +172,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VMLS :\n");
+		
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -181,6 +191,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0 && (OPC_2 & 0x2) == 2)
+{
+	DBG("VMLS :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -188,14 +204,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -253,6 +269,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VNMLA :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -270,6 +288,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 1 && (OPC_2 & 0x2) == 2)
+{
+	DBG("VNMLA :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -277,14 +301,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -342,6 +366,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VNMLS :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -359,6 +385,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 1 && (OPC_2 & 0x2) == 0)
+{
+	DBG("VNMLS :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -366,14 +398,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -431,6 +463,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VNMUL :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -448,6 +482,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 2 && (OPC_2 & 0x2) == 2)
+{
+	DBG("VNMUL :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -455,14 +495,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -520,6 +560,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VMUL :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -537,6 +579,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 2 && (OPC_2 & 0x2) == 0)
+{
+	DBG("VMUL :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -544,14 +592,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -609,6 +657,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VADD :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -626,6 +676,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 3 && (OPC_2 & 0x2) == 0)
+{
+	DBG("VADD :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -633,14 +689,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -698,6 +754,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VSUB :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -715,6 +773,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 3 && (OPC_2 & 0x2) == 2)
+{
+	DBG("VSUB :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -722,14 +786,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -787,6 +851,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VDIV :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -804,6 +870,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xA && (OPC_2 & 0x2) == 0)
+{
+	DBG("VDIV :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -811,14 +883,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -911,17 +983,17 @@ if ( (OPC_1 & 0xb) == 0xb && BITS(4, 7) == 0)
 #ifdef VFP_CDP_IMPL
 void VMOVI(ARMul_State * state, ARMword single, ARMword d, ARMword imm)
 {
-	vfpdebug("VMOV(I) :\n");
+	DBG("VMOV(I) :\n");
 		
 	if (single)
 	{
-		vfpdebug("\ts%d <= [%x]\n", d, imm);
+		DBG("\ts%d <= [%x]\n", d, imm);
 		state->ExtReg[d] = imm;
 	}
 	else
 	{
 		/* Check endian please */
-		vfpdebug("\ts[%d-%d] <= [%x-%x]\n", d*2+1, d*2, imm, 0);
+		DBG("\ts[%d-%d] <= [%x-%x]\n", d*2+1, d*2, imm, 0);
 		state->ExtReg[d*2+1] = imm;
 		state->ExtReg[d*2] = 0;
 	}
@@ -934,14 +1006,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1025,17 +1097,17 @@ if ( (OPC_1 & 0xb) == 0xb && CRn == 0 && (OPC_2 & 0x6) == 0x2 )
 #ifdef VFP_CDP_IMPL
 void VMOVR(ARMul_State * state, ARMword single, ARMword d, ARMword m)
 {
-	vfpdebug("VMOV(R) :\n");
+	DBG("VMOV(R) :\n");
 		
 	if (single)
 	{
-		vfpdebug("\ts%d <= s%d[%x]\n", d, m, state->ExtReg[m]);
+		DBG("\ts%d <= s%d[%x]\n", d, m, state->ExtReg[m]);
 		state->ExtReg[d] = state->ExtReg[m];
 	}
 	else
 	{
 		/* Check endian please */
-		vfpdebug("\ts[%d-%d] <= s[%d-%d][%x-%x]\n", d*2+1, d*2, m*2+1, m*2, state->ExtReg[m*2+1], state->ExtReg[m*2]);
+		DBG("\ts[%d-%d] <= s[%d-%d][%x-%x]\n", d*2+1, d*2, m*2+1, m*2, state->ExtReg[m*2+1], state->ExtReg[m*2]);
 		state->ExtReg[d*2+1] = state->ExtReg[m*2+1];
 		state->ExtReg[d*2] = state->ExtReg[m*2];
 	}
@@ -1048,14 +1120,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1113,6 +1185,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VABS :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -1130,6 +1204,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xB && CRn == 0 && (OPC_2 & 0x7) == 6)
+{
+	DBG("VABS :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -1137,14 +1217,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1201,7 +1281,9 @@ VFPLABEL_INST:
 	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
-		
+
+		DBG("VNEG :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -1219,6 +1301,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xB && CRn == 1 && (OPC_2 & 0x7) == 2)
+{
+	DBG("VNEG :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -1226,14 +1314,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1291,6 +1379,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VSQRT :\n");
+		
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -1308,6 +1398,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xB && CRn == 1 && (OPC_2 & 0x7) == 6)
+{
+	DBG("VSQRT :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -1315,14 +1411,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1379,7 +1475,9 @@ VFPLABEL_INST:
 	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
-		
+
+		DBG("VCMP(1) :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -1397,6 +1495,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xB && CRn == 4 && (OPC_2 & 0x2) == 2)
+{
+	DBG("VCMP(1) :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -1404,14 +1508,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1469,6 +1573,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VCMP(2) :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -1486,6 +1592,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xB && CRn == 5 && (OPC_2 & 0x2) == 2 && CRm == 0)
+{
+	DBG("VCMP(2) :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -1493,14 +1605,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1558,6 +1670,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VCVT(BDS) :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -1575,93 +1689,10 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vfpinstr),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xB && CRn == 7 && (OPC_2 & 0x6) == 6)
 {
-	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-	return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
-}
-#endif
-#undef vfpinstr
-#undef vfpinstr_inst
-#undef VFPLABEL_INST
-
-/* ----------------------------------------------------------------------- */
-/* VCVTBFI between floating point and integer */
-/* cond 1110 1D11 1op2 Vd-- 101X X1M0 Vm-- */
-#define vfpinstr 	vcvtbfi
-#define vfpinstr_inst 	vcvtbfi_inst
-#define VFPLABEL_INST 	VCVTBFI_INST
-#ifdef VFP_DECODE
-{"vcvt(bfi)",   5,      ARMVFP2,        23, 27, 0x1d,  19, 21, 0x7,     9, 11, 0x5,      6, 6, 1,     4, 4, 0},
-#endif
-#ifdef VFP_DECODE_EXCLUSION
-{"vcvt(bfi)",   0,      ARMVFP2, 0},
-#endif
-#ifdef VFP_INTERPRETER_TABLE
-INTERPRETER_TRANSLATE(vfpinstr),
-#endif
-#ifdef VFP_INTERPRETER_LABEL
-&&VFPLABEL_INST,
-#endif
-#ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vcvtbfi_inst {
-	unsigned int instr;
-	unsigned int dp_operation;
-} vfpinstr_inst;
-#endif
-#ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
-{
-	VFP_DEBUG_TRANSLATE;
-	
-	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
-	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
-
-	inst_base->cond  = BITS(inst, 28, 31);
-	inst_base->idx	 = index;
-	inst_base->br	 = NON_BRANCH;
-	inst_base->load_r15 = 0;
-
-	inst_cream->dp_operation = BIT(inst, 8);
-	inst_cream->instr = inst;
-	
-	return inst_base;
-}
-#endif
-#ifdef VFP_INTERPRETER_IMPL
-VFPLABEL_INST:
-{
-	INC_ICOUNTER;
-	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-		CHECK_VFP_ENABLED;
-		
-		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
-
-		int ret;
-		
-		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
-		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
-
-		CHECK_VFP_CDP_RET;
-	}
-	cpu->Reg[15] += 4;
-	INC_PC(sizeof(vfpinstr_inst));
-	FETCH_INST;
-	GOTO_NEXT_INST;
+	DBG("VCVT(BDS) :\n");
 }
 #endif
 #ifdef VFP_DYNCOM_TABLE
@@ -1671,14 +1702,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1736,6 +1767,8 @@ VFPLABEL_INST:
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
+		DBG("VCVT(BFF) :\n");
+
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
 		int ret;
@@ -1753,6 +1786,12 @@ VFPLABEL_INST:
 	GOTO_NEXT_INST;
 }
 #endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xB && CRn >= 0xA && (OPC_2 & 0x2) == 2)
+{
+	DBG("VCVT(BFF) :\n");
+}
+#endif
 #ifdef VFP_DYNCOM_TABLE
 DYNCOM_FILL_ACTION(vfpinstr),
 #endif
@@ -1760,14 +1799,112 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VCVTBFI between floating point and integer */
+/* cond 1110 1D11 1op2 Vd-- 101X X1M0 Vm-- */
+#define vfpinstr 	vcvtbfi
+#define vfpinstr_inst 	vcvtbfi_inst
+#define VFPLABEL_INST 	VCVTBFI_INST
+#ifdef VFP_DECODE
+{"vcvt(bfi)",   5,      ARMVFP2,        23, 27, 0x1d,  19, 21, 0x7,     9, 11, 0x5,      6, 6, 1,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vcvt(bfi)",   0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vcvtbfi_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		DBG("VCVT(BFI) :\n");
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_CDP_TRANS
+if ((OPC_1 & 0xB) == 0xB && CRn > 7 && (OPC_2 & 0x2) == 2)
+{
+	DBG("VCVT(BFI) :\n");
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1864,15 +2001,15 @@ if (OPC_1 == 0x0 && CRm == 0 && (OPC_2 & 0x3) == 0)
 #ifdef VFP_MRC_IMPL
 void VMOVBRS(ARMul_State * state, ARMword to_arm, ARMword t, ARMword n, ARMword *value)
 {
-	vfpdebug("VMOV(BRS) :\n");
+	DBG("VMOV(BRS) :\n");
 	if (to_arm)
 	{
-		vfpdebug("\tr%d <= s%d=[%x]\n", t, n, state->ExtReg[n]);
+		DBG("\tr%d <= s%d=[%x]\n", t, n, state->ExtReg[n]);
 		*value = state->ExtReg[n];
 	}
 	else
 	{
-		vfpdebug("\ts%d <= r%d=[%x]\n", n, t, *value);
+		DBG("\ts%d <= r%d=[%x]\n", n, t, *value);
 		state->ExtReg[n] = *value;
 	}
 }
@@ -1884,14 +2021,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -1968,7 +2105,7 @@ if (CRn == 1 && OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
 #ifdef VFP_MCR_IMPL
 void VMSR(ARMul_State * state, ARMword Rt)
 {
-	vfpdebug("VMSR :\tfpscr <= r%d=[%x]\n", Rt, state->Reg[Rt]);
+	DBG("VMSR :\tfpscr <= r%d=[%x]\n", Rt, state->Reg[Rt]);
 	state->VFP[VFP_FPSCR] = state->Reg[Rt];
 }
 #endif
@@ -1979,14 +2116,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -2074,14 +2211,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -2140,12 +2277,12 @@ VFPLABEL_INST:
 		
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 		
-		vfpdebug("VMRS :");
+		DBG("VMRS :");
 	
 		if (inst_cream->Rt != 15)
 		{	
 			cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSCR];
-			vfpdebug("\tr%d <= [%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPSCR]);
+			DBG("\tr%d <= [%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPSCR]);
 		}
 		else
 		{	
@@ -2153,7 +2290,7 @@ VFPLABEL_INST:
 			cpu->ZFlag = (cpu->VFP[VFP_FPSCR] >> 30) & 1;
 			cpu->CFlag = (cpu->VFP[VFP_FPSCR] >> 29) & 1;
 			cpu->VFlag = (cpu->VFP[VFP_FPSCR] >> 28) & 1;
-			vfpdebug("\tflags<=fpscr=[%1x]\n", cpu->VFP[VFP_FPSCR]>>28);
+			DBG("\tflags<=fpscr=[%1x]\n", cpu->VFP[VFP_FPSCR]>>28);
 		}
 	}
 	cpu->Reg[15] += 4;
@@ -2172,16 +2309,16 @@ if (CRn == 1 && OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
 #ifdef VFP_MRC_IMPL
 void VMRS(ARMul_State * state, ARMword Rt, ARMword * value)
 {
-	vfpdebug("VMRS :");
+	DBG("VMRS :");
 	if (Rt != 15)
 	{
 		*value = state->VFP[VFP_FPSCR];
-		vfpdebug("\tr%d <= [%08x]\n", Rt, state->VFP[VFP_FPSCR]);
+		DBG("\tr%d <= [%08x]\n", Rt, state->VFP[VFP_FPSCR]);
 	}
 	else
 	{
 		*value = state->VFP[VFP_FPSCR] ;
-		vfpdebug("\tflags<=fpscr=[%1x]\n", state->VFP[VFP_FPSCR]>>28);
+		DBG("\tflags<=fpscr=[%1x]\n", state->VFP[VFP_FPSCR]>>28);
 	}
 }
 #endif
@@ -2192,14 +2329,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -2287,14 +2424,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -2393,14 +2530,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -2493,16 +2630,16 @@ if (CoProc == 11 && (OPC_1 & 0xD) == 1)
 #ifdef VFP_MRRC_IMPL
 void VMOVBRRD(ARMul_State * state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword *value1, ARMword *value2)
 {
-	vfpdebug("VMOV(BRRD) :\n");
+	DBG("VMOV(BRRD) :\n");
 	if (to_arm)
 	{
-		vfpdebug("\tr[%d-%d] <= s[%d-%d]=[%x-%x]\n", t2, t, n*2+1, n*2, state->ExtReg[n*2+1], state->ExtReg[n*2]);
+		DBG("\tr[%d-%d] <= s[%d-%d]=[%x-%x]\n", t2, t, n*2+1, n*2, state->ExtReg[n*2+1], state->ExtReg[n*2]);
 		*value2 = state->ExtReg[n*2+1];
 		*value1 = state->ExtReg[n*2];
 	}
 	else
 	{
-		vfpdebug("\ts[%d-%d] <= r[%d-%d]=[%x-%x]\n", n*2+1, n*2, t2, t, *value2, *value1);
+		DBG("\ts[%d-%d] <= r[%d-%d]=[%x-%x]\n", n*2+1, n*2, t2, t, *value2, *value1);
 		state->ExtReg[n*2+1] = *value2;
 		state->ExtReg[n*2] = *value1;
 	}
@@ -2516,14 +2653,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -2596,7 +2733,7 @@ VFPLABEL_INST:
 		
 		unsigned int base = (inst_cream->n == 15 ? (cpu->Reg[inst_cream->n] & 0xFFFFFFFC) + 8 : cpu->Reg[inst_cream->n]);
 		addr = (inst_cream->add ? base + inst_cream->imm32 : base - inst_cream->imm32);
-		vfpdebug("VSTR :\n");
+		DBG("VSTR :\n");
 		
 		fault = check_address_validity(cpu, addr, &phys_addr, 0);
 		if (fault) goto MMU_EXCEPTION;
@@ -2605,7 +2742,7 @@ VFPLABEL_INST:
 		{
 			fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d], 32);
 			if (fault) goto MMU_EXCEPTION;
-			vfpdebug("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d, cpu->ExtReg[inst_cream->d]);
+			DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d, cpu->ExtReg[inst_cream->d]);
 		}
 		else
 		{
@@ -2614,7 +2751,7 @@ VFPLABEL_INST:
 			if (fault) goto MMU_EXCEPTION;
 			fault = interpreter_write_memory(core, addr + 4, phys_addr + 4, cpu->ExtReg[inst_cream->d*2+1], 32);
 			if (fault) goto MMU_EXCEPTION;
-			vfpdebug("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, inst_cream->d*2+1, inst_cream->d*2, cpu->ExtReg[inst_cream->d*2+1], cpu->ExtReg[inst_cream->d*2]);
+			DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, inst_cream->d*2+1, inst_cream->d*2, cpu->ExtReg[inst_cream->d*2+1], cpu->ExtReg[inst_cream->d*2]);
 		}
 	}
 	cpu->Reg[15] += 4;
@@ -2642,7 +2779,7 @@ int VSTR(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		d = single_reg ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
 		n = BITS(16, 19);	/* destination register */
 		
-		vfpdebug("VSTR :\n");
+		DBG("VSTR :\n");
 		
 		i = 0;
 		regs = 1;
@@ -2654,7 +2791,7 @@ int VSTR(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		if (single_reg)
 		{
 			*value = state->ExtReg[d+i];
-			vfpdebug("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d+i]);
+			DBG("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d+i]);
 			i++;
 			if (i < regs)
 				return ARMul_INC;
@@ -2665,7 +2802,7 @@ int VSTR(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		{
 			/* FIXME Careful of endianness, may need to rework this */
 			*value = state->ExtReg[d*2+i];
-			vfpdebug("\taddr[?] <= s[%d]=[%x]\n", d*2+i, state->ExtReg[d*2+i]);
+			DBG("\taddr[?] <= s[%d]=[%x]\n", d*2+i, state->ExtReg[d*2+i]);
 			i++;
 			if (i < regs*2)
 				return ARMul_INC;
@@ -2682,14 +2819,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -2755,15 +2892,15 @@ VFPLABEL_INST:
 
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
-		vfpdebug("VPUSH :\n");
+		DBG("VPUSH :\n");
 			
 		addr = cpu->Reg[R13] - inst_cream->imm32;
 		fault = check_address_validity(cpu, addr, &phys_addr, 0);
 		if (fault) goto MMU_EXCEPTION;
 
-		vfpdebug("\tsp[%x]", cpu->Reg[R13]);
+		DBG("\tsp[%x]", cpu->Reg[R13]);
 		cpu->Reg[R13] = cpu->Reg[R13] - inst_cream->imm32;
-		vfpdebug("=>[%x]\n", cpu->Reg[R13]);
+		DBG("=>[%x]\n", cpu->Reg[R13]);
 
 		for (i = 0; i < inst_cream->regs; i++)
 		{
@@ -2771,7 +2908,7 @@ VFPLABEL_INST:
 			{
 				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 				if (fault) goto MMU_EXCEPTION;
-				vfpdebug("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
+				DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
 				addr += 4;
 				phys_addr += 4;
 			}
@@ -2782,7 +2919,7 @@ VFPLABEL_INST:
 				if (fault) goto MMU_EXCEPTION;
 				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 				if (fault) goto MMU_EXCEPTION;
-				vfpdebug("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
+				DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
 				addr += 8;
 				phys_addr += 8;
 			}
@@ -2813,10 +2950,10 @@ int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		imm32 = BITS(0,7)<<2;	/* may not be used */
 		regs = single_regs ? BITS(0, 7) : BITS(1, 7); /* FSTMX if regs is odd */
 
-		vfpdebug("VPUSH :\n");
-		vfpdebug("\tsp[%x]", state->Reg[R13]);
+		DBG("VPUSH :\n");
+		DBG("\tsp[%x]", state->Reg[R13]);
 		state->Reg[R13] = state->Reg[R13] - imm32;
-		vfpdebug("=>[%x]\n", state->Reg[R13]);
+		DBG("=>[%x]\n", state->Reg[R13]);
 		
 		i = 0;
 		
@@ -2827,7 +2964,7 @@ int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		if (single_regs)
 		{
 			*value = state->ExtReg[d + i];
-			vfpdebug("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d + i]);
+			DBG("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d + i]);
 			i++;
 			if (i < regs)
 				return ARMul_INC;
@@ -2838,7 +2975,7 @@ int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		{
 			/* FIXME Careful of endianness, may need to rework this */
 			*value = state->ExtReg[d*2 + i];
-			vfpdebug("\taddr[?] <= s[%d]=[%x]\n", d*2 + i, state->ExtReg[d*2 + i]);
+			DBG("\taddr[?] <= s[%d]=[%x]\n", d*2 + i, state->ExtReg[d*2 + i]);
 			i++;
 			if (i < regs*2)
 				return ARMul_INC;
@@ -2855,14 +2992,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -2935,7 +3072,7 @@ VFPLABEL_INST: /* encoding 1 */
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 		
 		addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
-		vfpdebug("VSTM : addr[%x]\n", addr);
+		DBG("VSTM : addr[%x]\n", addr);
 		
 		fault = check_address_validity(cpu, addr, &phys_addr, 0);
 		if (fault) goto MMU_EXCEPTION;
@@ -2943,7 +3080,7 @@ VFPLABEL_INST: /* encoding 1 */
 		if (inst_cream->wback){
 			cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 : 
 						   cpu->Reg[inst_cream->n] - inst_cream->imm32);
-			vfpdebug("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
+			DBG("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
 		}
 		
 		for (i = 0; i < inst_cream->regs; i++)
@@ -2952,7 +3089,7 @@ VFPLABEL_INST: /* encoding 1 */
 			{
 				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 				if (fault) goto MMU_EXCEPTION;
-				vfpdebug("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
+				DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
 				addr += 4;
 				phys_addr += 4;
 			}
@@ -2963,7 +3100,7 @@ VFPLABEL_INST: /* encoding 1 */
 				if (fault) goto MMU_EXCEPTION;
 				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 				if (fault) goto MMU_EXCEPTION;
-				vfpdebug("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
+				DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
 				addr += 8;
 				phys_addr += 8;
 			}
@@ -2994,11 +3131,11 @@ int VSTM(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		imm32 = BITS(0,7) * 4;	/* may not be used */
 		regs = single_regs ? BITS(0, 7) : BITS(0, 7)>>1; /* FSTMX if regs is odd */
 
-		vfpdebug("VSTM :\n");
+		DBG("VSTM :\n");
 		
 		if (wback) {
 			state->Reg[n] = (add ? state->Reg[n] + imm32 : state->Reg[n] - imm32);
-			vfpdebug("\twback r%d[%x]\n", n, state->Reg[n]);
+			DBG("\twback r%d[%x]\n", n, state->Reg[n]);
 		}
 		
 		i = 0;
@@ -3010,7 +3147,7 @@ int VSTM(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		if (single_regs)
 		{
 			*value = state->ExtReg[d + i];
-			vfpdebug("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d + i]);
+			DBG("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d + i]);
 			i++;
 			if (i < regs)
 				return ARMul_INC;
@@ -3021,7 +3158,7 @@ int VSTM(ARMul_State * state, int type, ARMword instr, ARMword * value)
 		{
 			/* FIXME Careful of endianness, may need to rework this */
 			*value = state->ExtReg[d*2 + i];
-			vfpdebug("\taddr[?] <= s[%d]=[%x]\n", d*2 + i, state->ExtReg[d*2 + i]);
+			DBG("\taddr[?] <= s[%d]=[%x]\n", d*2 + i, state->ExtReg[d*2 + i]);
 			i++;
 			if (i < regs*2)
 				return ARMul_INC;
@@ -3038,14 +3175,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -3112,15 +3249,15 @@ VFPLABEL_INST:
 
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 		
-		vfpdebug("VPOP :\n");
+		DBG("VPOP :\n");
 		
 		addr = cpu->Reg[R13];
 		fault = check_address_validity(cpu, addr, &phys_addr, 0);
 		if (fault) goto MMU_EXCEPTION;
 
-		vfpdebug("\tsp[%x]", cpu->Reg[R13]);
+		DBG("\tsp[%x]", cpu->Reg[R13]);
 		cpu->Reg[R13] = cpu->Reg[R13] + inst_cream->imm32;
-		vfpdebug("=>[%x]\n", cpu->Reg[R13]);
+		DBG("=>[%x]\n", cpu->Reg[R13]);
 
 		for (i = 0; i < inst_cream->regs; i++)
 		{
@@ -3128,7 +3265,7 @@ VFPLABEL_INST:
 			{
 				fault = interpreter_read_memory(core, addr, phys_addr, value1, 32);
 				if (fault) goto MMU_EXCEPTION;
-				vfpdebug("\ts%d <= [%x] addr[%x]\n", inst_cream->d+i, value1, addr);
+				DBG("\ts%d <= [%x] addr[%x]\n", inst_cream->d+i, value1, addr);
 				cpu->ExtReg[inst_cream->d+i] = value1;
 				addr += 4;
 				phys_addr += 4;
@@ -3140,7 +3277,7 @@ VFPLABEL_INST:
 				if (fault) goto MMU_EXCEPTION;
 				fault = interpreter_read_memory(core, addr, phys_addr, value2, 32);
 				if (fault) goto MMU_EXCEPTION;
-				vfpdebug("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, value2, value1, addr+4, addr);
+				DBG("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, value2, value1, addr+4, addr);
 				cpu->ExtReg[(inst_cream->d+i)*2] = value1;
 				cpu->ExtReg[(inst_cream->d+i)*2 + 1] = value2;
 				addr += 8;
@@ -3173,10 +3310,10 @@ int VPOP(ARMul_State * state, int type, ARMword instr, ARMword value)
 		imm32 = BITS(0,7)<<2;	/* may not be used */
 		regs = single_regs ? BITS(0, 7) : BITS(1, 7); /* FLDMX if regs is odd */
 
-		vfpdebug("VPOP :\n");
-		vfpdebug("\tsp[%x]", state->Reg[R13]);
+		DBG("VPOP :\n");
+		DBG("\tsp[%x]", state->Reg[R13]);
 		state->Reg[R13] = state->Reg[R13] + imm32;
-		vfpdebug("=>[%x]\n", state->Reg[R13]);
+		DBG("=>[%x]\n", state->Reg[R13]);
 		
 		i = 0;
 		
@@ -3191,7 +3328,7 @@ int VPOP(ARMul_State * state, int type, ARMword instr, ARMword value)
 		if (single_regs)
 		{
 			state->ExtReg[d + i] = value;
-			vfpdebug("\ts%d <= [%x]\n", d + i, value);
+			DBG("\ts%d <= [%x]\n", d + i, value);
 			i++;
 			if (i < regs)
 				return ARMul_INC;
@@ -3202,7 +3339,7 @@ int VPOP(ARMul_State * state, int type, ARMword instr, ARMword value)
 		{
 			/* FIXME Careful of endianness, may need to rework this */
 			state->ExtReg[d*2 + i] = value;
-			vfpdebug("\ts%d <= [%x]\n", d*2 + i, value);
+			DBG("\ts%d <= [%x]\n", d*2 + i, value);
 			i++;
 			if (i < regs*2)
 				return ARMul_INC;
@@ -3219,14 +3356,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -3294,7 +3431,7 @@ VFPLABEL_INST:
 		
 		unsigned int base = (inst_cream->n == 15 ? (cpu->Reg[inst_cream->n] & 0xFFFFFFFC) + 8 : cpu->Reg[inst_cream->n]);
 		addr = (inst_cream->add ? base + inst_cream->imm32 : base - inst_cream->imm32);
-		vfpdebug("VLDR :\n", addr);
+		DBG("VLDR :\n", addr);
 		
 		fault = check_address_validity(cpu, addr, &phys_addr, 0);
 		if (fault) goto MMU_EXCEPTION;
@@ -3303,7 +3440,7 @@ VFPLABEL_INST:
 		{
 			fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d], 32);
 			if (fault) goto MMU_EXCEPTION;
-			vfpdebug("\ts%d <= [%x] addr[%x]\n", inst_cream->d, cpu->ExtReg[inst_cream->d], addr);
+			DBG("\ts%d <= [%x] addr[%x]\n", inst_cream->d, cpu->ExtReg[inst_cream->d], addr);
 		}
 		else
 		{
@@ -3315,7 +3452,7 @@ VFPLABEL_INST:
 			/* Check endianness */
 			cpu->ExtReg[inst_cream->d*2] = word1;
 			cpu->ExtReg[inst_cream->d*2+1] = word2;
-			vfpdebug("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", inst_cream->d*2+1, inst_cream->d*2, word2, word1, addr+4, addr);
+			DBG("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", inst_cream->d*2+1, inst_cream->d*2, word2, word1, addr+4, addr);
 		}
 	}
 	cpu->Reg[15] += 4;
@@ -3343,7 +3480,7 @@ int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value)
 		d = single_reg ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
 		n = BITS(16, 19);	/* destination register */
 		
-		vfpdebug("VLDR :\n");
+		DBG("VLDR :\n");
 		
 		i = 0;
 		regs = 1;
@@ -3359,7 +3496,7 @@ int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value)
 		if (single_reg)
 		{
 			state->ExtReg[d+i] = value;
-			vfpdebug("\ts%d <= [%x]\n", d+i, value);
+			DBG("\ts%d <= [%x]\n", d+i, value);
 			i++;
 			if (i < regs)
 				return ARMul_INC;
@@ -3370,7 +3507,7 @@ int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value)
 		{
 			/* FIXME Careful of endianness, may need to rework this */
 			state->ExtReg[d*2+i] = value;
-			vfpdebug("\ts[%d] <= [%x]\n", d*2+i, value);
+			DBG("\ts[%d] <= [%x]\n", d*2+i, value);
 			i++;
 			if (i < regs*2)
 				return ARMul_INC;
@@ -3387,14 +3524,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -3467,7 +3604,7 @@ VFPLABEL_INST:
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 		
 		addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
-		vfpdebug("VLDM : addr[%x]\n", addr);
+		DBG("VLDM : addr[%x]\n", addr);
 		
 		fault = check_address_validity(cpu, addr, &phys_addr, 0);
 		if (fault) goto MMU_EXCEPTION;
@@ -3475,7 +3612,7 @@ VFPLABEL_INST:
 		if (inst_cream->wback){
 			cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 : 
 						   cpu->Reg[inst_cream->n] - inst_cream->imm32);
-			vfpdebug("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
+			DBG("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
 		}
 		
 		for (i = 0; i < inst_cream->regs; i++)
@@ -3484,7 +3621,7 @@ VFPLABEL_INST:
 			{
 				fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 				if (fault) goto MMU_EXCEPTION;
-				vfpdebug("\ts%d <= [%x] addr[%x]\n", inst_cream->d+i, cpu->ExtReg[inst_cream->d+i], addr);
+				DBG("\ts%d <= [%x] addr[%x]\n", inst_cream->d+i, cpu->ExtReg[inst_cream->d+i], addr);
 				addr += 4;
 				phys_addr += 4;
 			}
@@ -3495,7 +3632,7 @@ VFPLABEL_INST:
 				if (fault) goto MMU_EXCEPTION;
 				fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 				if (fault) goto MMU_EXCEPTION;
-				vfpdebug("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2], addr+4, addr);
+				DBG("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2], addr+4, addr);
 				addr += 8;
 				phys_addr += 8;
 			}
@@ -3526,11 +3663,11 @@ int VLDM(ARMul_State * state, int type, ARMword instr, ARMword value)
 		imm32 = BITS(0,7) * 4;	/* may not be used */
 		regs = single_regs ? BITS(0, 7) : BITS(0, 7)>>1; /* FLDMX if regs is odd */
 
-		vfpdebug("VLDM :\n");
+		DBG("VLDM :\n");
 		
 		if (wback) {
 			state->Reg[n] = (add ? state->Reg[n] + imm32 : state->Reg[n] - imm32);
-			vfpdebug("\twback r%d[%x]\n", n, state->Reg[n]);
+			DBG("\twback r%d[%x]\n", n, state->Reg[n]);
 		}
 		
 		i = 0;
@@ -3542,7 +3679,7 @@ int VLDM(ARMul_State * state, int type, ARMword instr, ARMword value)
 		if (single_regs)
 		{
 			state->ExtReg[d + i] = value;
-			vfpdebug("\ts%d <= [%x] addr[?]\n", d+i, state->ExtReg[d + i]);
+			DBG("\ts%d <= [%x] addr[?]\n", d+i, state->ExtReg[d + i]);
 			i++;
 			if (i < regs)
 				return ARMul_INC;
@@ -3553,7 +3690,7 @@ int VLDM(ARMul_State * state, int type, ARMword instr, ARMword value)
 		{
 			/* FIXME Careful of endianness, may need to rework this */
 			state->ExtReg[d*2 + i] = value;
-			vfpdebug("\ts[%d] <= [%x] addr[?]\n", d*2 + i, state->ExtReg[d*2 + i]);
+			DBG("\ts[%d] <= [%x] addr[?]\n", d*2 + i, state->ExtReg[d*2 + i]);
 			i++;
 			if (i < regs*2)
 				return ARMul_INC;
@@ -3570,14 +3707,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
 }
 #endif
@@ -3585,7 +3722,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 #undef vfpinstr_inst
 #undef VFPLABEL_INST
 
-#define VFP_DEBUG_TRANSLATE vfpdebug("in func %s, %x\n", __FUNCTION__, inst);
+#define VFP_DEBUG_TRANSLATE DBG("in func %s, %x\n", __FUNCTION__, inst);
 #define VFP_DEBUG_UNIMPLEMENTED(x) printf("in func %s, " #x " unimplemented\n", __FUNCTION__); exit(-1);
 #define VFP_DEBUG_UNTESTED(x) printf("in func %s, " #x " untested\n", __FUNCTION__);
 
