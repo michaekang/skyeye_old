@@ -2110,7 +2110,7 @@ INTERPRETER_TRANSLATE(vfpinstr),
 #endif
 #ifdef VFP_INTERPRETER_STRUCT
 typedef struct _vmrs_inst {
-	unsigned int Rd;
+	unsigned int Rt;
 } vfpinstr_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
@@ -2126,7 +2126,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
 	inst_base->br     = NON_BRANCH;
 	inst_base->load_r15 = 0;
 
-	inst_cream->Rd	 = BITS(inst, 12, 15);
+	inst_cream->Rt	 = BITS(inst, 12, 15);
    
 	return inst_base;
 }
@@ -2140,7 +2140,21 @@ VFPLABEL_INST:
 		
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 		
-		VMRS(cpu, inst_cream->Rd);
+		vfpdebug("VMRS :");
+	
+		if (inst_cream->Rt != 15)
+		{	
+			cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSCR];
+			vfpdebug("\tr%d <= [%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPSCR]);
+		}
+		else
+		{	
+			cpu->NFlag = (cpu->VFP[VFP_FPSCR] >> 31) & 1;
+			cpu->ZFlag = (cpu->VFP[VFP_FPSCR] >> 30) & 1;
+			cpu->CFlag = (cpu->VFP[VFP_FPSCR] >> 29) & 1;
+			cpu->VFlag = (cpu->VFP[VFP_FPSCR] >> 28) & 1;
+			vfpdebug("\tflags<=fpscr=[%1x]\n", cpu->VFP[VFP_FPSCR]>>28);
+		}
 	}
 	cpu->Reg[15] += 4;
 	INC_PC(sizeof(vfpinstr_inst));
@@ -2151,25 +2165,22 @@ VFPLABEL_INST:
 #ifdef VFP_MRC_TRANS
 if (CRn == 1 && OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
 {
-	VMRS(state, Rt);
+	VMRS(state, Rt, value);
 	return ARMul_DONE;
 }
 #endif
 #ifdef VFP_MRC_IMPL
-void VMRS(ARMul_State * state, ARMword Rt)
+void VMRS(ARMul_State * state, ARMword Rt, ARMword * value)
 {
 	vfpdebug("VMRS :");
 	if (Rt != 15)
 	{
-		state->Reg[Rt] = state->VFP[VFP_FPSCR];
+		*value = state->VFP[VFP_FPSCR];
 		vfpdebug("\tr%d <= [%08x]\n", Rt, state->VFP[VFP_FPSCR]);
 	}
 	else
 	{
-		state->NFlag = (state->VFP[VFP_FPSCR] >> 31) & 1;
-		state->ZFlag = (state->VFP[VFP_FPSCR] >> 30) & 1;
-		state->CFlag = (state->VFP[VFP_FPSCR] >> 29) & 1;
-		state->VFlag = (state->VFP[VFP_FPSCR] >> 28) & 1;
+		*value = state->VFP[VFP_FPSCR] ;
 		vfpdebug("\tflags<=fpscr=[%1x]\n", state->VFP[VFP_FPSCR]>>28);
 	}
 }
@@ -3578,6 +3589,6 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 #define VFP_DEBUG_UNIMPLEMENTED(x) printf("in func %s, " #x " unimplemented\n", __FUNCTION__); exit(-1);
 #define VFP_DEBUG_UNTESTED(x) printf("in func %s, " #x " untested\n", __FUNCTION__);
 
-#define CHECK_VFP_ENABLED
+#define CHECK_VFP_ENABLED	
 	
 #define CHECK_VFP_CDP_RET	vfp_raise_exceptions(ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}

@@ -220,11 +220,16 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 		#define VFP_CDP_TRANS
 		#include "vfp/vfpinstr.c"
 		#undef VFP_CDP_TRANS
+		
+		int exceptions = 0;
 
 		if (CoProc == 10)
-			vfp_single_cpdo(instr, state->VFP[VFP_FPSCR]);
+			exceptions = vfp_single_cpdo(instr, state->VFP[VFP_FPSCR]);
 		else 
-			vfp_double_cpdo(instr, state->VFP[VFP_FPSCR]);
+			exceptions = vfp_double_cpdo(instr, state->VFP[VFP_FPSCR]);
+
+		vfp_raise_exceptions(exceptions, instr, state->VFP[VFP_FPSCR]);
+
 		return ARMul_DONE;
 	}
 	printf("VFPCDP: can't identify %x\n", instr);
