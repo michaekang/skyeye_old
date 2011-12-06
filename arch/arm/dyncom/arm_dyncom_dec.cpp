@@ -1068,8 +1068,10 @@ uint32_t boperand(uint32_t instr)
 #define CHECK_RN_PC  (RN==15? ADD(R(RN), CONST(8)):R(RN))
 #endif
 
-
 const ISEITEM arm_instruction[] = {
+	#define VFP_DECODE
+	#include "vfp/vfpinstr.c"
+	#undef VFP_DECODE
         {"adc",         2,      ARMALL,         26, 27, 0,      21, 24, 5},
         {"add",         2,      ARMALL,         26, 27, 0,      21, 24, 4},
         {"and",         2,      ARMALL,         26, 27, 0,      21, 24, 0},
@@ -1220,11 +1222,13 @@ const ISEITEM arm_instruction[] = {
         {"usub8",       2,      ARMV6,          20, 27, 0x65,   4, 7, 0xf},
         {"usubaddx",    2,      ARMV6,          20, 27, 0x65,   4, 7, 5},
         {"uxtab16",     2,      ARMV6,          20, 27, 0x6c,   4, 7, 7},
-        {"uxtb16",      2,      ARMV6,          16, 27, 0x6cf,  4, 7, 7}
+        {"uxtb16",      2,      ARMV6,          16, 27, 0x6cf,  4, 7, 7},
 };
 
-
 const ISEITEM arm_exclusion_code[] = {
+	#define VFP_DECODE_EXCLUSION
+	#include "vfp/vfpinstr.c"
+	#undef VFP_DECODE_EXCLUSION
         {"adc",         3,      ARMALL,		4, 4, 1,	7, 7, 1,	25, 25, 0}, 
         {"add",         3,      ARMALL, 	4, 4, 1,	7, 7, 1,	25, 25, 0}, 
         {"and",         3,      ARMALL, 	4, 4, 1,	7, 7, 1,	25, 25, 0},        

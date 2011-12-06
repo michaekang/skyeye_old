@@ -4012,10 +4012,11 @@ ARMul_Emulate26 (ARMul_State * state)
 						}
 					}
 					else
-						/* FIXME: Not sure what to do for other v5 processors.  */
-						ARMul_UndefInstr (state,
-								  instr);
-					break;
+					{
+						/* MCRR, ARMv5TE and up */
+						ARMul_MCRR (state, instr, DEST, state->Reg[LHSReg]);
+						break;
+					}
 				}
 				/* Drop through.  */
 
@@ -4072,10 +4073,11 @@ ARMul_Emulate26 (ARMul_State * state)
 						}
 					}
 					else
-						/* FIXME: Not sure what to do for other v5 processors.  */
-						ARMul_UndefInstr (state,
-								  instr);
-					break;
+					{
+						/* MRRC, ARMv5TE and up */
+						ARMul_MRRC (state, instr, &DEST, &(state->Reg[LHSReg]));
+						break;
+ 					}
 				}
 				/* Drop through.  */
 

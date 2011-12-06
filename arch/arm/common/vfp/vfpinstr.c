@@ -1,0 +1,3583 @@
+/*
+    vfp/vfpinstr.c - ARM VFPv3 emulation unit - Individual instructions data
+    Copyright (C) 2003 Skyeye Develop Group
+    for help please send mail to <skyeye-developer@lists.gro.clinux.org>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+/* Notice: this file should not be compiled as is, and is meant to be
+   included in other files only. */
+
+/* ----------------------------------------------------------------------- */
+/* CDP instructions */
+/* cond 1110 opc1 CRn- CRd- copr op20 CRm- CDP */
+
+/* ----------------------------------------------------------------------- */
+/* VMLA */
+/* cond 1110 0D00 Vn-- Vd-- 101X N0M0 Vm-- */
+#define vfpinstr 	vmla
+#define vfpinstr_inst 	vmla_inst
+#define VFPLABEL_INST 	VMLA_INST
+#ifdef VFP_DECODE
+{"vmla",        5,      ARMVFP2,        23, 27, 0x1c,   20, 21, 0x0,    9, 11, 0x5,     6, 6, 0,        4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmla",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmla_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMLS */
+/* cond 1110 0D00 Vn-- Vd-- 101X N1M0 Vm-- */
+#define vfpinstr 	vmls
+#define vfpinstr_inst 	vmls_inst
+#define VFPLABEL_INST 	VMLS_INST
+#ifdef VFP_DECODE
+{"vmls",        5,      ARMVFP2,        23, 27, 0x1c,   20, 21, 0x0,    9, 11, 0x5,     6, 6, 1,        4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmls",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmls_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VNMLA */
+/* cond 1110 0D01 Vn-- Vd-- 101X N1M0 Vm-- */
+#define vfpinstr 	vnmla
+#define vfpinstr_inst 	vnmla_inst
+#define VFPLABEL_INST 	VNMLA_INST
+#ifdef VFP_DECODE
+{"vnmla",       5,      ARMVFP2,        23, 27, 0x1c,   20, 21, 0x0,    9, 11, 0x5,     6, 6, 1,        4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vnmla",       0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vnmla_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VNMLS */
+/* cond 1110 0D01 Vn-- Vd-- 101X N0M0 Vm-- */
+#define vfpinstr 	vnmls
+#define vfpinstr_inst 	vnmls_inst
+#define VFPLABEL_INST 	VNMLS_INST
+#ifdef VFP_DECODE
+{"vnmls",       5,      ARMVFP2,        23, 27, 0x1c,   20, 21, 0x0,    9, 11, 0x5,     6, 6, 0,        4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vnmls",       0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vnmls_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VNMUL */
+/* cond 1110 0D10 Vn-- Vd-- 101X N0M0 Vm-- */
+#define vfpinstr 	vnmul
+#define vfpinstr_inst 	vnmul_inst
+#define VFPLABEL_INST 	VNMUL_INST
+#ifdef VFP_DECODE
+{"vnmul",       5,      ARMVFP2,        23, 27, 0x1c,   20, 21, 0x2,    9, 11, 0x5,     6, 6, 1,        4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vnmul",       0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vnmul_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMUL */
+/* cond 1110 0D10 Vn-- Vd-- 101X N0M0 Vm-- */
+#define vfpinstr 	vmul
+#define vfpinstr_inst 	vmul_inst
+#define VFPLABEL_INST 	VMUL_INST
+#ifdef VFP_DECODE
+{"vmul",        5,      ARMVFP2,        23, 27, 0x1c,  20, 21, 0x2,     9, 11, 0x5,      6, 6, 0,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmul",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmul_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VADD */
+/* cond 1110 0D11 Vn-- Vd-- 101X N0M0 Vm-- */
+#define vfpinstr 	vadd
+#define vfpinstr_inst 	vadd_inst
+#define VFPLABEL_INST 	VADD_INST
+#ifdef VFP_DECODE
+{"vadd",        5,      ARMVFP2,        23, 27, 0x1c,  20, 21, 0x3,     9, 11, 0x5,      6, 6, 0,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vadd",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vadd_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VSUB */
+/* cond 1110 0D11 Vn-- Vd-- 101X N1M0 Vm-- */
+#define vfpinstr 	vsub
+#define vfpinstr_inst 	vsub_inst
+#define VFPLABEL_INST 	VSUB_INST
+#ifdef VFP_DECODE
+{"vsub",        5,      ARMVFP2,        23, 27, 0x1c,  20, 21, 0x3,     9, 11, 0x5,      6, 6, 1,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vsub",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vsub_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VDIV */
+/* cond 1110 1D00 Vn-- Vd-- 101X N0M0 Vm-- */
+#define vfpinstr 	vdiv
+#define vfpinstr_inst 	vdiv_inst
+#define VFPLABEL_INST 	VDIV_INST
+#ifdef VFP_DECODE
+{"vdiv",        5,      ARMVFP2,        23, 27, 0x1d,  20, 21, 0x0,     9, 11, 0x5,      6, 6, 0,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vdiv",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vdiv_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMOVI move immediate */
+/* cond 1110 1D11 im4H Vd-- 101X 0000 im4L */
+/* cond 1110 opc1 CRn- CRd- copr op20 CRm- CDP */
+#define vfpinstr 	vmovi
+#define vfpinstr_inst 	vmovi_inst
+#define VFPLABEL_INST 	VMOVI_INST
+#ifdef VFP_DECODE
+{"vmov(i)",       4,      ARMVFP3,        23, 27, 0x1d,   20, 21, 0x3,    9, 11, 0x5,     4, 7, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmov(i)",       0,      ARMVFP3, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmovi_inst {
+	unsigned int single;
+	unsigned int d;
+	unsigned int imm;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+	
+	inst_cream->single   = BIT(inst, 8) == 0;
+	inst_cream->d        = (inst_cream->single ? BITS(inst,12,15)<<1 | BIT(inst,22) : BITS(inst,12,15) | BIT(inst,22)<<4);
+	unsigned int imm8 = BITS(inst, 16, 19) << 4 | BITS(inst, 0, 3);
+	if (inst_cream->single)
+		inst_cream->imm = BIT(imm8, 7)<<31 | (BIT(imm8, 6)==0)<<30 | (BIT(imm8, 6) ? 0x1f : 0)<<25 | BITS(imm8, 0, 5)<<19;
+	else
+		inst_cream->imm = BIT(imm8, 7)<<31 | (BIT(imm8, 6)==0)<<30 | (BIT(imm8, 6) ? 0xff : 0)<<22 | BITS(imm8, 0, 5)<<16;
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		VMOVI(cpu, inst_cream->single, inst_cream->d, inst_cream->imm);
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_CDP_TRANS
+if ( (OPC_1 & 0xb) == 0xb && BITS(4, 7) == 0)
+{
+	unsigned int single   = BIT(8) == 0;
+	unsigned int d        = (single ? BITS(12,15)<<1 | BIT(22) : BITS(12,15) | BIT(22)<<4);
+	unsigned int imm;
+	instr = BITS(16, 19) << 4 | BITS(0, 3); /* FIXME dirty workaround to get a correct imm */
+	if (single) {
+		imm = BIT(7)<<31 | (BIT(6)==0)<<30 | (BIT(6) ? 0x1f : 0)<<25 | BITS(0, 5)<<19;
+	} else {
+		imm = BIT(7)<<31 | (BIT(6)==0)<<30 | (BIT(6) ? 0xff : 0)<<22 | BITS(0, 5)<<16;
+	}
+	VMOVI(state, single, d, imm);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_CDP_IMPL
+void VMOVI(ARMul_State * state, ARMword single, ARMword d, ARMword imm)
+{
+	vfpdebug("VMOV(I) :\n");
+		
+	if (single)
+	{
+		vfpdebug("\ts%d <= [%x]\n", d, imm);
+		state->ExtReg[d] = imm;
+	}
+	else
+	{
+		/* Check endian please */
+		vfpdebug("\ts[%d-%d] <= [%x-%x]\n", d*2+1, d*2, imm, 0);
+		state->ExtReg[d*2+1] = imm;
+		state->ExtReg[d*2] = 0;
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMOVR move register */
+/* cond 1110 1D11 0000 Vd-- 101X 01M0 Vm-- */
+/* cond 1110 opc1 CRn- CRd- copr op20 CRm- CDP */
+#define vfpinstr 	vmovr
+#define vfpinstr_inst 	vmovr_inst
+#define VFPLABEL_INST 	VMOVR_INST
+#ifdef VFP_DECODE
+{"vmov(r)",       5,      ARMVFP3,        23, 27, 0x1d,   16, 21, 0x30,    9, 11, 0x5,    6, 7, 1,        4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmov(r)",       0,      ARMVFP3, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmovr_inst {
+	unsigned int single;
+	unsigned int d;
+	unsigned int m;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	VFP_DEBUG_UNTESTED(VMOVR);
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+	
+	inst_cream->single   = BIT(inst, 8) == 0;
+	inst_cream->d        = (inst_cream->single ? BITS(inst,12,15)<<1 | BIT(inst,22) : BITS(inst,12,15) | BIT(inst,22)<<4);
+	inst_cream->m        = (inst_cream->single ? BITS(inst, 0, 3)<<1 | BIT(inst, 5) : BITS(inst, 0, 3) | BIT(inst, 5)<<4);
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		VMOVR(cpu, inst_cream->single, inst_cream->d, inst_cream->m);
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_CDP_TRANS
+if ( (OPC_1 & 0xb) == 0xb && CRn == 0 && (OPC_2 & 0x6) == 0x2 )
+{
+	unsigned int single   = BIT(8) == 0;
+	unsigned int d        = (single ? BITS(12,15)<<1 | BIT(22) : BITS(12,15) | BIT(22)<<4);
+	unsigned int m        = (single ? BITS( 0, 3)<<1 | BIT( 5) : BITS( 0, 3) | BIT( 5)<<4);;
+	VMOVR(state, single, d, m);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_CDP_IMPL
+void VMOVR(ARMul_State * state, ARMword single, ARMword d, ARMword m)
+{
+	vfpdebug("VMOV(R) :\n");
+		
+	if (single)
+	{
+		vfpdebug("\ts%d <= s%d[%x]\n", d, m, state->ExtReg[m]);
+		state->ExtReg[d] = state->ExtReg[m];
+	}
+	else
+	{
+		/* Check endian please */
+		vfpdebug("\ts[%d-%d] <= s[%d-%d][%x-%x]\n", d*2+1, d*2, m*2+1, m*2, state->ExtReg[m*2+1], state->ExtReg[m*2]);
+		state->ExtReg[d*2+1] = state->ExtReg[m*2+1];
+		state->ExtReg[d*2] = state->ExtReg[m*2];
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VABS */
+/* cond 1110 1D11 0000 Vd-- 101X 11M0 Vm-- */
+#define vfpinstr 	vabs
+#define vfpinstr_inst 	vabs_inst
+#define VFPLABEL_INST 	VABS_INST
+#ifdef VFP_DECODE
+{"vabs",        5,      ARMVFP2,        23, 27, 0x1d,  16, 21, 0x30,    9, 11, 0x5,      6, 7, 3,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vabs",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vabs_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;VFP_DEBUG_UNTESTED(VABS);
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VNEG */
+/* cond 1110 1D11 0001 Vd-- 101X 11M0 Vm-- */
+#define vfpinstr 	vneg
+#define vfpinstr_inst 	vneg_inst
+#define VFPLABEL_INST 	VNEG_INST
+#ifdef VFP_DECODE
+{"vneg",        5,      ARMVFP2,        23, 27, 0x1d,  16, 21, 0x30,    9, 11, 0x5,      6, 7, 1,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vneg",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vneg_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;VFP_DEBUG_UNTESTED(VNEG);
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VSQRT */
+/* cond 1110 1D11 0001 Vd-- 101X 11M0 Vm-- */
+#define vfpinstr 	vsqrt
+#define vfpinstr_inst 	vsqrt_inst
+#define VFPLABEL_INST 	VSQRT_INST
+#ifdef VFP_DECODE
+{"vsqrt",        5,      ARMVFP2,        23, 27, 0x1d,  16, 21, 0x31,    9, 11, 0x5,      6, 7, 3,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vsqrt",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vsqrt_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VCMP VCMPE */
+/* cond 1110 1D11 0100 Vd-- 101X E1M0 Vm-- Encoding 1 */
+#define vfpinstr 	vcmp
+#define vfpinstr_inst 	vcmp_inst
+#define VFPLABEL_INST 	VCMP_INST
+#ifdef VFP_DECODE
+{"vcmp",        5,      ARMVFP2,        23, 27, 0x1d,  16, 21, 0x34,    9, 11, 0x5,      6, 6, 1,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vcmp",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vcmp_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VCMP VCMPE */
+/* cond 1110 1D11 0100 Vd-- 101X E1M0 Vm-- Encoding 2 */
+#define vfpinstr 	vcmp2
+#define vfpinstr_inst 	vcmp2_inst
+#define VFPLABEL_INST 	VCMP2_INST
+#ifdef VFP_DECODE
+{"vcmp2",        5,      ARMVFP2,        23, 27, 0x1d,  16, 21, 0x35,    9, 11, 0x5,     0, 6, 0x40},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vcmp2",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vcmp2_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VCVTBDS between double and single */
+/* cond 1110 1D11 0111 Vd-- 101X 11M0 Vm-- */
+#define vfpinstr 	vcvtbds
+#define vfpinstr_inst 	vcvtbds_inst
+#define VFPLABEL_INST 	VCVTBDS_INST
+#ifdef VFP_DECODE
+{"vcvt(bds)",   5,      ARMVFP2,        23, 27, 0x1d,  16, 21, 0x37,    9, 11, 0x5,      6, 7, 3,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vcvt(bds)",        0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vcvtbds_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VCVTBFI between floating point and integer */
+/* cond 1110 1D11 1op2 Vd-- 101X X1M0 Vm-- */
+#define vfpinstr 	vcvtbfi
+#define vfpinstr_inst 	vcvtbfi_inst
+#define VFPLABEL_INST 	VCVTBFI_INST
+#ifdef VFP_DECODE
+{"vcvt(bfi)",   5,      ARMVFP2,        23, 27, 0x1d,  19, 21, 0x7,     9, 11, 0x5,      6, 6, 1,     4, 4, 0},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vcvt(bfi)",   0,      ARMVFP2, 0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vcvtbfi_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VCVTBFF between floating point and fixed point */
+/* cond 1110 1D11 1op2 Vd-- 101X X1M0 Vm-- */
+#define vfpinstr 	vcvtbff
+#define vfpinstr_inst 	vcvtbff_inst
+#define VFPLABEL_INST 	VCVTBFF_INST
+#ifdef VFP_DECODE
+{"vcvt(bff)",   6,      ARMVFP3,        23, 27, 0x1d,  19, 21, 0x7,     17, 17, 0x1,      9, 11, 0x5,  	6, 6, 1},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vcvt(bff)",   1,      ARMVFP3,         4, 4, 1},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vcvtbff_inst {
+	unsigned int instr;
+	unsigned int dp_operation;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;VFP_DEBUG_UNTESTED(VCVTBFF);
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->dp_operation = BIT(inst, 8);
+	inst_cream->instr = inst;
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		int ret;
+		
+		if (inst_cream->dp_operation)
+			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+		else
+			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+
+		CHECK_VFP_CDP_RET;
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* MRC / MCR instructions */
+/* cond 1110 AAAL XXXX XXXX 101C XBB1 XXXX */
+/* cond 1110 op11 CRn- Rt-- copr op21 CRm- */
+
+/* ----------------------------------------------------------------------- */
+/* VMOVBRS between register and single precision */
+/* cond 1110 000o Vn-- Rt-- 1010 N001 0000 */
+/* cond 1110 op11 CRn- Rt-- copr op21 CRm- MRC */
+#define vfpinstr 	vmovbrs
+#define vfpinstr_inst 	vmovbrs_inst
+#define VFPLABEL_INST 	VMOVBRS_INST
+#ifdef VFP_DECODE
+{"vmovbrs",    3,    ARMVFP2,    21, 27, 0x70,    8, 11, 0xA,    0, 6, 0x10},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmovbrs",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmovbrs_inst {
+	unsigned int to_arm;
+	unsigned int t;
+	unsigned int n;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->to_arm   = BIT(inst, 20) == 1;
+	inst_cream->t        = BITS(inst, 12, 15);
+	inst_cream->n        = BIT(inst, 7) | BITS(inst, 16, 19)<<1;
+
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+           
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		VMOVBRS(cpu, inst_cream->to_arm, inst_cream->t, inst_cream->n, &(cpu->Reg[inst_cream->t]));
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_MRC_TRANS
+if (OPC_1 == 0x0 && CRm == 0 && (OPC_2 & 0x3) == 0)
+{
+	/* VMOV r to s */
+	/* Transfering Rt is not mandatory, as the value of interest is pointed by value */
+	VMOVBRS(state, BIT(20), Rt, BIT(7)|CRn<<1, value);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_MCR_TRANS
+if (OPC_1 == 0x0 && CRm == 0 && (OPC_2 & 0x3) == 0)
+{
+	/* VMOV s to r */
+	/* Transfering Rt is not mandatory, as the value of interest is pointed by value */
+	VMOVBRS(state, BIT(20), Rt, BIT(7)|CRn<<1, &value);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_MRC_IMPL
+void VMOVBRS(ARMul_State * state, ARMword to_arm, ARMword t, ARMword n, ARMword *value)
+{
+	vfpdebug("VMOV(BRS) :\n");
+	if (to_arm)
+	{
+		vfpdebug("\tr%d <= s%d=[%x]\n", t, n, state->ExtReg[n]);
+		*value = state->ExtReg[n];
+	}
+	else
+	{
+		vfpdebug("\ts%d <= r%d=[%x]\n", n, t, *value);
+		state->ExtReg[n] = *value;
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMSR */
+/* cond 1110 1110 0001 Rt-- 1010 0001 0000 */
+/* cond 1110 op10 CRn- Rt-- copr op21 CRm- MCR */
+#define vfpinstr 	vmsr
+#define vfpinstr_inst 	vmsr_inst
+#define VFPLABEL_INST 	VMSR_INST
+#ifdef VFP_DECODE
+{"vmsr",    2,    ARMVFP2,    16, 27, 0xEE1,    0, 11, 0xA10},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmsr",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmsr_inst {
+	unsigned int Rd;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rd   = BITS(inst, 12, 15);
+   
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+           
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		VMSR(cpu, inst_cream->Rd);
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_MCR_TRANS
+if (CRn == 1 && OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
+{
+	VMSR(state, Rt);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_MCR_IMPL
+void VMSR(ARMul_State * state, ARMword Rt)
+{
+	vfpdebug("VMSR :\tfpscr <= r%d=[%x]\n", Rt, state->Reg[Rt]);
+	state->VFP[VFP_FPSCR] = state->Reg[Rt];
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMOVBRC register to scalar */
+/* cond 1110 0XX0 Vd-- Rt-- 1011 DXX1 0000 */
+/* cond 1110 op10 CRn- Rt-- copr op21 CRm- MCR */
+#define vfpinstr 	vmovbrc
+#define vfpinstr_inst 	vmovbrc_inst
+#define VFPLABEL_INST 	VMOVBRC_INST
+#ifdef VFP_DECODE
+{"vmovbrc",    4,    ARMVFP2,    23, 27, 0x1C,    20, 20, 0x0,    8,11,0xB,    0,4,0x10},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmovbrc",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmovbrc_inst {
+	unsigned int esize;
+	unsigned int index;
+	unsigned int d;
+	unsigned int t;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->d     = BITS(inst, 16, 19)|BIT(inst, 7)<<4;
+	inst_cream->t     = BITS(inst, 12, 15);
+	/* VFP variant of instruction */
+	inst_cream->esize = 32;
+	inst_cream->index = BIT(inst, 21);
+   
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		VFP_DEBUG_UNIMPLEMENTED(VMOVBRC);
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_MCR_TRANS
+if ((OPC_1 & 0x4) == 0 && CoProc == 11 && CRm == 0)
+{
+	VFP_DEBUG_UNIMPLEMENTED(VMOVBRC);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMRS */
+/* cond 1110 1111 0001 Rt-- 1010 0001 0000 */
+/* cond 1110 op11 CRn- Rt-- copr op21 CRm- MRC */
+#define vfpinstr 	vmrs
+#define vfpinstr_inst 	vmrs_inst
+#define VFPLABEL_INST 	VMRS_INST
+#ifdef VFP_DECODE
+{"vmrs",        2,      ARMVFP2,        16, 27, 0xef1,     0, 11, 0xa10},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmrs",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmrs_inst {
+	unsigned int Rd;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rd	 = BITS(inst, 12, 15);
+   
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		VMRS(cpu, inst_cream->Rd);
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_MRC_TRANS
+if (CRn == 1 && OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
+{
+	VMRS(state, Rt);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_MRC_IMPL
+void VMRS(ARMul_State * state, ARMword Rt)
+{
+	vfpdebug("VMRS :");
+	if (Rt != 15)
+	{
+		state->Reg[Rt] = state->VFP[VFP_FPSCR];
+		vfpdebug("\tr%d <= [%08x]\n", Rt, state->VFP[VFP_FPSCR]);
+	}
+	else
+	{
+		state->NFlag = (state->VFP[VFP_FPSCR] >> 31) & 1;
+		state->ZFlag = (state->VFP[VFP_FPSCR] >> 30) & 1;
+		state->CFlag = (state->VFP[VFP_FPSCR] >> 29) & 1;
+		state->VFlag = (state->VFP[VFP_FPSCR] >> 28) & 1;
+		vfpdebug("\tflags<=fpscr=[%1x]\n", state->VFP[VFP_FPSCR]>>28);
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMOVBCR scalar to register */
+/* cond 1110 XXX1 Vd-- Rt-- 1011 NXX1 0000 */
+/* cond 1110 op11 CRn- Rt-- copr op21 CRm- MCR */
+#define vfpinstr 	vmovbcr
+#define vfpinstr_inst 	vmovbcr_inst
+#define VFPLABEL_INST 	VMOVBCR_INST
+#ifdef VFP_DECODE
+{"vmovbcr",    4,    ARMVFP2,    24, 27, 0xE,    20, 20, 1,    8, 11,0xB,    0,4, 0x10},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmovbcr",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmovbcr_inst {
+	unsigned int esize;
+	unsigned int index;
+	unsigned int d;
+	unsigned int t;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->d     = BITS(inst, 16, 19)|BIT(inst, 7)<<4;
+	inst_cream->t     = BITS(inst, 12, 15);
+	/* VFP variant of instruction */
+	inst_cream->esize = 32;
+	inst_cream->index = BIT(inst, 21);
+   
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		VFP_DEBUG_UNIMPLEMENTED(VMOVBCR);
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_MCR_TRANS
+if (CoProc == 11 && CRm == 0)
+{
+	VFP_DEBUG_UNIMPLEMENTED(VMOVBCR);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* MRRC / MCRR instructions */
+/* cond 1100 0101 Rt2- Rt-- copr opc1 CRm- MRRC */
+/* cond 1100 0100 Rt2- Rt-- copr opc1 CRm- MCRR */
+
+/* ----------------------------------------------------------------------- */
+/* VMOVBRRSS between 2 registers to 2 singles */
+/* cond 1100 010X Rt2- Rt-- 1010 00X1 Vm-- */
+/* cond 1100 0101 Rt2- Rt-- copr opc1 CRm- MRRC */
+#define vfpinstr 	vmovbrrss
+#define vfpinstr_inst 	vmovbrrss_inst
+#define VFPLABEL_INST 	VMOVBRRSS_INST
+#ifdef VFP_DECODE
+{"vmovbrrss",    3,    ARMVFP2,    21, 27, 0x62,    8, 11, 0xA,    4, 4, 1},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmovbrrss",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmovbrrss_inst {
+	unsigned int to_arm;
+	unsigned int t;
+	unsigned int t2;
+	unsigned int m;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->to_arm     = BIT(inst, 20) == 1;
+	inst_cream->t          = BITS(inst, 12, 15);
+	inst_cream->t2         = BITS(inst, 16, 19);
+	inst_cream->m          = BITS(inst, 0, 3)<<1|BIT(inst, 5);
+   
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		VFP_DEBUG_UNIMPLEMENTED(VMOVBRRSS);
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_MCRR_TRANS
+if (CoProc == 10 && (OPC_1 & 0xD) == 1)
+{
+	VFP_DEBUG_UNIMPLEMENTED(VMOVBRRSS);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_MRRC_TRANS
+if (CoProc == 10 && (OPC_1 & 0xD) == 1)
+{
+	VFP_DEBUG_UNIMPLEMENTED(VMOVBRRSS);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VMOVBRRD between 2 registers and 1 double */
+/* cond 1100 010X Rt2- Rt-- 1011 00X1 Vm-- */
+/* cond 1100 0101 Rt2- Rt-- copr opc1 CRm- MRRC */
+#define vfpinstr 	vmovbrrd
+#define vfpinstr_inst 	vmovbrrd_inst
+#define VFPLABEL_INST 	VMOVBRRD_INST
+#ifdef VFP_DECODE
+{"vmovbrrd",    3,    ARMVFP2,    21, 27, 0x62,    6, 11, 0x2c,    4, 4, 1},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vmovbrrd",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vmovbrrd_inst {
+	unsigned int to_arm;
+	unsigned int t;
+	unsigned int t2;
+	unsigned int m;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->to_arm   = BIT(inst, 20) == 1;
+	inst_cream->t        = BITS(inst, 12, 15);
+	inst_cream->t2       = BITS(inst, 16, 19);
+	inst_cream->m        = BIT(inst, 5)<<4 | BITS(inst, 0, 3);
+
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		VMOVBRRD(cpu, inst_cream->to_arm, inst_cream->t, inst_cream->t2, inst_cream->m, 
+				&(cpu->Reg[inst_cream->t]), &(cpu->Reg[inst_cream->t2]));
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_MCRR_TRANS
+if (CoProc == 11 && (OPC_1 & 0xD) == 1)
+{
+	/* Transfering Rt and Rt2 is not mandatory, as the value of interest is pointed by value1 and value2 */
+	VMOVBRRD(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, &value1, &value2);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_MRRC_TRANS
+if (CoProc == 11 && (OPC_1 & 0xD) == 1)
+{
+	/* Transfering Rt and Rt2 is not mandatory, as the value of interest is pointed by value1 and value2 */
+	VMOVBRRD(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, value1, value2);
+	return ARMul_DONE;
+}
+#endif
+#ifdef VFP_MRRC_IMPL
+void VMOVBRRD(ARMul_State * state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword *value1, ARMword *value2)
+{
+	vfpdebug("VMOV(BRRD) :\n");
+	if (to_arm)
+	{
+		vfpdebug("\tr[%d-%d] <= s[%d-%d]=[%x-%x]\n", t2, t, n*2+1, n*2, state->ExtReg[n*2+1], state->ExtReg[n*2]);
+		*value2 = state->ExtReg[n*2+1];
+		*value1 = state->ExtReg[n*2];
+	}
+	else
+	{
+		vfpdebug("\ts[%d-%d] <= r[%d-%d]=[%x-%x]\n", n*2+1, n*2, t2, t, *value2, *value1);
+		state->ExtReg[n*2+1] = *value2;
+		state->ExtReg[n*2] = *value1;
+	}
+}
+
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* LDC/STC between 2 registers and 1 double */
+/* cond 110X XXX1 Rn-- CRd- copr imm- imm- LDC */
+/* cond 110X XXX0 Rn-- CRd- copr imm8 imm8 STC */
+
+/* ----------------------------------------------------------------------- */
+/* VSTR */
+/* cond 1101 UD00 Rn-- Vd-- 101X imm8 imm8 */
+#define vfpinstr 	vstr
+#define vfpinstr_inst 	vstr_inst
+#define VFPLABEL_INST 	VSTR_INST
+#ifdef VFP_DECODE
+{"vstr",        3,      ARMVFP2,        24, 27, 0xd,   20, 21, 0,       9, 11, 0x5},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vstr",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vstr_inst {
+	unsigned int single;
+	unsigned int n;
+	unsigned int d;
+	unsigned int imm32;
+	unsigned int add;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+	
+	inst_cream->single = BIT(inst, 8) == 0;
+	inst_cream->add	   = BIT(inst, 23);
+	inst_cream->imm32  = BITS(inst, 0,7) << 2;
+	inst_cream->d      = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
+	inst_cream->n	   = BITS(inst, 16, 19);
+
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		unsigned int base = (inst_cream->n == 15 ? (cpu->Reg[inst_cream->n] & 0xFFFFFFFC) + 8 : cpu->Reg[inst_cream->n]);
+		addr = (inst_cream->add ? base + inst_cream->imm32 : base - inst_cream->imm32);
+		vfpdebug("VSTR :\n");
+		
+		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		if (fault) goto MMU_EXCEPTION;
+		
+		if (inst_cream->single)
+		{
+			fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d], 32);
+			if (fault) goto MMU_EXCEPTION;
+			vfpdebug("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d, cpu->ExtReg[inst_cream->d]);
+		}
+		else
+		{
+			/* Check endianness */
+			fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d*2], 32);
+			if (fault) goto MMU_EXCEPTION;
+			fault = interpreter_write_memory(core, addr + 4, phys_addr + 4, cpu->ExtReg[inst_cream->d*2+1], 32);
+			if (fault) goto MMU_EXCEPTION;
+			vfpdebug("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, inst_cream->d*2+1, inst_cream->d*2, cpu->ExtReg[inst_cream->d*2+1], cpu->ExtReg[inst_cream->d*2]);
+		}
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_STC_TRANS
+if (P == 1 && W == 0)
+{
+	return VSTR(state, type, instr, value);
+}
+#endif
+#ifdef VFP_STC_IMPL
+int VSTR(ARMul_State * state, int type, ARMword instr, ARMword * value)
+{
+	static int i = 0;
+	static int single_reg, add, d, n, imm32, regs;
+	if (type == ARMul_FIRST)
+	{
+		single_reg = BIT(8) == 0;	/* Double precision */
+		add = BIT(23);		/* */
+		imm32 = BITS(0,7)<<2;	/* may not be used */
+		d = single_reg ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+		n = BITS(16, 19);	/* destination register */
+		
+		vfpdebug("VSTR :\n");
+		
+		i = 0;
+		regs = 1;
+		
+		return ARMul_DONE;
+	}
+	else if (type == ARMul_DATA)
+	{
+		if (single_reg)
+		{
+			*value = state->ExtReg[d+i];
+			vfpdebug("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d+i]);
+			i++;
+			if (i < regs)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+		else
+		{
+			/* FIXME Careful of endianness, may need to rework this */
+			*value = state->ExtReg[d*2+i];
+			vfpdebug("\taddr[?] <= s[%d]=[%x]\n", d*2+i, state->ExtReg[d*2+i]);
+			i++;
+			if (i < regs*2)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VPUSH */
+/* cond 1101 0D10 1101 Vd-- 101X imm8 imm8 */
+#define vfpinstr 	vpush
+#define vfpinstr_inst 	vpush_inst
+#define VFPLABEL_INST 	VPUSH_INST
+#ifdef VFP_DECODE
+{"vpush",       3,      ARMVFP2,        23, 27, 0x1a,  16, 21, 0x2d,    9, 11, 0x5},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vpush",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vpush_inst {
+	unsigned int single;
+	unsigned int d;
+	unsigned int imm32;
+	unsigned int regs;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->single  = BIT(inst, 8) == 0;
+	inst_cream->d       = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
+	inst_cream->imm32   = BITS(inst, 0, 7)<<2;
+	inst_cream->regs    = (inst_cream->single ? BITS(inst, 0, 7) : BITS(inst, 1, 7));
+
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+				
+		int i;
+
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+		vfpdebug("VPUSH :\n");
+			
+		addr = cpu->Reg[R13] - inst_cream->imm32;
+		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		if (fault) goto MMU_EXCEPTION;
+
+		vfpdebug("\tsp[%x]", cpu->Reg[R13]);
+		cpu->Reg[R13] = cpu->Reg[R13] - inst_cream->imm32;
+		vfpdebug("=>[%x]\n", cpu->Reg[R13]);
+
+		for (i = 0; i < inst_cream->regs; i++)
+		{
+			if (inst_cream->single)
+			{
+				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+				if (fault) goto MMU_EXCEPTION;
+				vfpdebug("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
+				addr += 4;
+				phys_addr += 4;
+			}
+			else
+			{
+				/* Careful of endianness, little by default */
+				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
+				if (fault) goto MMU_EXCEPTION;
+				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+				if (fault) goto MMU_EXCEPTION;
+				vfpdebug("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
+				addr += 8;
+				phys_addr += 8;
+			}
+		}
+		
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vpush_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_STC_TRANS
+if (P == 1 && U == 0 && W == 1 && Rn == 0xD)
+{
+	return VPUSH(state, type, instr, value);
+}
+#endif
+#ifdef VFP_STC_IMPL
+int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword * value)
+{
+	static int i = 0;
+	static int single_regs, add, wback, d, n, imm32, regs;
+	if (type == ARMul_FIRST)
+	{
+		single_regs = BIT(8) == 0;	/* Single precision */
+		d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+		imm32 = BITS(0,7)<<2;	/* may not be used */
+		regs = single_regs ? BITS(0, 7) : BITS(1, 7); /* FSTMX if regs is odd */
+
+		vfpdebug("VPUSH :\n");
+		vfpdebug("\tsp[%x]", state->Reg[R13]);
+		state->Reg[R13] = state->Reg[R13] - imm32;
+		vfpdebug("=>[%x]\n", state->Reg[R13]);
+		
+		i = 0;
+		
+		return ARMul_DONE;
+	} 
+	else if (type == ARMul_DATA)
+	{
+		if (single_regs)
+		{
+			*value = state->ExtReg[d + i];
+			vfpdebug("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d + i]);
+			i++;
+			if (i < regs)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+		else
+		{
+			/* FIXME Careful of endianness, may need to rework this */
+			*value = state->ExtReg[d*2 + i];
+			vfpdebug("\taddr[?] <= s[%d]=[%x]\n", d*2 + i, state->ExtReg[d*2 + i]);
+			i++;
+			if (i < regs*2)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VSTM */
+/* cond 110P UDW0 Rn-- Vd-- 101X imm8 imm8 */
+#define vfpinstr 	vstm
+#define vfpinstr_inst 	vstm_inst
+#define VFPLABEL_INST 	VSTM_INST
+#ifdef VFP_DECODE
+{"vstm",	3,	ARMVFP2,	25, 27, 0x6,	20, 20, 0,	9, 11, 0x5},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vstm",	1,	ARMVFP2,	0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vstm_inst {
+	unsigned int single;
+	unsigned int add;
+	unsigned int wback;
+	unsigned int d;
+	unsigned int n;
+	unsigned int imm32;
+	unsigned int regs;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->single = BIT(inst, 8) == 0;
+	inst_cream->add    = BIT(inst, 23);
+	inst_cream->wback  = BIT(inst, 21);
+	inst_cream->d      = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
+	inst_cream->n      = BITS(inst, 16, 19);
+	inst_cream->imm32  = BITS(inst, 0, 7)<<2;
+	inst_cream->regs   = (inst_cream->single ? BITS(inst, 0, 7) : BITS(inst, 1, 7));
+
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST: /* encoding 1 */
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		int i;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
+		vfpdebug("VSTM : addr[%x]\n", addr);
+		
+		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		if (fault) goto MMU_EXCEPTION;
+		
+		if (inst_cream->wback){
+			cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 : 
+						   cpu->Reg[inst_cream->n] - inst_cream->imm32);
+			vfpdebug("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
+		}
+		
+		for (i = 0; i < inst_cream->regs; i++)
+		{
+			if (inst_cream->single)
+			{
+				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+				if (fault) goto MMU_EXCEPTION;
+				vfpdebug("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
+				addr += 4;
+				phys_addr += 4;
+			}
+			else
+			{
+				/* Careful of endianness, little by default */
+				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
+				if (fault) goto MMU_EXCEPTION;
+				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+				if (fault) goto MMU_EXCEPTION;
+				vfpdebug("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
+				addr += 8;
+				phys_addr += 8;
+			}
+		}
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vstm_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_STC_TRANS
+/* Should be the last operation of STC */
+return VSTM(state, type, instr, value);
+#endif
+#ifdef VFP_STC_IMPL
+int VSTM(ARMul_State * state, int type, ARMword instr, ARMword * value)
+{
+	static int i = 0;
+	static int single_regs, add, wback, d, n, imm32, regs;
+	if (type == ARMul_FIRST)
+	{
+		single_regs = BIT(8) == 0;	/* Single precision */
+		add = BIT(23);		/* */
+		wback = BIT(21);	/* write-back */
+		d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+		n = BITS(16, 19);	/* destination register */
+		imm32 = BITS(0,7) * 4;	/* may not be used */
+		regs = single_regs ? BITS(0, 7) : BITS(0, 7)>>1; /* FSTMX if regs is odd */
+
+		vfpdebug("VSTM :\n");
+		
+		if (wback) {
+			state->Reg[n] = (add ? state->Reg[n] + imm32 : state->Reg[n] - imm32);
+			vfpdebug("\twback r%d[%x]\n", n, state->Reg[n]);
+		}
+		
+		i = 0;
+		
+		return ARMul_DONE;
+	} 
+	else if (type == ARMul_DATA)
+	{
+		if (single_regs)
+		{
+			*value = state->ExtReg[d + i];
+			vfpdebug("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d + i]);
+			i++;
+			if (i < regs)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+		else
+		{
+			/* FIXME Careful of endianness, may need to rework this */
+			*value = state->ExtReg[d*2 + i];
+			vfpdebug("\taddr[?] <= s[%d]=[%x]\n", d*2 + i, state->ExtReg[d*2 + i]);
+			i++;
+			if (i < regs*2)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VPOP */
+/* cond 1100 1D11 1101 Vd-- 101X imm8 imm8 */
+#define vfpinstr 	vpop
+#define vfpinstr_inst 	vpop_inst
+#define VFPLABEL_INST 	VPOP_INST
+#ifdef VFP_DECODE
+{"vpop",        3,      ARMVFP2,        23, 27, 0x19,  16, 21, 0x3d,    9, 11, 0x5},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vpop",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vpop_inst {
+	unsigned int single;
+	unsigned int d;
+	unsigned int imm32;
+	unsigned int regs;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->single  = BIT(inst, 8) == 0;
+	inst_cream->d       = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
+	inst_cream->imm32   = BITS(inst, 0, 7)<<2;
+	inst_cream->regs    = (inst_cream->single ? BITS(inst, 0, 7) : BITS(inst, 1, 7));
+	
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		int i;
+		unsigned int value1, value2;
+
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		vfpdebug("VPOP :\n");
+		
+		addr = cpu->Reg[R13];
+		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		if (fault) goto MMU_EXCEPTION;
+
+		vfpdebug("\tsp[%x]", cpu->Reg[R13]);
+		cpu->Reg[R13] = cpu->Reg[R13] + inst_cream->imm32;
+		vfpdebug("=>[%x]\n", cpu->Reg[R13]);
+
+		for (i = 0; i < inst_cream->regs; i++)
+		{
+			if (inst_cream->single)
+			{
+				fault = interpreter_read_memory(core, addr, phys_addr, value1, 32);
+				if (fault) goto MMU_EXCEPTION;
+				vfpdebug("\ts%d <= [%x] addr[%x]\n", inst_cream->d+i, value1, addr);
+				cpu->ExtReg[inst_cream->d+i] = value1;
+				addr += 4;
+				phys_addr += 4;
+			}
+			else
+			{
+				/* Careful of endianness, little by default */
+				fault = interpreter_read_memory(core, addr, phys_addr, value1, 32);
+				if (fault) goto MMU_EXCEPTION;
+				fault = interpreter_read_memory(core, addr, phys_addr, value2, 32);
+				if (fault) goto MMU_EXCEPTION;
+				vfpdebug("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, value2, value1, addr+4, addr);
+				cpu->ExtReg[(inst_cream->d+i)*2] = value1;
+				cpu->ExtReg[(inst_cream->d+i)*2 + 1] = value2;
+				addr += 8;
+				phys_addr += 8;
+			}
+		}
+		
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vpop_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_LDC_TRANS
+if (P == 0 && U == 1 && W == 1 && Rn == 0xD)
+{
+	return VPOP(state, type, instr, value);
+}
+#endif
+#ifdef VFP_LDC_IMPL
+int VPOP(ARMul_State * state, int type, ARMword instr, ARMword value)
+{
+	static int i = 0;
+	static int single_regs, add, wback, d, n, imm32, regs;
+	if (type == ARMul_FIRST)
+	{
+		single_regs = BIT(8) == 0;	/* Single precision */
+		d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+		imm32 = BITS(0,7)<<2;	/* may not be used */
+		regs = single_regs ? BITS(0, 7) : BITS(1, 7); /* FLDMX if regs is odd */
+
+		vfpdebug("VPOP :\n");
+		vfpdebug("\tsp[%x]", state->Reg[R13]);
+		state->Reg[R13] = state->Reg[R13] + imm32;
+		vfpdebug("=>[%x]\n", state->Reg[R13]);
+		
+		i = 0;
+		
+		return ARMul_DONE;
+	}
+	else if (type == ARMul_TRANSFER)
+	{
+		return ARMul_DONE;
+	}
+	else if (type == ARMul_DATA)
+	{
+		if (single_regs)
+		{
+			state->ExtReg[d + i] = value;
+			vfpdebug("\ts%d <= [%x]\n", d + i, value);
+			i++;
+			if (i < regs)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+		else
+		{
+			/* FIXME Careful of endianness, may need to rework this */
+			state->ExtReg[d*2 + i] = value;
+			vfpdebug("\ts%d <= [%x]\n", d*2 + i, value);
+			i++;
+			if (i < regs*2)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VLDR */
+/* cond 1101 UD01 Rn-- Vd-- 101X imm8 imm8 */
+#define vfpinstr 	vldr
+#define vfpinstr_inst 	vldr_inst
+#define VFPLABEL_INST 	VLDR_INST
+#ifdef VFP_DECODE
+{"vldr",        3,      ARMVFP2,        24, 27, 0xd,   20, 21, 0x1,     9, 11, 0x5},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vldr",    0,    ARMVFP2,    0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vldr_inst {
+	unsigned int single;
+	unsigned int n;
+	unsigned int d;
+	unsigned int imm32;
+	unsigned int add;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+	
+	inst_cream->single = BIT(inst, 8) == 0;
+	inst_cream->add	   = BIT(inst, 23);
+	inst_cream->imm32  = BITS(inst, 0,7) << 2;
+	inst_cream->d      = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
+	inst_cream->n	   = BITS(inst, 16, 19);
+
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		unsigned int base = (inst_cream->n == 15 ? (cpu->Reg[inst_cream->n] & 0xFFFFFFFC) + 8 : cpu->Reg[inst_cream->n]);
+		addr = (inst_cream->add ? base + inst_cream->imm32 : base - inst_cream->imm32);
+		vfpdebug("VLDR :\n", addr);
+		
+		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		if (fault) goto MMU_EXCEPTION;
+		
+		if (inst_cream->single)
+		{
+			fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d], 32);
+			if (fault) goto MMU_EXCEPTION;
+			vfpdebug("\ts%d <= [%x] addr[%x]\n", inst_cream->d, cpu->ExtReg[inst_cream->d], addr);
+		}
+		else
+		{
+			unsigned int word1, word2;
+			fault = interpreter_read_memory(core, addr, phys_addr, word1, 32);
+			if (fault) goto MMU_EXCEPTION;
+			fault = interpreter_read_memory(core, addr + 4, phys_addr + 4, word2, 32);
+			if (fault) goto MMU_EXCEPTION;
+			/* Check endianness */
+			cpu->ExtReg[inst_cream->d*2] = word1;
+			cpu->ExtReg[inst_cream->d*2+1] = word2;
+			vfpdebug("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", inst_cream->d*2+1, inst_cream->d*2, word2, word1, addr+4, addr);
+		}
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vldr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_LDC_TRANS
+if (P == 1 && W == 0)
+{
+	return VLDR(state, type, instr, value);
+}
+#endif
+#ifdef VFP_LDC_IMPL
+int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value)
+{
+	static int i = 0;
+	static int single_reg, add, d, n, imm32, regs;
+	if (type == ARMul_FIRST)
+	{
+		single_reg = BIT(8) == 0;	/* Double precision */
+		add = BIT(23);		/* */
+		imm32 = BITS(0,7)<<2;	/* may not be used */
+		d = single_reg ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+		n = BITS(16, 19);	/* destination register */
+		
+		vfpdebug("VLDR :\n");
+		
+		i = 0;
+		regs = 1;
+		
+		return ARMul_DONE;
+	}
+	else if (type == ARMul_TRANSFER)
+	{
+		return ARMul_DONE;
+	}
+	else if (type == ARMul_DATA)
+	{
+		if (single_reg)
+		{
+			state->ExtReg[d+i] = value;
+			vfpdebug("\ts%d <= [%x]\n", d+i, value);
+			i++;
+			if (i < regs)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+		else
+		{
+			/* FIXME Careful of endianness, may need to rework this */
+			state->ExtReg[d*2+i] = value;
+			vfpdebug("\ts[%d] <= [%x]\n", d*2+i, value);
+			i++;
+			if (i < regs*2)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+/* ----------------------------------------------------------------------- */
+/* VLDM */
+/* cond 110P UDW1 Rn-- Vd-- 101X imm8 imm8 */
+#define vfpinstr 	vldm
+#define vfpinstr_inst 	vldm_inst
+#define VFPLABEL_INST 	VLDM_INST
+#ifdef VFP_DECODE
+{"vldm",	3,	ARMVFP2,	25, 27, 0x6,	20, 20, 1,	9, 11, 0x5},
+#endif
+#ifdef VFP_DECODE_EXCLUSION
+{"vldm",	0,	ARMVFP2,	0},
+#endif
+#ifdef VFP_INTERPRETER_TABLE
+INTERPRETER_TRANSLATE(vfpinstr),
+#endif
+#ifdef VFP_INTERPRETER_LABEL
+&&VFPLABEL_INST,
+#endif
+#ifdef VFP_INTERPRETER_STRUCT
+typedef struct _vldm_inst {
+	unsigned int single;
+	unsigned int add;
+	unsigned int wback;
+	unsigned int d;
+	unsigned int n;
+	unsigned int imm32;
+	unsigned int regs;
+} vfpinstr_inst;
+#endif
+#ifdef VFP_INTERPRETER_TRANS
+ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
+{
+	VFP_DEBUG_TRANSLATE;
+	
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vfpinstr_inst));
+	vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx     = index;
+	inst_base->br     = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->single = BIT(inst, 8) == 0;
+	inst_cream->add    = BIT(inst, 23);
+	inst_cream->wback  = BIT(inst, 21);
+	inst_cream->d      = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
+	inst_cream->n      = BITS(inst, 16, 19);
+	inst_cream->imm32  = BITS(inst, 0, 7)<<2;
+	inst_cream->regs   = (inst_cream->single ? BITS(inst, 0, 7) : BITS(inst, 1, 7));
+
+	return inst_base;
+}
+#endif
+#ifdef VFP_INTERPRETER_IMPL
+VFPLABEL_INST:
+{
+	INC_ICOUNTER;
+	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		CHECK_VFP_ENABLED;
+		
+		int i;
+		
+		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
+		
+		addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
+		vfpdebug("VLDM : addr[%x]\n", addr);
+		
+		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		if (fault) goto MMU_EXCEPTION;
+		
+		if (inst_cream->wback){
+			cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 : 
+						   cpu->Reg[inst_cream->n] - inst_cream->imm32);
+			vfpdebug("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
+		}
+		
+		for (i = 0; i < inst_cream->regs; i++)
+		{
+			if (inst_cream->single)
+			{
+				fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+				if (fault) goto MMU_EXCEPTION;
+				vfpdebug("\ts%d <= [%x] addr[%x]\n", inst_cream->d+i, cpu->ExtReg[inst_cream->d+i], addr);
+				addr += 4;
+				phys_addr += 4;
+			}
+			else
+			{
+				/* Careful of endianness, little by default */
+				fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
+				if (fault) goto MMU_EXCEPTION;
+				fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+				if (fault) goto MMU_EXCEPTION;
+				vfpdebug("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2], addr+4, addr);
+				addr += 8;
+				phys_addr += 8;
+			}
+		}
+	}
+	cpu->Reg[15] += 4;
+	INC_PC(sizeof(vfpinstr_inst));
+	FETCH_INST;
+	GOTO_NEXT_INST;
+}
+#endif
+#ifdef VFP_LDC_TRANS
+/* Should be the last operation of LDC */
+return VLDM(state, type, instr, value);
+#endif
+#ifdef VFP_LDC_IMPL
+int VLDM(ARMul_State * state, int type, ARMword instr, ARMword value)
+{
+	static int i = 0;
+	static int single_regs, add, wback, d, n, imm32, regs;
+	if (type == ARMul_FIRST)
+	{
+		single_regs = BIT(8) == 0;	/* Single precision */
+		add = BIT(23);		/* */
+		wback = BIT(21);	/* write-back */
+		d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+		n = BITS(16, 19);	/* destination register */
+		imm32 = BITS(0,7) * 4;	/* may not be used */
+		regs = single_regs ? BITS(0, 7) : BITS(0, 7)>>1; /* FLDMX if regs is odd */
+
+		vfpdebug("VLDM :\n");
+		
+		if (wback) {
+			state->Reg[n] = (add ? state->Reg[n] + imm32 : state->Reg[n] - imm32);
+			vfpdebug("\twback r%d[%x]\n", n, state->Reg[n]);
+		}
+		
+		i = 0;
+		
+		return ARMul_DONE;
+	} 
+	else if (type == ARMul_DATA)
+	{
+		if (single_regs)
+		{
+			state->ExtReg[d + i] = value;
+			vfpdebug("\ts%d <= [%x] addr[?]\n", d+i, state->ExtReg[d + i]);
+			i++;
+			if (i < regs)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+		else
+		{
+			/* FIXME Careful of endianness, may need to rework this */
+			state->ExtReg[d*2 + i] = value;
+			vfpdebug("\ts[%d] <= [%x] addr[?]\n", d*2 + i, state->ExtReg[d*2 + i]);
+			i++;
+			if (i < regs*2)
+				return ARMul_INC;
+			else
+				return ARMul_DONE;
+		}
+	}
+}
+#endif
+#ifdef VFP_DYNCOM_TABLE
+DYNCOM_FILL_ACTION(vfpinstr),
+#endif
+#ifdef VFP_DYNCOM_TAG
+int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
+{
+	int instr_size = INSTR_SIZE;
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
+#endif
+#ifdef VFP_DYNCOM_TRANS
+int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	vfpdebug("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
+	arch_arm_undef(cpu, bb, instr);
+}
+#endif
+#undef vfpinstr
+#undef vfpinstr_inst
+#undef VFPLABEL_INST
+
+#define VFP_DEBUG_TRANSLATE vfpdebug("in func %s, %x\n", __FUNCTION__, inst);
+#define VFP_DEBUG_UNIMPLEMENTED(x) printf("in func %s, " #x " unimplemented\n", __FUNCTION__); exit(-1);
+#define VFP_DEBUG_UNTESTED(x) printf("in func %s, " #x " untested\n", __FUNCTION__);
+
+#define CHECK_VFP_ENABLED
+	
+#define CHECK_VFP_CDP_RET	vfp_raise_exceptions(ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}

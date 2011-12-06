@@ -22,6 +22,7 @@
 #include "arm_dyncom_run.h"
 //#include "armemu.h"
 #include "arm_dyncom_thumb.h"
+#include "vfp/vfp.h"
 #include "skyeye_instr_length.h"
 #define DEBUG
 #include <skyeye_log.h>
@@ -2612,6 +2613,14 @@ int DYNCOM_TAG(blx_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, a
 	return instr_size;
 }
 /* Floating point instructions */
+#define VFP_DYNCOM_TAG
+#include "vfp/vfpinstr.c"
+#undef VFP_DYNCOM_TAG
+
+#define VFP_DYNCOM_TRANS
+#include "vfp/vfpinstr.c"
+#undef VFP_DYNCOM_TRANS
+
 int DYNCOM_TAG(fmrx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
@@ -2625,6 +2634,9 @@ int DYNCOM_TRANS(fmrx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 }
 
 const INSTRACT arm_instruction_action[] = {
+	#define VFP_DYNCOM_TABLE
+	#include "vfp/vfpinstr.c"
+	#undef VFP_DYNCOM_TABLE
 	DYNCOM_FILL_ACTION(adc),
 	DYNCOM_FILL_ACTION(add),
 	DYNCOM_FILL_ACTION(and),

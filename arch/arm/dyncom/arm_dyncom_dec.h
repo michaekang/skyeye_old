@@ -90,7 +90,7 @@ struct instruction_set_encoding_item {
         const char *name;
         int attribute_value;
         int version;
-        int content[12];//12 is the max number
+        int content[15];
 };
 
 typedef struct instruction_set_encoding_item ISEITEM;
@@ -104,7 +104,9 @@ enum ARMVER {
         ARMV5TE,
         ARMV5TEJ,
         ARMV6,
-	ARM1176JZF_S
+	ARM1176JZF_S,
+        ARMVFP2,
+        ARMVFP3
 };
 
 //extern const INSTRACT arm_instruction_action[];

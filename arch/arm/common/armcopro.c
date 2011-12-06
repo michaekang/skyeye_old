@@ -19,6 +19,7 @@
 #include "armdefs.h"
 #include "armos.h"
 #include "armemu.h"
+#include "vfp/vfp.h"
 
 //chy 2005-07-08
 #include "ansidecl.h"

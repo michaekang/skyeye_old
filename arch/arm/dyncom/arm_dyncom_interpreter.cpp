@@ -8,6 +8,7 @@ using namespace std;
 #include "armmmu.h"
 #include "bank_defs.h"
 #include "arm_dyncom_thumb.h"
+#include "vfp/vfp.h"
 
 #define CHECK_RS 	if(RS == 15) rs += 8
 #define CHECK_RM 	if(RM == 15) rm += 8
@@ -1732,7 +1733,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(bx)(unsigned int inst, int index)
 	return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(bxj)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
-ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index){printf("in func %s inst %x index %x\n", __FUNCTION__, inst, index);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(clrex)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(clrex_inst));
@@ -2918,9 +2919,25 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab16)(unsigned int inst, int index){printf
 ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb16)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 
 
+
+/* Floating point VFPv3 structures and instructions */
+
+#define VFP_INTERPRETER_STRUCT
+#include "vfp/vfpinstr.c"
+#undef VFP_INTERPRETER_STRUCT
+ 
+#define VFP_INTERPRETER_TRANS
+#include "vfp/vfpinstr.c"
+#undef VFP_INTERPRETER_TRANS
+
+
+
 typedef ARM_INST_PTR (*transop_fp_t)(unsigned int, int);
 
 const transop_fp_t arm_instruction_trans[] = {
+	#define VFP_INTERPRETER_TABLE
+	#include "vfp/vfpinstr.c"
+	#undef VFP_INTERPRETER_TABLE
 	INTERPRETER_TRANSLATE(adc),
 	INTERPRETER_TRANSLATE(add),
 	INTERPRETER_TRANSLATE(and),
@@ -3976,10 +3993,14 @@ void InterpreterMainLoop(cpu_t *core)
 						cpu->CFlag = (cpu->Cpsr >> 29) & 1;   \
 						cpu->VFlag = (cpu->Cpsr >> 28) & 1
 	#define CurrentModeHasSPSR		(cpu->Mode != SYSTEM32MODE) && (cpu->Mode != USER32MODE)
+	
 
 	arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
 
 	void *InstLabel[] = {
+		#define VFP_INTERPRETER_LABEL
+		#include "vfp/vfpinstr.c"
+		#undef VFP_INTERPRETER_LABEL
 		&&ADC_INST,&&ADD_INST,&&AND_INST,&&BBL_INST,&&BIC_INST,&&BKPT_INST,&&BLX_INST,&&BLX_INST,&&BX_INST,
 		&&BXJ_INST,&&CDP_INST,&&CLREX_INST,&&CLZ_INST,&&CMN_INST,&&CMP_INST,&&CPS_INST,&&CPY_INST,&&EOR_INST,
 		&&LDC_INST,&&LDM_INST,&&LDM_INST,&&LDM_INST,&&SXTH_INST,&&UXTH_INST,&&UXTAH_INST,&&REV_INST,&&REV16_INST,&&REVSH_INST,
@@ -5790,6 +5811,9 @@ void InterpreterMainLoop(cpu_t *core)
 	USUBADDX_INST:
 	UXTAB16_INST:
 	UXTB16_INST:
+	#define VFP_INTERPRETER_IMPL
+	#include "vfp/vfpinstr.c"
+	#undef VFP_INTERPRETER_IMPL
 	MMU_EXCEPTION:
 	{
 		SAVE_NZCV;

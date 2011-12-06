@@ -4,7 +4,8 @@ arm_dbct = dbct/arm2x86.c dbct/arm2x86_coproc.c dbct/arm2x86_dp.c dbct/arm2x86_m
 arm_mach = \
 mach/skyeye_mach_lpc.c
 arm_dyncom = dyncom/arm_dyncom_interface.cpp dyncom/arm_disasm.cpp dyncom/arm_dyncom_translate.cpp dyncom/arm_dyncom_run.cpp dyncom/arm_dyncom_dec.cpp dyncom/arm_dyncom_mmu.cpp dyncom/arm_dyncom_parallel.cpp dyncom/arm_dyncom_interpreter.cpp dyncom/arm_dyncom_thumb.cpp
-libarm_la_SOURCES = $(arm_comm) $(arm_mmu) $(arm_mach)
+arm_vfp = common/vfp/vfp.c common/vfp/vfpsingle.c common/vfp/vfpdouble.c
+libarm_la_SOURCES = $(arm_comm) $(arm_mmu) $(arm_mach) $(arm_vfp)
 
 if LLVM_EXIST
 libarm_la_SOURCES += $(arm_dyncom)
