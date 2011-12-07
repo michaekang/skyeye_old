@@ -1351,16 +1351,20 @@ ARMul_Emulate26 (ARMul_State * state)
 #endif
 				if (BITS (4, 7) == 9) {	/* MLA */
 					rhs = state->Reg[MULRHSReg];
+					#if 0
 					if (MULLHSReg == MULDESTReg) {
 						UNDEF_MULDestEQOp1;
 						state->Reg[MULDESTReg] =
 							state->Reg[MULACCReg];
 					}
-					else if (MULDESTReg != 15)
+					else if (MULDESTReg != 15){
+					#endif
+					if (MULDESTReg != 15){
 						state->Reg[MULDESTReg] =
 							state->
 							Reg[MULLHSReg] * rhs +
 							state->Reg[MULACCReg];
+					}
 					else
 						UNDEF_MULPCDest;
 
@@ -6092,9 +6096,9 @@ Multiply64 (ARMul_State * state, ARMword instr, int msigned, int scc)
 		state->Reg[nRdLo] = RdLo;
 		state->Reg[nRdHi] = RdHi;
 	}
-	else
-		fprintf (stderr, "sim: MULTIPLY64 - INVALID ARGUMENTS\n");
-
+	else{
+		fprintf (stderr, "sim: MULTIPLY64 - INVALID ARGUMENTS, instr=0x%x\n", instr);
+	}
 	if (scc)
 		/* Ensure that both RdHi and RdLo are used to compute Z,
 		   but don't let RdLo's sign bit make it to N.  */
