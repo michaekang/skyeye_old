@@ -2012,7 +2012,22 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ldrbt)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(ldrd)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(ldrd)(unsigned int inst, int index)
+{
+	printf("In func %s\n", __FUNCTION__);
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
+	ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+
+	inst_base->cond = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+
+	inst_cream->inst = inst;
+	inst_cream->get_addr = get_calc_addr_op(inst);
+
+	return inst_base;
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(ldrex)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
@@ -4583,6 +4598,28 @@ void InterpreterMainLoop(cpu_t *core)
 		GOTO_NEXT_INST;
 	}
 	LDRD_INST:
+	{
+		INC_ICOUNTER;
+		ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			/* Should check if RD is even-numbered, Rd != 14, addr[0:1] == 0, (CP15_reg1_U == 1 || addr[2] == 0) */
+			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
+			if (fault) goto MMU_EXCEPTION;
+			unsigned int value;
+			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
+			if (fault) goto MMU_EXCEPTION;
+			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+			fault = interpreter_read_memory(core, addr + 4, phys_addr + 4, value, 32);
+			if (fault) goto MMU_EXCEPTION;
+			cpu->Reg[BITS(inst_cream->inst, 12, 15) + 1] = value;
+			/* No dispatch since this operation should not modify R15 */
+		}
+		cpu->Reg[15] += 4;
+		INC_PC(sizeof(ldst_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	LDREX_INST:
 	{
 		INC_ICOUNTER;
@@ -5594,6 +5631,9 @@ void InterpreterMainLoop(cpu_t *core)
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			teq_inst *inst_cream = (teq_inst *)inst_base->component;
 			lop = RN;
+			if (inst_cream->Rn == 15)
+				lop += GET_INST_SIZE(cpu) * 2;
+
 			rop = SHIFTER_OPERAND;
 			dst = lop ^ rop;
 
