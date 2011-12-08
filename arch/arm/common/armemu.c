@@ -6050,7 +6050,8 @@ Multiply64 (ARMul_State * state, ARMword instr, int msigned, int scc)
 	if (nRdHi != 15
 	    && nRdLo != 15
 	    && nRs != 15
-	    && nRm != 15 && nRdHi != nRdLo && nRdHi != nRm && nRdLo != nRm) {
+	    //&& nRm != 15 && nRdHi != nRdLo && nRdHi != nRm && nRdLo != nRm) {
+	    && nRm != 15 && nRdHi != nRdLo ) {
 		/* Intermediate results.  */
 		ARMword lo, mid1, mid2, hi;
 		int carry;
