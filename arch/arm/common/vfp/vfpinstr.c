@@ -2038,13 +2038,13 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 
 /* ----------------------------------------------------------------------- */
 /* VMSR */
-/* cond 1110 1110 0001 Rt-- 1010 0001 0000 */
+/* cond 1110 1110 reg- Rt-- 1010 0001 0000 */
 /* cond 1110 op10 CRn- Rt-- copr op21 CRm- MCR */
 #define vfpinstr 	vmsr
 #define vfpinstr_inst 	vmsr_inst
 #define VFPLABEL_INST 	VMSR_INST
 #ifdef VFP_DECODE
-{"vmsr",    2,    ARMVFP2,    16, 27, 0xEE1,    0, 11, 0xA10},
+{"vmsr",    2,    ARMVFP2,    20, 27, 0xEE,    0, 11, 0xA10},
 #endif
 #ifdef VFP_DECODE_EXCLUSION
 {"vmsr",    0,    ARMVFP2,    0},
@@ -2057,6 +2057,7 @@ INTERPRETER_TRANSLATE(vfpinstr),
 #endif
 #ifdef VFP_INTERPRETER_STRUCT
 typedef struct _vmsr_inst {
+	unsigned int reg;
 	unsigned int Rd;
 } vfpinstr_inst;
 #endif
@@ -2073,6 +2074,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
 	inst_base->br     = NON_BRANCH;
 	inst_base->load_r15 = 0;
 
+	inst_cream->reg  = BITS(inst, 16, 19);
 	inst_cream->Rd   = BITS(inst, 12, 15);
    
 	return inst_base;
@@ -2083,11 +2085,14 @@ VFPLABEL_INST:
 {
 	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		/* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled ,
+		   and in privilegied mode */
+		/* Exceptions must be checked, according to v7 ref manual */
 		CHECK_VFP_ENABLED;
            
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 
-		VMSR(cpu, inst_cream->Rd);
+		VMSR(cpu, inst_cream->reg, inst_cream->Rd);
 	}
 	cpu->Reg[15] += 4;
 	INC_PC(sizeof(vfpinstr_inst));
@@ -2096,17 +2101,25 @@ VFPLABEL_INST:
 }
 #endif
 #ifdef VFP_MCR_TRANS
-if (CRn == 1 && OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
+if (OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
 {
-	VMSR(state, Rt);
+	VMSR(state, CRn, Rt);
 	return ARMul_DONE;
 }
 #endif
 #ifdef VFP_MCR_IMPL
-void VMSR(ARMul_State * state, ARMword Rt)
+void VMSR(ARMul_State * state, ARMword reg, ARMword Rt)
 {
-	DBG("VMSR :\tfpscr <= r%d=[%x]\n", Rt, state->Reg[Rt]);
-	state->VFP[VFP_FPSCR] = state->Reg[Rt];
+	if (reg == 1)
+	{
+		DBG("VMSR :\tfpscr <= r%d=[%x]\n", Rt, state->Reg[Rt]);
+		state->VFP[VFP_FPSCR] = state->Reg[Rt];
+	}
+	else if (reg == 8)
+	{
+		DBG("VMSR :\tfpexc <= r%d=[%x]\n", Rt, state->Reg[Rt]);
+		state->VFP[VFP_FPEXC] = state->Reg[Rt];
+	}
 }
 #endif
 #ifdef VFP_DYNCOM_TABLE
@@ -2228,13 +2241,13 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 
 /* ----------------------------------------------------------------------- */
 /* VMRS */
-/* cond 1110 1111 0001 Rt-- 1010 0001 0000 */
+/* cond 1110 1111 CRn- Rt-- 1010 0001 0000 */
 /* cond 1110 op11 CRn- Rt-- copr op21 CRm- MRC */
 #define vfpinstr 	vmrs
 #define vfpinstr_inst 	vmrs_inst
 #define VFPLABEL_INST 	VMRS_INST
 #ifdef VFP_DECODE
-{"vmrs",        2,      ARMVFP2,        16, 27, 0xef1,     0, 11, 0xa10},
+{"vmrs",        2,      ARMVFP2,        20, 27, 0xEF,     0, 11, 0xa10},
 #endif
 #ifdef VFP_DECODE_EXCLUSION
 {"vmrs",    0,    ARMVFP2,    0},
@@ -2247,6 +2260,7 @@ INTERPRETER_TRANSLATE(vfpinstr),
 #endif
 #ifdef VFP_INTERPRETER_STRUCT
 typedef struct _vmrs_inst {
+	unsigned int reg;
 	unsigned int Rt;
 } vfpinstr_inst;
 #endif
@@ -2263,6 +2277,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
 	inst_base->br     = NON_BRANCH;
 	inst_base->load_r15 = 0;
 
+	inst_cream->reg  = BITS(inst, 16, 19);
 	inst_cream->Rt	 = BITS(inst, 12, 15);
    
 	return inst_base;
@@ -2273,24 +2288,55 @@ VFPLABEL_INST:
 {
 	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		/* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled,
+		   and in privilegied mode */
+		/* Exceptions must be checked, according to v7 ref manual */
 		CHECK_VFP_ENABLED;
 		
 		vfpinstr_inst *inst_cream = (vfpinstr_inst *)inst_base->component;
 		
 		DBG("VMRS :");
 	
-		if (inst_cream->Rt != 15)
-		{	
-			cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSCR];
-			DBG("\tr%d <= [%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPSCR]);
-		}
+		if (inst_cream->reg == 1) /* FPSCR */
+		{
+			if (inst_cream->Rt != 15)
+			{	
+				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSCR];
+				DBG("\tr%d <= fpscr[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPSCR]);
+			}
+			else
+			{	
+				cpu->NFlag = (cpu->VFP[VFP_FPSCR] >> 31) & 1;
+				cpu->ZFlag = (cpu->VFP[VFP_FPSCR] >> 30) & 1;
+				cpu->CFlag = (cpu->VFP[VFP_FPSCR] >> 29) & 1;
+				cpu->VFlag = (cpu->VFP[VFP_FPSCR] >> 28) & 1;
+				DBG("\tflags <= fpscr[%1xxxxxxxx]\n", cpu->VFP[VFP_FPSCR]>>28);
+			}
+		} 
 		else
-		{	
-			cpu->NFlag = (cpu->VFP[VFP_FPSCR] >> 31) & 1;
-			cpu->ZFlag = (cpu->VFP[VFP_FPSCR] >> 30) & 1;
-			cpu->CFlag = (cpu->VFP[VFP_FPSCR] >> 29) & 1;
-			cpu->VFlag = (cpu->VFP[VFP_FPSCR] >> 28) & 1;
-			DBG("\tflags<=fpscr=[%1x]\n", cpu->VFP[VFP_FPSCR]>>28);
+		{
+			switch (inst_cream->reg)
+			{
+			case 0:
+				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSID];
+				DBG("\tr%d <= fpsid[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPSID]);
+				break;
+			case 6:
+				/* MVFR1, VFPv3 only ? */
+				DBG("\tr%d <= MVFR1 unimplemented\n", inst_cream->Rt);
+				break;
+			case 7:
+				/* MVFR0, VFPv3 only? */
+				DBG("\tr%d <= MVFR0 unimplemented\n", inst_cream->Rt);
+				break;
+			case 8:
+				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPEXC];
+				DBG("\tr%d <= fpexc[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPEXC]);
+				break;
+			default:
+				DBG("\tSUBARCHITECTURE DEFINED\n");
+				break;
+			}
 		}
 	}
 	cpu->Reg[15] += 4;
@@ -2300,25 +2346,53 @@ VFPLABEL_INST:
 }
 #endif
 #ifdef VFP_MRC_TRANS
-if (CRn == 1 && OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
+if (OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
 {
-	VMRS(state, Rt, value);
+	VMRS(state, CRn, Rt, value);
 	return ARMul_DONE;
 }
 #endif
 #ifdef VFP_MRC_IMPL
-void VMRS(ARMul_State * state, ARMword Rt, ARMword * value)
+void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword * value)
 {
 	DBG("VMRS :");
-	if (Rt != 15)
+	if (reg == 1)
 	{
-		*value = state->VFP[VFP_FPSCR];
-		DBG("\tr%d <= [%08x]\n", Rt, state->VFP[VFP_FPSCR]);
+		if (Rt != 15)
+		{
+			*value = state->VFP[VFP_FPSCR];
+			DBG("\tr%d <= fpscr[%08x]\n", Rt, state->VFP[VFP_FPSCR]);
+		}
+		else
+		{
+			*value = state->VFP[VFP_FPSCR] ;
+			DBG("\tflags <= fpscr[%1xxxxxxxx]\n", state->VFP[VFP_FPSCR]>>28);
+		}
 	}
 	else
 	{
-		*value = state->VFP[VFP_FPSCR] ;
-		DBG("\tflags<=fpscr=[%1x]\n", state->VFP[VFP_FPSCR]>>28);
+		switch (reg)
+		{
+		case 0:
+			*value = state->VFP[VFP_FPSID];
+			DBG("\tr%d <= fpsid[%08x]\n", Rt, state->VFP[VFP_FPSID]);
+			break;
+		case 6:
+			/* MVFR1, VFPv3 only ? */
+			DBG("\tr%d <= MVFR1 unimplemented\n", Rt);
+			break;
+		case 7:
+			/* MVFR0, VFPv3 only? */
+			DBG("\tr%d <= MVFR0 unimplemented\n", Rt);
+			break;
+		case 8:
+			*value = state->VFP[VFP_FPEXC];
+			DBG("\tr%d <= fpexc[%08x]\n", Rt, state->VFP[VFP_FPEXC]);
+			break;
+		default:
+			DBG("\tSUBARCHITECTURE DEFINED\n");
+			break;
+		}
 	}
 }
 #endif

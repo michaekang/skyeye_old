@@ -86,13 +86,13 @@ extern uint32_t vfp_single_cpdo(uint32_t inst, uint32_t fpscr);
 extern uint32_t vfp_double_cpdo(uint32_t inst, uint32_t fpscr);
 
 /* MRC */
-inline void VMRS(ARMul_State * state, ARMword Rt, ARMword *value);
+inline void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword *value);
 inline void VMOVBRS(ARMul_State * state, ARMword to_arm, ARMword t, ARMword n, ARMword *value);
 inline void VMOVBRRD(ARMul_State * state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword *value1, ARMword *value2);
 inline void VMOVI(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
 inline void VMOVR(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
 /* MCR */
-inline void VMSR(ARMul_State * state, ARMword Rt);
+inline void VMSR(ARMul_State * state, ARMword reg, ARMword Rt);
 /* STC */
 inline int VSTM(ARMul_State * state, int type, ARMword instr, ARMword* value);
 inline int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword* value);
