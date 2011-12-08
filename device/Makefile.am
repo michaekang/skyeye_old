@@ -6,6 +6,7 @@ uart/skyeye_uart_pipe.c uart/skyeye_uart_term.c
 dev_uart_16550 = uart_16550/uart_16550.c uart_16550/uart_16550_module.c
 dev_lcd_s3c6410 = lcd_s3c6410/lcd_s3c6410.c lcd_s3c6410/lcd_s3c6410_module.c
 dev_sdhci_s3c6410 = sdhci_s3c6410/sdhci_s3c6410.c sdhci_s3c6410/sdhci_s3c6410_module.c
+dev_touchscreen_s3c6410 = touchscreen_s3c6410/touchscreen_s3c6410.c touchscreen_s3c6410/touchscreen_s3c6410_module.c
 
 #dev_flash = flash/armflash.c  flash/dev_flash_sst39lvf160.c flash/flash_module.c\
 #flash/dev_flash_am29.c  flash/dev_flash_intel.c  flash/skyeye_flash.c
@@ -49,6 +50,9 @@ endif
 libsdhci_s3c6410_la_SOURCES = $(dev_sdhci_s3c6410)
 libsdhci_s3c6410_la_LDFLAGS = -module
 
+libtouchscreen_s3c6410_la_SOURCES = $(dev_touchscreen_s3c6410)
+libtouchscreen_s3c6410_la_LDFLAGS = -module
+
 libflash_la_SOURCES = $(dev_flash)
 libflash_la_LDFLAGS = -module
 
@@ -75,7 +79,7 @@ pkglib_LTLIBRARIES = libuart.la libuart_16550.la libflash.la libnandflash.la lib
 if WIN32
 libuart_la_LDFLAGS +=  -no-undefined -shared -module -Xlinker -L../common/.libs/ -L/mingw/lib -Xlinker -lcommon -Xlinker --export-all-symbol
 else
-pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la
+pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la libtouchscreen_s3c6410.la
 endif
 
 if GTK_LCD
