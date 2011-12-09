@@ -152,7 +152,7 @@ generic_arch_t* get_default_arch(){
                         return skyeye_archs[i];
                 }
         }
-	skyeye_log(Warnning_log, __FUNCTION__, "No default arch is found.\n");
+	skyeye_log(Warning_log, __FUNCTION__, "No default arch is found.\n");
 	return NULL;
 }
 

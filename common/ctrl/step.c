@@ -67,7 +67,7 @@ void skyeye_stepi(int steps){
 		return;
 	}
 	if(arch_instance->get_step == NULL){
-		printf(Warnning_log, __FUNCTION__, "The arch have not implemented get_step.\n");
+		printf(Warning_log, __FUNCTION__, "The arch have not implemented get_step.\n");
 		return;
 	}
 	stopped_step  = arch_instance->get_step() + steps;

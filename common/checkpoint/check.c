@@ -72,7 +72,7 @@ static void save_chp(char *arg)
 
 	if(access(dir, 0) == -1){
 		if(mkdir(dir, 0777)){
-			skyeye_log(Warnning_log, __func__, "create dir %s failed\n", dir);
+			skyeye_log(Warning_log, __func__, "create dir %s failed\n", dir);
 			return;
 		}
 	}
@@ -82,7 +82,7 @@ static void save_chp(char *arg)
 	//fp = fopen("config", "wb");
 	fp = fopen(dir, "wb");
 	if(fp == NULL)
-		skyeye_log(Warnning_log, __func__, "can't create file %s\n",dir);
+		skyeye_log(Warning_log, __func__, "can't create file %s\n",dir);
 	/* check for difference archtecture */
 	for( p = chp_data_list.head; p != NULL; p = p->next){
 		ret = 0;
@@ -123,7 +123,7 @@ static void load_chp(char *arg)
 	//fp = fopen("config", "rb");
 	fp = fopen(dir, "rb");
 	if(fp == NULL){
-		skyeye_log(Warnning_log, __func__, "can't open file %s\n, may be it does not exist", dir);
+		skyeye_log(Warning_log, __func__, "can't open file %s\n, may be it does not exist", dir);
 		return;
 	}
 
@@ -213,7 +213,7 @@ static void reverse_to(char *arg)
 {
 	generic_arch_t* arch_instance = get_arch_instance("");
 	if (!arch_instance) {
-		skyeye_log(Warnning_log, __func__, "Can't get the current arch instance\n");
+		skyeye_log(Warning_log, __func__, "Can't get the current arch instance\n");
 		return;
 	}
 	uint32 step = arch_instance->get_step();
@@ -221,7 +221,7 @@ static void reverse_to(char *arg)
 	if(bookmark[0])
 		load_chp(bookmark);
 	else
-		skyeye_log(Warnning_log, __func__, "please set a bookmark first before using reverse command\n");
+		skyeye_log(Warning_log, __func__, "please set a bookmark first before using reverse command\n");
 
 	if(arg == NULL || *arg == 0){
 
@@ -234,7 +234,7 @@ static void reverse_to(char *arg)
 		if(ret > 0)
 			skyeye_stepi(ret);
 		else
-			skyeye_log(Warnning_log, __func__, "haven't exec enought steps,reverse to the bookmark\n");
+			skyeye_log(Warning_log, __func__, "haven't exec enought steps,reverse to the bookmark\n");
 	}
 }
 

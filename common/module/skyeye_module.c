@@ -181,14 +181,14 @@ exception_t SKY_load_module(const char* module_filename){
         if (handler == NULL)
         {
         	err_str = dlerrordup(err_str);
-                skyeye_log(Warnning_log, __FUNCTION__, "%s\n", err_str);
+                skyeye_log(Warning_log, __FUNCTION__, "%s\n", err_str);
 		return Dll_open_exp;
         }
 	
 	module_name = lt_dlsym(handler, "skyeye_module");
 	if((err_str = dlerrordup(err_str)) != NULL){
-		skyeye_log(Warnning_log, __FUNCTION__, "dll error %s\n", err_str);
-		skyeye_log(Warnning_log, __FUNCTION__, "Invalid module in file %s\n", module_filename);
+		skyeye_log(Warning_log, __FUNCTION__, "dll error %s\n", err_str);
+		skyeye_log(Warning_log, __FUNCTION__, "Invalid module in file %s\n", module_filename);
 		lt_dlclose(handler);
 		return Invmod_exp;
 	}

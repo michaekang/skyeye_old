@@ -118,7 +118,7 @@ void* get_cast_conf_obj(conf_object_t* conf_obj, const char* type_string){
 	else{
 		printf("In %s,conf_obj=0x%x\n, conf_obj->objname=0x%x\n", __FUNCTION__, conf_obj, conf_obj->objname);
 		printf("In %s, conf_obj->objname=%s\n", __FUNCTION__, conf_obj->objname);
-		skyeye_log(Warnning_log, __FUNCTION__, "Type %s cast is failed!\n", type_string);
+		skyeye_log(Warning_log, __FUNCTION__, "Type %s cast is failed!\n", type_string);
 		return NULL;
 	}
 }

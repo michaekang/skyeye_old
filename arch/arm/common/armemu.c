@@ -5576,7 +5576,7 @@ StoreByte (ARMul_State * state, ARMword instr, ARMword address)
 		TAKEABORT;
 		return state->lateabtSig;
 	}
-	UNDEF_LSRBPC;
+	//UNDEF_LSRBPC;
 	return TRUE;
 }
 
@@ -5590,9 +5590,9 @@ LoadMult (ARMul_State * state, ARMword instr, ARMword address, ARMword WBBase)
 {
 	ARMword dest, temp;
 
-	UNDEF_LSMNoRegs;
-	UNDEF_LSMPCBase;
-	UNDEF_LSMBaseInListWb;
+	//UNDEF_LSMNoRegs;
+	//UNDEF_LSMPCBase;
+	//UNDEF_LSMBaseInListWb;
 	BUSUSEDINCPCS;
 #ifndef MODE32
 	if (ADDREXCEPT (address))
@@ -5693,9 +5693,9 @@ LoadSMult (ARMul_State * state,
 {
 	ARMword dest, temp;
 
-	UNDEF_LSMNoRegs;
-	UNDEF_LSMPCBase;
-	UNDEF_LSMBaseInListWb;
+	//UNDEF_LSMNoRegs;
+	//UNDEF_LSMPCBase;
+	//UNDEF_LSMBaseInListWb;
 
 	BUSUSEDINCPCS;
 

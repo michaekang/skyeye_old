@@ -17,7 +17,7 @@ typedef enum{
 	Quiet_log = 0, /* Only output the necessary information for the user */
 	Info_log , /* Some addtional information to see how about the system */
 	Debug_log, /* Debug information for programmer */
-	Warnning_log, /* Something warnning information, maybe something wrong */
+	Warning_log, /* Something warning information, maybe something wrong */
 	Error_log, /* Something really error, but maybe still work or can be recover */
 	Critical_log, /* Can not recover and the system should be terminated immediately */
 	MAX_LOG_LEVEL

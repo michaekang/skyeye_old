@@ -489,33 +489,85 @@ typedef enum
 }
 tdstate;
 
-#define UNDEF_WARNNING skyeye_log(Warnning_log, __FUNCTION__, "undefined or unpredicted behavior for arm instruction.\n");
+/*********************************************************************************
+ * Check all the possible undef or unpredict behavior, Some of them probably is
+ * out-of-updated with the newer ISA.
+ * -- Michael.Kang
+ ********************************************************************************/
+#define UNDEF_WARNING skyeye_log(Warning_log, __FUNCTION__, "[%d line]undefined or unpredicted behavior for arm instruction.\n", __LINE__);
 
 /* Macros to scrutinize instructions.  */
-#define UNDEF_Test UNDEF_WARNNING
-#define UNDEF_Shift UNDEF_WARNNING
-#define UNDEF_MSRPC UNDEF_WARNNING
-#define UNDEF_MRSPC UNDEF_WARNNING
-#define UNDEF_MULPCDest UNDEF_WARNNING
-#define UNDEF_MULDestEQOp1 UNDEF_WARNNING
-#define UNDEF_LSRBPC UNDEF_WARNNING
-#define UNDEF_LSRBaseEQOffWb UNDEF_WARNNING
-#define UNDEF_LSRBaseEQDestWb UNDEF_WARNNING
-#define UNDEF_LSRPCBaseWb UNDEF_WARNNING
-#define UNDEF_LSRPCOffWb UNDEF_WARNNING
-#define UNDEF_LSMNoRegs UNDEF_WARNNING
-#define UNDEF_LSMPCBase UNDEF_WARNNING
-#define UNDEF_LSMUserBankWb UNDEF_WARNNING
-#define UNDEF_LSMBaseInListWb UNDEF_WARNNING
-#define UNDEF_SWPPC UNDEF_WARNNING
-#define UNDEF_CoProHS UNDEF_WARNNING
-#define UNDEF_MCRPC UNDEF_WARNNING
-#define UNDEF_LSCPCBaseWb UNDEF_WARNNING
-#define UNDEF_UndefNotBounced UNDEF_WARNNING
-#define UNDEF_ShortInt UNDEF_WARNNING
-#define UNDEF_IllegalMode UNDEF_WARNNING
-#define UNDEF_Prog32SigChange UNDEF_WARNNING
-#define UNDEF_Data32SigChange UNDEF_WARNNING
+#define UNDEF_Test UNDEF_WARNING
+//#define UNDEF_Test
+
+//#define UNDEF_Shift UNDEF_WARNING
+#define UNDEF_Shift
+
+//#define UNDEF_MSRPC UNDEF_WARNING
+#define UNDEF_MSRPC
+
+//#define UNDEF_MRSPC UNDEF_WARNING
+#define UNDEF_MRSPC
+
+#define UNDEF_MULPCDest UNDEF_WARNING
+//#define UNDEF_MULPCDest
+
+#define UNDEF_MULDestEQOp1 UNDEF_WARNING
+//#define UNDEF_MULDestEQOp1
+
+//#define UNDEF_LSRBPC UNDEF_WARNING
+#define UNDEF_LSRBPC
+
+//#define UNDEF_LSRBaseEQOffWb UNDEF_WARNING
+#define UNDEF_LSRBaseEQOffWb
+
+//#define UNDEF_LSRBaseEQDestWb UNDEF_WARNING
+#define UNDEF_LSRBaseEQDestWb
+
+//#define UNDEF_LSRPCBaseWb UNDEF_WARNING
+#define UNDEF_LSRPCBaseWb
+
+//#define UNDEF_LSRPCOffWb UNDEF_WARNING
+#define UNDEF_LSRPCOffWb
+
+//#define UNDEF_LSMNoRegs UNDEF_WARNING
+#define UNDEF_LSMNoRegs
+
+//#define UNDEF_LSMPCBase UNDEF_WARNING
+#define UNDEF_LSMPCBase
+
+//#define UNDEF_LSMUserBankWb UNDEF_WARNING
+#define UNDEF_LSMUserBankWb
+
+//#define UNDEF_LSMBaseInListWb UNDEF_WARNING
+#define UNDEF_LSMBaseInListWb
+
+#define UNDEF_SWPPC UNDEF_WARNING
+//#define UNDEF_SWPPC
+
+#define UNDEF_CoProHS UNDEF_WARNING
+//#define UNDEF_CoProHS
+
+#define UNDEF_MCRPC UNDEF_WARNING
+//#define UNDEF_MCRPC
+
+//#define UNDEF_LSCPCBaseWb UNDEF_WARNING
+#define UNDEF_LSCPCBaseWb
+
+#define UNDEF_UndefNotBounced UNDEF_WARNING
+//#define UNDEF_UndefNotBounced
+
+#define UNDEF_ShortInt UNDEF_WARNING
+//#define UNDEF_ShortInt
+
+#define UNDEF_IllegalMode UNDEF_WARNING
+//#define UNDEF_IllegalMode
+
+#define UNDEF_Prog32SigChange UNDEF_WARNING
+//#define UNDEF_Prog32SigChange
+
+#define UNDEF_Data32SigChange UNDEF_WARNING
+//#define UNDEF_Data32SigChange
 
 /* Prototypes for exported functions.  */
 extern unsigned ARMul_NthReg (ARMword, unsigned);

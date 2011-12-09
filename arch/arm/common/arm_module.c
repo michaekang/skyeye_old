@@ -61,7 +61,8 @@ void module_init(){
 
 	if(register_option("cpu", do_cpu_option, "Processor option for arm architecture.") != No_exp)
                 fprintf(stderr,"Can not register cpu option\n");
-	register_option("run", do_mode_option, "Indicate the different running mode, such as dyncom, hybrid etc.\n");
+	if(register_option("run", do_mode_option, "Indicate the different running mode, such as dyncom, hybrid etc.\n") != No_exp)
+		fprintf(stderr,"Can not register run option\n");
 
 }
 void module_fini(){
