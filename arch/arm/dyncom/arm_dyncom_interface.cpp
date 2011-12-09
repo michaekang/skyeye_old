@@ -169,6 +169,7 @@ static void per_cpu_step(conf_object_t * running_core){
 		if(running_mode == FAST_INTERPRET){
 			extern void InterpreterMainLoop(cpu_t *core);
 			InterpreterMainLoop((cpu_t*)(core->dyncom_cpu->obj));
+			ret = 1;
 		}
 		else{
 			ret = launch_compiled_queue((cpu_t*)(core->dyncom_cpu->obj), core->Reg[15]);
