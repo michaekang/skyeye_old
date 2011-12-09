@@ -4212,7 +4212,7 @@ void InterpreterMainLoop(cpu_t *core)
 			unsigned int inst = inst_cream->inst;
 			if (BITS(inst, 20, 27) == 0x12 && BITS(inst, 4, 7) == 0x3) {
 				//LINK_RTN_ADDR;
-				cpu->Reg[14] = (cpu->Reg[15] + GET_INST_SIZE(cpu)) | 0x1 ;
+				cpu->Reg[14] = (cpu->Reg[15] + GET_INST_SIZE(cpu));
 				cpu->Reg[15] = cpu->Reg[BITS(inst, 0, 3)] & 0xfffffffe;
 				cpu->TFlag = cpu->Reg[BITS(inst, 0, 3)] & 0x1;
 			} else {
