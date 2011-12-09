@@ -1268,7 +1268,8 @@ ARMul_Emulate26 (ARMul_State * state)
 				if (BITS (4, 7) == 9) {
 					/* MUL */
 					rhs = state->Reg[MULRHSReg];
-					if (MULLHSReg == MULDESTReg) {
+					//if (MULLHSReg == MULDESTReg) {
+					if(0){ /* For armv6, the restriction is removed */
 						UNDEF_MULDestEQOp1;
 						state->Reg[MULDESTReg] = 0;
 					}
