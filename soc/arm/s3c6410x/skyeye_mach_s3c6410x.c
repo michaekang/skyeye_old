@@ -886,6 +886,14 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	add_chp_data(&s3c6410x_io, sizeof(s3c6410x_io_t), "6410io");
 	/* The whole address space */
 	addr_space_t* phys_mem = new_addr_space("s3c6410_mach_space");
+	conf_object_t* sysctrl = pre_conf_obj("s3c6410_sysctrl_0", "s3c6410_sysctrl");
+	memory_space_intf* sysctrl_io_memory = (memory_space_intf*)SKY_get_interface(sysctrl, MEMORY_SPACE_INTF_NAME);
+	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, lcd_io_memory);
+	exception_t ret;
+       	ret = add_map(phys_mem, 0x7e00f000, 0x1000, 0x0, sysctrl_io_memory, 1, 1);
+	if(ret != No_exp){
+		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for system controller\n");
+	}
 
 	/* Register lcd io memory to the whole address space */
 	conf_object_t* lcd = pre_conf_obj("s3c6410_lcd_0", "s3c6410_lcd");
