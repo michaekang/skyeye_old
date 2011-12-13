@@ -1,6 +1,8 @@
+#include <algorithm>
 #include "arm_dyncom_mmu.h"
 #include <map>
 #include <cstdio>
+#include <vector>
 using namespace std;
 
 #include "stat.h"
@@ -8,6 +10,7 @@ using namespace std;
 #include "armmmu.h"
 #include "bank_defs.h"
 #include "arm_dyncom_thumb.h"
+#include "skyeye_ram.h"
 #include "vfp/vfp.h"
 
 #define CHECK_RS 	if(RS == 15) rs += 8
@@ -3252,7 +3255,87 @@ enum {
 typedef struct instruction_set_encoding_item ISEITEM;
 
 extern const ISEITEM arm_instruction[];
-int InterpreterTranslate(cpu_t *core, int &bb_start)
+
+vector<uint64_t> code_page_set;
+
+static void flush_bb(uint32_t addr)
+{
+	bb_map::iterator it;
+	uint32_t start;
+
+	addr  &= 0xfffff000;
+	for (int i = 0; i < 65536; i ++) {
+		for (it = CreamCache[i].begin(); it != CreamCache[i].end(); ++ it) {
+			start = static_cast<uint32_t>(it->first);
+			//start = (start >> 12) << 12;
+			start &= 0xfffff000;
+			if (start == addr) {
+				printf("[ERASE][0x%08x]\n", static_cast<int>(it->first));
+				CreamCache[i].erase(it);
+			}
+		}
+	}
+}
+
+static uint32_t get_bank_addr(void *addr)
+{
+	uint64_t address = (uint64_t)addr;
+	uint64_t bank0 = get_dma_addr(BANK0_START);
+	if ((address >= bank0) && (address < (bank0 + BANK0_SIZE))) {
+		printf("1.addr is %llx\n", addr);
+		return ((uint64_t)addr - bank0) + BANK0_START;
+	}
+	return 0;
+}
+
+static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
+{
+//	printf("in %s\n", __FUNCTION__);
+	uint64_t addr = (uint64_t)si->si_addr;
+	addr = (addr >> 12) << 12;
+	#if 0
+	if (addr == 0) {
+		return;
+	}
+	#endif
+	const vector<uint64_t>::iterator it = find(code_page_set.begin(), 
+						   code_page_set.end(),
+						   (uint64_t)addr);
+	if (it != code_page_set.end()) {
+		code_page_set.erase(it);
+	}
+	mprotect((void *)addr, 4096, PROT_READ | PROT_WRITE);
+	printf("[flush][ADDR:0x%08llx]\n", addr);
+	uint32_t phys_addr = get_bank_addr((void *)addr);
+//	printf("[PHYSICAL][ADDR:0x%08llx]\n", phys_addr);
+	flush_bb(phys_addr);
+}
+
+void protect_code_page(uint32_t addr)
+{
+	void *mem_ptr = (void *)get_dma_addr(addr);
+	mem_ptr = (void *)((long long int)mem_ptr & 0xfffffffffffff000);
+
+	const vector<uint64_t>::iterator it = find(code_page_set.begin(), 
+						   code_page_set.end(),
+						   (uint64_t)mem_ptr);
+	if (it != code_page_set.end()) {
+		return;
+	}
+	printf("[mprotect][ADDR:0x%08llx]\n", mem_ptr);
+	struct sigaction sa;
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_flags = SA_RESTART | SA_SIGINFO;
+	sa.sa_sigaction = &flush_code_cache;
+	sigaction(SIGSEGV, &sa, NULL);
+
+	mprotect(mem_ptr, 4096, PROT_READ);
+
+	code_page_set.push_back((uint64_t)mem_ptr);
+}
+
+int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 {
 	/* Decode instruction, get index */
 	/* Allocate memory and init InsCream */
@@ -3302,6 +3385,10 @@ translated:
 		}
 		ret = inst_base->br;
 	};
+	pc_start = phys_addr;
+	if (!core->is_user_mode) {
+		protect_code_page(pc_start);
+	}
 	insert_bb(pc_start, bb_start);
 	return KEEP_GOING;
 }
@@ -4063,8 +4150,8 @@ void InterpreterMainLoop(cpu_t *core)
 			cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = cpu->Reg[15];
 			goto END;
 		}
-		if (find_bb(cpu->Reg[15], ptr) == -1) {
-			if (InterpreterTranslate(core, ptr) == FETCH_EXCEPTION)
+		if (find_bb(phys_addr, ptr) == -1) {
+			if (InterpreterTranslate(core, ptr, phys_addr) == FETCH_EXCEPTION)
 				goto END;
 		}
 		inst_base = (arm_inst *)&inst_buf[ptr];
@@ -4416,7 +4503,6 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			printf("in ldm_inst\n");
 			int i;
 			unsigned int ret;
 			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
@@ -4491,7 +4577,6 @@ void InterpreterMainLoop(cpu_t *core)
 				}
 			}
 			if (BIT(inst, 15)) {
-				printf("new pc is %x\n", cpu->Reg[15]);
 				goto DISPATCH;
 			}
 		}

@@ -4,6 +4,9 @@
 #include "skyeye_obj.h"
 #include "arm_dyncom_dec.h"
 #include "dyncom/tag.h"
+#include "skyeye_ram.h"
+
+
 static bool_t is_inside_page(cpu_t *cpu, addr_t a)
 {
 //	return ((a & 0xfffff000) == cpu->current_page_phys) ? True : False;

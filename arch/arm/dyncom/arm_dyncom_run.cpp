@@ -1170,11 +1170,13 @@ void arm_dyncom_init(arm_core_t* core){
 	
 	cpu->dyncom_engine->flags &= ~CPU_FLAG_SWAPMEM;
 
-	if (pref->user_mode_sim){
 #ifdef FAST_MEMORY
+	if (pref->user_mode_sim){
 		cpu->dyncom_engine->RAM = (uint8_t*)get_dma_addr(0);
-#endif
 	}
+	else
+		cpu->dyncom_engine->RAM = (uint8_t*)get_dma_addr(BANK0_START);
+#endif
 
 	//core->CP15[CP15(CP15_MAIN_ID)] = 0x410FB760;
 	core->CP15[CP15(CP15_MAIN_ID)] = 0x7b000;
