@@ -2352,7 +2352,20 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(rev)(unsigned int inst, int index)
 
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(rev16)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(rev16)(unsigned int inst, int index){
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rev_inst));
+	rev_inst *inst_cream = (rev_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rm   = BITS(inst,  0,  3);
+	inst_cream->Rd   = BITS(inst, 12, 15);
+
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(revsh)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(rfe)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(rsb)(unsigned int inst, int index)
@@ -5139,6 +5152,20 @@ void InterpreterMainLoop(cpu_t *core)
 		GOTO_NEXT_INST;
 	}
 	REV16_INST:
+	{
+		INC_ICOUNTER;
+		rev_inst *inst_cream = (rev_inst *)inst_base->component;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			RD = (RD & 0xFFFFFF00) | ((RM & 0xff00) >> 8);
+			RD = (RD & 0xFFFF00FF) | ((RM & 0x00FF) << 8);
+			RD = (RD & 0xFF00FFFF) | ((RM & 0xFF000000) >> 8);
+			RD = (RD & 0x00FFFFFF) | ((RM & 0x00FF0000) << 8);
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(rev_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
 	REVSH_INST:
 	RFE_INST:
 	RSB_INST:
