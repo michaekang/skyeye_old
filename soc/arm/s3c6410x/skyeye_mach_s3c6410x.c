@@ -901,6 +901,13 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	if(ret != No_exp){
 		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for gpio\n");
 	}
+	conf_object_t* touchscreen = pre_conf_obj("s3c6410_touchscreen_0", "s3c6410_touchscreen");
+	memory_space_intf* ts_io_memory = (memory_space_intf*)SKY_get_interface(touchscreen, MEMORY_SPACE_INTF_NAME);
+	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, ts_io_memory);
+	ret = add_map(phys_mem, 0x7f00b000, 0x1000, 0x0, ts_io_memory, 1, 1);
+	if(ret != No_exp){
+		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for touchscreen\n");
+	}
 
 	/* Register lcd io memory to the whole address space */
 	conf_object_t* lcd = pre_conf_obj("s3c6410_lcd_0", "s3c6410_lcd");
