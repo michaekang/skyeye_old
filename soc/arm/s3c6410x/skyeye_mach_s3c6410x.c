@@ -894,6 +894,13 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	if(ret != No_exp){
 		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for system controller\n");
 	}
+	conf_object_t* gpio = pre_conf_obj("s3c6410_gpio_0", "s3c6410_gpio");
+	memory_space_intf* gpio_io_memory = (memory_space_intf*)SKY_get_interface(gpio, MEMORY_SPACE_INTF_NAME);
+	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, gpio_io_memory);
+       	ret = add_map(phys_mem, 0x7f008000, 0x1000, 0x0, gpio_io_memory, 1, 1);
+	if(ret != No_exp){
+		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for gpio\n");
+	}
 
 	/* Register lcd io memory to the whole address space */
 	conf_object_t* lcd = pre_conf_obj("s3c6410_lcd_0", "s3c6410_lcd");
