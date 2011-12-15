@@ -999,6 +999,12 @@ typedef struct _uxtb_inst {
 	unsigned int rotate;
 } uxtb_inst;
 
+typedef struct _swp_inst {
+	unsigned int Rn;
+	unsigned int Rd;
+	unsigned int Rm;
+} swp_inst;
+
 typedef struct _b_2_thumb {
 	unsigned int imm;
 }b_2_thumb;
@@ -2758,7 +2764,24 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(swi)(unsigned int inst, int index)
 	inst_cream->num  = BITS(inst, 0, 23);
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(swp)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(swp)(unsigned int inst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(swp_inst));
+	swp_inst *inst_cream = (swp_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+
+	inst_cream->Rn	 = BITS(inst, 16, 19);
+	inst_cream->Rd	 = BITS(inst, 12, 15);
+	inst_cream->Rm	 = BITS(inst,  0,  3);
+
+	if (inst_cream->Rd == 15) {
+		inst_base->br = INDIRECT_BRANCH;
+	}
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(swpb)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab16)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
@@ -5793,6 +5816,25 @@ void InterpreterMainLoop(cpu_t *core)
 		GOTO_NEXT_INST;
 	}
 	SWP_INST:
+	{
+		INC_ICOUNTER;
+		swp_inst *inst_cream = (swp_inst *)inst_base->component;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			addr = RN;
+			fault = check_address_validity(cpu, addr, &phys_addr, 1);
+			if (fault) goto MMU_EXCEPTION;
+			unsigned int value;
+			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
+			if (fault) goto MMU_EXCEPTION;
+			fault = interpreter_write_memory(core, addr, phys_addr, RM, 32);
+			if (fault) goto MMU_EXCEPTION;
+			RD = value;
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(swp_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
 	SWPB_INST:
 	SXTAB_INST:
 	SXTAB16_INST:
