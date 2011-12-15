@@ -980,6 +980,13 @@ typedef struct _sxth_inst {
 	unsigned int rotate;
 } sxth_inst;
 
+typedef struct _uxtab_inst {
+	unsigned int Rn;
+	unsigned int Rd;
+	unsigned int rotate;
+	unsigned int Rm;
+} uxtab_inst;
+
 typedef struct _uxtah_inst {
 	unsigned int Rn;
 	unsigned int Rd;
@@ -2600,7 +2607,23 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb)(unsigned int inst, int index)
 		inst_base->load_r15 = 1;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab)(unsigned int inst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(uxtab_inst));
+	uxtab_inst *inst_cream = (uxtab_inst *)inst_base->component;
+
+	inst_base->cond = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rd     = BITS(inst, 12, 15);
+	inst_cream->rotate = BITS(inst, 10, 11);
+	inst_cream->Rm     = BITS(inst,  0,  3);
+	inst_cream->Rn     = BITS(inst, 16, 19);
+
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(strb)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
@@ -5622,6 +5645,19 @@ void InterpreterMainLoop(cpu_t *core)
 		GOTO_NEXT_INST;
 	}
 	UXTAB_INST:
+	{
+		INC_ICOUNTER;
+		uxtab_inst *inst_cream = (uxtab_inst *)inst_base->component;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) 
+						& 0xff;
+			RD = RN + operand2;
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(uxtab_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
 	STRB_INST:
 	{
 		INC_ICOUNTER;
