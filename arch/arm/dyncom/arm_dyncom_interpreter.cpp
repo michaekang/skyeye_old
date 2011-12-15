@@ -334,8 +334,10 @@ int CondPassed(arm_processor *cpu, unsigned int cond);
 #define MLnS(s)		glue(MLnS, s)
 #define LdnStM(s)	glue(LdnStM, s)
 
+#define W_BIT		BIT(inst, 21)
 #define U_BIT		BIT(inst, 23)
 #define I_BIT		BIT(inst, 25)
+#define P_BIT		BIT(inst, 24)
 #define OFFSET_12	BITS(inst, 0, 11)
 fault_t LnSWoUB(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw)
 {
@@ -463,7 +465,17 @@ fault_t MLnS(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int
 		addr = rn + rm;
 	} else
 		addr = rn - rm;
-
+	if(BIT(inst, 20)){ /* L BIT */
+	}
+	if(BIT(inst, 6)){ /* Sign Bit */
+	}
+	if(BIT(inst, 5)){ /* Half Bit */
+	}
+	/* When both W and P is set to one, pre-indexed addressing */
+	//printf("In %s, W_BIT=%d, P_BIT=%d, cpu->Rn[%d]=0x%x,cpu->Rm[%d]=0x%x, \n", __FUNCTION__, W_BIT, P_BIT, Rn, cpu->Reg[Rn], Rm, cpu->Reg[Rm]);
+	if(W_BIT && P_BIT){
+		cpu->Reg[Rn] = addr;
+	}
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
 	return fault;
@@ -663,7 +675,12 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
 		addr = rn + index;
 	} else
 		addr = rn - index;
-
+	if (W_BIT) {
+		/* write back to the base address */
+		cpu->Reg[Rn] = addr;
+	}
+	else
+		; /* Do nothing */
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
 	return fault;
@@ -1544,8 +1561,12 @@ get_addr_fp_t get_calc_addr_op(unsigned int inst)
 //		printf("line is %d", __LINE__);
 		return LnSWoUB(ImmediatePreIndexed);
 	} else if (BITS(inst, 24, 27) == 7 && BIT(inst, 21) == 1 && BITS(inst, 4, 11) == 0) {
+		//if(BIT(inst, 20) == 1){
+			return LnSWoUB(ScaledRegisterOffset);
+		//}
 		DEBUG_MSG;
 	} else if (BITS(inst, 24, 27) == 7 && BIT(inst, 21) == 1 && BIT(inst, 4) == 0) {
+		return LnSWoUB(ScaledRegisterOffset);
 		DEBUG_MSG;
 	} else if (BITS(inst, 24, 27) == 4 && BIT(inst, 21) == 0) {
 		return LnSWoUB(ImmediatePostIndexed);
@@ -1567,7 +1588,12 @@ get_addr_fp_t get_calc_addr_op(unsigned int inst)
 		return MLnS(ImmediatePreIndexed);
 //		DEBUG_MSG;
 	} else if (BITS(inst, 24, 27) == 1 && BITS(inst, 21, 22) == 1 && BIT(inst, 7) == 1 && BIT(inst, 4) == 1) {
-		DEBUG_MSG;
+		/* LDRH */
+		if(BIT(inst, 20) == 1 && BITS(inst, 4, 7) == 0xb){
+			return MLnS(RegisterOffset);
+		}
+		else
+			DEBUG_MSG;
 	} else if (BITS(inst, 24, 27) == 0 && BITS(inst, 21, 22) == 2 && BIT(inst, 7) == 1 && BIT(inst, 4) == 1) {
 //		DEBUG_MSG;
 		return MLnS(ImmediatePostIndexed);
