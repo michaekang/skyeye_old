@@ -818,9 +818,9 @@ typedef struct _tst_inst {
 
 typedef struct _cmn_inst {
 	unsigned int I;
-	unsigned int S;
+	//unsigned int S;
 	unsigned int Rn;
-	unsigned int Rd;
+	//unsigned int Rd;
 	unsigned int shifter_operand;
 	shtop_fp_t shtop_func;
 } cmn_inst;
@@ -1813,9 +1813,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(cmn)(unsigned int inst, int index)
 	inst_base->load_r15 = 0;
 
 	inst_cream->I	 = BIT(inst, 25);
-	inst_cream->S	 = BIT(inst, 20);
+	//inst_cream->S	 = BIT(inst, 20);
 	inst_cream->Rn	 = BITS(inst, 16, 19);
-	inst_cream->Rd	 = BITS(inst, 12, 15);
+	//inst_cream->Rd	 = BITS(inst, 12, 15);
 	if (CHECK_RN) 
 		inst_base->load_r15 = 1;
 	inst_cream->shifter_operand = BITS(inst, 0, 11);
@@ -2084,7 +2084,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ldrex)(unsigned int inst, int index)
 	inst_base->br	 = NON_BRANCH;
 
 	inst_cream->inst = inst;
-	inst_cream->get_addr = get_calc_addr_op(inst);
+	//inst_cream->get_addr = get_calc_addr_op(inst);
 
 	if (BITS(inst, 12, 15) == 15) {
 		inst_base->br = INDIRECT_BRANCH;
@@ -4143,6 +4143,7 @@ void InterpreterMainLoop(cpu_t *core)
 								(ISPOS(rop) && ISPOS(dst))))
 	#define UPDATE_CFLAG(dst, lop, rop)	(cpu->CFlag = ((dst < lop) || (dst < rop)))
 	#define UPDATE_CFLAG_CARRY_FROM_ADD(lop, rop, flag)	(cpu->CFlag = (((uint64_t) lop + (uint64_t) rop + (uint64_t) flag) > 0xffffffff) )
+	#define UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(lop, rop, flag) (cpu->CFlag = ((uint64_t) lop >= (uint64_t) rop + (uint64_t) flag))
 	#define UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop)	(cpu->CFlag = (lop >= rop))
 	#define UPDATE_CFLAG_WITH_NOT(dst, lop, rop)	(cpu->CFlag = !(dst < lop))
 	#define UPDATE_CFLAG_WITH_SC		cpu->CFlag = cpu->shifter_carry_out
@@ -4316,7 +4317,7 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
 				UPDATE_CFLAG_WITH_SC;
-				UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
+				//UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
 			}
 			if (inst_cream->Rd == 15) {
 				goto DISPATCH;
@@ -4383,8 +4384,10 @@ void InterpreterMainLoop(cpu_t *core)
 			if (BITS(inst, 20, 27) == 0x12 && BITS(inst, 4, 7) == 0x3) {
 				//LINK_RTN_ADDR;
 				cpu->Reg[14] = (cpu->Reg[15] + GET_INST_SIZE(cpu));
-				cpu->Reg[15] = cpu->Reg[BITS(inst, 0, 3)] & 0xfffffffe;
-				cpu->TFlag = cpu->Reg[BITS(inst, 0, 3)] & 0x1;
+				cpu->Reg[15] = cpu->Reg[inst_cream->val.Rm] & 0xfffffffe;
+				cpu->TFlag = cpu->Reg[inst_cream->val.Rm] & 0x1;
+				//cpu->Reg[15] = cpu->Reg[BITS(inst, 0, 3)] & 0xfffffffe;
+				//cpu->TFlag = cpu->Reg[BITS(inst, 0, 3)] & 0x1;
 			} else {
 				DEBUG_MSG;
 			}
@@ -4398,8 +4401,11 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		bx_inst *inst_cream = (bx_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			if (inst_cream->Rm == 15)
+				printf("In %s, BX at pc %x: use of Rm = R15 is discouraged\n", __FUNCTION__, cpu->Reg[15]);
+			cpu->TFlag = RM & 0x1;
 			cpu->Reg[15] = RM & 0xfffffffe;
-			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
+//			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
 			goto DISPATCH;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4479,26 +4485,28 @@ void InterpreterMainLoop(cpu_t *core)
 		cps_inst *inst_cream = (cps_inst *)inst_base->component;
 		uint32_t aif_val = 0;
 		uint32_t aif_mask = 0;
-		/* isInAPrivilegedMode */
-		if (inst_cream->imod1) {
-			if (inst_cream->A) {
-				aif_val |= (inst_cream->imod0 << 8);
-				aif_mask |= 1 << 8;
+		if (InAPrivilegedMode(cpu)) {
+			/* isInAPrivilegedMode */
+			if (inst_cream->imod1) {
+				if (inst_cream->A) {
+					aif_val |= (inst_cream->imod0 << 8);
+					aif_mask |= 1 << 8;
+				}
+				if (inst_cream->I) {
+					aif_val |= (inst_cream->imod0 << 7);
+					aif_mask |= 1 << 7;
+				}
+				if (inst_cream->F) {
+					aif_val |= (inst_cream->imod0 << 6);
+					aif_mask |= 1 << 6;
+				}
+				aif_mask = ~aif_mask;
+				cpu->Cpsr = (cpu->Cpsr & aif_mask) | aif_val;
 			}
-			if (inst_cream->I) {
-				aif_val |= (inst_cream->imod0 << 7);
-				aif_mask |= 1 << 7;
+			if (inst_cream->mmod) {
+				cpu->Cpsr = (cpu->Cpsr & 0xffffffe0) | inst_cream->mode;
+				switch_mode(cpu, inst_cream->mode);
 			}
-			if (inst_cream->F) {
-				aif_val |= (inst_cream->imod0 << 6);
-				aif_mask |= 1 << 6;
-			}
-			aif_mask = ~aif_mask;
-			cpu->Cpsr = (cpu->Cpsr & aif_mask) | aif_val;
-		}
-		if (inst_cream->mmod) {
-			cpu->Cpsr = (cpu->Cpsr & 0xffffffe0) | inst_cream->mode;
-			switch_mode(cpu, inst_cream->mode);
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(cps_inst));
@@ -4580,7 +4588,7 @@ void InterpreterMainLoop(cpu_t *core)
 				goto MMU_EXCEPTION;
 			}
 			unsigned int inst = inst_cream->inst;
-			if (BITS(inst, 25, 27) == 4 && BIT(inst, 22) && BIT(inst, 20) && !BIT(inst, 15)) {
+			if (BIT(inst, 22) && !BIT(inst, 15)) {
 //				DEBUG_MSG;
 				#if 1
 				/* LDM (2) user */
@@ -4630,7 +4638,7 @@ void InterpreterMainLoop(cpu_t *core)
 						cpu->Reg_usr[1] = ret;
 				}
 				#endif
-			} else {
+			} else if (!BIT(inst, 22)) {
 				for( i = 0; i < 16; i ++ ){
 					if(BIT(inst, i)){
 						//bus_read(32, addr, &ret);
@@ -4654,14 +4662,41 @@ void InterpreterMainLoop(cpu_t *core)
 						phys_addr += 4;
 					}
 				}
-				if (BITS(inst, 25, 27) == 4 && BIT(inst, 22) && BIT(inst, 20)) {
-					if (CurrentModeHasSPSR) {
-						cpu->Cpsr = cpu->Spsr_copy;
-						switch_mode(cpu, cpu->Cpsr & 0x1f);
-						LOAD_NZCV;
-					}
+			} else if (BIT(inst, 22) && BIT(inst, 15)) {
+				for( i = 0; i < 15; i ++ ){
+					if(BIT(inst, i)){
+						fault = check_address_validity(cpu, addr, &phys_addr, 1);
+						if (fault) {
+							goto MMU_EXCEPTION;
+						}
+						fault = interpreter_read_memory(core, addr, phys_addr, ret, 32);
+						if (fault) {
+							goto MMU_EXCEPTION;
+						}
+						cpu->Reg[i] = ret;
+						addr += 4;
+						phys_addr += 4;
+ 					}
+ 				}
+				
+				if (CurrentModeHasSPSR) {
+					cpu->Cpsr = cpu->Spsr_copy;
+					switch_mode(cpu, cpu->Cpsr & 0x1f);
+					LOAD_NZCV;
 				}
-			}
+				
+				fault = check_address_validity(cpu, addr, &phys_addr, 1);
+				if (fault) {
+					goto MMU_EXCEPTION;
+				}
+				fault = interpreter_read_memory(core, addr, phys_addr, ret, 32);
+				if (fault) {
+					goto MMU_EXCEPTION;
+				}
+				cpu->Reg[15] = ret;
+				addr += 4;
+				phys_addr += 4;
+ 			}
 			if (BIT(inst, 15)) {
 				goto DISPATCH;
 			}
@@ -4878,13 +4913,13 @@ void InterpreterMainLoop(cpu_t *core)
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
 			if (fault) goto MMU_EXCEPTION;
-			unsigned int value;
+			unsigned int value = 0;
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 16);
 //			fault = interpreter_read_memory(core, addr, value, 32);
 			if (fault) goto MMU_EXCEPTION;
-			if (value == 0xffff && cpu->icounter > 190000000 && cpu->icounter < 210000000) {
-				value = 0xffffffff;
-			}
+			//if (value == 0xffff && cpu->icounter > 190000000 && cpu->icounter < 210000000) {
+			//	value = 0xffffffff;
+			//}
 			//bus_read(16, addr, &value);
 //			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value & 0xffff;
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
@@ -4966,6 +5001,12 @@ void InterpreterMainLoop(cpu_t *core)
 //			printf("PC:%x\n", cpu->Reg[15]);
 //			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+			if (0) /* If CP15_reg1_Ubit == 1, to protect unaligned access. It is a special case */
+			{
+				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+			} 
+			else /* else CP15_reg1_Ubit == 0 */
+				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = rotr(value,(8*(addr&0x3))) ;
 //			printf("after : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
 //			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 16, 19)]);
 //			cpu->Reg[BITS(inst_cream->inst, 16, 19)] = addr;
@@ -5148,11 +5189,7 @@ void InterpreterMainLoop(cpu_t *core)
 			if (inst_cream->R) {
 				RD = cpu->Spsr_copy;
 			} else {
-				cpu->Cpsr = (cpu->Cpsr & 0xfffffff) |
-						(cpu->NFlag << 31)  |
-						(cpu->ZFlag << 30)  |
-						(cpu->CFlag << 29)  |
-						(cpu->VFlag << 28);
+				SAVE_NZCV;
 				RD = cpu->Cpsr;
 			}
 		}
@@ -5374,9 +5411,12 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		rsc_inst *inst_cream = (rsc_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			lop = RN + !cpu->CFlag;
+			//lop = RN + !cpu->CFlag;
+			//rop = SHIFTER_OPERAND;
+			//RD = dst = rop - lop;
+			lop = RN;
 			rop = SHIFTER_OPERAND;
-			RD = dst = rop - lop;
+			RD = dst = rop - lop - !cpu->CFlag;
 			if (inst_cream->S && (inst_cream->Rd == 15)) {
 				/* cpsr = spsr */
 				if (CurrentModeHasSPSR) {
@@ -5388,7 +5428,8 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
 //				UPDATE_CFLAG(dst, lop, rop);
-				UPDATE_CFLAG_NOT_BORROW_FROM(rop, lop);
+//				UPDATE_CFLAG_NOT_BORROW_FROM(rop, lop);
+				UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(lop, rop, !cpu->CFlag);
 //				cpu->CFlag = !((ISNEG(lop) && ISPOS(rop)) || (ISNEG(lop) && ISPOS(dst)) || (ISPOS(rop) && ISPOS(dst)));
 				UPDATE_VFLAG_OVERFLOW_FROM((int)dst, (int)rop, (int)lop);
 			}
@@ -5525,7 +5566,7 @@ void InterpreterMainLoop(cpu_t *core)
 			int i;
 			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
 			if (fault) goto MMU_EXCEPTION;
-			if (BITS(inst_cream->inst, 25, 27) == 4 && BITS(inst_cream->inst, 20, 22) == 4) {
+			if (BIT(inst_cream->inst, 22) == 1) {
 //				DEBUG_MSG;
 				#if 1
 				for (i = 0; i < 13; i++) {
@@ -5716,8 +5757,8 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
+		//if (BITS(inst_cream->inst, 12, 15) == 15)
+		//	goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5800,8 +5841,8 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
+		//if (BITS(inst_cream->inst, 12, 15) == 15)
+		//	goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
