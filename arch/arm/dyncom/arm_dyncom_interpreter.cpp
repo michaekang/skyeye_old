@@ -404,7 +404,7 @@ fault_t LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsi
 	if (U_BIT) {
 		addr = CHECK_READ_REG15_WA(cpu, Rn) + OFFSET_12;
 	} else {
-		addr = CHECK_READ_REG15(cpu, Rn) - OFFSET_12;
+		addr = CHECK_READ_REG15_WA(cpu, Rn) - OFFSET_12;
 	}
 	#if 0
 	if (Rn == 15) {
