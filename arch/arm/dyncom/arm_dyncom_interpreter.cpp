@@ -4373,8 +4373,12 @@ void InterpreterMainLoop(cpu_t *core)
 		bic_inst *inst_cream = (bic_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			lop = RN;
+			if (inst_cream->Rn == 15) {
+				lop += 2 * GET_INST_SIZE(cpu);
+			}
 			rop = SHIFTER_OPERAND;
-			RD = dst = lop & (rop ^ 0xffffffff);
+//			RD = dst = lop & (rop ^ 0xffffffff);
+			RD = dst = lop & (~rop);
 			if ((inst_cream->S) && (inst_cream->Rd == 15)) {
 				/* cpsr = spsr */
 				if (CurrentModeHasSPSR) {
