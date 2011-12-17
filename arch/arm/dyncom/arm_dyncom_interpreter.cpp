@@ -5290,7 +5290,9 @@ void InterpreterMainLoop(cpu_t *core)
 		mul_inst *inst_cream = (mul_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 //			RD = dst = SHIFTER_OPERAND;
-			RD = dst = RM * RS;
+			uint64_t rm = RM;
+			uint64_t rs = RS;
+			RD = dst = static_cast<uint32_t>((rm * rs) & 0xffffffff);
 			if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
