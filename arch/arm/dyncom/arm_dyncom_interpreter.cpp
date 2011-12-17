@@ -4265,7 +4265,7 @@ void InterpreterMainLoop(cpu_t *core)
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			lop = RN;
 			if (inst_cream->Rn == 15) {
-				lop += 8;
+				lop += 2 * GET_INST_SIZE(cpu);
 			}
 			rop = SHIFTER_OPERAND;
 			RD = dst = lop + rop;
@@ -4463,6 +4463,9 @@ void InterpreterMainLoop(cpu_t *core)
 //			printf("r0 is %x\n", cpu->Reg[0]);
 			cmp_inst *inst_cream = (cmp_inst *)inst_base->component;
 			lop = RN;
+			if (inst_cream->Rn == 15) {
+				lop += 2 * GET_INST_SIZE(cpu);
+			}
 			rop = SHIFTER_OPERAND;
 			dst = lop - rop;
 
@@ -4542,6 +4545,9 @@ void InterpreterMainLoop(cpu_t *core)
 		eor_inst *inst_cream = (eor_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			lop = RN;
+			if (inst_cream->Rn == 15) {
+				lop += 2 * GET_INST_SIZE(cpu);
+			}
 			rop = SHIFTER_OPERAND;
 			RD = dst = lop ^ rop;
 			if (inst_cream->S && (inst_cream->Rd == 15)) {
@@ -5075,6 +5081,10 @@ void InterpreterMainLoop(cpu_t *core)
 			uint64_t rm = RM;
 			uint64_t rs = RS;
 			uint64_t rn = RN;
+			if (inst_cream->Rm == 15 || inst_cream->Rs == 15 || inst_cream->Rn == 15) {
+				printf("in __line__\n", __LINE__);
+				exit(-1);
+			}
 //			RD = dst = RM * RS + RN;
 			RD = dst = static_cast<uint32_t>((rm * rs + rn) & 0xffffffff);
 			if (inst_cream->S) {
@@ -5219,7 +5229,11 @@ void InterpreterMainLoop(cpu_t *core)
 		uint32_t mask;
 		if (!inst_cream->R) {
 			if (InAPrivilegedMode(cpu)) {
-				mask = byte_mask & (UserMask | PrivMask);
+				if ((operand & StateMask) != 0) {
+					/* UNPREDICTABLE */
+					DEBUG_MSG;
+				} else
+					mask = byte_mask & (UserMask | PrivMask);
 			} else {
 				mask = byte_mask & UserMask;
 			}
@@ -5353,6 +5367,10 @@ void InterpreterMainLoop(cpu_t *core)
 				(((RM >> 8) & 0xff) << 16) |
 				(((RM >> 16) & 0xff) << 8) |
 				((RM >> 24) & 0xff);
+			if (inst_cream->Rm == 15) {
+				printf("in line %d\n", __LINE__);
+				exit(-1);
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(rev_inst));
@@ -5381,9 +5399,12 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		rsb_inst *inst_cream = (rsb_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			lop = RN;
-			rop = SHIFTER_OPERAND;
-			RD = dst = rop - lop;
+			rop = RN;
+			lop = SHIFTER_OPERAND;
+			if (inst_cream->Rn == 15) {
+				rop += 2 * GET_INST_SIZE(cpu);;
+			}
+			RD = dst = lop - rop;
 			if (inst_cream->S && (inst_cream->Rd == 15)) {
 				/* cpsr = spsr */
 				if (CurrentModeHasSPSR) {
@@ -5394,8 +5415,9 @@ void InterpreterMainLoop(cpu_t *core)
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
-				UPDATE_CFLAG_NOT_BORROW_FROM(rop, lop);
-				UPDATE_VFLAG_OVERFLOW_FROM(dst, rop, lop);
+				UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop);
+//				UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
+				UPDATE_VFLAG_OVERFLOW_FROM(dst, lop, rop);
 			}
 			if (inst_cream->Rd == 15) {
 				goto DISPATCH;
@@ -5970,6 +5992,8 @@ void InterpreterMainLoop(cpu_t *core)
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			tst_inst *inst_cream = (tst_inst *)inst_base->component;
 			lop = RN;
+			if (inst_cream->Rn == 15)
+				lop += GET_INST_SIZE(cpu) * 2;
 			rop = SHIFTER_OPERAND;
 			dst = lop & rop;
 
