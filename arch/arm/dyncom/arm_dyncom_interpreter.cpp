@@ -424,6 +424,38 @@ fault_t LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsi
 	}
 	return fault;
 }
+
+fault_t MLnS(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw)
+{
+	fault_t fault;
+	unsigned int addr;
+	unsigned int Rn = BITS(inst, 16, 19);
+	unsigned int Rm = BITS(inst,  0,  3);
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
+	//if (Rn == 15) rn += 8;
+	//if (Rm == 15) rm += 8;
+	if (U_BIT) {
+		addr = rn + rm;
+	} else
+		addr = rn - rm;
+	if(BIT(inst, 20)){ /* L BIT */
+	}
+	if(BIT(inst, 6)){ /* Sign Bit */
+	}
+	if(BIT(inst, 5)){ /* Half Bit */
+	}
+
+	virt_addr = addr;
+	fault = check_address_validity(cpu, addr, &phys_addr, rw);
+	if (fault) return fault;
+
+	if (CondPassed(cpu, BITS(inst, 28, 31))) {
+		cpu->Reg[Rn] = addr;
+	}
+	return fault;
+}
+
 fault_t LnSWoUB(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw)
 {
 	fault_t fault;
@@ -562,11 +594,6 @@ fault_t MLnS(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int
 	if(BIT(inst, 6)){ /* Sign Bit */
 	}
 	if(BIT(inst, 5)){ /* Half Bit */
-	}
-	/* When both W and P is set to one, pre-indexed addressing */
-	//printf("In %s, W_BIT=%d, P_BIT=%d, cpu->Rn[%d]=0x%x,cpu->Rm[%d]=0x%x, \n", __FUNCTION__, W_BIT, P_BIT, Rn, cpu->Reg[Rn], Rm, cpu->Reg[Rm]);
-	if(W_BIT && P_BIT){
-		cpu->Reg[Rn] = addr;
 	}
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
@@ -771,12 +798,6 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
 		addr = rn + index;
 	} else
 		addr = rn - index;
-	if (W_BIT) {
-		/* write back to the base address */
-		cpu->Reg[Rn] = addr;
-	}
-	else
-		; /* Do nothing */
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
 	return fault;
@@ -1681,12 +1702,7 @@ get_addr_fp_t get_calc_addr_op(unsigned int inst)
 		return MLnS(ImmediatePreIndexed);
 //		DEBUG_MSG;
 	} else if (BITS(inst, 24, 27) == 1 && BITS(inst, 21, 22) == 1 && BIT(inst, 7) == 1 && BIT(inst, 4) == 1) {
-		/* LDRH */
-		if(BIT(inst, 20) == 1 && BITS(inst, 4, 7) == 0xb){
-			return MLnS(RegisterOffset);
-		}
-		else
-			DEBUG_MSG;
+		return MLnS(RegisterPreIndexed);
 	} else if (BITS(inst, 24, 27) == 0 && BITS(inst, 21, 22) == 2 && BIT(inst, 7) == 1 && BIT(inst, 4) == 1) {
 //		DEBUG_MSG;
 		return MLnS(ImmediatePostIndexed);
@@ -5155,7 +5171,7 @@ void InterpreterMainLoop(cpu_t *core)
 						CP15_REG(CP15_TRANSLATION_BASE_TABLE_1) = RD;
 					} else if (CRn == 2 && CRm == 0 && OPCODE_2 == 2) {
 						//LET(CP15_TRANSLATION_BASE_CONTROL, R(RD));
-						CP15_REG(CP15_TRANSLATION_BASE_CONTROL);
+						CP15_REG(CP15_TRANSLATION_BASE_CONTROL) = RD;
 			//		} else if (CRn == 7 && CRm == 14 && OPCODE_2 == 0) {
 			//			LET(R(RD));
 					} else {
