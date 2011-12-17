@@ -5884,7 +5884,7 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
+			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
 			if (fault) goto MMU_EXCEPTION;
 			unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xffff;
 			//bus_write(16, addr, value);
@@ -5903,7 +5903,7 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
+			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
 			if (fault) goto MMU_EXCEPTION;
 			unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)];
 			//bus_write(16, addr, value);
