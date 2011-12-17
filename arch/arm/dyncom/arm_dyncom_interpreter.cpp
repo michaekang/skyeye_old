@@ -323,6 +323,9 @@ typedef struct _ldst_inst {
 	unsigned int inst;
 	get_addr_fp_t get_addr;
 } ldst_inst;
+#define DEBUG_MSG	printf("in %s %d\n", __FUNCTION__, __LINE__);		\
+			printf("inst is %x\n", inst);				\
+			exit(0)
 
 int CondPassed(arm_processor *cpu, unsigned int cond);
 #define LnSWoUB(s)	glue(LnSWoUB, s)
@@ -419,6 +422,78 @@ fault_t LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsi
 	if (CondPassed(cpu, BITS(inst, 28, 31))) {
 		cpu->Reg[Rn] = addr;
 	}
+	return fault;
+}
+fault_t LnSWoUB(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw)
+{
+	fault_t fault;
+	unsigned int Rn = BITS(inst, 16, 19);
+	unsigned int Rm = BITS(inst, 0, 3);
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
+	unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
+	//if (Rm == 15) rm += 8;
+	unsigned int addr;
+	if (U_BIT) {
+		addr = rn + rm;
+	} else {
+		addr = rn - rm;
+	}
+	virt_addr = addr;
+	fault = check_address_validity(cpu, addr, &phys_addr, rw);
+	if(fault)
+		return fault;
+	if (CondPassed(cpu, BITS(inst, 28, 31))) {
+		cpu->Reg[Rn] = addr;
+	}
+	return fault;
+}
+fault_t LnSWoUB(ScaledRegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw)
+{
+	fault_t fault;
+	unsigned int shift = BITS(inst, 5, 6);
+	unsigned int shift_imm = BITS(inst, 7, 11);
+	unsigned int Rn = BITS(inst, 16, 19);
+	unsigned int Rm = BITS(inst, 0, 3);
+	unsigned int index;
+	unsigned int addr;
+
+	unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
+	//if (Rm == 15) rm += 8;
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	//if (Rn == 15) rn += 8;
+	switch (shift) {
+	case 0:
+		//DEBUG_MSG;
+		index = rm << shift_imm;
+		break;
+	case 1:
+//		DEBUG_MSG;
+		if (shift_imm == 0) {
+			index = 0;
+		} else {
+			index = rm >> shift_imm;
+		}
+		break;
+	case 2:
+		DEBUG_MSG;
+		break;
+	case 3:
+		DEBUG_MSG;
+		break;
+	}
+	if (U_BIT) {
+		addr = rn + index;
+	} else
+		addr = rn - index;
+	virt_addr = addr;
+	fault = check_address_validity(cpu, addr, &phys_addr, rw);
+	if(fault)
+		return fault;
+	if (CondPassed(cpu, BITS(inst, 28, 31))) {
+		cpu->Reg[Rn] = addr;
+	}
+
 	return fault;
 }
 
@@ -651,9 +726,6 @@ fault_t LdnStM(DecrementAfter)(arm_processor *cpu, unsigned int inst, unsigned i
 	return fault;
 }
 
-#define DEBUG_MSG	printf("in %s %d\n", __FUNCTION__, __LINE__);		\
-			printf("inst is %x\n", inst);				\
-			exit(0)
 fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw)
 {
 	fault_t fault;
@@ -1585,13 +1657,9 @@ get_addr_fp_t get_calc_addr_op(unsigned int inst)
 //		printf("line is %d", __LINE__);
 		return LnSWoUB(ImmediatePreIndexed);
 	} else if (BITS(inst, 24, 27) == 7 && BIT(inst, 21) == 1 && BITS(inst, 4, 11) == 0) {
-		//if(BIT(inst, 20) == 1){
-			return LnSWoUB(ScaledRegisterOffset);
-		//}
-		DEBUG_MSG;
+		return LnSWoUB(RegisterPreIndexed);
 	} else if (BITS(inst, 24, 27) == 7 && BIT(inst, 21) == 1 && BIT(inst, 4) == 0) {
-		return LnSWoUB(ScaledRegisterOffset);
-		DEBUG_MSG;
+		return LnSWoUB(ScaledRegisterPreIndexed);
 	} else if (BITS(inst, 24, 27) == 4 && BIT(inst, 21) == 0) {
 		return LnSWoUB(ImmediatePostIndexed);
 	} else if (BITS(inst, 24, 27) == 6 && BIT(inst, 21) == 0 && BITS(inst, 4, 11) == 0) {
