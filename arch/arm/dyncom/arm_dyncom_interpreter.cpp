@@ -216,16 +216,11 @@ unsigned int DPO(ArithmeticShiftRightByRegister)(arm_processor *cpu, unsigned in
 		shifter_operand = static_cast<int>(rm) >> BITS(rs, 0, 7);
 		cpu->shifter_carry_out = BIT(rm, BITS(rs, 0, 7) - 1);
 	} else {
-		if (BITS(rs, 0, 7) == 32) {
-			if (rm < 0x80000000)
-				shifter_operand = 0x0;
-			else
-				shifter_operand = 0xFFFFFFFF;
-			cpu->shifter_carry_out = BIT(rm, 31);
-		} else {
-			shifter_operand = 0xFFFFFFFF;
-			cpu->shifter_carry_out = BIT(rm, 31);
-		}
+		if (BIT(rm, 31) == 0) {
+			shifter_operand = 0;
+		} else 
+			shifter_operand = 0xffffffff;
+		cpu->shifter_carry_out = BIT(rm, 31);
 	}
 	return shifter_operand;
 }
