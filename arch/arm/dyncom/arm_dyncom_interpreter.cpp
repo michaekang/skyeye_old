@@ -4962,6 +4962,13 @@ void InterpreterMainLoop(cpu_t *core)
 			/* Should check if RD is even-numbered, Rd != 14, addr[0:1] == 0, (CP15_reg1_U == 1 || addr[2] == 0) */
 			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
 			if (fault) goto MMU_EXCEPTION;
+			uint32_t rear_phys_addr;
+			 fault = check_address_validity(cpu, addr + 4, &rear_phys_addr, 1);
+			if(fault){
+				fprintf(stderr, "mmu fault , should rollback the above get_addr\n");
+				exit(-1);
+				goto MMU_EXCEPTION;
+			}
 			unsigned int value;
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
 			if (fault) goto MMU_EXCEPTION;
@@ -5908,6 +5915,17 @@ void InterpreterMainLoop(cpu_t *core)
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
 			if (fault) goto MMU_EXCEPTION;
+			uint32_t rear_phys_addr;
+			fault = check_address_validity(cpu, addr + 4, &rear_phys_addr, 0);
+                        if (fault){
+				fprintf(stderr, "mmu fault , should rollback the above get_addr\n");
+				exit(-1);
+				goto MMU_EXCEPTION;
+			}
+
+			//fault = inst_cream->get_addr(cpu, inst_cream->inst, addr + 4, phys_addr + 4, 0);
+			//if (fault) goto MMU_EXCEPTION;
+
 			unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)];
 			//bus_write(32, addr, value);
 			fault = interpreter_write_memory(core, addr, phys_addr, value, 32);
