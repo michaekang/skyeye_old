@@ -682,7 +682,14 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
 		}
 		break;
 	case 2:
-		DEBUG_MSG;
+		if (shift_imm == 0){ /* ASR #32 */
+			if (cpu->Reg[Rm] >> 31)
+				index = 0xFFFFFFFF;
+			else
+				index = 0;
+		}
+		else
+			index = cpu->Reg[Rm] >> shift_imm;
 		break;
 	case 3:
 		DEBUG_MSG;
