@@ -5179,10 +5179,26 @@ void InterpreterMainLoop(cpu_t *core)
 					} else if (CRn == 2 && CRm == 0 && OPCODE_2 == 2) {
 						//LET(CP15_TRANSLATION_BASE_CONTROL, R(RD));
 						CP15_REG(CP15_TRANSLATION_BASE_CONTROL) = RD;
+					} else if(CRn == MMU_CACHE_OPS){
+						//SKYEYE_WARNING("cache operation have not implemented.\n");
+					} else if(CRn == MMU_TLB_OPS){
+						//SKYEYE_WARNING("tlb operation have not implemented.\n");
 			//		} else if (CRn == 7 && CRm == 14 && OPCODE_2 == 0) {
 			//			LET(R(RD));
+					} else if(CRn == MMU_PID){
+						if(OPCODE_2 == 0)
+							CP15_REG(CP15_PID) = RD;
+						else if(OPCODE_2 == 1)
+							CP15_REG(CP15_CONTEXT_ID) = RD;
+						else if(OPCODE_2 == 3){
+							CP15_REG(CP15_THREAD_URO) = RD;
+						}
+						else{
+							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", CRn);
+						}
+
 					} else {
-//						printf("mcr is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
+						printf("mcr is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
 					}
 				}
 			}
