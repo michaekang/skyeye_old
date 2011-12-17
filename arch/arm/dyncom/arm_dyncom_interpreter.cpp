@@ -16,7 +16,8 @@ using namespace std;
 #define CHECK_RS 	if(RS == 15) rs += 8
 #define CHECK_RM 	if(RM == 15) rm += 8
 
-#define BITS(s, a, b) (((s) >> (a)) & ((1 << (1 + (b) - (a))) - 1))
+//#define BITS(s, a, b) (((s) >> (a)) & ((1 << (1 + (b) - (a))) - 1))
+#define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
 #define BIT(s, n) ((s >> (n)) & 1)
 #define RM	BITS(sht_oper, 0, 3)
 #define RS	BITS(sht_oper, 8, 11)
