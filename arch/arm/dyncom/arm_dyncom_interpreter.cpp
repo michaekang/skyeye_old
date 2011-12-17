@@ -5310,7 +5310,8 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		mvn_inst *inst_cream = (mvn_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			RD = dst = (SHIFTER_OPERAND ^ 0xffffffff);
+//			RD = dst = (SHIFTER_OPERAND ^ 0xffffffff);
+			RD = dst = ~SHIFTER_OPERAND;
 			if (inst_cream->S && (inst_cream->Rd == 15)) {
 				/* cpsr = spsr */
 				if (CurrentModeHasSPSR) {
