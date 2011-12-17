@@ -5312,8 +5312,17 @@ void InterpreterMainLoop(cpu_t *core)
 					} else if (CRn == 5 && CRm == 0 && OPCODE_2 == 1) {
 						//LET(RD, R(CP15_INSTR_FAULT_STATUS));
 						RD = cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)];
-					} else if (CRn == 13 && CRm == 0 && OPCODE_2 == 3) {
-						RD = cpu->CP15[CP15(CP15_THREAD_URO)];
+					} else if (CRn == 13) {
+						if(OPCODE_2 == 0)
+							RD = CP15_REG(CP15_PID);
+						else if(OPCODE_2 == 1)
+							RD = CP15_REG(CP15_CONTEXT_ID);
+						else if(OPCODE_2 == 3){
+							RD = CP15_REG(CP15_THREAD_URO);
+						}
+						else{
+							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", CRn);
+						}
 					}
 					else {
 						printf("mrc is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
