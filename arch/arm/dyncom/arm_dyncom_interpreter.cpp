@@ -422,6 +422,28 @@ fault_t LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsi
 	return fault;
 }
 
+fault_t LnSWoUB(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw)
+{
+	fault_t fault;
+	unsigned int Rn = BITS(inst, 16, 19);
+	unsigned int Rm = BITS(inst,  0,  3);
+
+	unsigned int addr = cpu->Reg[Rn];
+	if (Rn == 15) addr += 8;
+	virt_addr = addr;
+	fault = check_address_validity(cpu, addr, &phys_addr, rw);
+	if (fault) return fault;
+
+	if (CondPassed(cpu, BITS(inst, 28, 31))) {
+		if (U_BIT) {
+			cpu->Reg[Rn] += cpu->Reg[Rm];
+		} else {
+			cpu->Reg[Rn] -= cpu->Reg[Rm];
+		}
+	}
+	return fault;
+}
+
 fault_t MLnS(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw)
 {
 	fault_t fault;
@@ -1566,7 +1588,8 @@ get_addr_fp_t get_calc_addr_op(unsigned int inst)
 	} else if (BITS(inst, 24, 27) == 4 && BIT(inst, 21) == 0) {
 		return LnSWoUB(ImmediatePostIndexed);
 	} else if (BITS(inst, 24, 27) == 6 && BIT(inst, 21) == 0 && BITS(inst, 4, 11) == 0) {
-		DEBUG_MSG;
+//		DEBUG_MSG;
+		return LnSWoUB(RegisterPostIndexed);
 	} else if (BITS(inst, 24, 27) == 6 && BIT(inst, 21) == 0 && BIT(inst, 4) == 0) {
 		DEBUG_MSG;
 	} else if (BITS(inst, 24, 27) == 1 && BITS(inst, 21, 22) == 2 && BIT(inst, 7) == 1 && BIT(inst, 4) == 1) {
