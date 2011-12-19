@@ -24,10 +24,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "skyeye_log.h"
 #include "skyeye_loader.h"
 #include "bank_defs.h"
+#include "skyeye_ram.h"
 
 /**
 * @brief load a block of data to the memory
@@ -64,20 +68,45 @@ exception_t load_file(const char* filename, generic_address_t load_addr){
 	uint8 data;
 	int nread = 0;
 	generic_address_t addr = load_addr;
+	unsigned long host_addr = get_dma_addr(addr);
+	skyeye_log(Debug_log, __FUNCTION__, "addr=0x%x, host_addr=0x%lx.\n", addr, (unsigned long) host_addr);
+	struct stat stat_buf;
+	if(stat(filename, &stat_buf) != 0){
+		skyeye_log(Error_log, __FUNCTION__, "Can not stat file %s.\n", filename);
+		return File_open_exp;
+	}
+	off_t size = stat_buf.st_size;
+	if(size >= (get_bank_size(addr) - addr)){
+		skyeye_log(Error_log, __FUNCTION__, "File %s too big.\n", filename);
+		return Excess_range_exp;
+	}
 	f = fopen(filename, "rb");
 	if(f == NULL){
 		skyeye_log(Error_log, __FUNCTION__, "Can not open file %s.\n", filename);
 		return File_open_exp;
 	}
+
+	nread = fread((uint8_t *)host_addr, 1, size, f);
+	if(nread != size){
+		skyeye_log(Error_log, __FUNCTION__, "Can not stat file %s.\n", filename);
+		fclose(f);
+		return File_open_exp;
+	}
+	#if 0
 	/* read a char and write it to the memory */
 	while(nread = fread(&data, 1, 1, f)){
+		#if 0
 		if(bus_write(8, addr, data) != 0){
 			/* error handler for address error */
 			fclose(f);
 			return Excess_range_exp;
 		}
+		#endif
+		*(uint8_t *)host_addr = data;
+		host_addr++;
 		addr++;
 	}
+	#endif
 	skyeye_log(Info_log, __FUNCTION__, "Load the file %s to the memory 0x%x\n", filename, load_addr);
 	fclose(f);
 #if 0 
