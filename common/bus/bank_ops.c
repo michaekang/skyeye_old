@@ -57,6 +57,18 @@ bank_ptr (uint32_t addr)
 	return (NULL);
 }
 
+uint64_t
+get_bank_size (uint32_t addr)
+{
+	/* Try to reduce the time of find the right bank */
+	mem_bank_t *mbp = bank_ptr(addr);
+	if(mbp != NULL)
+		return mbp->len;
+	else
+		/* something wrong */
+		return 0;
+}
+
 /**
 * @brief generic data read interface
 *

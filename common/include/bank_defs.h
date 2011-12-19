@@ -61,6 +61,8 @@ int bus_write(short size, generic_address_t addr, uint32_t value);
 
 mem_bank_t * bank_ptr(uint32_t addr);
 
+uint64_t get_bank_size (uint32_t addr);
+
 /* fill the zero for global_memmap */
 void reset_global_memmap();
 
