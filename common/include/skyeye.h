@@ -41,8 +41,8 @@
 #endif
 
 #define SKYEYE_INFO(msg...)		skyeye_log(Info_log, __FUNCTION__, ##msg);
-#define SKYEYE_ERR(msg...)		fprintf(stderr, ##msg);
-#define SKYEYE_WARNING(msg...)	fprintf(stderr, ##msg);
+#define SKYEYE_ERR(msg...)		skyeye_log(Error_log, __FUNCTION__, ##msg);
+#define SKYEYE_WARNING(msg...)		skyeye_log(Warning_log, __FUNCTION__, ##msg);
 #if 0
 #ifndef i8
 #define i8	char
