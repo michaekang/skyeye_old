@@ -74,7 +74,7 @@ unsigned int DPO(Immediate)(arm_processor *cpu, unsigned int sht_oper)
 	unsigned int rotate_imm = BITS(sht_oper, 8, 11);
 //	printf("immed_8 is %x\n", immed_8);
 //	printf("rotate_imm is %x\n", rotate_imm);
-	unsigned int shifter_operand = rotr(immed_8, rotate_imm * 2);//ROTATE_RIGHT_32(immed_8, rotate_imm * 2);
+	unsigned int shifter_operand = ROTATE_RIGHT_32(immed_8, rotate_imm * 2);//ROTATE_RIGHT_32(immed_8, rotate_imm * 2);
 //	printf("shifter_operand : %x\n", shifter_operand);
 	/* set c flag */
 	if (rotate_imm == 0) 
@@ -4834,7 +4834,7 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		sxth_inst *inst_cream = (sxth_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			unsigned int operand2 = rotr(RM, 8 * inst_cream->rotate);
+			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate);
 			if (BIT(operand2, 15)) {
 				operand2 |= 0xffff0000;
 			} else {
@@ -4880,7 +4880,7 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		uxth_inst *inst_cream = (uxth_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			unsigned int operand2 = rotr(RM, 8 * inst_cream->rotate) 
+			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) 
 						& 0xffff;
 			RD = operand2;
 		}
@@ -4894,9 +4894,13 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		uxtah_inst *inst_cream = (uxtah_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			unsigned int operand2 = rotr(RM, 8 * inst_cream->rotate) 
+			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) 
 						& 0xffff;
 			RD = RN + operand2;
+			if (inst_cream->Rn == 15 || inst_cream->Rm == 15) {
+				printf("in line %d\n", __LINE__);
+				exit(-1);
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(uxtah_inst));
@@ -5133,7 +5137,7 @@ void InterpreterMainLoop(cpu_t *core)
 				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			} 
 			else /* else CP15_reg1_Ubit == 0 */
-				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = rotr(value,(8*(addr&0x3))) ;
+				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = ROTATE_RIGHT_32(value,(8*(addr&0x3))) ;
 //			printf("after : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
 //			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 16, 19)]);
 //			cpu->Reg[BITS(inst_cream->inst, 16, 19)] = addr;
@@ -5365,7 +5369,7 @@ void InterpreterMainLoop(cpu_t *core)
 		if (BIT(inst, 25)) {
 			int rot_imm = BITS(inst, 8, 11) * 2;
 			//operand = ROTL(CONST(BITS(0, 7)), CONST(32 - rot_imm));
-			operand = rotr(BITS(inst, 0, 7), (32 - rot_imm));
+			operand = ROTATE_RIGHT_32(BITS(inst, 0, 7), rot_imm);
 		} else {
 			//operand = R(RM);
 			operand = cpu->Reg[BITS(inst, 0, 3)];
@@ -5839,7 +5843,11 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		sxtb_inst *inst_cream = (sxtb_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			unsigned int operand2 = rotr(RM, 8 * inst_cream->rotate);
+			if (inst_cream->Rm == 15) {
+				printf("line is %d\n", __LINE__);
+				exit(-1);
+			}
+			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate);
 			if (BIT(operand2, 7)) {
 				operand2 |= 0xffffff00;
 			} else
@@ -5873,7 +5881,7 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		uxtb_inst *inst_cream = (uxtb_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			unsigned int operand2 = rotr(RM, 8 * inst_cream->rotate) 
+			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) 
 						& 0xff;
 			RD = operand2;
 		}
