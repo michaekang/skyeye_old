@@ -24,8 +24,8 @@ using namespace std;
 
 #define glue(x, y)		x ## y
 #define DPO(s)			glue(DataProcessingOperands, s)
-#define ROTATE_RIGHT(n, i, l)	(n << (l - i)) | (n >> i)
-#define ROTATE_LEFT(n, i, l)	(n >> (l - i)) | (n << i)
+#define ROTATE_RIGHT(n, i, l)	((n << (l - i)) | (n >> i))
+#define ROTATE_LEFT(n, i, l)	((n >> (l - i)) | (n << i))
 #define ROTATE_RIGHT_32(n, i)	ROTATE_RIGHT(n, i, 32)
 #define ROTATE_LEFT_32(n, i)	ROTATE_LEFT(n, i, 32)
 
