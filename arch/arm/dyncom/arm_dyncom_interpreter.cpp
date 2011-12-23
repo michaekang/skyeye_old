@@ -5169,6 +5169,12 @@ void InterpreterMainLoop(cpu_t *core)
 						//LET(RD, CONST(0x410FB760));
 						//LET(CP15_MAIN_ID, R(RD));
 						CP15_REG(CP15_MAIN_ID) = RD;
+					} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
+						//LET(RD, R(CP15_CONTROL));
+						CP15_REG(CP15_AUXILIARY_CONTROL) = RD;
+					} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 2) {
+						//LET(RD, R(CP15_CONTROL));
+						CP15_REG(CP15_COPROCESSOR_ACCESS_CONTROL) = RD;
 					} else if(CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
 						//LET(CP15_CONTROL, R(RD));
 						CP15_REG(CP15_CONTROL) = RD;
@@ -5299,6 +5305,12 @@ void InterpreterMainLoop(cpu_t *core)
 					} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
 						//LET(RD, R(CP15_CONTROL));
 						RD = cpu->CP15[CP15(CP15_CONTROL)];
+					} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
+						//LET(RD, R(CP15_CONTROL));
+						RD = cpu->CP15[CP15(CP15_AUXILIARY_CONTROL)];
+					} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 2) {
+						//LET(RD, R(CP15_CONTROL));
+						RD = cpu->CP15[CP15(CP15_COPROCESSOR_ACCESS_CONTROL)];
 					} else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
 						//LET(RD, R(CP15_DOMAIN_ACCESS_CONTROL));
 						RD = cpu->CP15[CP15(CP15_DOMAIN_ACCESS_CONTROL)];
