@@ -5535,10 +5535,10 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		rev_inst *inst_cream = (rev_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-			RD = (RD & 0xFFFFFF00) | ((RM & 0xff00) >> 8);
-			RD = (RD & 0xFFFF00FF) | ((RM & 0x00FF) << 8);
-			RD = (RD & 0xFF00FFFF) | ((RM & 0xFF000000) >> 8);
-			RD = (RD & 0x00FFFFFF) | ((RM & 0x00FF0000) << 8);
+			RD = (BITS(RM, 0, 7) << 8) | 
+				BITS(RM, 8, 15) |
+				(BITS(RM, 16, 23) << 24) |
+				(BITS(RM, 24, 31) << 16);
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(rev_inst));
