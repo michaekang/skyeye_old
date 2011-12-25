@@ -5767,7 +5767,7 @@ void InterpreterMainLoop(cpu_t *core)
 				#if 1
 				for (i = 0; i < 13; i++) {
 					if(BIT(inst_cream->inst, i)){
-						fault = check_address_validity(cpu, addr, &phys_addr, 1);
+						fault = check_address_validity(cpu, addr, &phys_addr, 0);
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
@@ -5779,7 +5779,7 @@ void InterpreterMainLoop(cpu_t *core)
 				}
 				if (BIT(inst_cream->inst, 13)) {
 					if (cpu->Mode == USER32MODE) {
-						fault = check_address_validity(cpu, addr, &phys_addr, 1);
+						fault = check_address_validity(cpu, addr, &phys_addr, 0);
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
@@ -5796,7 +5796,7 @@ void InterpreterMainLoop(cpu_t *core)
 				}
 				if (BIT(inst_cream->inst, 14)) {
 					if (cpu->Mode == USER32MODE) {
-						fault = check_address_validity(cpu, addr, &phys_addr, 1);
+						fault = check_address_validity(cpu, addr, &phys_addr, 0);
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
@@ -5805,7 +5805,7 @@ void InterpreterMainLoop(cpu_t *core)
 						addr += 4;
 						phys_addr += 4;
 					} else {
-						fault = check_address_validity(cpu, addr, &phys_addr, 1);
+						fault = check_address_validity(cpu, addr, &phys_addr, 0);
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
@@ -5816,7 +5816,7 @@ void InterpreterMainLoop(cpu_t *core)
 					}
 				}
 				if (BIT(inst_cream->inst, 15)) {
-					fault = check_address_validity(cpu, addr, &phys_addr, 1);
+					fault = check_address_validity(cpu, addr, &phys_addr, 0);
 					if (fault) {
 						goto MMU_EXCEPTION;
 					}
@@ -5829,7 +5829,7 @@ void InterpreterMainLoop(cpu_t *core)
 					if(BIT(inst_cream->inst, i)){
 						//arch_write_memory(cpu, bb, Addr, R(i), 32);
 						//bus_write(32, addr, cpu->Reg[i]);
-						fault = check_address_validity(cpu, addr, &phys_addr, 1);
+						fault = check_address_validity(cpu, addr, &phys_addr, 0);
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
@@ -5845,7 +5845,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if(BIT(inst_cream->inst, i)){
 					//arch_write_memory(cpu, bb, Addr, STOREM_CHECK_PC, 32);
 					//bus_write(32, addr, cpu->Reg[i] + 8);
-					fault = check_address_validity(cpu, addr, &phys_addr, 1);
+					fault = check_address_validity(cpu, addr, &phys_addr, 0);
 					if (fault) {
 						goto MMU_EXCEPTION;
 					}
