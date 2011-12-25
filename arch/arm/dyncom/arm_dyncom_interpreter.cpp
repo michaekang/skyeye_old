@@ -5675,8 +5675,10 @@ void InterpreterMainLoop(cpu_t *core)
 			RDLO = BITS(rst,  0, 31);
 			RDHI = BITS(rst, 32, 63);
 
-			cpu->NFlag = BIT(RDHI, 31);
-			cpu->ZFlag = (RDHI == 0 && RDLO == 0);
+			if (inst_cream->S) {
+				cpu->NFlag = BIT(RDHI, 31);
+				cpu->ZFlag = (RDHI == 0 && RDLO == 0);
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(umlal_inst));
