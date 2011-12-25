@@ -3147,7 +3147,6 @@ VFPLABEL_INST: /* encoding 1 */
 		
 		addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
 		DBG("VSTM : addr[%x]\n", addr);
-		
 		fault = check_address_validity(cpu, addr, &phys_addr, 0);
 		if (fault) goto MMU_EXCEPTION;
 		
@@ -3326,7 +3325,7 @@ VFPLABEL_INST:
 		DBG("VPOP :\n");
 		
 		addr = cpu->Reg[R13];
-		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		fault = check_address_validity(cpu, addr, &phys_addr, 1);
 		if (fault) goto MMU_EXCEPTION;
 
 		DBG("\tsp[%x]", cpu->Reg[R13]);
@@ -3507,7 +3506,7 @@ VFPLABEL_INST:
 		addr = (inst_cream->add ? base + inst_cream->imm32 : base - inst_cream->imm32);
 		DBG("VLDR :\n", addr);
 		
-		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		fault = check_address_validity(cpu, addr, &phys_addr, 1);
 		if (fault) goto MMU_EXCEPTION;
 		
 		if (inst_cream->single)
@@ -3680,7 +3679,7 @@ VFPLABEL_INST:
 		addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
 		DBG("VLDM : addr[%x]\n", addr);
 		
-		fault = check_address_validity(cpu, addr, &phys_addr, 0);
+		fault = check_address_validity(cpu, addr, &phys_addr, 1);
 		if (fault) goto MMU_EXCEPTION;
 		
 		if (inst_cream->wback){
