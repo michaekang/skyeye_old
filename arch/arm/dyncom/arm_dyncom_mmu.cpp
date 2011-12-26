@@ -175,8 +175,10 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 		printf("virt_addr is %x phys_addr is %x\n", virt_addr, *phys_addr);
 		#endif
 		if (fault) {
+		#if MMU_DEBUG
 			printf("fault\n");
 			printf("icounter is %lld\n", cpu->icounter);
+		#endif
 			return fault;
 		}
 		/* no tlb, only check permission */
@@ -213,9 +215,11 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 	} else {
 		fault = dyncom_mmu_translate(core, virt_addr, phys_addr, &ap, &sop);
 		if (fault) {
+		#if MMU_DEBUG
 			printf("fault:%d\n", fault);
 			printf("virt_addr:0x%08x\n", virt_addr);
 			printf("icounter:%lld\n", core->icounter);
+		#endif
 			return fault;
 		}
 		/* no tlb, only check permission */

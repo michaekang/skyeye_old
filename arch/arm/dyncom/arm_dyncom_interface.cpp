@@ -191,7 +191,7 @@ static void per_cpu_step(conf_object_t * running_core){
 
 	/* the next part concerns only dyncom */
 	if (core->syscallSig) {
-		printf("In %s, syscallSig %x\n", __FUNCTION__, core->Reg[15]);
+		//printf("In %s, syscallSig %x\n", __FUNCTION__, core->Reg[15]);
 		core->syscallSig = 0;
 		arm_dyncom_abort(core, ARMul_SWIV);
 	}
@@ -204,7 +204,7 @@ static void per_cpu_step(conf_object_t * running_core){
 	}
 	#endif
 	if (core->abortSig) {
-		printf("In %s, abortSig occured at pc %x with signal %x\n", __FUNCTION__, core->Reg[15], core->Aborted);
+		//printf("In %s, abortSig occured at pc %x with signal %x\n", __FUNCTION__, core->Reg[15], core->Aborted);
 		arm_dyncom_abort(core, core->Aborted);
 	}
 	if (!core->NirqSig) {

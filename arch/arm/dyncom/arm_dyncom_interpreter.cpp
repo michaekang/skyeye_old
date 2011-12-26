@@ -2170,7 +2170,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ldrbt)(unsigned int inst, int index)
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ldrd)(unsigned int inst, int index)
 {
-	printf("In func %s\n", __FUNCTION__);
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
 	ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
 
@@ -3452,7 +3451,7 @@ static void flush_bb(uint32_t addr)
 			//start = (start >> 12) << 12;
 			start &= 0xfffff000;
 			if (start == addr) {
-				printf("[ERASE][0x%08x]\n", static_cast<int>(it->first));
+				//printf("[ERASE][0x%08x]\n", static_cast<int>(it->first));
 				CreamCache[i].erase(it);
 			}
 		}
@@ -3464,7 +3463,7 @@ static uint32_t get_bank_addr(void *addr)
 	uint64_t address = (uint64_t)addr;
 	uint64_t bank0 = get_dma_addr(BANK0_START);
 	if ((address >= bank0) && (address < (bank0 + BANK0_SIZE))) {
-		printf("1.addr is %llx\n", addr);
+		//printf("1.addr is %llx\n", addr);
 		return ((uint64_t)addr - bank0) + BANK0_START;
 	}
 	return 0;
@@ -3487,7 +3486,7 @@ static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
 		code_page_set.erase(it);
 	}
 	mprotect((void *)addr, 4096, PROT_READ | PROT_WRITE);
-	printf("[flush][ADDR:0x%08llx]\n", addr);
+	//printf("[flush][ADDR:0x%08llx]\n", addr);
 	uint32_t phys_addr = get_bank_addr((void *)addr);
 //	printf("[PHYSICAL][ADDR:0x%08llx]\n", phys_addr);
 	flush_bb(phys_addr);
@@ -3504,7 +3503,7 @@ void protect_code_page(uint32_t addr)
 	if (it != code_page_set.end()) {
 		return;
 	}
-	printf("[mprotect][ADDR:0x%08llx]\n", mem_ptr);
+	//printf("[mprotect][ADDR:0x%08llx]\n", mem_ptr);
 	struct sigaction sa;
 
 	memset(&sa, 0, sizeof(sa));
