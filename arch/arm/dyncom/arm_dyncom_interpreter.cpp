@@ -1135,6 +1135,16 @@ typedef struct _uxth_inst {
 	unsigned int rotate;
 } uxth_inst;
 
+typedef struct _cdp_inst {
+	unsigned int opcode_1;
+	unsigned int CRn;
+	unsigned int CRd;
+	unsigned int cp_num;
+	unsigned int opcode_2;
+	unsigned int CRm;
+	uint32 inst;
+}cdp_inst;
+
 typedef struct _uxtb_inst {
 	unsigned int Rd;
 	unsigned int Rm;
@@ -1885,7 +1895,24 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(bx)(unsigned int inst, int index)
 	return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(bxj)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
-ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index){printf("in func %s inst %x index %x\n", __FUNCTION__, inst, index);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index){
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(cdp_inst));
+	cdp_inst *inst_cream = (cdp_inst *)inst_base->component;
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->CRm   = BITS(inst,  0,  3);
+	inst_cream->CRd   = BITS(inst, 12, 15);
+	inst_cream->CRn   = BITS(inst, 16, 19);
+	inst_cream->cp_num   = BITS(inst, 8, 11);
+	inst_cream->opcode_2   = BITS(inst, 5, 7);
+	inst_cream->opcode_1   = BITS(inst, 20, 23);
+	inst_cream->inst = inst;
+
+	printf("in func %s inst %x index %x\n", __FUNCTION__, inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(clrex)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(clrex_inst));
@@ -4527,6 +4554,28 @@ void InterpreterMainLoop(cpu_t *core)
 	}
 	BXJ_INST:
 	CDP_INST:
+	{
+		INC_ICOUNTER;
+		cdp_inst *inst_cream = (cdp_inst *)inst_base->component;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			/* FIXME, check if cp access allowed */
+			#define CP_ACCESS_ALLOW 0
+			if(CP_ACCESS_ALLOW){
+				/* undefined instruction here */
+				return;
+			}
+			unsigned cpab = (cpu->CDP[inst_cream->cp_num]) (cpu, ARMul_FIRST, inst_cream->inst);
+			if(cpab != ARMul_DONE){
+				SKYEYE_ERR("CDP insn wrong\n");
+				exit(-1);
+			}
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(cdp_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	CLREX_INST:
 	{
 		INC_ICOUNTER;
