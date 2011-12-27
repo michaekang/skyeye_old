@@ -3171,7 +3171,7 @@ VFPLABEL_INST: /* encoding 1 */
 				/* Careful of endianness, little by default */
 				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
 				if (fault) goto MMU_EXCEPTION;
-				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+				fault = interpreter_write_memory(core, addr + 4, phys_addr + 4, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
 				addr += 8;
