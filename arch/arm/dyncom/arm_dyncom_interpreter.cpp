@@ -670,13 +670,18 @@ fault_t LdnStM(DecrementBefore)(arm_processor *cpu, unsigned int inst, unsigned 
 	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
 	//if (Rn == 15) rn += 8;
 	unsigned int start_addr = rn - count * 4;
+	unsigned int end_addr   = rn - 4;
 
-	virt_addr = start_addr;
+	fault = check_address_validity(cpu, end_addr,   &phys_addr, rw);
+	virt_addr = end_addr;
+	if (fault) return fault;
+
 	fault = check_address_validity(cpu, start_addr, &phys_addr, rw);
+	virt_addr = start_addr;
 	if (fault) return fault;
 
 	if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
-		cpu->Reg[Rn] = start_addr;
+		cpu->Reg[Rn] -= count * 4;
 	}
 
 	return fault;
@@ -689,18 +694,24 @@ fault_t LdnStM(IncrementBefore)(arm_processor *cpu, unsigned int inst, unsigned 
 	unsigned int i = BITS(inst, 0, 15);
 	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
 	//if (Rn == 15) rn += 8;
-	unsigned int start_addr = rn + 4;
+	int count = 0;
+	while(i) {
+		if(i & 1) count ++;
+		i = i >> 1;
+	}
 
-	virt_addr = start_addr;
+	unsigned int start_addr = rn + 4;
+	unsigned int end_addr   = rn + count * 4;
+
+	fault = check_address_validity(cpu, end_addr,   &phys_addr, rw);
+	virt_addr = end_addr;
+	if (fault) return fault;
+
 	fault = check_address_validity(cpu, start_addr, &phys_addr, rw);
+	virt_addr = start_addr;
 	if (fault) return fault;
 
 	if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
-		int count = 0;
-		while(i) {
-			if(i & 1) count ++;
-			i = i >> 1;
-		}
 		cpu->Reg[Rn] += count * 4;
 	}
 	return fault;
@@ -712,19 +723,24 @@ fault_t LdnStM(IncrementAfter)(arm_processor *cpu, unsigned int inst, unsigned i
 	unsigned int Rn = BITS(inst, 16, 19);
 	unsigned int i = BITS(inst, 0, 15);
 	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+	int count = 0;
+	while(i) {
+		if(i & 1) count ++;
+		i = i >> 1;
+	}
 	//if (Rn == 15) rn += 8;
 	unsigned int start_addr = rn;
+	unsigned int end_addr = rn + count * 4 - 4;
 
-	virt_addr = start_addr;
+	fault = check_address_validity(cpu, end_addr,   &phys_addr, rw);
+	virt_addr = end_addr;
+	if (fault) return fault;
+
 	fault = check_address_validity(cpu, start_addr, &phys_addr, rw);
+	virt_addr = start_addr;
 	if (fault) return fault;
 
 	if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
-		int count = 0;
-		while(i) {
-			if(i & 1) count ++;
-			i = i >> 1;
-		}
 		cpu->Reg[Rn] += count * 4;
 	}
 	return fault;
@@ -743,10 +759,15 @@ fault_t LdnStM(DecrementAfter)(arm_processor *cpu, unsigned int inst, unsigned i
 	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
 	//if (Rn == 15) rn += 8;
 	unsigned int start_addr = rn - count * 4 + 4;
+	unsigned int end_addr   = rn;
 
-	virt_addr = start_addr;
+	fault = check_address_validity(cpu, end_addr,   &phys_addr, rw);
+	virt_addr = end_addr;
+	if (fault) return fault;
+
 	fault = check_address_validity(cpu, start_addr, &phys_addr, rw);
 	if (fault) return fault;
+	virt_addr = start_addr;
 
 	if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
 		cpu->Reg[Rn] -= count * 4;
@@ -6053,6 +6074,16 @@ void InterpreterMainLoop(cpu_t *core)
 			addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
 			unsigned int value = cpu->Reg[BITS(inst_cream->inst, 0, 3)];
 			fault = check_address_validity(cpu, addr, &phys_addr, 0);
+			if (fault) {
+				fault = NO_FAULT;
+//				printf("subpage fault in strex\n");
+				cpu->Reg[15] += GET_INST_SIZE(cpu);
+				if (BITS(inst_cream->inst, 12, 15) == 15)
+					goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				FETCH_INST;
+				GOTO_NEXT_INST;
+			}
 			if (fault) goto MMU_EXCEPTION;
 //			bus_write(32, addr, value);
 			fault = interpreter_write_memory(core, addr, phys_addr, value, 32);
