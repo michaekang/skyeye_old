@@ -289,6 +289,7 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 		fault = mmu_translate (state, va, &pa, &ap, &sop);
 		if (fault) {
 			d_msg ("translate\n");
+			printf("va=0x%x, icounter=%lld, fault=%d\n", va, state->NumInstrs, fault);
 			return fault;
 		}
 
@@ -401,6 +402,16 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 	fault = mmu_translate (state, va, ARM920T_D_TLB (), &tlb);
 #endif
 	fault = mmu_translate (state, va, &pa, &ap, &sop);
+#if 0
+	if(va ==0xbebb1774 || state->Reg[15] == 0x400ff594){
+                //printf("In %s, current=0x%x. mode is %x, pc=0x%x\n", __FUNCTION__, state->CurrInstr, state->Mode, state->Reg[15]);
+                printf("In %s, ap is %d, sop is %d, va=0x%x, pa=0x%x, fault=%d, data=0x%x\n", __FUNCTION__, ap, sop, va, pa, fault, data);
+                int i;
+                for(i = 0; i < 16; i++)
+                        printf("Reg[%d]=0x%x\t", i, state->Reg[i]);
+                printf("\n");
+        }
+#endif
 	if (fault) {
 		d_msg ("translate\n");
 		//printf("mmu read fault at %x\n", va);
@@ -526,7 +537,18 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 	va &= ~(WORD_SIZE - 1);
 	/*tlb translate */
 	fault = mmu_translate (state, va, &pa, &ap, &sop);
+#if 0
+	if(va ==0xbebb1774 || state->Reg[15] == 0x40102334){
+                //printf("In %s, current=0x%x. mode is %x, pc=0x%x\n", __FUNCTION__, state->CurrInstr, state->Mode, state->Reg[15]);
+                printf("In %s, ap is %d, sop is %d, va=0x%x, pa=0x%x, fault=%d, data=0x%x\n", __FUNCTION__, ap, sop, va, pa, fault, data);
+                int i;
+                for(i = 0; i < 16; i++)
+                        printf("Reg[%d]=0x%x\t", i, state->Reg[i]);
+                printf("\n");
+        }
+#endif
 	if (fault) {
+		printf("va=0x%x, icounter=%lld, fault=%d\n", va, state->NumInstrs, fault);
 		d_msg ("translate\n");
 		//printf("mmu write fault at %x\n", va);
 		return fault;
@@ -633,8 +655,8 @@ arm1176jzf_s_mmu_mrc (ARMul_State *state, ARMword instr, ARMword *value)
 		default:
 			printf ("mmu_mrc read UNKNOWN - p15 c2 opcode2 %d\n", OPC_2);
 			break;
-		break;
 		}
+		break;
 	case MMU_DOMAIN_ACCESS_CONTROL:
 		data = state->mmu.domain_access_control;
 		break;
