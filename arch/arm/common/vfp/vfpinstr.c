@@ -1727,7 +1727,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 {"vcvt(bff)",   6,      ARMVFP3,        23, 27, 0x1d,  19, 21, 0x7,     17, 17, 0x1,      9, 11, 0x5,  	6, 6, 1},
 #endif
 #ifdef VFP_DECODE_EXCLUSION
-{"vcvt(bff)",   1,      ARMVFP3,         4, 4, 1},
+{"vcvt(bff)",   0,      ARMVFP3,         4, 4, 1},
 #endif
 #ifdef VFP_INTERPRETER_TABLE
 INTERPRETER_TRANSLATE(vfpinstr),
@@ -3091,7 +3091,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 {"vstm",	3,	ARMVFP2,	25, 27, 0x6,	20, 20, 0,	9, 11, 0x5},
 #endif
 #ifdef VFP_DECODE_EXCLUSION
-{"vstm",	1,	ARMVFP2,	0},
+{"vstm",	0,	ARMVFP2,	0},
 #endif
 #ifdef VFP_INTERPRETER_TABLE
 INTERPRETER_TRANSLATE(vfpinstr),
