@@ -1933,6 +1933,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index){
 	inst_cream->inst = inst;
 
 	printf("in func %s inst %x index %x\n", __FUNCTION__, inst, index);
+	return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(clrex)(unsigned int inst, int index)
 {
