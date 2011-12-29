@@ -2977,9 +2977,6 @@ VFPLABEL_INST:
 			
 		addr = cpu->Reg[R13] - inst_cream->imm32;
 
-		DBG("\tsp[%x]", cpu->Reg[R13]);
-		cpu->Reg[R13] = cpu->Reg[R13] - inst_cream->imm32;
-		DBG("=>[%x]\n", cpu->Reg[R13]);
 
 		for (i = 0; i < inst_cream->regs; i++)
 		{
@@ -3008,9 +3005,12 @@ VFPLABEL_INST:
 				addr += 8;
 			}
 		}
-		
+		DBG("\tsp[%x]", cpu->Reg[R13]);
+		cpu->Reg[R13] = cpu->Reg[R13] - inst_cream->imm32;
+		DBG("=>[%x]\n", cpu->Reg[R13]);
+	
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vpush_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -3158,11 +3158,6 @@ VFPLABEL_INST: /* encoding 1 */
 		addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
 		DBG("VSTM : addr[%x]\n", addr);
 		
-		if (inst_cream->wback){
-			cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 : 
-						   cpu->Reg[inst_cream->n] - inst_cream->imm32);
-			DBG("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
-		}
 		
 		for (i = 0; i < inst_cream->regs; i++)
 		{
@@ -3194,9 +3189,18 @@ VFPLABEL_INST: /* encoding 1 */
 				addr += 8;
 			}
 		}
+		if (inst_cream->wback){
+			cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 : 
+						   cpu->Reg[inst_cream->n] - inst_cream->imm32);
+			DBG("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
+		}
+
 	}
 	cpu->Reg[15] += 4;
 	INC_PC(sizeof(vstm_inst));
+cpu->Reg[15] += GET_INST_SIZE(cpu);
+	INC_PC(sizeof(vfpinstr_inst));
+
 	FETCH_INST;
 	GOTO_NEXT_INST;
 }
@@ -3342,9 +3346,6 @@ VFPLABEL_INST:
 		
 		addr = cpu->Reg[R13];
 		
-		DBG("\tsp[%x]", cpu->Reg[R13]);
-		cpu->Reg[R13] = cpu->Reg[R13] + inst_cream->imm32;
-		DBG("=>[%x]\n", cpu->Reg[R13]);
 
 		for (i = 0; i < inst_cream->regs; i++)
 		{
@@ -3379,9 +3380,12 @@ VFPLABEL_INST:
 				addr += 8;
 			}
 		}
+		DBG("\tsp[%x]", cpu->Reg[R13]);
+		cpu->Reg[R13] = cpu->Reg[R13] + inst_cream->imm32;
+		DBG("=>[%x]\n", cpu->Reg[R13]);
 		
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vpop_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -3706,13 +3710,6 @@ VFPLABEL_INST:
 		addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
 		DBG("VLDM : addr[%x]\n", addr);
 		
-		
-		if (inst_cream->wback){
-			cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 : 
-						   cpu->Reg[inst_cream->n] - inst_cream->imm32);
-			DBG("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
-		}
-		
 		for (i = 0; i < inst_cream->regs; i++)
 		{
 			if (inst_cream->single)
@@ -3740,8 +3737,14 @@ VFPLABEL_INST:
 				addr += 8;
 			}
 		}
+		if (inst_cream->wback){
+			cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 : 
+						   cpu->Reg[inst_cream->n] - inst_cream->imm32);
+			DBG("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
+		}
+
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
