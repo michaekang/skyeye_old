@@ -1065,6 +1065,13 @@ typedef struct _umull_inst {
 	unsigned int Rs;
 	unsigned int Rm;
 } umull_inst;
+typedef struct _smlad_inst {
+	unsigned int m;
+	unsigned int Rm;
+	unsigned int Rd;
+	unsigned int Ra;
+	unsigned int Rn;
+} smlad_inst;
 
 typedef struct _umlal_inst {
 	unsigned int S;
@@ -2659,7 +2666,25 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(shsub16)(unsigned int inst, int index){printf
 ARM_INST_PTR INTERPRETER_TRANSLATE(shsub8)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(shsubaddx)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(smla)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlad)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlad)(unsigned int inst, int index){
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
+	smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->m	 = BIT(inst, 4);
+	inst_cream->Rn	 = BITS(inst, 0, 3);
+	inst_cream->Rm	 = BITS(inst, 8, 11);
+	inst_cream->Rd = BITS(inst, 16, 19);
+	inst_cream->Ra = BITS(inst, 12, 15);
+
+	if (CHECK_RM ) 
+		inst_base->load_r15 = 1;
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umlal_inst));
@@ -5766,6 +5791,46 @@ void InterpreterMainLoop(cpu_t *core)
 	SHSUBADDX_INST:
 	SMLA_INST:
 	SMLAD_INST:
+	{
+		INC_ICOUNTER;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
+			long long int rm = cpu->Reg[inst_cream->Rm];
+			long long int rn = cpu->Reg[inst_cream->Rn];
+			long long int ra = cpu->Reg[inst_cream->Ra];
+			/* see SMUAD */
+			if(inst_cream->Ra == 15)
+				exit(-1);
+			int operand2 = (inst_cream->m)? ROTATE_RIGHT_32(rm, 16):rm;
+			
+			int half_rn, half_operand2;
+			half_rn = rn & 0xFFFF;
+			half_rn = (half_rn & 0x8000)? (0xFFFF0000|half_rn) : half_rn;
+
+			half_operand2 = operand2 & 0xFFFF;
+			half_operand2 = (half_operand2 & 0x8000)? (0xFFFF0000|half_operand2) : half_operand2;
+		
+			long long int product1 = half_rn * half_operand2;
+
+			half_rn = (rn & 0xFFFF0000) >> 16;
+			half_rn = (half_rn & 0x8000)? (0xFFFF0000|half_rn) : half_rn;
+
+			half_operand2 = (operand2 & 0xFFFF0000) >> 16;
+			half_operand2 = (half_operand2 & 0x8000)? (0xFFFF0000|half_operand2) : half_operand2;
+		
+			long long int product2 = half_rn * half_operand2;
+
+			long long int signed_ra = (ra & 0x80000000)? (0xFFFFFFFF00000000) | ra : ra;
+			long long int result = product1 + product2 + signed_ra;
+			cpu->Reg[inst_cream->Rd] = result & 0xFFFFFFFF;
+			/* FIXME , should check Signed overflow */
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(umlal_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	SMLAL_INST:
 	{
 		INC_ICOUNTER;
