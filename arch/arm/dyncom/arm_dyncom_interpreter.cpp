@@ -1205,7 +1205,7 @@ typedef struct _blx_1_thumb {
 
 typedef arm_inst * ARM_INST_PTR;
 
-#define CACHE_BUFFER_SIZE	(64 * 1024 * 200)
+#define CACHE_BUFFER_SIZE	(64 * 1024 * 2000)
 char inst_buf[CACHE_BUFFER_SIZE];
 int top = 0;
 inline void *AllocBuffer(unsigned int size)
