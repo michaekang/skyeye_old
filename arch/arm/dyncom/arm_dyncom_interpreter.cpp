@@ -3542,14 +3542,15 @@ static void flush_bb(uint32_t addr)
 
 	addr  &= 0xfffff000;
 	for (int i = 0; i < 65536; i ++) {
-		for (it = CreamCache[i].begin(); it != CreamCache[i].end(); ++ it) {
+		for (it = CreamCache[i].begin(); it != CreamCache[i].end(); ) {
 			start = static_cast<uint32_t>(it->first);
 			//start = (start >> 12) << 12;
 			start &= 0xfffff000;
 			if (start == addr) {
 				//printf("[ERASE][0x%08x]\n", static_cast<int>(it->first));
-				CreamCache[i].erase(it);
-			}
+				CreamCache[i].erase(it ++);
+			} else
+				++it;
 		}
 	}
 }
