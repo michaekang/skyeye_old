@@ -88,7 +88,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -185,7 +185,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -282,7 +282,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -379,7 +379,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -476,7 +476,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -573,7 +573,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -670,7 +670,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -767,7 +767,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -864,7 +864,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -958,7 +958,7 @@ VFPLABEL_INST:
 
 		VMOVI(cpu, inst_cream->single, inst_cream->d, inst_cream->imm);
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1078,7 +1078,7 @@ VFPLABEL_INST:
 
 		VMOVR(cpu, inst_cream->single, inst_cream->d, inst_cream->m);
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1198,7 +1198,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1295,7 +1295,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1392,7 +1392,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1489,7 +1489,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1586,7 +1586,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1683,7 +1683,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1780,7 +1780,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1878,7 +1878,7 @@ VFPLABEL_INST:
 
 		CHECK_VFP_CDP_RET;
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -1974,7 +1974,7 @@ VFPLABEL_INST:
 
 		VMOVBRS(cpu, inst_cream->to_arm, inst_cream->t, inst_cream->n, &(cpu->Reg[inst_cream->t]));
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -2094,7 +2094,7 @@ VFPLABEL_INST:
 
 		VMSR(cpu, inst_cream->reg, inst_cream->Rd);
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -2204,7 +2204,7 @@ VFPLABEL_INST:
 		
 		VFP_DEBUG_UNIMPLEMENTED(VMOVBRC);
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -2339,7 +2339,7 @@ VFPLABEL_INST:
 			}
 		}
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -2478,7 +2478,7 @@ VFPLABEL_INST:
 		
 		VFP_DEBUG_UNIMPLEMENTED(VMOVBCR);
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -2577,7 +2577,7 @@ VFPLABEL_INST:
 		
 		VFP_DEBUG_UNIMPLEMENTED(VMOVBRRSS);
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -2679,7 +2679,7 @@ VFPLABEL_INST:
 		VMOVBRRD(cpu, inst_cream->to_arm, inst_cream->t, inst_cream->t2, inst_cream->m, 
 				&(cpu->Reg[inst_cream->t]), &(cpu->Reg[inst_cream->t2]));
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vfpinstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -2835,7 +2835,7 @@ VFPLABEL_INST:
 			DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, inst_cream->d*2+1, inst_cream->d*2, cpu->ExtReg[inst_cream->d*2+1], cpu->ExtReg[inst_cream->d*2]);
 		}
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vstr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
@@ -3559,7 +3559,7 @@ VFPLABEL_INST:
 			DBG("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", inst_cream->d*2+1, inst_cream->d*2, word2, word1, addr+4, addr);
 		}
 	}
-	cpu->Reg[15] += 4;
+	cpu->Reg[15] += GET_INST_SIZE(cpu);
 	INC_PC(sizeof(vldr_inst));
 	FETCH_INST;
 	GOTO_NEXT_INST;
