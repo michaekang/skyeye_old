@@ -183,6 +183,8 @@ typedef struct mmu_state_t
 	ARMword control;
 	ARMword translation_table_base;
 /* dyf 201-08-11 for arm1176 */
+	ARMword auxiliary_control;
+	ARMword coprocessor_access_control;
 	ARMword translation_table_base0;
 	ARMword translation_table_base1;
 	ARMword translation_table_ctrl;

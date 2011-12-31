@@ -751,7 +751,14 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 		 * 10           read as 0
 		 * 18,16	read as 1
 		 * */
-			state->mmu.control = (value | 0x50078) & 0xFFFFFBFF;
+			if(OPC_2 == 0)
+				state->mmu.control = (value | 0x50078) & 0xFFFFFBFF;
+			else if(OPC_2 == 1)
+				state->mmu.auxiliary_control = value;
+			else if(OPC_2 == 2)
+				state->mmu.coprocessor_access_control = value;
+			else
+				fprintf(stderr, "In %s, wrong OPC_2 %d\n", __FUNCTION__, OPC_2);
 			break;
 		case MMU_TRANSLATION_TABLE_BASE:
 			switch (OPC_2) {
