@@ -42,6 +42,7 @@ do_mode_option (skyeye_option_t * this_option, int num_params,
                 const char *params[]);
 
 extern void init_arm11_core();
+extern void init_ram_image();
 void module_init(){
 	/* register the arm core to the common library */
 	init_arm_arch ();
@@ -52,6 +53,7 @@ void module_init(){
 	skyeye_log(Debug_log, __FUNCTION__, "LLVM not exist and dyncom not available.\n");
 #endif
 	init_arm11_core();
+	init_ram_image();
 	/*
 	 * register all the supported mach to the common library.
 	 */
