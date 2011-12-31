@@ -4188,6 +4188,8 @@ uint32_t am_diff(cpu_t *cpu)
 static int
 debug_function(cpu_t *cpu)
 {
+	extern int diff_single_step(cpu_t *cpu);
+	//return diff_single_step(cpu); 
 	#if 0
 	unsigned int value;
 	unsigned int dummy;
