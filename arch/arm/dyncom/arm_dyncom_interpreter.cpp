@@ -4362,15 +4362,18 @@ void InterpreterMainLoop(cpu_t *core)
 								((lop >= 0) && (rop) >= 0 && (dst < 0))))
 	#define UPDATE_VFLAG_OVERFLOW_FROM(dst, lop, rop)	(cpu->VFlag = (((lop ^ rop) & (lop ^ dst)) >> 31))
 
-	#define SAVE_NZCV			cpu->Cpsr = (cpu->Cpsr & 0x0fffffff) | \
+	#define SAVE_NZCVT			cpu->Cpsr = (cpu->Cpsr & 0x0fffffdf) | \
 						(cpu->NFlag << 31)   |                 \
 						(cpu->ZFlag << 30)   |                 \
 						(cpu->CFlag << 29)   |                 \
-						(cpu->VFlag << 28)
-	#define LOAD_NZCV			cpu->NFlag = (cpu->Cpsr >> 31);   \
+						(cpu->VFlag << 28)   |			\
+						(cpu->TFlag << 5)
+	#define LOAD_NZCVT			cpu->NFlag = (cpu->Cpsr >> 31);   \
 						cpu->ZFlag = (cpu->Cpsr >> 30) & 1;   \
 						cpu->CFlag = (cpu->Cpsr >> 29) & 1;   \
-						cpu->VFlag = (cpu->Cpsr >> 28) & 1
+						cpu->VFlag = (cpu->Cpsr >> 28) & 1;	\
+						cpu->TFlag = (cpu->Cpsr >> 5) & 1;
+
 	#define CurrentModeHasSPSR		(cpu->Mode != SYSTEM32MODE) && (cpu->Mode != USER32MODE)
 	
 
@@ -4410,7 +4413,7 @@ void InterpreterMainLoop(cpu_t *core)
 		goto INIT_INST_LENGTH;
 	#endif
 
-	LOAD_NZCV;
+	LOAD_NZCVT;
 	DISPATCH:
 	{
 		counter --;
@@ -4447,7 +4450,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -4480,7 +4483,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Cpsr & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -4517,7 +4520,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Cpsr & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -4565,7 +4568,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -4787,7 +4790,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -4920,7 +4923,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Cpsr & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 				
 				fault = check_address_validity(cpu, addr, &phys_addr, 1);
@@ -5381,7 +5384,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -5479,7 +5482,7 @@ void InterpreterMainLoop(cpu_t *core)
 			if (inst_cream->R) {
 				RD = cpu->Spsr_copy;
 			} else {
-				SAVE_NZCV;
+				SAVE_NZCVT;
 				RD = cpu->Cpsr;
 			}
 		}
@@ -5518,11 +5521,11 @@ void InterpreterMainLoop(cpu_t *core)
 				mask = byte_mask & UserMask;
 			}
 			//LET(CPSR_REG, OR(AND(R(CPSR_REG), COM(CONST(mask))), AND(operand, CONST(mask))));
-			SAVE_NZCV;
+			SAVE_NZCVT;
 
 			cpu->Cpsr = (cpu->Cpsr & ~mask) | (operand & mask);
 			switch_mode(cpu, cpu->Cpsr & 0x1f);
-			LOAD_NZCV;
+			LOAD_NZCVT;
 		} else {
 			if (CurrentModeHasSPSR) {
 				mask = byte_mask & (UserMask | PrivMask | StateMask);
@@ -5570,7 +5573,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -5601,7 +5604,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -5693,7 +5696,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -5727,7 +5730,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -5763,7 +5766,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -6261,7 +6264,7 @@ void InterpreterMainLoop(cpu_t *core)
 				if (CurrentModeHasSPSR) {
 					cpu->Cpsr = cpu->Spsr_copy;
 					switch_mode(cpu, cpu->Spsr_copy & 0x1f);
-					LOAD_NZCV;
+					LOAD_NZCVT;
 				}
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
@@ -6515,7 +6518,7 @@ void InterpreterMainLoop(cpu_t *core)
 	#undef VFP_INTERPRETER_IMPL
 	MMU_EXCEPTION:
 	{
-		SAVE_NZCV;
+		SAVE_NZCVT;
 		cpu->abortSig = true;
 		cpu->Aborted = ARMul_DataAbortV;
 		cpu->AbortAddr = addr;
@@ -6525,7 +6528,7 @@ void InterpreterMainLoop(cpu_t *core)
 	}
 	END:
 	{
-		SAVE_NZCV;
+		SAVE_NZCVT;
 		return;
 	}
 	INIT_INST_LENGTH:
