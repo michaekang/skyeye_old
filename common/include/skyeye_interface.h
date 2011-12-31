@@ -25,6 +25,15 @@
 #ifndef __SKYEYE_INTERFACE_H__
 #define __SKYEYE_INTERFACE_H__
 #include <skyeye_types.h>
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 exception_t SKY_register_interface(conf_object_t* obj, const char* name, const char* iface);
 void* SKY_get_interface(conf_object_t* obj, const char* iface_name);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

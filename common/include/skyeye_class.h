@@ -18,9 +18,17 @@ typedef struct skyeye_class{
 	exception_t (*set_attr)(const char* attr_name, conf_object_t* obj, attr_value_t);
 	char** interface_list;
 }skyeye_class_t;
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 void SKY_register_class(const char* name, skyeye_class_t* skyeye_class);
 
 conf_object_t* pre_conf_obj(const char* objname, const char* class_name);
+#ifdef __cplusplus
+}
+#endif
 
 //SIM_register_typed_attribute
 
