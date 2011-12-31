@@ -1,5 +1,5 @@
 s3c2410 = s3c2410x/skyeye_mach_s3c2410x.c s3c2410x/s3c2410x_module.c
-s3c6410 = s3c6410x/skyeye_mach_s3c6410x.c s3c6410x/s3c6410x_module.c
+s3c6410 = s3c6410x/skyeye_mach_s3c6410x.c s3c6410x/s3c6410x_module.c s3c6410x/skyeye_mach.c
 at91 = at91/skyeye_mach_at91.c at91/at91_module.c
 at91rm92 = at91rm92/skyeye_mach_at91rm92.c at91rm92/at91rm92_module.c
 cs89712 = cs89712/skyeye_mach_cs89712.c cs89712/cs89712_module.c
