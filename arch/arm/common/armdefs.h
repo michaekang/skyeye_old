@@ -40,6 +40,8 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#include <memory_space.h>
 //AJ2D--------------------------------------------------------------------------
 #if 0
 #if 0
@@ -431,8 +433,14 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 //#if DIFF_STATE
 	FILE * state_log;
 //#endif
-
-//AJ2D--------------------------------------------------------------------------
+	memory_space_intf space;	
+	uint32 CurrInstr;
+	uint32 last_pc; /* the last pc executed */
+	uint32 last_instr; /* the last inst executed */
+	uint32 WriteAddr[17];
+	uint32 WriteData[17];
+	uint32 WritePc[17];
+	uint32 CurrWrite;
 };
 
 typedef ARMul_State arm_core_t;
