@@ -42,6 +42,10 @@ int diff_single_step(cpu_t *cpu){
 	int i;
 
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	if(core->icounter < 90000000)
+		return 0;
+	if(core->icounter % 10000000 == 0)
+		printf("ICOUNTER=%lld\n", core->icounter);
 	/* initialization for original interpreter */
 	if(arm11_core_obj == NULL){
 		/* initilize a arm11 core */
@@ -83,6 +87,18 @@ int diff_single_step(cpu_t *cpu){
 		}arm11_core_t;
 		arm11_core_t* arm11_core = (arm11_core_t*)(arm11_core_obj->obj);
 		state = arm11_core->state;
+		state->mmu.control = core->CP15[CP15(CP15_CONTROL)];
+		state->mmu.auxiliary_control = core->CP15[CP15(CP15_AUXILIARY_CONTROL)];
+		state->mmu.coprocessor_access_control = core->CP15[CP15(CP15_COPROCESSOR_ACCESS_CONTROL)];
+		state->mmu.domain_access_control = core->CP15[CP15(CP15_DOMAIN_ACCESS_CONTROL)];
+		state->mmu.fault_status = core->CP15[CP15(CP15_FAULT_STATUS)];
+		state->mmu.fault_address = core->CP15[CP15(CP15_FAULT_ADDRESS)];
+		state->mmu.translation_table_ctrl = core->CP15[CP15(CP15_TRANSLATION_BASE_CONTROL)];
+		state->mmu.translation_table_base0 = core->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_0)];
+		state->mmu.translation_table_base1 = core->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_1)];
+		state->mmu.process_id = core->CP15[CP15(CP15_PID)];
+		state->mmu.context_id = core->CP15[(CP15_CONTEXT_ID)];
+		state->mmu.thread_uro_id = core->CP15[(CP15_THREAD_URO)];
 		/* the core os*/
 		#if 0
 		arm11_core = (arm_core_t*)(arm11_core_obj->obj);
@@ -102,7 +118,24 @@ int diff_single_step(cpu_t *cpu){
 #if 0
 	if(core->icounter == 100)
 		exit(0);
-#endif
+#endif	
+	static int last_tflag = 0;
+	if(last_tflag != core->TFlag){
+		last_tflag = core->TFlag;
+		if(core->TFlag){
+			skyeye_printf_in_color(BLUE, "\nSwitch to THUMB state, at pc=0x%x, instr=0x%x, last_pc=0x%x, last_instr=0x%x\n", core->Reg[15], state->CurrInstr, state->last_pc, state->last_instr);
+			;
+		}
+		else{
+			skyeye_printf_in_color(BLUE, "\nSwitch to ARM state, at pc=0x%x, instr=0x%x, last_pc=0x%x, last_instr=0x%x\n", core->Reg[15], state->CurrInstr, state->last_pc, state->last_instr);
+			;
+		}
+	}
+	if(core->TFlag || state->TFlag){
+		/* for BLX instruction of thumb mode */
+		if(((state->last_instr  & 0xF8000000) >> 27) == 31)
+			return 0;
+	}
 	if(core->Reg[15] == 0xffff0018 || core->Reg[15] == 0xffff0214 
 		|| core->Reg[15] == 0xffff020c /* irq */
 		|| core->Reg[15] == 0xc002dba0 /* irq_svc */
@@ -119,14 +152,26 @@ int diff_single_step(cpu_t *cpu){
 		|| core->Reg[15] == 0xffff0308 /* irq */
 		|| core->Reg[15] == 0xffff000c /* irq */
 		|| core->Reg[15] == 0xffff0288 /* irq */
+		|| core->Reg[15] == 0xc006ac54 /* irq */
+		|| core->Reg[15] == 0xc006ac4c /* irq */
+		|| core->Reg[15] == 0xc006ac48 /* irq */
+		|| core->Reg[15] == 0xc006ac50 /* irq */
+		|| core->Reg[15] == 0xc00363b8 /* serial */
+		|| core->Reg[15] == 0xc00363e8 /* serial */
+		|| core->Reg[15] == 0xc0198314 /* serial */
+		|| core->Reg[15] == 0xc002fd20 /* serial */
+		|| core->Reg[15] == 0xc003ce64 /* serial */
+		|| core->Reg[15] == 0xc0198dd4 /* serial */
+		|| core->Reg[15] == 0xffff0fe0 /* serial */
 		)
 		goto SYNC;
 	/* diff all the register for last instruction */
-	core->Cpsr = (core->Cpsr & 0x0fffffff) | \
+	core->Cpsr = (core->Cpsr & 0x0fffffdf) | \
                                                 (core->NFlag << 31)   |                 \
                                                 (core->ZFlag << 30)   |                 \
                                                 (core->CFlag << 29)   |                 \
-                                                (core->VFlag << 28);
+                                                (core->VFlag << 28)	|		\
+                                                (core->TFlag << 5);
 
 	uint32 regval;
 	uint32 instr;
@@ -161,18 +206,19 @@ int diff_single_step(cpu_t *cpu){
 
 		if(regval != core->Reg[i]){
 			instr = arm_run->get_regval_by_id(arm11_core_obj, 0xFF);
-			skyeye_printf_in_color(RED, "ICOUNTER=%d(0x%x), instr=0x%x, diff Fail, orginal R[%d]=0x%x, wrong value 0x%x\n",core->icounter, core->Reg[15], instr, i, regval, core->Reg[i]);
+			skyeye_printf_in_color(RED, "ICOUNTER=%d(0x%x), last_instr=0x%x, instr=0x%x, diff Fail, orginal R[%d]=0x%x, wrong value 0x%x\n",core->icounter, core->Reg[15], state->last_instr, instr, i, regval, core->Reg[i]);
 			int j;
 			for(j = 0; j < 16; j++){
 				regval = arm_run->get_regval_by_id(arm11_core_obj, j);
 				skyeye_printf_in_color(BLUE, "R[%d]=0x%x:0x%x\t", j, regval, core->Reg[j]);
 			}
+			skyeye_printf_in_color(BLUE, "\norginal CPSR=0x%x, wrong value 0x%x\n", arm_run->get_regval_by_id(arm11_core_obj, CPSR_REG), core->Cpsr);
 			printf("\n");
 		}
 		//printf("R[%d]=0x%x:0x%x\t", i, regval, core->Reg[i]);
 	}
 	cpsr = arm_run->get_regval_by_id(arm11_core_obj, CPSR_REG);
-	if((core->Cpsr & 0xF0000000) != (cpsr & 0xF0000000)){
+	if((core->Cpsr & 0xF0000020) != (cpsr & 0xF0000020)){
 			instr = arm_run->get_regval_by_id(arm11_core_obj, 0xFF);
 			skyeye_printf_in_color(RED, "ICOUNTER=%d(0x%x), instr=0x%x, diff Fail, orginal CPSR=0x%x, wrong value 0x%x\n",core->icounter, core->Reg[15], instr, arm_run->get_regval_by_id(arm11_core_obj, CPSR_REG), core->Cpsr);
 			int j;

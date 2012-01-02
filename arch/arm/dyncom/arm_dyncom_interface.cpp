@@ -68,7 +68,7 @@ arm_dyncom_abort(arm_core_t * state, ARMword vector)
 		break;
 	case ARMul_UndefinedInstrV:	/* Undefined Instruction */
 		printf("in %s, undefined instruction\n", __FUNCTION__);
-		state->Reg_undef[1] = state->Reg[15] + 4;
+		state->Reg_undef[1] = state->Reg[15] + GET_INST_SIZE(state);
 		state->Spsr[UNDEFBANK] = state->Cpsr;
 		state->Cpsr = state->Cpsr & 0xfffffc40;
 		state->Cpsr |= 0x9b;
@@ -80,7 +80,7 @@ arm_dyncom_abort(arm_core_t * state, ARMword vector)
 		state->abortSig = 0;
 		break;
 	case ARMul_SWIV:	/* Software Interrupt */
-		state->Reg_svc[1] = state->Reg[15] + 4;
+		state->Reg_svc[1] = state->Reg[15] + GET_INST_SIZE(state);
 		state->Spsr[SVCBANK] = state->Cpsr;
 		state->Cpsr = state->Cpsr & 0xfffffc40;
 		state->Cpsr |= 0x93;
@@ -100,6 +100,7 @@ arm_dyncom_abort(arm_core_t * state, ARMword vector)
 		switch_mode(state, state->Cpsr & 0x1f);
 		state->Aborted = 0;
 		state->abortSig = 0;
+		//printf("In ARMul_PrefetchAbortV: Cpsr=0x%x\n", state->Cpsr);
 		break;
 	case ARMul_DataAbortV:	/* Data Abort */
 		state->Reg_abort[1] = state->Reg[15] + 8;

@@ -10,6 +10,7 @@ using namespace std;
 #include "armmmu.h"
 #include "bank_defs.h"
 #include "arm_dyncom_thumb.h"
+#include "arm_dyncom_run.h"
 #include "skyeye_ram.h"
 #include "vfp/vfp.h"
 
@@ -38,10 +39,6 @@ extern void switch_mode(arm_core_t *core, uint32_t mode);
 
 typedef arm_core_t arm_processor;
 typedef unsigned int (*shtop_fp_t)(arm_processor *cpu, unsigned int sht_oper);
-/* FIXME, we temporarily think thumb instruction is always 16 bit */
-static inline uint32 GET_INST_SIZE(arm_core_t* core){
-	return core->TFlag? 2 : 4;
-}
 
 /**
 * @brief Read R15 and forced R15 to wold align
@@ -1208,6 +1205,7 @@ typedef struct _bl_2_thumb {
 }bl_2_thumb;
 typedef struct _blx_1_thumb {
 	unsigned int imm;
+	unsigned int instr;
 }blx_1_thumb;
 
 typedef arm_inst * ARM_INST_PTR;
@@ -3141,7 +3139,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(b_2_thumb)(unsigned int tinst, int index)
 	b_2_thumb *inst_cream = (b_2_thumb *)inst_base->component;
 
 	inst_cream->imm =((tinst & 0x3FF) << 1) | ((tinst & (1 << 10)) ? 0xFFFFF800 : 0);
-	printf("In %s, tinst=0x%x, imm=0x%x\n", __FUNCTION__, tinst, inst_cream->imm);
+	//printf("In %s, tinst=0x%x, imm=0x%x\n", __FUNCTION__, tinst, inst_cream->imm);
 	inst_base->idx = index;
 	inst_base->br	 = DIRECT_BRANCH;
 	return inst_base;
@@ -3154,7 +3152,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(b_cond_thumb)(unsigned int tinst, int index)
 
 	inst_cream->imm = (((tinst & 0x7F) << 1) | ((tinst & (1 << 7)) ?	0xFFFFFF00 : 0));
 	inst_cream->cond = ((tinst >> 8) & 0xf);
-	printf("In %s, tinst=0x%x, imm=0x%x, cond=0x%x\n", __FUNCTION__, tinst, inst_cream->imm, inst_cream->cond);
+	//printf("In %s, tinst=0x%x, imm=0x%x, cond=0x%x\n", __FUNCTION__, tinst, inst_cream->imm, inst_cream->cond);
 	inst_base->idx = index;
 	inst_base->br	 = DIRECT_BRANCH;
 	return inst_base;
@@ -3190,6 +3188,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(blx_1_thumb)(unsigned int tinst, int index)
 
 	inst_cream->imm = (tinst & 0x07FF) << 1;
 	//printf("In %s, tinst=0x%x, imm=0x%x\n", __FUNCTION__, tinst, inst_cream->imm);
+	inst_cream->instr = tinst;
 	inst_base->idx	 = index;
 	inst_base->br	 = DIRECT_BRANCH;
 	return inst_base;
@@ -3439,6 +3438,8 @@ enum {
 static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *arm_inst, uint32_t* inst_size, ARM_INST_PTR* ptr_inst_base){
 	/* Check if in Thumb mode.  */
 	tdstate ret;
+	if(cpu->translate_pc >= 0x0001026c && cpu->translate_pc <= 0x102a0)
+		printf("In %s t_branch, inst=0x%x, pc=0x%x\n", __FUNCTION__, inst, cpu->translate_pc);
 	ret = thumb_translate (cpu, inst, arm_inst, inst_size);
 	if(ret == t_branch){
 		/* FIXME, endian should be judged */
@@ -3449,7 +3450,8 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *a
 			tinstr = inst & 0xFFFF;
 
 		//tinstr = inst & 0xFFFF;
-		//printf("In %s t_branch, inst=0x%x, tinst=0x%x\n", __FUNCTION__, inst, tinstr);
+		if(cpu->translate_pc >= 0x0001026c && cpu->translate_pc <= 0x102a0)
+			printf("In %s t_branch, inst=0x%x, tinst=0x%x, pc=0x%x\n", __FUNCTION__, inst, tinstr, cpu->translate_pc);
 		int inst_index;
 		/* table_length */
 		int table_length = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);
@@ -3481,19 +3483,19 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *a
 		case 29:
 			/* For BLX 1 thumb instruction*/
 			inst_index = table_length - 1;
-			//printf("In %s, tinstr=0x%x, blx 1 thumb index=%d\n", __FUNCTION__, tinstr, inst_index);
+			//printf("In %s, tinstr=0x%x, blx 1 thumb index=%d, pc=0x%x\n", __FUNCTION__, tinstr, inst_index, cpu->translate_pc);
 			*ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
 			break;
 		case 30:
 			/* For BL 1 thumb instruction*/
 			inst_index = table_length - 3;
-			//printf("In %s, tinstr=0x%x, bl 1 thumb index=%d\n", __FUNCTION__, tinstr, inst_index);
+			//printf("In %s, tinstr=0x%x, bl 1 thumb index=%d, pc=0x%x\n", __FUNCTION__, tinstr, inst_index, cpu->translate_pc);
 			*ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
 			break;
 		case 31:
 			/* For BL 2 thumb instruction*/
 			inst_index = table_length - 2;
-			//printf("In %s, tinstr=0x%x, bl 2 thumb index=%d\n", __FUNCTION__, tinstr, inst_index);
+			//printf("In %s, tinstr=0x%x, bl 2 thumb index=%d, px=0x%x\n", __FUNCTION__, tinstr, inst_index, cpu->translate_pc);
 			*ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
 			break;
 		default:
@@ -3633,6 +3635,9 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 		if (ret == FETCH_FAILURE) {
 			return FETCH_EXCEPTION;
 		}
+		if(cpu->translate_pc >= 0x0001026c && cpu->translate_pc <= 0x102b0)
+                	printf("In %s t_branch, inst=0x%x, pc=0x%x, TFlag=0x%x\n", __FUNCTION__, inst, cpu->translate_pc, cpu->TFlag);
+
 		/* If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction */
 		if (cpu->TFlag){
 			uint32_t arm_inst;
@@ -3667,6 +3672,7 @@ translated:
 	if (!core->is_user_mode) {
 		protect_code_page(pc_start);
 	}
+	//printf("In %s,insert_bb pc=0x%x, TFlag=0x%x\n", __FUNCTION__, pc_start, cpu->TFlag);
 	insert_bb(pc_start, bb_start);
 	return KEEP_GOING;
 }
@@ -4189,7 +4195,7 @@ static int
 debug_function(cpu_t *cpu)
 {
 	extern int diff_single_step(cpu_t *cpu);
-	//return diff_single_step(cpu); 
+	return diff_single_step(cpu); 
 	#if 0
 	unsigned int value;
 	unsigned int dummy;
@@ -4333,7 +4339,7 @@ void InterpreterMainLoop(cpu_t *core)
 	#define SET_PC				(cpu->Reg[15] = cpu->Reg[15] + 8 + inst_cream->signed_immed_24)
 	#define SHIFTER_OPERAND			inst_cream->shtop_func(cpu, inst_cream->shifter_operand)
 
-	#define INC_ICOUNTER			//cpu->icounter++;                                                   \
+	#define INC_ICOUNTER			cpu->icounter++;                                                   \
 						if (debug_function(core))                                          \
 							if (core->check_int_flag)                                  \
 								goto END
@@ -4437,6 +4443,9 @@ void InterpreterMainLoop(cpu_t *core)
 				goto END;
 		}
 		inst_base = (arm_inst *)&inst_buf[ptr];
+		//if(cpu->icounter > 90000000)
+		if(cpu->icounter > 110000000 && cpu->Reg[15] < 0xc0000000)
+			printf("DISPATCH:pc=0x%x, cpsr=0x%x, tflag=0x%x, lr=0x%x\n", cpu->Reg[15],cpu->Cpsr, cpu->TFlag, cpu->Reg[14]);
 		GOTO_NEXT_INST;
 	}
 	ADC_INST:
@@ -4599,6 +4608,8 @@ void InterpreterMainLoop(cpu_t *core)
 			if (BITS(inst, 20, 27) == 0x12 && BITS(inst, 4, 7) == 0x3) {
 				//LINK_RTN_ADDR;
 				cpu->Reg[14] = (cpu->Reg[15] + GET_INST_SIZE(cpu));
+				if(cpu->TFlag)
+					cpu->Reg[14] |= 0x1;
 				cpu->Reg[15] = cpu->Reg[inst_cream->val.Rm] & 0xfffffffe;
 				cpu->TFlag = cpu->Reg[inst_cream->val.Rm] & 0x1;
 				//cpu->Reg[15] = cpu->Reg[BITS(inst, 0, 3)] & 0xfffffffe;
@@ -4618,8 +4629,10 @@ void InterpreterMainLoop(cpu_t *core)
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			if (inst_cream->Rm == 15)
 				printf("In %s, BX at pc %x: use of Rm = R15 is discouraged\n", __FUNCTION__, cpu->Reg[15]);
-			cpu->TFlag = RM & 0x1;
-			cpu->Reg[15] = RM & 0xfffffffe;
+			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
+			cpu->Reg[15] = cpu->Reg[inst_cream->Rm] & 0xfffffffe;
+			if(cpu->Reg[15] < 0xc0000000)
+				printf("In %s, BX at pc %x: Rm=0x%x, RM=0x%x\n", __FUNCTION__, cpu->Reg[15], inst_cream->Rm, cpu->Reg[inst_cream->Rm]);
 //			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
 			goto DISPATCH;
 		}
@@ -4639,10 +4652,11 @@ void InterpreterMainLoop(cpu_t *core)
 				/* undefined instruction here */
 				return;
 			}
+			SKYEYE_ERR("CDP insn inst=0x%x, pc=0x%x\n", inst_cream->inst, cpu->Reg[15]);
 			unsigned cpab = (cpu->CDP[inst_cream->cp_num]) (cpu, ARMul_FIRST, inst_cream->inst);
 			if(cpab != ARMul_DONE){
-				SKYEYE_ERR("CDP insn wrong\n");
-				exit(-1);
+				SKYEYE_ERR("CDP insn wrong, inst=0x%x, cp_num=0x%x\n", inst_cream->inst, inst_cream->cp_num);
+				//exit(-1);
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5417,6 +5431,7 @@ void InterpreterMainLoop(cpu_t *core)
 			if (inst_cream->inst == 0xeef04a10) {
 				/* undefined instruction fmrx */
 				RD = 0x20000000;
+				exit(-1);
 				goto END;
 			} else {
 				if (inst_cream->cp_num == 15) {
@@ -5461,13 +5476,14 @@ void InterpreterMainLoop(cpu_t *core)
 							RD = CP15_REG(CP15_THREAD_URO);
 						}
 						else{
-							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", CRn);
+							printf ("mmu_mrr wrote UNKNOWN - reg %d\n", CRn);
 						}
 					}
 					else {
 						printf("mrc is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
 					}
 				}
+				//printf("mrc is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -6469,9 +6485,14 @@ void InterpreterMainLoop(cpu_t *core)
 		INC_ICOUNTER;
 		bl_1_thumb *inst_cream = (bl_1_thumb *)inst_base->component;
 		cpu->Reg[14] = cpu->Reg[15] + 4 + inst_cream->imm;
-		cpu->Reg[15] += 2;
-		//printf(" BL_1_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
-		goto DISPATCH;
+		//cpu->Reg[15] += 2;
+		printf(" BL_1_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
+
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(bl_1_thumb));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+
 	}
 	BL_2_THUMB:
 	{
@@ -6491,12 +6512,12 @@ void InterpreterMainLoop(cpu_t *core)
 		uint32 tmp = cpu->Reg[15];
 		blx_1_thumb *inst_cream = (blx_1_thumb *)inst_base->component;
 		cpu->Reg[15] = (cpu->Reg[14] + inst_cream->imm) & 0xFFFFFFFC;
-		//printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, \n", inst_cream->imm, cpu->Reg[14]);
+		printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, instr=0x%x\n", inst_cream->imm, cpu->Reg[14], inst_cream->instr);
 		cpu->Reg[14] = ((tmp + 2) | 1);
 		//(state->Reg[14] + ((tinstr & 0x07FF) << 1)) & 0xFFFFFFFC;
 		/* switch to arm state from thumb state */
 		cpu->TFlag = 0;
-		//printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r15=0x%x, \n", inst_cream->imm, cpu->Reg[15]);
+		printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, r15=0x%x, \n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
 		goto DISPATCH;
 	}
 
