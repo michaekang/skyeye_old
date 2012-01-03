@@ -3590,6 +3590,7 @@ static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
 	uint32_t phys_addr = get_bank_addr((void *)addr);
 //	printf("[PHYSICAL][ADDR:0x%08llx]\n", phys_addr);
 	flush_bb(phys_addr);
+	flush_bb(phys_addr + 4096);
 }
 
 void protect_code_page(uint32_t addr)
