@@ -5948,6 +5948,9 @@ void InterpreterMainLoop(cpu_t *core)
 		unsigned int inst = inst_cream->inst;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			int i;
+			unsigned int Rn = BITS(inst, 16, 19);
+			unsigned int old_RN = cpu->Reg[Rn];
+
 			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
 			if (fault) goto MMU_EXCEPTION;
 			if (BIT(inst_cream->inst, 22) == 1) {
@@ -6021,7 +6024,10 @@ void InterpreterMainLoop(cpu_t *core)
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
-						fault = interpreter_write_memory(core, addr, phys_addr, cpu->Reg[i], 32);
+						if(i == Rn)
+							fault = interpreter_write_memory(core, addr, phys_addr, old_RN, 32);
+						else
+							fault = interpreter_write_memory(core, addr, phys_addr, cpu->Reg[i], 32);
 						if (fault) goto MMU_EXCEPTION;
 						addr += 4;
 						phys_addr += 4;
