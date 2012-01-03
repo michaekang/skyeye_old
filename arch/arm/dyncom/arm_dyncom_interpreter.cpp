@@ -1907,8 +1907,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(blx)(unsigned int inst, int index)
 	if (BITS(inst, 20, 27) == 0x12 && BITS(inst, 4, 7) == 0x3) {
 		inst_cream->val.Rm = BITS(inst, 0, 3);
 	} else {
-		printf("inst is %x\n", inst);
-		exit(-1);
+		inst_cream->val.signed_immed_24 = BITS(inst, 0, 23);
+		printf(" blx inst is %x\n", inst);
+		//exit(-1);
 //		DEBUG_MSG;
 	}
 
@@ -4615,7 +4616,15 @@ void InterpreterMainLoop(cpu_t *core)
 				//cpu->Reg[15] = cpu->Reg[BITS(inst, 0, 3)] & 0xfffffffe;
 				//cpu->TFlag = cpu->Reg[BITS(inst, 0, 3)] & 0x1;
 			} else {
-				DEBUG_MSG;
+				cpu->Reg[14] = (cpu->Reg[15] + GET_INST_SIZE(cpu));
+				cpu->TFlag = 0x1;
+				int signed_int = inst_cream->val.signed_immed_24;
+				signed_int = (signed_int) & 0x800000 ? (0x3F000000 | signed_int) : signed_int;
+				signed_int = signed_int << 2;
+				cpu->Reg[15] = cpu->Reg[15] + 2 * GET_INST_SIZE(cpu) 
+						+ signed_int + (BIT(inst, 24) << 1);
+				printf("In BLX, r14=0x%x, r15=0x%x\n", cpu->Reg[14], cpu->Reg[15]);
+				//DEBUG_MSG;
 			}
 			goto DISPATCH;
 		}
