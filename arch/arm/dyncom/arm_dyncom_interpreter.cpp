@@ -1908,7 +1908,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(blx)(unsigned int inst, int index)
 		inst_cream->val.Rm = BITS(inst, 0, 3);
 	} else {
 		inst_cream->val.signed_immed_24 = BITS(inst, 0, 23);
-		printf(" blx inst is %x\n", inst);
+		//printf(" blx inst is %x\n", inst);
 		//exit(-1);
 //		DEBUG_MSG;
 	}
@@ -3439,8 +3439,6 @@ enum {
 static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *arm_inst, uint32_t* inst_size, ARM_INST_PTR* ptr_inst_base){
 	/* Check if in Thumb mode.  */
 	tdstate ret;
-	if(cpu->translate_pc >= 0x0001026c && cpu->translate_pc <= 0x102a0)
-		printf("In %s t_branch, inst=0x%x, pc=0x%x\n", __FUNCTION__, inst, cpu->translate_pc);
 	ret = thumb_translate (cpu, inst, arm_inst, inst_size);
 	if(ret == t_branch){
 		/* FIXME, endian should be judged */
@@ -3451,8 +3449,6 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *a
 			tinstr = inst & 0xFFFF;
 
 		//tinstr = inst & 0xFFFF;
-		if(cpu->translate_pc >= 0x0001026c && cpu->translate_pc <= 0x102a0)
-			printf("In %s t_branch, inst=0x%x, tinst=0x%x, pc=0x%x\n", __FUNCTION__, inst, tinstr, cpu->translate_pc);
 		int inst_index;
 		/* table_length */
 		int table_length = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);
@@ -3637,8 +3633,6 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 		if (ret == FETCH_FAILURE) {
 			return FETCH_EXCEPTION;
 		}
-		if(cpu->translate_pc >= 0x0001026c && cpu->translate_pc <= 0x102b0)
-                	printf("In %s t_branch, inst=0x%x, pc=0x%x, TFlag=0x%x\n", __FUNCTION__, inst, cpu->translate_pc, cpu->TFlag);
 
 		/* If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction */
 		if (cpu->TFlag){
@@ -4341,7 +4335,7 @@ void InterpreterMainLoop(cpu_t *core)
 	#define SET_PC				(cpu->Reg[15] = cpu->Reg[15] + 8 + inst_cream->signed_immed_24)
 	#define SHIFTER_OPERAND			inst_cream->shtop_func(cpu, inst_cream->shifter_operand)
 
-	#define INC_ICOUNTER			cpu->icounter++;                                                   \
+	#define INC_ICOUNTER			//cpu->icounter++;                                                   \
 						if (debug_function(core))                                          \
 							if (core->check_int_flag)                                  \
 								goto END
@@ -4624,12 +4618,12 @@ void InterpreterMainLoop(cpu_t *core)
 				signed_int = signed_int << 2;
 				cpu->Reg[15] = cpu->Reg[15] + 2 * GET_INST_SIZE(cpu) 
 						+ signed_int + (BIT(inst, 24) << 1);
-				printf("In BLX, r14=0x%x, r15=0x%x\n", cpu->Reg[14], cpu->Reg[15]);
 				//DEBUG_MSG;
 			}
 			goto DISPATCH;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
+//		INC_PC(sizeof(bx_inst));
 		goto DISPATCH;
 	}
 	BX_INST:
@@ -4641,8 +4635,6 @@ void InterpreterMainLoop(cpu_t *core)
 				printf("In %s, BX at pc %x: use of Rm = R15 is discouraged\n", __FUNCTION__, cpu->Reg[15]);
 			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
 			cpu->Reg[15] = cpu->Reg[inst_cream->Rm] & 0xfffffffe;
-			if(cpu->Reg[15] < 0xc0000000)
-				printf("In %s, BX at pc %x: Rm=0x%x, RM=0x%x\n", __FUNCTION__, cpu->Reg[15], inst_cream->Rm, cpu->Reg[inst_cream->Rm]);
 //			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
 			goto DISPATCH;
 		}
@@ -6502,7 +6494,7 @@ void InterpreterMainLoop(cpu_t *core)
 		bl_1_thumb *inst_cream = (bl_1_thumb *)inst_base->component;
 		cpu->Reg[14] = cpu->Reg[15] + 4 + inst_cream->imm;
 		//cpu->Reg[15] += 2;
-		printf(" BL_1_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
+		//printf(" BL_1_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
 
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(bl_1_thumb));
@@ -6528,12 +6520,12 @@ void InterpreterMainLoop(cpu_t *core)
 		uint32 tmp = cpu->Reg[15];
 		blx_1_thumb *inst_cream = (blx_1_thumb *)inst_base->component;
 		cpu->Reg[15] = (cpu->Reg[14] + inst_cream->imm) & 0xFFFFFFFC;
-		printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, instr=0x%x\n", inst_cream->imm, cpu->Reg[14], inst_cream->instr);
+		//printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, instr=0x%x\n", inst_cream->imm, cpu->Reg[14], inst_cream->instr);
 		cpu->Reg[14] = ((tmp + 2) | 1);
 		//(state->Reg[14] + ((tinstr & 0x07FF) << 1)) & 0xFFFFFFFC;
 		/* switch to arm state from thumb state */
 		cpu->TFlag = 0;
-		printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, r15=0x%x, \n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
+		//printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, r15=0x%x, \n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
 		goto DISPATCH;
 	}
 
