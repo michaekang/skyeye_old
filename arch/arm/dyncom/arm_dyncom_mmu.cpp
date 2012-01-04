@@ -296,7 +296,15 @@ fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, 
 	else if (size == 16)
 		bus_read(16, phys_addr | (virt_addr & 3), &value);
 	else
+	{
 		bus_read(32, phys_addr, &value);
+		/* Unaligned read word */
+		if ((virt_addr & 3) && (size == 32)) {
+			virt_addr = (virt_addr & 3) << 3;       /* Get the word address.  */
+			value =  ((value >> virt_addr) | (value << (32 - virt_addr)));  /* rot right */
+		}
+	}
+
 #if 0
 	if (cpu->icounter == 4149571 || cpu->icounter == 5705376 || cpu->icounter == 5781965 || cpu->icounter == 7598893
 	    || cpu->icounter == 7844811 || cpu->icounter == 8012434 || cpu->icounter == 12160365 || cpu->icounter == 19370686 || cpu->icounter == 19511535
