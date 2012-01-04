@@ -23,7 +23,7 @@ extern decoder_cache dc_map;
 const int THUMB_BIT = 5;
 static int get_instr_size(cpu_t* cpu){
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	return (core->Cpsr & (1 << THUMB_BIT))?2:4;
+	return (core->TFlag)?2:4;
 }
 #ifndef INSTR_SIZE
 #define INSTR_SIZE get_instr_size(cpu)
