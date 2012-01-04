@@ -66,9 +66,11 @@ arm11_step_once (conf_object_t* opaque)
 	state->stop_simulator = 0;
 	state->NextInstr = RESUME;      /* treat as PC change */
 	state->last_pc = state->Reg[15];
+	//core->space->read(core->space->conf_obj, state->Reg[15], state->last_instr, 4);
 	//state->Reg[15] = ARMul_DoProg(state);
-        state->Reg[15] = ARMul_DoInstr(state);
-	state->Cpsr = (state->Cpsr & 0x0fffffff) | \
+        state->Reg[15] = ARMul_DoInstr(state);	
+	//core->space->read(core->space->conf_obj, state->Reg[15], state->CurrInstr, 4);
+	state->Cpsr = (state->Cpsr & 0x0fffffdf) | \
                      (state->NFlag << 31)   |                 \
                      (state->ZFlag << 30)   |                 \
                      (state->CFlag << 29)   |                 \

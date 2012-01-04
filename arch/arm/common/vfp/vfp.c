@@ -237,6 +237,7 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 		return ARMul_DONE;
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x\n", instr);
+	return ARMul_CANT;
 }
 
 

@@ -541,6 +541,9 @@ ARMul_Emulate26 (ARMul_State * state)
         }
         printf("\n");
 #endif
+	state->last_instr = state->CurrInstr;
+	state->CurrInstr = instr;
+
 #if DIFF_STATE
       fprintf(state->state_log, "PC:0x%x\n", pc);
       if (pc && (pc + 8) != state->Reg[15]) {
