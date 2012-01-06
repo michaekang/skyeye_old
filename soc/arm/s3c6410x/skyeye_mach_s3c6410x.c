@@ -180,6 +180,29 @@ s3c6410x_io_do_cycle (generic_arch_t *state)
 				return;
 			}
 		}
+
+		if ((io.timer.tcon & 0x1000) != 0) {
+			/*tcntx is the orignal value we set, it equals tcntbx firstly*/
+			io.timer.tcnt[2]--;
+			if (io.timer.tcnt[2] <= 0) {
+				/* whe the tcntx is 0, reset the timer tcntx as the value of
+				 * tcntb
+				 */
+				io.timer.tcnt[2] = io.timer.tcntb[2];
+				io.timer.tcnto[2] = io.timer.tcntb[2];
+				io.timer.tcmpb[2] = io.timer.tcmp[2];
+				/* Timer2 request status*/
+	
+				/* set timer2 interrupt */
+				io.vic0rawintr |= 1 << INT_TIMER2;
+				io.vic0irqstatus |=  ((1 << INT_TIMER2) & ~(io.vic0intselect) & io.vic0intenable);
+				io.vic0fiqstatus |=  ((1 << INT_TIMER2) & io.vic0intselect & io.vic0intenable);
+	
+				s3c6410x_update_int (state);
+				return;
+			}
+		}
+
 	
 		for (i = 0; i < 3; i++) {
 			if (((io.uart[i].utrstat & 0x1) == 0x0) && ((io.uart[i].ucon & 0x3) == 0x1)) {
@@ -443,7 +466,7 @@ s3c6410x_timer_write (generic_arch_t *state, u32 offset, u32 data)
 static uint32
 s3c6410x_io_read_word (void *arch_instance, uint32 addr)
 {
-	uint32 data = -1;
+	uint32 data = 0;
 	int i;
 
 	conf_object_t* conf_obj = get_conf_obj("s3c6410_mach_space");
@@ -904,11 +927,18 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	conf_object_t* touchscreen = pre_conf_obj("s3c6410_touchscreen_0", "s3c6410_touchscreen");
 	memory_space_intf* ts_io_memory = (memory_space_intf*)SKY_get_interface(touchscreen, MEMORY_SPACE_INTF_NAME);
 	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, ts_io_memory);
-	ret = add_map(phys_mem, 0x7f00b000, 0x1000, 0x0, ts_io_memory, 1, 1);
+	ret = add_map(phys_mem, 0x7E00b000, 0x1000, 0x0, ts_io_memory, 1, 1);
 	if(ret != No_exp){
 		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for touchscreen\n");
 	}
 
+	conf_object_t* spi = pre_conf_obj("s3c6410_spi_0", "s3c6410_spi");
+	memory_space_intf* spi_io_memory = (memory_space_intf*)SKY_get_interface(spi, MEMORY_SPACE_INTF_NAME);
+	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, spi_io_memory);
+	ret = add_map(phys_mem, 0x7F00B000, 0x1000, 0x0, spi_io_memory, 1, 1);
+	if(ret != No_exp){
+		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for spi\n");
+	}
 	/* Register lcd io memory to the whole address space */
 	conf_object_t* lcd = pre_conf_obj("s3c6410_lcd_0", "s3c6410_lcd");
 	if(lcd != NULL){
