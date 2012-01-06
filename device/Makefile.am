@@ -9,6 +9,7 @@ dev_sdhci_s3c6410 = sdhci_s3c6410/sdhci_s3c6410.c sdhci_s3c6410/sdhci_s3c6410_mo
 dev_touchscreen_s3c6410 = touchscreen_s3c6410/touchscreen_s3c6410.c touchscreen_s3c6410/touchscreen_s3c6410_module.c
 dev_sysctrl_s3c6410 = sysctrl_s3c6410/sysctrl_s3c6410.c sysctrl_s3c6410/sysctrl_s3c6410_module.c
 dev_gpio_s3c6410 = gpio_s3c6410/gpio_s3c6410.c gpio_s3c6410/gpio_s3c6410_module.c
+dev_spi_s3c6410 = spi_s3c6410/spi_s3c6410.c spi_s3c6410/spi_s3c6410_module.c
 
 #dev_flash = flash/armflash.c  flash/dev_flash_sst39lvf160.c flash/flash_module.c\
 #flash/dev_flash_am29.c  flash/dev_flash_intel.c  flash/skyeye_flash.c
@@ -60,6 +61,8 @@ libsysctrl_s3c6410_la_LDFLAGS = -module
 
 libgpio_s3c6410_la_SOURCES = $(dev_gpio_s3c6410)
 libgpio_s3c6410_la_LDFLAGS = -module
+libspi_s3c6410_la_SOURCES = $(dev_spi_s3c6410)
+libspi_s3c6410_la_LDFLAGS = -module
 
 libflash_la_SOURCES = $(dev_flash)
 libflash_la_LDFLAGS = -module
@@ -87,7 +90,7 @@ pkglib_LTLIBRARIES = libuart.la libuart_16550.la libflash.la libnandflash.la lib
 if WIN32
 libuart_la_LDFLAGS +=  -no-undefined -shared -module -Xlinker -L../common/.libs/ -L/mingw/lib -Xlinker -lcommon -Xlinker --export-all-symbol
 else
-pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la libtouchscreen_s3c6410.la libsysctrl_s3c6410.la libgpio_s3c6410.la
+pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la libtouchscreen_s3c6410.la libsysctrl_s3c6410.la libgpio_s3c6410.la libspi_s3c6410.la
 endif
 
 if GTK_LCD
