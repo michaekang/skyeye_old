@@ -27,6 +27,28 @@
 #define __SYSCTRL_S3C6410_H__
 
 typedef struct sysctrl_reg{
+	uint32_t apll_lock;
+	uint32_t mpll_lock;
+	uint32_t epll_lock;
+	uint32_t apll_con;
+	uint32_t mpll_con;
+	uint32_t epll_con0;
+	uint32_t epll_con1;
+	uint32_t clk_src;
+	uint32_t clk_div0;
+	uint32_t clk_div1;
+	uint32_t clk_div2;
+	uint32_t hclk_gate;
+	uint32_t pclk_gate;
+	uint32_t sclk_gate;
+	uint32_t mem0_clk_gate;
+	uint32_t ahb_con0;
+	uint32_t sys_id;
+	uint32_t mem_sys_cfg;
+	uint32_t osc_freq;
+	uint32_t osc_stable;
+	uint32_t clk_src2;
+	uint32_t others;
 	uint32_t pwr_cfg; // 0x7E00_B000
 	uint32_t sdma_sel; // 0x7E00_B000
 }sysctrl_reg_t; 
