@@ -42,9 +42,31 @@ static exception_t s3c6410_spi_read(conf_object_t *opaque, generic_address_t off
 	struct s3c6410_spi_device *dev = opaque->obj;
 	spi_reg_t* regs = dev->regs;
 	switch(offset) {
-		case 0x20:
-			*(uint32_t*)buf = regs->gpbcon; // 0x7E00_B000
+		case 0x0:
+			*(uint32_t*)buf = regs->ch_cfg;
 			break;
+		case 0x8:
+			*(uint32_t*)buf = regs->mode_cfg;
+			break;
+
+		case 0xc:
+			*(uint32_t*)buf = regs->cs_reg;
+			break;
+		case 0x14:
+			*(uint32_t*)buf = regs->spi_status;
+			break;
+
+		case 0x24:
+			*(uint32_t*)buf = regs->pending_clr_reg;
+			break;
+		case 0x28:
+                        *(uint32_t*)buf = regs->swap_cfg;
+                        break;
+
+		case 0x2c:
+			*(uint32_t*)buf = regs->fb_clk_sel;
+			break;
+
 		default:
 			printf("Can not read the register at 0x%x in spi\n", offset);
 			return Invarg_exp;
@@ -58,9 +80,31 @@ static exception_t s3c6410_spi_write(conf_object_t *opaque, generic_address_t of
 	spi_reg_t* regs = dev->regs;
 	uint32_t val = *(uint32_t*)buf;
 	switch(offset) {
-		case 0x20:
-			regs->gpbcon = val; // 0x7E00_B000
+		case 0x0:
+			regs->ch_cfg = val;
 			break;
+		case 0x8:
+			regs->mode_cfg = val;
+			break;
+
+		case 0xc:
+			regs->cs_reg = val;
+			break;
+		case 0x14:
+			regs->spi_status = val;
+			break;
+
+		case 0x24:
+			regs->pending_clr_reg = val;
+			break;
+		case 0x28:
+			regs->swap_cfg = val;
+			break;
+
+		case 0x2c:
+			regs->fb_clk_sel = val;
+			break;
+
 		default:
 			printf("Can not write the register at 0x%x in spi\n", offset);
 			return Invarg_exp;
@@ -72,7 +116,9 @@ static conf_object_t* new_s3c6410_spi(char* obj_name){
 	spi_reg_t* regs =  skyeye_mm_zero(sizeof(spi_reg_t));
 	dev->obj = new_conf_object(obj_name, dev);
 	/* init spi regs */
-	regs->gpbcon = 0x40000;
+	regs->ch_cfg = 0x40;
+	regs->cs_reg = 0x1;
+	regs->fb_clk_sel = 0x3;
 	dev->regs = regs;
 
 	/* Register io function to the object */

@@ -27,7 +27,19 @@
 #define __SPI_S3C6410_H__
 
 typedef struct spi_reg{
-	uint32_t gpbcon; // 0x7E00_B000
+	uint32 ch_cfg; 
+	uint32 clk_cfg;
+	uint32 mode_cfg;
+	uint32 cs_reg;
+	uint32 spi_int_en;
+	uint32 spi_status;
+	uint32 spi_tx_data;
+	uint32 spi_rx_data;
+	uint32 packet_cnt_reg;
+	uint32 swap_cfg;
+	uint32 fb_clk_sel;
+	uint32 pending_clr_reg;
+	 
 }spi_reg_t; 
 
 typedef struct s3c6410_spi_device{
