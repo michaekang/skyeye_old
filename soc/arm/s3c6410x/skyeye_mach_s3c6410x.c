@@ -939,13 +939,31 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	if(ret != No_exp){
 		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for spi\n");
 	}
+
+	conf_object_t* usbhost = pre_conf_obj("s3c6410_usbhost_0", "s3c6410_usbhost");
+	memory_space_intf* usbhost_io_memory = (memory_space_intf*)SKY_get_interface(usbhost, MEMORY_SPACE_INTF_NAME);
+	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, usbhost_io_memory);
+	ret = add_map(phys_mem, 0x74300000, 0x1000, 0x0, usbhost_io_memory, 1, 1);
+	if(ret != No_exp){
+		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for usbhost\n");
+	}
+	
+	conf_object_t* ac97 = pre_conf_obj("s3c6410_ac97_0", "s3c6410_ac97");
+	memory_space_intf* ac97_io_memory = (memory_space_intf*)SKY_get_interface(usbhost, MEMORY_SPACE_INTF_NAME);
+	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, ac97_io_memory);
+	ret = add_map(phys_mem, 0x7f001000, 0x1000, 0x0, ac97_io_memory, 1, 1);
+	if(ret != No_exp){
+		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for ac97\n");
+	}
+
 	/* Register lcd io memory to the whole address space */
 	conf_object_t* lcd = pre_conf_obj("s3c6410_lcd_0", "s3c6410_lcd");
 	if(lcd != NULL){
 		memory_space_intf* lcd_io_memory = (memory_space_intf*)SKY_get_interface(lcd, MEMORY_SPACE_INTF_NAME);
 		DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, lcd_io_memory);
 		exception_t ret;
-        	ret = add_map(phys_mem, 0x77100000, 0x100000, 0x0, lcd_io_memory, 1, 1);
+        	//ret = add_map(phys_mem, 0x77100000, 0x100000, 0x0, lcd_io_memory, 1, 1);
+        	ret = add_map(phys_mem, 0x77600000, 0x100000, 0x0, lcd_io_memory, 1, 1);
 #ifdef GTK_LCD
 		/* set the lcd_ctrl_0 attribute for lcd */
 		conf_object_t* gtk_painter = pre_conf_obj("gtk_lcd_0", "gtk_lcd");
