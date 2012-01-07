@@ -45,6 +45,32 @@ static exception_t s3c6410_gpio_read(conf_object_t *opaque, generic_address_t of
 		case 0x20:
 			*(uint32_t*)buf = regs->gpbcon; // 0x7E00_B000
 			break;
+		case 0xa0:
+			*(uint32_t*)buf = regs->gpfcon;
+			break;
+		case 0xa4:
+			*(uint32_t*)buf = regs->gpfdat;		
+			break;
+		case 0xa8:
+			*(uint32_t*)buf = regs->gpfpud;
+			break;
+		case 0x100:
+			*(uint32_t*)buf = regs->gpicon;
+			break;
+		case 0x120:
+			*(uint32_t*)buf = regs->gpjcon;
+			break;
+
+		case 0x830:
+			*(uint32_t*)buf = regs->gpncon;
+			break;
+		case 0x900:
+			*(uint32_t*)buf = regs->eint0con0;
+			break;
+		case 0x920:
+			*(uint32_t*)buf = regs->eint0mask;
+			break;
+
 		default:
 			printf("Can not read the register at 0x%x in gpio\n", offset);
 			return Invarg_exp;
@@ -61,6 +87,31 @@ static exception_t s3c6410_gpio_write(conf_object_t *opaque, generic_address_t o
 		case 0x20:
 			regs->gpbcon = val; // 0x7E00_B000
 			break;
+		case 0xa0:
+			regs->gpfcon = val;
+			break;
+		case 0xa4:
+			regs->gpfdat = val;		
+			break;
+		case 0xa8:
+			regs->gpfpud = val;
+			break;
+		case 0x100:
+			regs->gpicon = val;
+			break;
+		case 0x120:
+			regs->gpjcon = val;
+			break;
+
+		case 0x830:
+			regs->gpncon = val;
+			break;
+		case 0x900:
+			regs->eint0con0 = val;
+			break;
+		case 0x920:
+			regs->eint0mask = val;
+			break;
 		default:
 			printf("Can not write the register at 0x%x in gpio\n", offset);
 			return Invarg_exp;
@@ -73,6 +124,8 @@ static conf_object_t* new_s3c6410_gpio(char* obj_name){
 	dev->obj = new_conf_object(obj_name, dev);
 	/* init gpio regs */
 	regs->gpbcon = 0x40000;
+	regs->eint0mask = 0x0FFFFFFF;
+	regs->gpfpud = 0x55555555;
 	dev->regs = regs;
 
 	/* Register io function to the object */
