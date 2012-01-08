@@ -63,9 +63,12 @@ typedef union interrupt_signal{
 }interrupt_signal_t;
 
 typedef struct signal_interface{
+	conf_object_t* conf_obj;
 	int (*raise_signal)(conf_object_t* target, int line);
 	int (*lower_signal)(conf_object_t* target, int line);
 }general_signal_intf;
+
+#define  GENERAL_SIGNAL_INTF_NAME "general_signal_intf"
 
 exception_t send_signal(interrupt_signal_t* signal);
 
