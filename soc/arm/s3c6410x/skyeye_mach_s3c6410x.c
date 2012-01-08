@@ -924,6 +924,15 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	if(ret != No_exp){
 		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for gpio\n");
 	}
+
+	conf_object_t* mfc = pre_conf_obj("s3c6410_mfc_0", "s3c6410_mfc");
+	memory_space_intf* mfc_io_memory = (memory_space_intf*)SKY_get_interface(mfc, MEMORY_SPACE_INTF_NAME);
+	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, mfc_io_memory);
+       	ret = add_map(phys_mem, 0x7e002000, 0x1000, 0x0, mfc_io_memory, 1, 1);
+	if(ret != No_exp){
+		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for mfc\n");
+	}
+
 	conf_object_t* touchscreen = pre_conf_obj("s3c6410_touchscreen_0", "s3c6410_touchscreen");
 	memory_space_intf* ts_io_memory = (memory_space_intf*)SKY_get_interface(touchscreen, MEMORY_SPACE_INTF_NAME);
 	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, ts_io_memory);
