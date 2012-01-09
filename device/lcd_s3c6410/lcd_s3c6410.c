@@ -23,7 +23,7 @@
 #include <memory_space.h>
 #include <skyeye_lcd_intf.h>
 #include <skyeye_lcd_surface.h>
-#define DEBUG
+//#define DEBUG
 #include <skyeye_log.h>
 
 #include "lcd_s3c6410.h"
@@ -114,26 +114,138 @@ typedef struct {
 } FbUpdateState;
 static exception_t s3c6410_fb_read(conf_object_t *opaque, generic_address_t offset, void* buf, size_t count)
 {
-	uint32_t ret;
+	exception_t ret = No_exp;
 	struct s3c6410_fb_device *dev = opaque->obj;
 	fb_reg_t* regs = dev->regs;
 	DBG("In %s, offset=0x%x\n", __FUNCTION__, offset);
 	switch(offset) {
         case VIDCON0:
-		regs->vidcon[0];
+		*(uint32_t*)buf = regs->vidcon[0];
 		return ret;
 
         case VIDCON1:
-		regs->vidcon[1];
+		*(uint32_t*)buf = regs->vidcon[1];
 		return ret;
 
         case VIDCON2:
-		regs->vidcon[2];
+		*(uint32_t*)buf = regs->vidcon[2];
 		return ret;
+	case WINCON(0):
+		*(uint32_t*)buf = regs->wincon[0];
+		break;
+	case WINCON(1):
+		*(uint32_t*)buf = regs->wincon[0];
+		break;
+	case WINCON(2):
+		*(uint32_t*)buf = regs->wincon[2];
+		break;
+	case WINCON(3):
+		*(uint32_t*)buf = regs->wincon[3];
+		break;
+	case VIDOSD_BASE:
+		*(uint32_t*)buf = regs->vidosd[0][0];
+		break;
+	case (VIDOSD_BASE + 4):
+		*(uint32_t*)buf = regs->vidosd[0][1];
+		break;
+	case (VIDOSD_BASE + 8):
+		*(uint32_t*)buf = regs->vidosd[0][2];
+		DBG("In %s, windows size is %d\n", __FUNCTION__, data & 0xFFFFFF);
+		break;
+	case (VIDOSD_BASE + 0x10):
+		*(uint32_t*)buf = regs->vidosd[1][0];
+		break;
+	case (VIDOSD_BASE + 0x14):
+		*(uint32_t*)buf = regs->vidosd[1][1];
+		break;
+	case (VIDOSD_BASE + 0x18):
+		*(uint32_t*)buf = regs->vidosd[1][2];
+		break;
+	case (VIDOSD_BASE + 0x1c):
+		*(uint32_t*)buf = regs->vidosd1d;
+		break;
+	case (VIDOSD_BASE + 0x20):
+		*(uint32_t*)buf = regs->vidosd[2][0];
+		break;
+	case (VIDOSD_BASE + 0x24):
+		*(uint32_t*)buf = regs->vidosd[2][1];
+		break;
+	case (VIDOSD_BASE + 0x28):
+		*(uint32_t*)buf = regs->vidosd[2][2];
+		break;
+	case (VIDOSD_BASE + 0x2c):
+		*(uint32_t*)buf = regs->vidosd2d;
+		break;
+	case (VIDOSD_BASE + 0x30):
+		*(uint32_t*)buf = regs->vidosd[3][0];
+		break;
+	case (VIDOSD_BASE + 0x34):
+		*(uint32_t*)buf = regs->vidosd[3][1];
+		break;
+	case (VIDOSD_BASE + 0x38):
+		*(uint32_t*)buf = regs->vidosd[3][2];
+		break;
+	case (VIDOSD_BASE + 0x40):
+		*(uint32_t*)buf = regs->vidosd[4][0];
+		break;
+	case (VIDOSD_BASE + 0x44):
+		*(uint32_t*)buf = regs->vidosd[4][1];
+		break;
+	case (VIDOSD_BASE + 0x48):
+		*(uint32_t*)buf = regs->vidosd[4][2];
+		break;
+	case 0xa8:
+		*(uint32_t*)buf = regs->vidw01add0b0;
+		break;
+	case 0xac:
+		*(uint32_t*)buf = regs->vidw01add0b1;
+		break;
+	case 0xb0:
+		*(uint32_t*)buf = regs->vidw02add0;
+		break;
+	case 0xb8:
+		*(uint32_t*)buf = regs->vidw03add0;
+		break;
+	case 0xe8:
+		*(uint32_t*)buf = regs->vidw03add1;
+		break;
+	case 0xe0:
+		*(uint32_t*)buf = regs->vid02add1;
+		break;
+	case 0xd8:
+		*(uint32_t*)buf = regs->vidw01add1b0;
+		break;
+	case 0xdc:
+		*(uint32_t*)buf = regs->vidw01add1b1;
+		break;
+	case 0x104:
+		*(uint32_t*)buf = regs->vidw01add2;
+		break;
+	case 0x108:
+		*(uint32_t*)buf = regs->vidw02add2;
+		break;
+	case 0x10c:
+		*(uint32_t*)buf = regs->vidw03add2;
+		break;
+	case 0x130:
+		*(uint32_t*)buf = regs->vidintcon0;
+		break;
+	case 0x134:
+		*(uint32_t*)buf = regs->vidintcon1;
+		break;
+	
+	case 0x170:
+		*(uint32_t*)buf = regs->dithmode;
+		break;
+	case 0x1a0:
+		*(uint32_t*)buf = regs->wpalcon;
+		break;
 	default:
 		printf("Can not read the register at 0x%x\n", offset);
-		return 0;
+		*(uint32_t*)buf = 0;
+		//return 0;
 	}
+	return ret;
 }
 
 //static void s3c6410_fb_write(void *opaque, target_phys_addr_t offset,
@@ -231,6 +343,9 @@ static exception_t s3c6410_fb_write(conf_object_t *opaque, generic_address_t off
 	case (VIDOSD_BASE + 0x18):
 		regs->vidosd[1][2] = data;
 		break;
+	case (VIDOSD_BASE + 0x1c):
+		regs->vidosd1d = data;
+                break;
 	case (VIDOSD_BASE + 0x20):
 		regs->vidosd[2][0] = data;
 		break;
@@ -239,6 +354,9 @@ static exception_t s3c6410_fb_write(conf_object_t *opaque, generic_address_t off
 		break;
 	case (VIDOSD_BASE + 0x28):
 		regs->vidosd[2][2] = data;
+		break;
+	case (VIDOSD_BASE + 0x2c):
+		regs->vidosd2d = data;
 		break;
 	case (VIDOSD_BASE + 0x30):
 		regs->vidosd[3][0] = data;
@@ -263,29 +381,128 @@ static exception_t s3c6410_fb_write(conf_object_t *opaque, generic_address_t off
 		regs->vidw00add0b0 = data;
 		surface->lcd_addr_begin = data;
 		break;
+	case 0xa4:
+		regs->vidw00add0b1 = data;
+		break;
+	case 0xa8:
+		regs->vidw01add0b0 = data;
+		break;
+	case 0xac:
+		regs->vidw01add0b1 = data;
+		break;
+	case 0xb0:
+		regs->vidw02add0 = data;
+		break;
+	case 0xb8:
+		regs->vidw03add0 = data;
+		break;
+	case 0xe8:
+		regs->vidw03add1 = data;
+		break;
+	case 0xe0:
+		regs->vid02add1 = data;
+		break;
+
 	case 0xd0:
 		DBG("In %s, windows0 buf end=0x%x", __FUNCTION__, data);
 		regs->vidw00add1b0 = data;
 		surface->lcd_addr_end = data;
 		break;
+	case 0xd4:
+		regs->vidw00add1b1 = data;
+		break;
+	case 0xd8:
+		regs->vidw01add1b0 = data;
+		break;
+	case 0xdc:
+		regs->vidw01add1b1 = data;
+		break;
+
 	case 0x100:
 		DBG("In %s, windows 0 buffer size is 0x%x\n", __FUNCTION__, data);
 		regs->vidw_buf_size[0] = data;
 		break;
+	case 0x104:
+                regs->vidw01add2 = data;
+                break;
+        case 0x108:
+		regs->vidw02add2 = data;
+                break;
+        case 0x10c:
+		regs->vidw03add2 = data;
+                break;
+        case 0x130:
+		regs->vidintcon0 = data;
+		printf("In %s, vidintcon0=0x%x\n", __FUNCTION__, data);
+		if(data & 0x1)
+			printf("In %s, Video Interrupt Enable\n", __FUNCTION__);
+		if(data & 0x1000) /* Frame video interrupt */
+			printf("In %s, Frame Video Interrupt Enable\n", __FUNCTION__);
+
+                break;
+        case 0x134:
+		/* W1C */
+		regs->vidintcon1 &= ~data;
+		if(dev->master != NULL && dev->master->lower_signal != NULL)
+			dev->master->lower_signal(dev->master->conf_obj, dev->line_no);
+                break;
+	case 0x170:
+		regs->dithmode = data;
+		break;
 	case 0x180:
 		regs->winmap[0] = data;
 		break;
+	case 0x1a0:
+                *(uint32_t*)buf = regs->wpalcon;
+                break;
+
 	default:
 		if(offset >= 0x140 && offset <= 0x15c){
 			regs->wkeycon[((offset - 0x140) / 4)] = data;
 			break;
 		}
 
-		printf("Can not read the register at 0x%x\n", offset);
+		printf("Can not write the register at 0x%x\n", offset);
 		return Invarg_exp;
             //cpu_abort (cpu_single_env, "s3c6410_fb_write: Bad offset %x\n", offset);
 	}
 	return No_exp;
+}
+#if 0
+static void timer_update(conf_object_t *dev){
+	if(dev->matser->conf_obj != NULL && dev->lcd_ctrl->u.ptr != NULL)
+		lcd_control_intf* lcd_ctrl = dev->lcd_ctrl->u.ptr;
+		gtk_lcd_update(lcd_ctrl->conf_obj);
+		if(regs->vidintcon0 & 0x1){
+			if(regs->vidintcon0 & 0x1000)
+				regs->vidintcon1 |= 0x2 /* trigger frame sync interrupt */ 
+			if(regs->vidintcon0 & 0x2)
+				regs->vidintcon1 |= 0x1 /* trigger FIFO empty interrupt */ 
+			dev->master->raise_signal(dev->master->conf_obj, dev->line_no);
+		}
+	}
+}
+#endif
+static int refresh_trigger(conf_object_t* opaque){
+	struct s3c6410_fb_device *dev = opaque->obj;
+	fb_reg_t* regs = dev->regs;
+	if(regs->vidintcon0 & 0x1 == 0)
+		return 0;
+	/* check if we are still at interrupt handler */
+	if(regs->vidintcon1 & 0x3 != 0)
+		return 0;
+	if(regs->vidintcon0 & 0x1000)
+		regs->vidintcon1 |= 0x2; /* trigger frame sync interrupt */ 
+	if(regs->vidintcon0 & 0x2)
+		regs->vidintcon1 |= 0x1; /* trigger FIFO empty interrupt */ 
+
+	if(dev->master == NULL || dev->master->raise_signal == NULL)
+		return 0;
+	/* send the signal to the vic */
+	if(regs->vidintcon1 & 0x3)
+		dev->master->raise_signal(dev->master->conf_obj, dev->line_no);
+	
+	return 0;
 }
 static conf_object_t* new_s3c6410_lcd(char* obj_name){
 	s3c6410_fb_device* dev = skyeye_mm_zero(sizeof(s3c6410_fb_device));
@@ -293,6 +510,7 @@ static conf_object_t* new_s3c6410_lcd(char* obj_name){
 	fb_state_t* state =  skyeye_mm_zero(sizeof(fb_state_t));
 	dev->state = state;
 	fb_reg_t* regs = skyeye_mm_zero(sizeof(fb_reg_t));
+	regs->vidintcon0 = 0x03f00000;
 	dev->regs = regs;
 	lcd_surface_t* surface = skyeye_mm_zero(sizeof(lcd_surface_t));
 	dev->surface = surface;
@@ -304,8 +522,24 @@ static conf_object_t* new_s3c6410_lcd(char* obj_name){
 	SKY_register_interface(io_memory, obj_name, MEMORY_SPACE_INTF_NAME);
 
 	dev->lcd_ctrl = make_new_attr(Val_ptr);
-	printf("In %s, attr=0x%x\n", __FUNCTION__, dev->lcd_ctrl);
 	SKY_register_attr(dev->obj, "lcd_ctrl_0", dev->lcd_ctrl);
+
+	//int timer_id;
+	//create_thread_scheduler(5000, Periodic_sched, timer_update, dev->lcd_ctrl, &timer_id);
+
+	general_signal_intf* lcd_signal = skyeye_mm_zero(sizeof(general_signal_intf));
+	lcd_signal->conf_obj = NULL;
+	lcd_signal->raise_signal = NULL;
+	lcd_signal->lower_signal = NULL;
+	dev->master = lcd_signal;
+	dev->line_no = 30; /* Frame sync */
+	SKY_register_interface(lcd_signal, obj_name, GENERAL_SIGNAL_INTF_NAME);
+
+	/* Get notified when gtk refresh finished */
+	simple_signal_intf* refresh_signal = skyeye_mm_zero(sizeof(simple_signal_intf));
+	refresh_signal->conf_obj = dev->obj;
+	refresh_signal->trigger = refresh_trigger;
+	SKY_register_interface(refresh_signal, obj_name, SIMPLE_SIGNAL_INTF_NAME);
 
 	return dev->obj;
 }

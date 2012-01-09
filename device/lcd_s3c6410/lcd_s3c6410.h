@@ -22,6 +22,8 @@ typedef struct fb_reg{
 	uint32 vidtcon[3];
 	uint32 wincon[5];
 	uint32 vidosd[5][3];
+	uint32 vidosd1d;
+	uint32 vidosd2d;
 	uint32 vidw00add0b0;
 	uint32 vidw00add0b1;
 	uint32 vidw01add0b0;
@@ -31,6 +33,13 @@ typedef struct fb_reg{
 	uint32 vidw04add0;
 	uint32 vidw00add1b0;
 	uint32 vidw00add1b1;
+	uint32 vidw01add2;
+	uint32 vidw02add2;
+	uint32 vidw03add2;
+	uint32 vidw03add1;
+	uint32 vid02add1;
+	uint32 vidw01add1b0;
+	uint32 vidw01add1b1;
 	uint32 vidw_buf_size[5];
 	uint32 vidintcon0;
 	uint32 vidintcon1;
@@ -44,6 +53,7 @@ typedef struct fb_reg{
 	uint32 w2pdata[8];
 	uint32 w3pdata[8];
 	uint32 w4pdata[2];
+	uint32 dithmode;
 }fb_reg_t;
 typedef struct s3c6410_fb_device{
 	conf_object_t* obj;
