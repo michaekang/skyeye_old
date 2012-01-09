@@ -72,4 +72,10 @@ typedef struct signal_interface{
 
 exception_t send_signal(interrupt_signal_t* signal);
 
+typedef struct simple_signal_interface{
+	conf_object_t* conf_obj;
+	int (*trigger)(conf_object_t* target);
+}simple_signal_intf;
+
+#define SIMPLE_SIGNAL_INTF_NAME "simple_signal_intf"
 #endif
