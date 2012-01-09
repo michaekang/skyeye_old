@@ -38,6 +38,7 @@
 #include <skyeye_lcd_intf.h>
 #include <skyeye_log.h>
 #include <skyeye_uart.h>
+#include <skyeye_mm.h>
 
 #ifdef __CYGWIN__
 #include <time.h>
@@ -889,6 +890,25 @@ s3c6410x_io_write_halfword (generic_arch_t *state, uint32 addr, uint32 data)
 	s3c6410x_io_write_word (state, addr, data);
 }
 
+typedef struct s3c6410_vic_dev{
+	conf_object_t* obj;
+}s3c6410_vic_device;
+static int vic_raise_signal(conf_object_t* target, int line){
+	int irq_no = line;
+	io.vic0rawintr |= 1 << irq_no;
+	io.vic0irqstatus |=  ((1 << irq_no) & ~(io.vic0intselect) & io.vic0intenable);
+	io.vic0fiqstatus |=  ((1 << irq_no) & io.vic0intselect & io.vic0intenable);
+
+	s3c6410x_update_int (NULL);
+	return 0;
+}
+static int vic_lower_signal(conf_object_t* target, int line){
+	int irq_no = line;
+	io.vic0irqstatus &= ~irq_no;
+	s3c6410x_update_int(NULL);
+	return 0;
+}
+
 void
 s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 {
@@ -909,6 +929,15 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	add_chp_data(&s3c6410x_io, sizeof(s3c6410x_io_t), "6410io");
 	/* The whole address space */
 	addr_space_t* phys_mem = new_addr_space("s3c6410_mach_space");
+
+	/* create the object of vic */
+	s3c6410_vic_device* vic0_dev = skyeye_mm_zero(sizeof(s3c6410_vic_device));
+	vic0_dev->obj = new_conf_object("s3c6410_vic_0", vic0_dev);
+	general_signal_intf* vic_signal = skyeye_mm_zero(sizeof(general_signal_intf));
+	vic_signal->conf_obj = vic0_dev->obj;
+	vic_signal->raise_signal = vic_raise_signal;
+	vic_signal->lower_signal = vic_lower_signal;
+
 	conf_object_t* sysctrl = pre_conf_obj("s3c6410_sysctrl_0", "s3c6410_sysctrl");
 	memory_space_intf* sysctrl_io_memory = (memory_space_intf*)SKY_get_interface(sysctrl, MEMORY_SPACE_INTF_NAME);
 	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, lcd_io_memory);
@@ -982,7 +1011,18 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		attr->u.ptr = lcd_ctrl;
 		/* set the attribute of lcd */
 		SKY_set_attr(lcd, "lcd_ctrl_0", attr);
+
+		simple_signal_intf* refresh_signal = (simple_signal_intf*)SKY_get_interface(gtk_painter, SIMPLE_SIGNAL_INTF_NAME);
+		simple_signal_intf* slave_signal = (simple_signal_intf*)SKY_get_interface(lcd, SIMPLE_SIGNAL_INTF_NAME);
+		/* connect the signal line, so lcd get notified when gtk finished refresh */
+		refresh_signal->conf_obj = slave_signal->conf_obj;
+		refresh_signal->trigger = slave_signal->trigger;
 #endif
+		general_signal_intf* lcd_intr_signal = (lcd_control_intf*)SKY_get_interface(lcd, GENERAL_SIGNAL_INTF_NAME);
+		lcd_intr_signal->conf_obj = vic_signal->conf_obj;
+		lcd_intr_signal->raise_signal = vic_signal->raise_signal;
+		lcd_intr_signal->lower_signal = vic_signal->lower_signal;
+
 	}
 	else{
 		printf("can not initlize the lcd, maybe the module not exist\n");
