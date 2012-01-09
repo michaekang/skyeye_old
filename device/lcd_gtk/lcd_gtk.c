@@ -531,6 +531,9 @@ static int gtk_lcd_update(conf_object_t *lcd_dev)
 	gtk_main_iteration_do(FALSE);
 	SkyEyeLCD_GTK *lcd = dev->gtk_win;
 	gtk_widget_queue_draw(lcd->window);
+	if(dev->master != NULL && dev->master->trigger != NULL)
+		/* send the signal to lcd controller when finished refresh */
+		dev->master->trigger(dev->master->conf_obj);
 
 	return 0;
 }
@@ -586,6 +589,12 @@ static conf_object_t* new_gtk_lcd(char* obj_name)
 	lcd_ctrl->lcd_lookup_color = NULL;
 
 	SKY_register_interface(lcd_ctrl, obj_name, LCD_CTRL_INTF_NAME);
+
+	simple_signal_intf* refresh_signal = skyeye_mm_zero(sizeof(simple_signal_intf));
+	refresh_signal->conf_obj = NULL;
+	refresh_signal->trigger = NULL;
+	SKY_register_interface(refresh_signal, obj_name, SIMPLE_SIGNAL_INTF_NAME);
+	dev->master = refresh_signal;
 
 	return dev->obj;
 }

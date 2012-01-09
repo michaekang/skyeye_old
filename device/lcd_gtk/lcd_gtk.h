@@ -26,6 +26,7 @@
 #ifndef __LCD_GTK_H__
 #define __LCD_GTK_H__
 #include <skyeye_types.h>
+#include <skyeye_signal.h>
 typedef struct SkyEyeLCD_GTK {
 	int width;
 	int virtual_width;
@@ -48,6 +49,7 @@ typedef struct SkyEyeLCD_GTK {
 typedef struct lcd_gtk_device{
 	conf_object_t* obj;
 	SkyEyeLCD_GTK* gtk_win;	
+	simple_signal_intf* master;
 	int mod;
 
 	int width;
