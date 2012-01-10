@@ -47,12 +47,17 @@ static exception_t s3c6410_ac97_read(conf_object_t *opaque, generic_address_t of
 			break;		
 		case 0x4:
 			*(uint32_t*)buf = regs->ac_glbstat;
+			
 			break;
 		case 0x8:
 			*(uint32_t*)buf = regs->ac_codec_cmd;
 			break;
-		case 0xc:
-			*(uint32_t*)buf = regs->ac_codec_stat;
+		case 0xc: /* regs->ac_codec_stat */
+			DBG("In %s, ac_codec_cmd=0x%x\n", __FUNCTION__, regs->ac_codec_cmd);
+			if(regs->ac_codec_cmd & 0x800000)
+				*(uint32_t*)buf = regs->ac_codec_cmd;
+			else
+				*(uint32_t*)buf = 0;
 			break;
 		case 0x10:
 			*(uint32_t*)buf = regs->ac_pcmaddr;
@@ -82,11 +87,15 @@ static exception_t s3c6410_ac97_write(conf_object_t *opaque, generic_address_t o
 	switch(offset) {
 		case 0x0:
 			regs->ac_glbctrl = val;
+			/* enter ready state */
+			if(regs->ac_glbctrl & 0x4)
+				regs->ac_glbstat = 010 | (regs->ac_glbstat & ~0x7);
 			break;		
 		case 0x4:
 			regs->ac_glbstat = val;
 			break;
 		case 0x8:
+			DBG("In %s, ac_codec_cmd=0x%x\n", __FUNCTION__, val);
 			regs->ac_codec_cmd = val;
 			break;
 		case 0xc:
