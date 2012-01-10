@@ -987,7 +987,7 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	}
 	
 	conf_object_t* ac97 = pre_conf_obj("s3c6410_ac97_0", "s3c6410_ac97");
-	memory_space_intf* ac97_io_memory = (memory_space_intf*)SKY_get_interface(usbhost, MEMORY_SPACE_INTF_NAME);
+	memory_space_intf* ac97_io_memory = (memory_space_intf*)SKY_get_interface(ac97, MEMORY_SPACE_INTF_NAME);
 	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, ac97_io_memory);
 	ret = add_map(phys_mem, 0x7f001000, 0x1000, 0x0, ac97_io_memory, 1, 1);
 	if(ret != No_exp){
