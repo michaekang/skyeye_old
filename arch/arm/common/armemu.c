@@ -1312,7 +1312,10 @@ ARMul_Emulate26 (ARMul_State * state)
 					/* MULS */
 					rhs = state->Reg[MULRHSReg];
 
-					if (MULLHSReg == MULDESTReg) {
+					//if (MULLHSReg == MULDESTReg) {
+					if(0){
+						printf("Something in %d line\n", __LINE__);
+						UNDEF_WARNING;
 						UNDEF_MULDestEQOp1;
 						state->Reg[MULDESTReg] = 0;
 						CLEARN;
