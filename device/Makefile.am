@@ -13,6 +13,7 @@ dev_spi_s3c6410 = spi_s3c6410/spi_s3c6410.c spi_s3c6410/spi_s3c6410_module.c
 dev_usbhost_s3c6410 = usbhost_s3c6410/usbhost_s3c6410.c usbhost_s3c6410/usbhost_s3c6410_module.c
 dev_ac97_s3c6410 = ac97_s3c6410/ac97_s3c6410.c ac97_s3c6410/ac97_s3c6410_module.c
 dev_mfc_s3c6410 = mfc_s3c6410/mfc_s3c6410.c mfc_s3c6410/mfc_s3c6410_module.c
+dev_rtc_s3c6410 = rtc_s3c6410/rtc_s3c6410.c rtc_s3c6410/rtc_s3c6410_module.c
 dev_camif_s3c6410 = camif_s3c6410/camif_s3c6410.c camif_s3c6410/camif_s3c6410_module.c
 
 #dev_flash = flash/armflash.c  flash/dev_flash_sst39lvf160.c flash/flash_module.c\
@@ -73,6 +74,8 @@ libac97_s3c6410_la_SOURCES = $(dev_ac97_s3c6410)
 libac97_s3c6410_la_LDFLAGS = -module
 libmfc_s3c6410_la_SOURCES = $(dev_mfc_s3c6410)
 libmfc_s3c6410_la_LDFLAGS = -module
+librtc_s3c6410_la_SOURCES = $(dev_rtc_s3c6410)
+librtc_s3c6410_la_LDFLAGS = -module
 libcamif_s3c6410_la_SOURCES = $(dev_camif_s3c6410)
 libcamif_s3c6410_la_LDFLAGS = -module
 
@@ -102,7 +105,7 @@ pkglib_LTLIBRARIES = libuart.la libuart_16550.la libflash.la libnandflash.la lib
 if WIN32
 libuart_la_LDFLAGS +=  -no-undefined -shared -module -Xlinker -L../common/.libs/ -L/mingw/lib -Xlinker -lcommon -Xlinker --export-all-symbol
 else
-pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la libtouchscreen_s3c6410.la libsysctrl_s3c6410.la libgpio_s3c6410.la libspi_s3c6410.la libusbhost_s3c6410.la libac97_s3c6410.la libmfc_s3c6410.la libcamif_s3c6410.la
+pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la libtouchscreen_s3c6410.la libsysctrl_s3c6410.la libgpio_s3c6410.la libspi_s3c6410.la libusbhost_s3c6410.la libac97_s3c6410.la libmfc_s3c6410.la libcamif_s3c6410.la librtc_s3c6410.la
 endif
 
 if GTK_LCD

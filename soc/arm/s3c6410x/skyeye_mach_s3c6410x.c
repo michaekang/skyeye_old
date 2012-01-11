@@ -962,6 +962,14 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for mfc\n");
 	}
 
+	conf_object_t* rtc = pre_conf_obj("s3c6410_rtc_0", "s3c6410_rtc");
+	memory_space_intf* rtc_io_memory = (memory_space_intf*)SKY_get_interface(rtc, MEMORY_SPACE_INTF_NAME);
+	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, rtc_io_memory);
+       	ret = add_map(phys_mem, 0x7e002000, 0x1000, 0x0, rtc_io_memory, 1, 1);
+	if(ret != No_exp){
+		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for rtc\n");
+	}
+
 	conf_object_t* camif = pre_conf_obj("s3c6410_camif_0", "s3c6410_camif");
 	memory_space_intf* camif_io_memory = (memory_space_intf*)SKY_get_interface(camif, MEMORY_SPACE_INTF_NAME);
 	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, camif_io_memory);
