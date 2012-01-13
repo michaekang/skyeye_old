@@ -10,7 +10,7 @@
 #define __SKYEYE_ADDR_SPACE_H__
 #include <skyeye_types.h>
 #include <memory_space.h>
-#define MAX_MAP 8
+#define MAX_MAP 16
 
 typedef struct map_info{
 	generic_address_t base_addr;
