@@ -26,6 +26,37 @@
 #include "armdefs.h"
 #include "bank_defs.h"
 
+#define TLB_SIZE 1024 * 1024
+#define ASID 255
+static uint32_t tlb_entry_array[TLB_SIZE][ASID];
+static inline void invalidate_all_tlb(ARMul_State *state){
+	memset(&tlb_entry_array[0], 0xFF, sizeof(uint32_t) * TLB_SIZE * ASID);
+}
+static inline void invalidate_by_mva(ARMul_State *state, ARMword va){
+	memset(&tlb_entry_array[va >> 12][va & 0xFF], 0xFF, sizeof(uint32_t));
+	return;
+}
+static inline void invalidate_by_asid(ARMul_State *state, ARMword asid){
+	int i;
+	for(i = 0; i < TLB_SIZE; i++)
+		memset(&tlb_entry_array[i][asid & 0xFF], 0xFF, sizeof(uint32_t));
+	return;
+}
+
+static uint32_t get_phys_page(ARMul_State* state, ARMword va){
+	uint32_t phys_page = tlb_entry_array[va >> 12][state->mmu.context_id & 0xFF];
+	//printf("In %s, for va=0x%x, page=0x%x\n", __func__, va, phys_page);
+	return phys_page;
+}
+
+static inline void insert_tlb(ARMul_State* state, ARMword va, ARMword pa){
+	//printf("In %s, insert va=0x%x, pa=0x%x\n", __FUNCTION__, va, pa);
+	//printf("In %s, insert va=0x%x, va>>12=0x%x, pa=0x%x, pa>>12=0x%x\n", __FUNCTION__, va, va >> 12, pa, pa >> 12);
+	tlb_entry_array[va >> 12][state->mmu.context_id & 0xFF] = pa >> 12;
+
+	return;
+}
+
 #define BANK0_START 0x50000000
 static void* mem_ptr = NULL;
 //static void mem_read_raw(uint32_t offset, uint32_t &value, int size)
@@ -290,6 +321,7 @@ arm1176jzf_s_mmu_init (ARMul_State *state)
 	state->mmu.process_id = 0;
 	state->mmu.context_id = 0;
 	state->mmu.thread_uro_id = 0;
+	invalidate_all_tlb(state);
 }
 
 void
@@ -444,6 +476,12 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 	}
 
 	/* va &= ~(WORD_SIZE - 1); */
+	uint32_t page_base;
+	page_base = get_phys_page(state, va);
+	if((page_base & 0xFFF) == 0){
+		pa = (page_base << 12) | (va & 0xFFF);
+		goto skip_translation;
+	}
 
 	/*translate va to tlb */
 #if 0
@@ -482,6 +520,9 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 	if (fault)
 		return fault;
 #endif
+
+	insert_tlb(state, va, pa);
+skip_translation:
 		/* *data = mem_read_word(state, pa); */
 	if (datatype == ARM_BYTE_TYPE) {
 		/* *data = mem_read_byte (state, pa | (real_va & 3)); */
@@ -601,6 +642,14 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 		return ALIGNMENT_FAULT;
 	}
 	va &= ~(WORD_SIZE - 1);
+
+	uint32_t page_base;
+	page_base = get_phys_page(state, va);
+	if((page_base & 0xFFF) == 0){
+		pa = (page_base << 12) | (va & 0xFFF);
+		goto skip_translation;
+	}
+
 	/*tlb translate */
 	fault = mmu_translate (state, va, &pa, &ap, &sop);
 #if 0
@@ -649,6 +698,8 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
             exit(-1);
     }
 #endif
+	insert_tlb(state, va, pa);
+skip_translation:
 	if (datatype == ARM_BYTE_TYPE) {
 		/* mem_write_byte (state,
 				(pa | (real_va & 3)),
@@ -770,10 +821,13 @@ arm1176jzf_s_mmu_mrc (ARMul_State *state, ARMword instr, ARMword *value)
 	return data;
 }
 
+
 static ARMword
 arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 {
 	mmu_regnum_t creg = BITS (16, 19) & 0xf;
+	mmu_regnum_t CRm = BITS (0, 3) & 0xf;
+	int OPC_1 = BITS (21, 23) & 0x7;
 	int OPC_2 = BITS (5, 7) & 0x7;
 	if (!strncmp (state->cpu->cpu_arch_name, "armv6", 5)) {
 		switch (creg) {
@@ -823,6 +877,8 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 					printf ("mmu_mcr wrote UNKNOWN - cp15 c2 opcode2 %d\n", OPC_2);
 					break;
 			}
+			//printf("SKYEYE In %s, write TLB_BASE 0x%x OPC_2=%d instr=0x%x\n", __FUNCTION__, value, OPC_2, instr);
+			//invalidate_all_tlb(state);
 			break;
 		case MMU_DOMAIN_ACCESS_CONTROL:
 		/* printf("mmu_mcr wrote DACR         "); */
@@ -843,12 +899,76 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 		case MMU_CACHE_OPS:
 			break;
 		case MMU_TLB_OPS:
+			{
+				switch(CRm){
+				case 5: /* ITLB */
+				{
+					switch(OPC_2){
+						case 0: /* invalidate all */
+							invalidate_all_tlb(state);
+							break;
+						case 1: /* invalidate by MVA */
+							invalidate_by_mva(state, value);
+							break;
+						case 2: /* invalidate by asid */
+							invalidate_by_asid(state, value);
+							break;
+						default:
+							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
+							break;
+					}
+					break;
+				}
+				case 6: /* DTLB */
+				{
+					switch(OPC_2){
+						case 0: /* invalidate all */
+							invalidate_all_tlb(state);
+							break;
+						case 1: /* invalidate by MVA */
+							invalidate_by_mva(state, value);
+							break;
+						case 2: /* invalidate by asid */
+							invalidate_by_asid(state, value);
+							break;
+						default:
+							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
+							break;
+					}
+					break;
+				}
+				case 7: /* Unified TLB */
+				{
+					switch(OPC_2){
+						case 0: /* invalidate all */
+							invalidate_all_tlb(state);
+							break;
+						case 1: /* invalidate by MVA */
+							invalidate_by_mva(state, value);
+							break;
+						case 2: /* invalidate by asid */
+							invalidate_by_asid(state, value);
+							break;
+						default:
+							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
+							break;
+					}
+					break;
+				}
+
+				default:
+					printf ("mmu_mcr wrote UNKNOWN - reg %d, CRm=%d\n", creg, CRm);
+					break;
+				}
+			//printf("SKYEYE In %s, write TLB 0x%x OPC_1=%d, OPC_2=%d , CRm=%d instr=0x%x\n", __FUNCTION__, value, OPC_1, OPC_2, CRm, instr);
+			}
 			break;
 		case MMU_CACHE_LOCKDOWN:
 			/*
 			 * FIXME: cache lock down*/
 			break;
 		case MMU_TLB_LOCKDOWN:
+			printf("SKYEYE In %s, write TLB_LOCKDOWN 0x%x OPC_2=%d instr=0x%x\n", __FUNCTION__, value, OPC_2, instr);
 			/* FIXME:tlb lock down */
 			break;
 		case MMU_PID:
