@@ -20,9 +20,43 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
+#include <skyeye_ram.h>
 
 #include "armdefs.h"
 #include "bank_defs.h"
+
+#define BANK0_START 0x50000000
+static void* mem_ptr = NULL;
+//static void mem_read_raw(uint32_t offset, uint32_t &value, int size)
+static void mem_read_raw(int size, uint32_t offset, uint32_t *value)
+{
+	if(offset == 0)
+		return;	
+	if(mem_ptr == NULL)
+		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
+	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
+	if(offset >= 0x50000000 && offset < 0x70000000){
+		mem_read(size, offset, value);	
+	}	
+	else{
+		bus_read(size, offset, value);
+	}
+}
+
+//static void mem_write_raw(uint32_t offset, uint32_t value, int size)
+static void mem_write_raw(int size, uint32_t offset, uint32_t value)
+{
+	if(mem_ptr == NULL)
+		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
+	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
+	if(offset >= 0x50000000 && offset < 0x70000000){
+		mem_write(size, offset, value);
+	}
+	else{
+		bus_write(size, offset, value);
+	}
+}
 
 #if 0
 fault_t
@@ -158,7 +192,7 @@ mmu_translate (ARMul_State *state, ARMword virt_addr, ARMword *phys_addr, int *a
 		if(state->space.conf_obj != NULL)
 			state->space.read(state->space.conf_obj, l1addr, &l1desc, 4);
 		else
-			bus_read(32, l1addr, &l1desc);
+			mem_read_raw(32, l1addr, &l1desc);
         #if 0
         if (virt_addr == 0xc000d2bc) {
                 printf("mmu_control is %x\n", state->mmu.translation_table_ctrl);
@@ -191,7 +225,7 @@ mmu_translate (ARMul_State *state, ARMword virt_addr, ARMword *phys_addr, int *a
 				if(state->space.conf_obj != NULL)
 					state->space.read(state->space.conf_obj, l2addr, &l2desc, 4);
 				else
-					bus_read(32, l2addr, &l2desc);
+					mem_read_raw(32, l2addr, &l2desc);
 				/* chy 2003-09-02 for xscale */
 				*ap = (l2desc >> 4) & 0x3;
 				*sop = 1;	/* page */
@@ -256,7 +290,6 @@ arm1176jzf_s_mmu_init (ARMul_State *state)
 	state->mmu.process_id = 0;
 	state->mmu.context_id = 0;
 	state->mmu.thread_uro_id = 0;
-
 }
 
 void
@@ -326,7 +359,7 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 	if(state->space.conf_obj == NULL)
 		state->space.read(state->space.conf_obj, pa, instr, 4);
 	else
-		bus_read(32, pa, instr);
+		mem_read_raw(32, pa, instr);
 
 	return 0;
 }
@@ -380,19 +413,19 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 			if(state->space.conf_obj != NULL)
 				state->space.read(state->space.conf_obj, va, data, 1);
 			else
-				bus_read(8, va, data);
+				mem_read_raw(8, va, data);
 		else if (datatype == ARM_HALFWORD_TYPE)
 			/* *data = mem_read_halfword (state, va); */
 			if(state->space.conf_obj != NULL)
 				state->space.read(state->space.conf_obj, va, data, 2);
 			else
-				bus_read(16, va, data);
+				mem_read_raw(16, va, data);
 		else if (datatype == ARM_WORD_TYPE)
 			/* *data = mem_read_word (state, va); */
 			if(state->space.conf_obj != NULL)
 				state->space.read(state->space.conf_obj, va, data, 4);
 			else
-				bus_read(32, va, data);
+				mem_read_raw(32, va, data);
 		else {
 			printf ("SKYEYE:1 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
 			skyeye_exit (-1);
@@ -455,21 +488,21 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 		if(state->space.conf_obj != NULL)
 			state->space.read(state->space.conf_obj, pa | (real_va & 3), data, 1);
 		else
-			bus_read(8, pa | (real_va & 3), data);
-		/* bus_read(32, pa | (real_va & 3), data); */
+			mem_read_raw(8, pa | (real_va & 3), data);
+		/* mem_read_raw(32, pa | (real_va & 3), data); */
 	} else if (datatype == ARM_HALFWORD_TYPE) {
 		/* *data = mem_read_halfword (state, pa | (real_va & 2)); */
 		if(state->space.conf_obj != NULL)
 			state->space.read(state->space.conf_obj, pa | (real_va & 3), data, 2);
 		else
-			bus_read(16, pa | (real_va & 3), data);
-		/* bus_read(32, pa | (real_va & 2), data); */
+			mem_read_raw(16, pa | (real_va & 3), data);
+		/* mem_read_raw(32, pa | (real_va & 2), data); */
 	} else if (datatype == ARM_WORD_TYPE)
 		/* *data = mem_read_word (state, pa); */
 		if(state->space.conf_obj != NULL)	
 			state->space.read(state->space.conf_obj, pa , data, 4);
 		else
-			bus_read(32, pa, data);
+			mem_read_raw(32, pa, data);
 	else {
 		printf ("SKYEYE:2 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
 		skyeye_exit (-1);
@@ -540,19 +573,19 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 			if(state->space.conf_obj != NULL)
 				state->space.write(state->space.conf_obj, va, &data, 1);
 			else
-				bus_write(8, va, data);
+				mem_write_raw(8, va, data);
 		else if (datatype == ARM_HALFWORD_TYPE)
 			/* mem_write_halfword (state, va, data); */
 			if(state->space.conf_obj != NULL)
 				state->space.write(state->space.conf_obj, va, &data, 2);
 			else
-				bus_write(16, va, data);
+				mem_write_raw(16, va, data);
 		else if (datatype == ARM_WORD_TYPE)
 			/* mem_write_word (state, va, data); */
 			if(state->space.conf_obj != NULL)
 				state->space.write(state->space.conf_obj, va, &data, 4);
 			else
-				bus_write(32, va, data);
+				mem_write_raw(32, va, data);
 		else {
 			printf ("SKYEYE:1 arm1176jzf_s_mmu_write error: unknown data type %d\n", datatype);
 			skyeye_exit (-1);
@@ -581,7 +614,6 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
         }
 #endif
 	if (fault) {
-		printf("va=0x%x, icounter=%lld, fault=%d\n", va, state->NumInstrs, fault);
 		d_msg ("translate\n");
 		//printf("mmu write fault at %x\n", va);
 		return fault;
@@ -625,7 +657,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 		if(state->space.conf_obj != NULL)
 			state->space.write(state->space.conf_obj, (pa | (real_va & 3)), &data, 1);
 		else
-			bus_write(8, (pa | (real_va & 3)), data);
+			mem_write_raw(8, (pa | (real_va & 3)), data);
 
 	} else if (datatype == ARM_HALFWORD_TYPE)
 		/* mem_write_halfword (state,
@@ -636,13 +668,13 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 		if(state->space.conf_obj != NULL)
 			state->space.write(state->space.conf_obj, (pa | (real_va & 3)), &data, 2);
 		else
-			bus_write(16, (pa | (real_va & 3)), data);
+			mem_write_raw(16, (pa | (real_va & 3)), data);
 	else if (datatype == ARM_WORD_TYPE)
 		/* mem_write_word (state, pa, data); */
 		if(state->space.conf_obj != NULL)
 			state->space.write(state->space.conf_obj, pa, &data, 4);
 		else
-			bus_write(32, pa, data);
+			mem_write_raw(32, pa, data);
 #if 0
     if (state->NumInstrs > 236403) {
             printf("write memory\n");
