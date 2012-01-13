@@ -1402,8 +1402,8 @@ ARMul_Emulate26 (ARMul_State * state)
 				if (BITS (4, 7) == 9) {
 					/* MLAS */
 					rhs = state->Reg[MULRHSReg];
-
-					if (MULLHSReg == MULDESTReg) {
+					//if (MULLHSReg == MULDESTReg) {
+					if (0) {
 						UNDEF_MULDestEQOp1;
 						dest = state->Reg[MULACCReg];
 						ARMul_NegZero (state, dest);
