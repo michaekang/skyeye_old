@@ -55,7 +55,7 @@ chp_list chp_data_list;
 *
 * @return 
 */
-static void save_chp(char *arg)
+void save_chp(char *arg)
 {
 	chp_data *p;
 	int i,ret;
@@ -103,7 +103,7 @@ static void save_chp(char *arg)
 *
 * @return 
 */
-static void load_chp(char *arg)
+void load_chp(char *arg)
 {
 	chp_data *p;
 	int ret,i;
@@ -182,7 +182,7 @@ void add_chp_data(void *data, int size, char *name)
 /**
 * @brief bookmart array used to save
 */
-static char bookmark[100] = {'\0'};
+char bookmark[100] = {'\0'};
 
 /**
 * @brief set a bookmark
@@ -191,7 +191,7 @@ static char bookmark[100] = {'\0'};
 *
 * @return 
 */
-static void set_bookmark(char *arg)
+void set_bookmark(char *arg)
 {
 	if(arg == NULL || *arg == 0){
 		strcpy(bookmark, "defbookmark");
@@ -209,7 +209,7 @@ static void set_bookmark(char *arg)
 *
 * @return 
 */
-static void reverse_to(char *arg)
+void reverse_to(char *arg)
 {
 	generic_arch_t* arch_instance = get_arch_instance("");
 	if (!arch_instance) {
@@ -245,7 +245,7 @@ static void reverse_to(char *arg)
 *
 * @return 
 */
-static void reverse_step_insn(char *arg)
+void reverse_step_insn(char *arg)
 {
 	reverse_to("1");
 }

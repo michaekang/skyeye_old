@@ -356,6 +356,17 @@ class SkyEyeCli(cmd.Cmd):
 #        print "outline do_break"
         libcommon.com_break(arg)
 
+    def do_write_configure(self,arg):
+    	libcommon.save_chp(arg)
+
+    def do_read_configure(self,arg):
+    	libcommon.load_chp(arg)
+
+    def do_set_bookmark(self,arg):
+    	libcommon.set_bookmark(arg)
+
+    def do_reverse_to(self,arg):
+    	libcommon.reverse_to(arg)
 
     def help_ls(self):
         help_info_open()
