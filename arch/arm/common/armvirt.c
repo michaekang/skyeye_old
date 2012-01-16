@@ -265,20 +265,22 @@ ARMul_ReLoadInstr (ARMul_State * state, ARMword address, ARMword isize)
 	if (skyeye_config.code_cov.prof_on)
 			cov_prof(EXEC_FLAG, address);
 #endif
+#if 1
 	if ((isize == 2) && (address & 0x2)) {
 		ARMword lo, hi;
 		if (!(skyeye_cachetype == INSTCACHE))
-			fault = GetWord (state, address, &lo);
+			fault = GetHalfWord (state, address, &lo);
 		else
 			fault = LoadInstr (state, address, &lo);
-
+#if 0
 		if (!fault) {
 			if (!(skyeye_cachetype == INSTCACHE))
-				fault = GetWord (state, address + 4, &hi);
+				fault = GetHalfWord (state, address + isize, &hi);
 			else
-				fault = LoadInstr (state, address + 4, &hi);
+				fault = LoadInstr (state, address + isize, &hi);
 
 		}
+#endif
 		if (fault) {
 			ARMul_PREFETCHABORT (address);
 			return ARMul_ABORTWORD;
@@ -286,13 +288,15 @@ ARMul_ReLoadInstr (ARMul_State * state, ARMword address, ARMword isize)
 		else {
 			ARMul_CLEARABORT;
 		}
-
+		return lo;
+#if 0
 		if (state->bigendSig == HIGH)
 			return (lo << 16) | (hi >> 16);
 		else
 			return ((hi & 0xFFFF) << 16) | (lo >> 16);
+#endif
 	}
-
+#endif
 	if (!(skyeye_cachetype == INSTCACHE))
 		fault = GetWord (state, address, &data);
 	else

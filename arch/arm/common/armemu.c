@@ -433,8 +433,8 @@ ARMul_Emulate26 (ARMul_State * state)
 			have_bp = ARMul_ICE_debug(state,instr,decoded_addr);
 			decoded = loaded;
 			decoded_addr=loaded_addr;
-			loaded = ARMul_LoadInstrS (state, pc + (isize * 2),
-						   isize);
+			//loaded = ARMul_LoadInstrS (state, pc + (isize * 2),
+			//			   isize);
 			loaded_addr=pc + (isize * 2);
 			if (have_bp) goto  TEST_EMULATE;
 			break;
@@ -448,8 +448,8 @@ ARMul_Emulate26 (ARMul_State * state)
 			have_bp=ARMul_ICE_debug(state,instr,decoded_addr);
 			decoded = loaded;
 			decoded_addr=loaded_addr;
-			loaded = ARMul_LoadInstrN (state, pc + (isize * 2),
-						   isize);
+			//loaded = ARMul_LoadInstrN (state, pc + (isize * 2),
+			//			   isize);
 			loaded_addr=pc + (isize * 2);
 			NORMALCYCLE;
 			if (have_bp) goto  TEST_EMULATE;
@@ -463,8 +463,8 @@ ARMul_Emulate26 (ARMul_State * state)
 			have_bp=ARMul_ICE_debug(state,instr,decoded_addr);
 			decoded = loaded;
 			decoded_addr=loaded_addr;
-			loaded = ARMul_LoadInstrS (state, pc + (isize * 2),
-						   isize);
+			//loaded = ARMul_LoadInstrS (state, pc + (isize * 2),
+			//			   isize);
 			loaded_addr=pc + (isize * 2);
 			NORMALCYCLE;
 			if (have_bp) goto  TEST_EMULATE;
@@ -478,8 +478,8 @@ ARMul_Emulate26 (ARMul_State * state)
 			have_bp=ARMul_ICE_debug(state,instr,decoded_addr);
 			decoded = loaded;
 			decoded_addr=loaded_addr;
-			loaded = ARMul_LoadInstrN (state, pc + (isize * 2),
-						   isize);
+			//loaded = ARMul_LoadInstrN (state, pc + (isize * 2),
+			//			   isize);
 			loaded_addr=pc + (isize * 2);
 			NORMALCYCLE;
 			if (have_bp) goto  TEST_EMULATE;
@@ -496,14 +496,15 @@ ARMul_Emulate26 (ARMul_State * state)
 			//chy 2004-05-25, fix bug provided by Carl van Schaik<cvansch@cse.unsw.EDU.AU>
 			state->AbortAddr = 1;
 
-			instr = ARMul_ReLoadInstr (state, pc, isize);
+			instr = ARMul_LoadInstrN (state, pc, isize);
+			//instr = ARMul_ReLoadInstr (state, pc, isize);
 			//chy 2006-04-12, for ICE debug
 			have_bp=ARMul_ICE_debug(state,instr,pc);
-			decoded =
-				ARMul_ReLoadInstr (state, pc + isize, isize);
+			//decoded =
+			//	ARMul_ReLoadInstr (state, pc + isize, isize);
 			decoded_addr=pc+isize;
-			loaded = ARMul_ReLoadInstr (state, pc + isize * 2,
-						    isize);
+			//loaded = ARMul_ReLoadInstr (state, pc + isize * 2,
+			//			    isize);
 			loaded_addr=pc + isize * 2;
 			NORMALCYCLE;
 			if (have_bp) goto  TEST_EMULATE;
@@ -523,11 +524,15 @@ ARMul_Emulate26 (ARMul_State * state)
 			instr = ARMul_LoadInstrN (state, pc, isize);
 			//chy 2006-04-12, for ICE debug
 			have_bp=ARMul_ICE_debug(state,instr,pc);
+			#if 0
 			decoded =
 				ARMul_LoadInstrS (state, pc + (isize), isize);
+			#endif
 			decoded_addr=pc+isize;
+			#if 0
 			loaded = ARMul_LoadInstrS (state, pc + (isize * 2),
 						   isize);
+			#endif
 			loaded_addr=pc + isize * 2;
 			NORMALCYCLE;
 			if (have_bp) goto  TEST_EMULATE;
@@ -541,9 +546,31 @@ ARMul_Emulate26 (ARMul_State * state)
         }
         printf("\n");
 #endif
+	instr = ARMul_LoadInstrN (state, pc, isize);
 	state->last_instr = state->CurrInstr;
 	state->CurrInstr = instr;
-
+	if((state->NumInstrs % 10000000) == 0)
+		printf("---|%p|---  %lld\n", pc, state->NumInstrs);
+#if 0
+	if(state->NumInstrs > (3000000000)){
+		static int flag = 0;
+		if(pc == 0x8032ccc4){
+			flag = 300;
+		}
+		if(flag){
+			int idx = 0;
+			printf("------------------------------------\n");
+		        printf("pc:%x\n", pc);
+		        for (;idx < 17; idx ++) {
+                		printf("R%d:%x\t", idx, state->Reg[idx]);
+		        }
+			printf("\nN:%d\t Z:%d\t C:%d\t V:%d\n", state->NFlag,  state->ZFlag, state->CFlag, state->VFlag);
+		        printf("\n");
+			printf("------------------------------------\n");
+			flag--;
+		}
+	}
+#endif	
 #if DIFF_STATE
       fprintf(state->state_log, "PC:0x%x\n", pc);
       if (pc && (pc + 8) != state->Reg[15]) {
