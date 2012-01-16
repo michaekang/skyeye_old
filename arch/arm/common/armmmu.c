@@ -151,9 +151,6 @@ fault_t
 mmu_write_word (ARMul_State * state, ARMword virt_addr, ARMword data)
 {
 	fault_t fault;
-	static int count = 0;
-
-	count++;
 	fault = MMU_OPS.write_word (state, virt_addr, data);
 
 	/*used for debug for MMU*
