@@ -89,6 +89,40 @@ static void mem_write_raw(int size, uint32_t offset, uint32_t value)
 	}
 }
 
+static int exclusive_detect(ARMul_State* state, ARMword addr){
+	int i;
+	for(i = 0; i < 128; i++){
+		if(state->exclusive_tag_array[i] == addr)
+			return 0;
+	}
+	return -1;
+}
+
+static void add_exclusive_addr(ARMul_State* state, ARMword addr){
+	int i;
+	for(i = 0; i < 128; i++){
+		if(state->exclusive_tag_array[i] == 0xffffffff){
+			state->exclusive_tag_array[i] = addr;
+			//printf("In %s, add  addr 0x%x\n", __func__, addr);
+			return;
+		}
+	}
+	printf("In %s ,can not monitor the addr, out of array\n", __FUNCTION__);
+	return;
+}
+
+static void remove_exclusive(ARMul_State* state, ARMword addr){
+	int i;
+	for(i = 0; i < 128; i++){
+		if(state->exclusive_tag_array[i] == addr){
+			state->exclusive_tag_array[i] = 0xffffffff;
+			//printf("In %s, remove  addr 0x%x\n", __func__, addr);
+			return;
+		}
+	}
+
+}
+
 #if 0
 fault_t
 mmu_translate (ARMul_State *state, ARMword virt_addr, ARMword *phys_addr);
@@ -548,6 +582,29 @@ skip_translation:
 		printf ("SKYEYE:2 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
 		skyeye_exit (-1);
 	}
+	if(0 && (va == 0x2869c)){
+            	printf("In %s, pa is %x va=0x%x, value is %x pc %x, instr=0x%x\n", __FUNCTION__, pa, va, *data, state->Reg[15], state->CurrInstr);
+	}
+
+	/* ldrex or ldrexb */
+	if(((state->CurrInstr & 0x0FF000F0) == 0x01900090) ||
+		((state->CurrInstr & 0x0FF000F0) == 0x01d00090)){
+		int rn = (state->CurrInstr & 0xF0000) >> 16;
+		if(state->Reg[rn] == va){
+			if((state->CurrInstr & 0x0FF000F0) == 0x01900090){
+				add_exclusive_addr(state, pa);
+				add_exclusive_addr(state, pa + 1);
+				add_exclusive_addr(state, pa + 2);
+				add_exclusive_addr(state, pa + 3);
+			}
+			if((state->CurrInstr & 0x0FF000F0) == 0x01d00090){
+				add_exclusive_addr(state, pa | (real_va & 3));
+			}
+			state->exclusive_access_state = 1;
+			if(va == 0x2869c)
+				printf("In ldrex, instr=0x%x, pa=0x%x\n", state->CurrInstr, pa);
+		}
+	}
 #if 0
     if (state->pc == 0xc011a868) {
             printf("pa is %x value is %x size is %x\n", pa, data, datatype);
@@ -700,6 +757,31 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 #endif
 	insert_tlb(state, va, pa);
 skip_translation:
+	/* strex */
+	if(((state->CurrInstr & 0x0FF000F0) == 0x01800090) ||
+		((state->CurrInstr & 0x0FF000F0) == 0x01c00090)){
+		/* failed , the address is monitord now. */
+		int dest_reg = (state->CurrInstr & 0xF000) >> 12;
+		if((exclusive_detect(state, pa | (real_va & 3)) == 0) && (state->exclusive_access_state == 1)){
+			if((state->CurrInstr & 0x0FF000F0) == 0x01800090){
+				remove_exclusive(state, pa);
+				remove_exclusive(state, pa + 1);
+				remove_exclusive(state, pa + 2);
+				remove_exclusive(state, pa + 3);
+			}
+			if((state->CurrInstr & 0x0FF000F0) == 0x01c00090){
+				remove_exclusive(state, pa | (real_va & 3));
+			}
+			state->Reg[dest_reg] = 0;
+			state->exclusive_access_state = 0;
+		}
+		else{
+			state->Reg[dest_reg] = 1;
+			//printf("In %s, try to strex a monitored address 0x%x\n", __FUNCTION__, pa);
+			return 0;
+		}
+	}
+
 	if (datatype == ARM_BYTE_TYPE) {
 		/* mem_write_byte (state,
 				(pa | (real_va & 3)),

@@ -433,6 +433,11 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 //#if DIFF_STATE
 	FILE * state_log;
 //#endif
+	/* monitored memory for exclusice access */
+	ARMword exclusive_tag_array[128];
+	/* 1 means exclusive access and 0 means open access */
+	ARMword exclusive_access_state;
+
 	memory_space_intf space;	
 	uint32 CurrInstr;
 	uint32 last_pc; /* the last pc executed */

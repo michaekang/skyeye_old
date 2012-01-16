@@ -219,6 +219,8 @@ ARMul_NewState (ARMul_State *state)
 	if (pref->user_mode_sim)
 		register_callback(arm_user_mode_init, Bootmach_callback);
 
+	memset(&state->exclusive_tag_array[0], 0xFF, sizeof(state->exclusive_tag_array[0]) * 128);
+	state->exclusive_access_state = 0;
 	//state->cpu = (cpu_config_t *) malloc (sizeof (cpu_config_t));
 	//state->mem_bank = (mem_config_t *) malloc (sizeof (mem_config_t));
 	return (state);

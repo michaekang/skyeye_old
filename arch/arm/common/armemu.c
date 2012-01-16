@@ -965,6 +965,12 @@ ARMul_Emulate26 (ARMul_State * state)
 			if (state->is_v6) {
 				/* clrex do nothing here temporary */
 				if (instr == 0xf57ff01f) {
+					//printf("clrex \n");
+					int i;
+					for(i = 0; i < 128; i++){
+						state->exclusive_tag_array[i] = 0xffffffff;
+					}
+					state->exclusive_access_state = 0;
 					goto donext;
 				}
 
@@ -6244,8 +6250,24 @@ handle_v6_insn (ARMul_State * state, ARMword instr)
 	/* dyf add armv6 instr strex  2010.9.17 */
 	 if (BITS (4, 7) == 0x9) {
 		lhs = LHS;
+		if(state->Reg[15] >= 0xffff0fb0 && state->Reg[15] <= 0xffff0ff0)
+			if(lhs == 0x2869c){
+				printf("#############strex, addr=0x%x, pc=0x%x instr=0x%x\n", lhs, state->Reg[15], state->CurrInstr);
+			int idx = 0;
+			printf("------------------------------------\n");
+		        for (;idx < 17; idx ++) {
+                		printf("R%d:%x\t", idx, state->Reg[idx]);
+		        }
+			printf("\nN:%d\t Z:%d\t C:%d\t V:%d\n", state->NFlag,  state->ZFlag, state->CFlag, state->VFlag);
+		        printf("\n");
+			printf("------------------------------------\n");
+			}
 		ARMul_StoreWordS(state, lhs, RHS);
-		DEST = 0;
+		//StoreWord(state, lhs, RHS)
+		if (state->Aborted) {
+			TAKEABORT;
+		}
+
 		return 1;
 	 }
 	 break;
@@ -6267,14 +6289,15 @@ handle_v6_insn (ARMul_State * state, ARMword instr)
 	/* dyf add for STREXB */
 	if (BITS (4, 7) == 0x9) {
 		lhs = LHS;
-		BUSUSEDINCPCN;
 		ARMul_StoreByte (state, lhs, RHS);
+		BUSUSEDINCPCN;
 		if (state->Aborted) {
 			TAKEABORT;
 		}
+
+		//printf("In %s, strexb not implemented\n", __FUNCTION__);
 		UNDEF_LSRBPC;
 		/* WRITESDEST (dest); */
-		state->Reg[DESTReg] = 0;
 		return 1;
 	}
 	break;
@@ -6290,6 +6313,8 @@ handle_v6_insn (ARMul_State * state, ARMword instr)
         //printf("ldrexb\n");
         //printf("instr is %x rm is %d\n", instr, BITS(16, 19));
         //exit(-1);
+		
+		//printf("In %s, ldrexb not implemented\n", __FUNCTION__);
 		return 1;
     }
 	break;
