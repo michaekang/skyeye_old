@@ -271,6 +271,8 @@ static exception_t s3c6410_fb_write(conf_object_t *opaque, generic_address_t off
         case VIDCON1: 
 		regs->vidcon[1] = data;
 		break;
+	case 0xC: /* unknown address on manual ,just stop complaining from kernel */
+		break;
 	case VIDTCON0:
 		regs->vidtcon[0] = data;
 		break;
@@ -433,12 +435,13 @@ static exception_t s3c6410_fb_write(conf_object_t *opaque, generic_address_t off
                 break;
         case 0x130:
 		regs->vidintcon0 = data;
+		#if 0
 		printf("In %s, vidintcon0=0x%x\n", __FUNCTION__, data);
 		if(data & 0x1)
 			printf("In %s, Video Interrupt Enable\n", __FUNCTION__);
 		if(data & 0x1000) /* Frame video interrupt */
 			printf("In %s, Frame Video Interrupt Enable\n", __FUNCTION__);
-
+		#endif
                 break;
         case 0x134:
 		/* W1C */
