@@ -6250,18 +6250,6 @@ handle_v6_insn (ARMul_State * state, ARMword instr)
 	/* dyf add armv6 instr strex  2010.9.17 */
 	 if (BITS (4, 7) == 0x9) {
 		lhs = LHS;
-		if(state->Reg[15] >= 0xffff0fb0 && state->Reg[15] <= 0xffff0ff0)
-			if(lhs == 0x2869c){
-				printf("#############strex, addr=0x%x, pc=0x%x instr=0x%x\n", lhs, state->Reg[15], state->CurrInstr);
-			int idx = 0;
-			printf("------------------------------------\n");
-		        for (;idx < 17; idx ++) {
-                		printf("R%d:%x\t", idx, state->Reg[idx]);
-		        }
-			printf("\nN:%d\t Z:%d\t C:%d\t V:%d\n", state->NFlag,  state->ZFlag, state->CFlag, state->VFlag);
-		        printf("\n");
-			printf("------------------------------------\n");
-			}
 		ARMul_StoreWordS(state, lhs, RHS);
 		//StoreWord(state, lhs, RHS)
 		if (state->Aborted) {
