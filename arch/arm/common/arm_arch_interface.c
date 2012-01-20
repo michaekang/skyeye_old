@@ -349,7 +349,7 @@ arm_core_init (ARMul_State *state, int i)
 	if (!strcmp(p_arm_cpu->cpu_arch_name, "armv5"))
 		ARMul_SelectProcessor (state, ARM_v5_Prop | ARM_v5e_Prop);
 	if (!strcmp(p_arm_cpu->cpu_arch_name, "armv6"))
-		ARMul_SelectProcessor (state, ARM_v6_Prop);
+		ARMul_SelectProcessor (state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
 
 	if (!strcmp(p_arm_cpu->cpu_name, "arm7tdmi"))
 		state->lateabtSig = LOW;
