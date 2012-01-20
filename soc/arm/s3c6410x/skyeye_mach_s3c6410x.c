@@ -44,6 +44,7 @@
 #include <time.h>
 #endif
 s3c6410x_io_t s3c6410x_io;
+lcd_control_intf* mach_lcd_ctrl = NULL;
 #define io s3c6410x_io
 
 static inline void
@@ -237,6 +238,11 @@ s3c6410x_io_do_cycle (generic_arch_t *state)
 				}
 			}
 		}
+	}
+	static int lcd_prescale = 10000;
+	if(lcd_prescale-- <= 0){
+		lcd_prescale = 10000;
+		mach_lcd_ctrl->lcd_update(mach_lcd_ctrl->conf_obj);
 	}
 }
 
@@ -1016,8 +1022,8 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		memory_space_intf* lcd_io_memory = (memory_space_intf*)SKY_get_interface(lcd, MEMORY_SPACE_INTF_NAME);
 		DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, lcd_io_memory);
 		exception_t ret;
-        	//ret = add_map(phys_mem, 0x77100000, 0x100000, 0x0, lcd_io_memory, 1, 1);
-        	ret = add_map(phys_mem, 0x77600000, 0x100000, 0x0, lcd_io_memory, 1, 1);
+        	ret = add_map(phys_mem, 0x77100000, 0x100000, 0x0, lcd_io_memory, 1, 1);
+        	//ret = add_map(phys_mem, 0x77600000, 0x100000, 0x0, lcd_io_memory, 1, 1);
 #ifdef GTK_LCD
 		/* set the lcd_ctrl_0 attribute for lcd */
 		conf_object_t* gtk_painter = pre_conf_obj("gtk_lcd_0", "gtk_lcd");
@@ -1025,6 +1031,8 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(gtk_painter, LCD_CTRL_INTF_NAME);
 		attr_value_t* attr = make_new_attr(Val_ptr);
 		attr->u.ptr = lcd_ctrl;
+
+		mach_lcd_ctrl = lcd_ctrl;
 		/* set the attribute of lcd */
 		SKY_set_attr(lcd, "lcd_ctrl_0", attr);
 

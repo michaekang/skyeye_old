@@ -577,7 +577,7 @@ static conf_object_t* new_gtk_lcd(char* obj_name)
 	//dev->gtk_win = gtk_win;
 	/* lcd update*/
 	int timer_id;
-	create_thread_scheduler(5000, Periodic_sched, timer_update, dev->obj, &timer_id);
+	//create_thread_scheduler(5000, Periodic_sched, timer_update, dev->obj, &timer_id);
 
 	lcd_control_intf* lcd_ctrl = skyeye_mm_zero(sizeof(lcd_control_intf));
 	lcd_ctrl->conf_obj = dev->obj;
