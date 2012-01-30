@@ -1076,6 +1076,14 @@ typedef struct _mul_inst {
 	unsigned int Rm;
 } mul_inst;
 
+typedef struct _smul_inst {
+	unsigned int Rd;
+	unsigned int Rs;
+	unsigned int Rm;
+	unsigned int x;
+	unsigned int y;
+} smul_inst;
+
 typedef struct _umull_inst {
 	unsigned int S;
 	unsigned int RdHi;
@@ -2736,7 +2744,23 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smmla)(unsigned int inst, int index){printf("
 ARM_INST_PTR INTERPRETER_TRANSLATE(smmls)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(smmul)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(smuad)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smul)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smul)(unsigned int inst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smul_inst));
+	smul_inst *inst_cream = (smul_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rd = BITS(inst, 16, 19);
+	inst_cream->Rs = BITS(inst,  8, 11);
+	inst_cream->Rm = BITS(inst,  0,  3);
+
+	inst_cream->x  = BIT(inst, 5);
+	inst_cream->y  = BIT(inst, 6);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(smull)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umull_inst));
@@ -5911,6 +5935,27 @@ void InterpreterMainLoop(cpu_t *core)
 	SMMUL_INST:
 	SMUAD_INST:
 	SMUL_INST:
+	{
+		INC_ICOUNTER;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			smul_inst *inst_cream = (smul_inst *)inst_base->component;
+			uint32_t operand1, operand2;
+			if (inst_cream->x == 0)
+				operand1 = (BIT(RM, 15)) ? (BITS(RM, 0, 15) | 0xffff0000) : BITS(RM, 0, 15);
+			else
+				operand1 = (BIT(RM, 31)) ? (BITS(RM, 16, 31) | 0xffff0000) : BITS(RM, 16, 31);
+
+			if (inst_cream->y == 0)
+				operand2 = (BIT(RS, 15)) ? (BITS(RS, 0, 15) | 0xffff0000) : BITS(RS, 0, 15);
+			else
+				operand2 = (BIT(RS, 31)) ? (BITS(RS, 16, 31) | 0xffff0000) : BITS(RS, 16, 31);
+			RD = operand1 * operand2;
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(smul_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
 	SMULL_INST:
 	{
 		INC_ICOUNTER;
