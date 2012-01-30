@@ -145,23 +145,22 @@ int diff_single_step(cpu_t *cpu){
 		|| core->Reg[15] == 0xc0048f14
 		|| core->Reg[15] == 0xc004d7c0
 		|| core->Reg[15] == 0xc002dda0 /* irq_usr */
-		|| core->Reg[15] == 0xc0045060
 		|| core->Reg[15] == 0xffff0208 /* irq */
 		|| core->Reg[15] == 0xffff0010 /* abort irq */
 		|| core->Reg[15] == 0xc0049700 /* interrupt enable */
 		|| core->Reg[15] == 0xffff0308 /* irq */
 		|| core->Reg[15] == 0xffff000c /* irq */
 		|| core->Reg[15] == 0xffff0288 /* irq */
-		|| core->Reg[15] == 0xc006ac54 /* irq */
-		|| core->Reg[15] == 0xc006ac4c /* irq */
-		|| core->Reg[15] == 0xc006ac48 /* irq */
-		|| core->Reg[15] == 0xc006ac50 /* irq */
-		|| core->Reg[15] == 0xc00363b8 /* serial */
-		|| core->Reg[15] == 0xc00363e8 /* serial */
-		|| core->Reg[15] == 0xc0198314 /* serial */
+		|| core->Reg[15] == 0xc002da80 /* irq */
+		|| core->Reg[15] == 0xc002db20 /* irq */
+		|| core->Reg[15] == 0xc002dad0 /* irq */
+		|| core->Reg[15] == 0xc002dae0 /* irq */
+		|| core->Reg[15] == 0xc0033f88 /* serial */
+		|| core->Reg[15] == 0xc0033fb8 /* serial */
+		|| core->Reg[15] == 0xc0193d10 /* serial */
 		|| core->Reg[15] == 0xc002fd20 /* serial */
 		|| core->Reg[15] == 0xc003ce64 /* serial */
-		|| core->Reg[15] == 0xc0198dd4 /* serial */
+		|| core->Reg[15] == 0xc003a4bc /* serial */
 		|| core->Reg[15] == 0xffff0fe0 /* serial */
 		)
 		goto SYNC;

@@ -4486,9 +4486,6 @@ void InterpreterMainLoop(cpu_t *core)
 				goto END;
 		}
 		inst_base = (arm_inst *)&inst_buf[ptr];
-		//if(cpu->icounter > 90000000)
-		if(cpu->icounter > 110000000 && cpu->Reg[15] < 0xc0000000)
-			printf("DISPATCH:pc=0x%x, cpsr=0x%x, tflag=0x%x, lr=0x%x\n", cpu->Reg[15],cpu->Cpsr, cpu->TFlag, cpu->Reg[14]);
 		GOTO_NEXT_INST;
 	}
 	ADC_INST:
