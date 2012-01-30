@@ -49,6 +49,9 @@ void module_init(){
 #ifdef LLVM_EXIST
 	skyeye_log(Debug_log, __FUNCTION__, "LLVM exist and dyncom registered.\n");
 	init_arm_dyncom ();
+	if(register_option("run", do_mode_option, "Indicate the different running mode, such as dyncom, hybrid etc.\n") != No_exp)
+		fprintf(stderr,"Can not register run option\n");
+
 #else
 	skyeye_log(Debug_log, __FUNCTION__, "LLVM not exist and dyncom not available.\n");
 #endif
@@ -65,8 +68,6 @@ void module_init(){
 
 	if(register_option("cpu", do_cpu_option, "Processor option for arm architecture.") != No_exp)
                 fprintf(stderr,"Can not register cpu option\n");
-	if(register_option("run", do_mode_option, "Indicate the different running mode, such as dyncom, hybrid etc.\n") != No_exp)
-		fprintf(stderr,"Can not register run option\n");
 
 }
 void module_fini(){
