@@ -2760,6 +2760,11 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smul)(unsigned int inst, int index)
 
 	inst_cream->x  = BIT(inst, 5);
 	inst_cream->y  = BIT(inst, 6);
+
+	if (CHECK_RM || CHECK_RS) 
+		inst_base->load_r15 = 1;
+	return inst_base;
+
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smull)(unsigned int inst, int index)
 {
