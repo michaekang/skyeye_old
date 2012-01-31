@@ -40,6 +40,51 @@ extern void switch_mode(arm_core_t *core, uint32_t mode);
 typedef arm_core_t arm_processor;
 typedef unsigned int (*shtop_fp_t)(arm_processor *cpu, unsigned int sht_oper);
 
+/* exclusive memory access */
+static int exclusive_detect(ARMul_State* state, ARMword addr){
+	int i;
+	#if 0
+	for(i = 0; i < 128; i++){
+		if(state->exclusive_tag_array[i] == addr)
+			return 0;
+	}
+	#endif
+	if(state->exclusive_tag_array[0] == addr)
+		return 0;
+	else
+		return -1;
+}
+
+static void add_exclusive_addr(ARMul_State* state, ARMword addr){
+	int i;
+	#if 0
+	for(i = 0; i < 128; i++){
+		if(state->exclusive_tag_array[i] == 0xffffffff){
+			state->exclusive_tag_array[i] = addr;
+			//printf("In %s, add  addr 0x%x\n", __func__, addr);
+			return;
+		}
+	}
+	printf("In %s ,can not monitor the addr, out of array\n", __FUNCTION__);
+	#endif
+	state->exclusive_tag_array[0] = addr;
+	return;
+}
+
+static void remove_exclusive(ARMul_State* state, ARMword addr){
+	#if 0
+	int i;
+	for(i = 0; i < 128; i++){
+		if(state->exclusive_tag_array[i] == addr){
+			state->exclusive_tag_array[i] = 0xffffffff;
+			//printf("In %s, remove  addr 0x%x\n", __func__, addr);
+			return;
+		}
+	}
+	#endif
+	state->exclusive_tag_array[0] = 0xFFFFFFFF;
+}
+
 /**
 * @brief Read R15 and forced R15 to wold align
 *
@@ -5188,6 +5233,10 @@ void InterpreterMainLoop(cpu_t *core)
 			unsigned int value;
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
 			if (fault) goto MMU_EXCEPTION;
+
+			add_exclusive_addr(cpu, phys_addr);
+			cpu->exclusive_access_state = 1;
+
 			//bus_read(32, addr, &value);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
@@ -5212,6 +5261,10 @@ void InterpreterMainLoop(cpu_t *core)
 			unsigned int value;
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 8);
 			if (fault) goto MMU_EXCEPTION;
+			
+			add_exclusive_addr(cpu, phys_addr);
+			cpu->exclusive_access_state = 1;
+
 			//bus_read(8, addr, &value);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
@@ -6273,10 +6326,21 @@ void InterpreterMainLoop(cpu_t *core)
 				GOTO_NEXT_INST;
 			}
 			if (fault) goto MMU_EXCEPTION;
-//			bus_write(32, addr, value);
-			fault = interpreter_write_memory(core, addr, phys_addr, value, 32);
-			if (fault) goto MMU_EXCEPTION;
-			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = 0;
+
+			int dest_reg = BITS(inst_cream->inst, 12, 15);
+			if((exclusive_detect(cpu, phys_addr) == 0) && (cpu->exclusive_access_state == 1)){
+				remove_exclusive(cpu, phys_addr);
+				cpu->Reg[dest_reg] = 0;
+				cpu->exclusive_access_state = 0;
+				
+				//			bus_write(32, addr, value);
+				fault = interpreter_write_memory(core, addr, phys_addr, value, 32);
+				if (fault) goto MMU_EXCEPTION;
+			}
+			else{
+				/* Failed to write due to mutex access */
+				cpu->Reg[dest_reg] = 1;
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		if (BITS(inst_cream->inst, 12, 15) == 15)
@@ -6295,9 +6359,18 @@ void InterpreterMainLoop(cpu_t *core)
 			fault = check_address_validity(cpu, addr, &phys_addr, 0);
 			if (fault) goto MMU_EXCEPTION;
 			//bus_write(8, addr, value);
-			fault = interpreter_write_memory(core, addr, phys_addr, value, 8);
-			if (fault) goto MMU_EXCEPTION;
-			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = 0;
+			int dest_reg = BITS(inst_cream->inst, 12, 15);
+			if((exclusive_detect(cpu, phys_addr) == 0) && (cpu->exclusive_access_state == 1)){
+				remove_exclusive(cpu, phys_addr);
+				cpu->Reg[dest_reg] = 0;
+				cpu->exclusive_access_state = 0;
+				fault = interpreter_write_memory(core, addr, phys_addr, value, 8);
+				if (fault) goto MMU_EXCEPTION;
+
+			}
+			else{
+				cpu->Reg[dest_reg] = 1;
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		if (BITS(inst_cream->inst, 12, 15) == 15)
