@@ -148,8 +148,15 @@ static uint32 arm11_get_regval_by_id(conf_object_t* opaque, int id){
 		return state->mmu.fault_address;
 	if(id == CP15_FAULT_STATUS)
 		return state->mmu.fault_status;
-	if (id == CPSR_REG)
-		return state->Cpsr;
+	if (id == CPSR_REG){
+		ARMword cpsr = state->Cpsr & 0x0FFFFFDF;
+		cpsr |= (state->NFlag & 0x1) << 31;
+	        cpsr |= (state->ZFlag & 0x1) << 30;
+		cpsr |= (state->CFlag & 0x1) << 29;
+	        cpsr |= (state->VFlag & 0x1) << 28;
+		cpsr |= (state->TFlag & 0x1) << 5;
+		return cpsr;
+	}
 	else
         	return state->Reg[id];
 }

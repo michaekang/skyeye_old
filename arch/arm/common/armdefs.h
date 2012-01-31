@@ -447,6 +447,7 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 	uint32 WritePc[17];
 	uint32 CurrWrite;
 };
+#define DIFF_WRITE 0
 
 typedef ARMul_State arm_core_t;
 #define ResetPin NresetSig

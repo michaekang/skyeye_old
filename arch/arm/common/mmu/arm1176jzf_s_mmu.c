@@ -688,8 +688,8 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 			printf ("SKYEYE:1 arm1176jzf_s_mmu_write error: unknown data type %d\n", datatype);
 			skyeye_exit (-1);
 		}
-
-		return 0;
+		goto finished_write;
+		//return 0;
 	}
 	/*align check */
 	/* if ((va & (WORD_SIZE - 1)) && MMU_Aligned){ */
@@ -807,7 +807,32 @@ skip_translation:
                 printf("icounter is %lld\n", state->NumInstrs);
     }
 #endif
-		return 0;
+	static int write_begin = 0;
+finished_write:
+#if DIFF_WRITE
+	if(state->CurrWrite == 0xdeadc0de || write_begin == 1){
+		if(state->CurrWrite == 0xdeadc0de)
+			state->CurrWrite = 0;
+		write_begin = 1;
+		if(state->CurrWrite >= 17 ){
+			printf("Wrong write array, 0x%x",  state->CurrWrite);
+			exit(-1);
+		}
+		uint32 record_data = data;
+		if(datatype == ARM_BYTE_TYPE)
+			record_data &= 0xFF;
+		if(datatype == ARM_HALFWORD_TYPE)
+			record_data &= 0xFFFF;
+
+		state->WriteAddr[state->CurrWrite] = pa | (real_va & 3);
+		state->WriteData[state->CurrWrite] = record_data;
+		state->WritePc[state->CurrWrite] = state->Reg[15];
+		state->CurrWrite++;
+		//printf("In %s, pc=0x%x, addr=0x%x, data=0x%x, CFlag=%d\n", __FUNCTION__, state->Reg[15],  pa | (real_va & 3), record_data, state->CFlag);
+	}
+#endif
+
+	return 0;
 }
 
 ARMword

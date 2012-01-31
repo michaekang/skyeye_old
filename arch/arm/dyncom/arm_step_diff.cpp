@@ -23,6 +23,7 @@
 * @date 2011-12-31
 */
 #include "arm_dyncom_mmu.h"
+#include "arm_dyncom_run.h"
 #include "armdefs.h"
 #include <skyeye_class.h>
 #include <skyeye_core_intf.h>
@@ -112,6 +113,8 @@ int diff_single_step(cpu_t *cpu){
 		for(i = 0; i < 16; i++){
 			arm_run->set_regval_by_id(arm11_core_obj, i, core->Reg[i]);
 		}
+
+		core->CurrWrite = state->CurrWrite = 0xdeadc0de;
 	}
 	/* the code of fast interpreter */
 	//printf("ICOUNTER(0x%x)\n", core->icounter);
@@ -131,19 +134,21 @@ int diff_single_step(cpu_t *cpu){
 			;
 		}
 	}
+#if 0
 	if(core->TFlag || state->TFlag){
 		/* for BLX instruction of thumb mode */
 		if(((state->last_instr  & 0xF8000000) >> 27) == 31)
 			return 0;
 	}
+#endif
 	if(core->Reg[15] == 0xffff0018 || core->Reg[15] == 0xffff0214 
 		|| core->Reg[15] == 0xffff020c /* irq */
 		|| core->Reg[15] == 0xc002dba0 /* irq_svc */
 		|| core->Reg[15] == 0xc002dbdc
 		|| core->Reg[15] == 0xc002fcc0 /* __irq_svc */
 		|| core->Reg[15] == 0xc002fd10 /* __irq_svc */
-		|| core->Reg[15] == 0xc0048f14
-		|| core->Reg[15] == 0xc004d7c0
+		|| core->Reg[15] == 0xc004abe4
+		|| core->Reg[15] == 0xc004678c
 		|| core->Reg[15] == 0xc002dda0 /* irq_usr */
 		|| core->Reg[15] == 0xffff0208 /* irq */
 		|| core->Reg[15] == 0xffff0010 /* abort irq */
@@ -228,8 +233,28 @@ int diff_single_step(cpu_t *cpu){
 			printf("\n");
 
 	}
+	/* Comparing the writen data */
+	if(((state->CurrWrite != 0xdeadc0de) && (state->CurrWrite != 0)) || (state->CurrWrite != core->CurrWrite)){
+		if(state->CurrWrite == 0xdeadc0de)
+			state->CurrWrite = 0;
+		if(state->CurrWrite != core->CurrWrite){
+			skyeye_printf_in_color(RED, "ICOUNTER=%d(0x%x:0x%x), instr=0x%x, Data Write diff Fail, orginal CurrWrite=%d, wrong CurrWrite %d\n",core->icounter, core->Reg[15], state->Reg[15], instr, state->CurrWrite, core->CurrWrite);
+		}
+		for(i = 0; i < state->CurrWrite; i++){
+			if(state->WriteAddr[state->CurrWrite] != core->WriteAddr[state->CurrWrite]){
+				skyeye_printf_in_color(RED, "ICOUNTER=%d(0x%x), instr=0x%x, Data Write diff Fail, orginal WriteAddr=0x%x, wrong WriteAddr 0x%x\n",core->icounter, core->Reg[15], instr, state->WriteAddr[state->CurrWrite], core->WriteAddr[state->CurrWrite]);
+			}
+			if(state->WriteData[state->CurrWrite] != core->WriteData[state->CurrWrite]){
+				skyeye_printf_in_color(RED, "ICOUNTER=%d(0x%x), instr=0x%x, Data Write diff Fail, orginal WriteData=0x%x, wrong WriteData 0x%x\n",core->icounter, core->Reg[15], instr, state->WriteData[state->CurrWrite], core->WriteData[state->CurrWrite]);
+			}
+			if((state->WritePc[state->CurrWrite] != core->WritePc[state->CurrWrite] + GET_INST_SIZE(core) * 2) && state->WritePc[state->CurrWrite] != 0){
+				skyeye_printf_in_color(RED, "ICOUNTER=%d(0x%x), instr=0x%x, Data Write diff Fail, orginal WritePc=0x%x, wrong WritePc 0x%x\n",core->icounter, core->Reg[15], instr, state->WritePc[state->CurrWrite], core->WritePc[state->CurrWrite]);
+			}
+		}
+	}
 	//printf("\n");
 SYNC:
+	state->CurrWrite = core->CurrWrite = 0;
 	/* Sync all the register with fast interpreter */
 	for(i = 0; i < 16; i++){
 		if(core->Cpsr & 0xF == 2){/* irq */
