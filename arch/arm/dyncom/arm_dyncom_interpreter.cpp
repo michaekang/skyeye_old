@@ -5093,7 +5093,10 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) {
 				goto MMU_EXCEPTION;
 			}
-			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+			if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
+				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+			else
+				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = ROTATE_RIGHT_32(value,(8*(addr&0x3))) ;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				/* For armv5t, should enter thumb when bits[0] is non-zero. */
 				cpu->TFlag = value & 0x1;
@@ -5373,12 +5376,12 @@ void InterpreterMainLoop(cpu_t *core)
 //			printf("PC:%x\n", cpu->Reg[15]);
 //			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-			if (0) /* If CP15_reg1_Ubit == 1, to protect unaligned access. It is a special case */
-			{
+
+			if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
 				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-			} 
-			else /* else CP15_reg1_Ubit == 0 */
+			else
 				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = ROTATE_RIGHT_32(value,(8*(addr&0x3))) ;
+
 //			printf("after : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
 //			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 16, 19)]);
 //			cpu->Reg[BITS(inst_cream->inst, 16, 19)] = addr;
