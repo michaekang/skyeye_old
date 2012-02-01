@@ -148,8 +148,12 @@ s3c6410x_io_reset (generic_arch_t *arch_instance)
 	io.clkpower.epllcon1 = 0x00009111;
 	io.clkpower.clkdiv0 = 0x01051000;
 
+	/* The environment for boot linux */
+	arch_instance->set_regval_by_id(0, 0);
 	/* machine ID for SMDK6410 */
 	arch_instance->set_regval_by_id(1, 1626);
+	/* The atag or dtb address for linux booting */
+	arch_instance->set_regval_by_id(2, 0x50000100);
 }
 
 /* s3c6410x io_do_cycle */

@@ -62,8 +62,6 @@ static void* mem_ptr = NULL;
 //static void mem_read_raw(uint32_t offset, uint32_t &value, int size)
 static void mem_read_raw(int size, uint32_t offset, uint32_t *value)
 {
-	if(offset == 0)
-		return;	
 	if(mem_ptr == NULL)
 		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
 	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
