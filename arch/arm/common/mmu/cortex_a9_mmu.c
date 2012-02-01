@@ -1,23 +1,27 @@
-/*
-    arm1176jzf_s_mmu.c - ARM920T Memory Management Unit emulation.
-    Copyright (C) 2003 Skyeye Develop Group
-    for help please send mail to <skyeye-developer@lists.gro.clinux.org>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+/* Copyright (C)
+* 2012 - Michael.Kang blackfin.kang@gmail.com
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*
 */
-
+/**
+* @file cortex_a9_mmu.c
+* @brief The mmu implementation of cortex a9
+* @author Michael.Kang blackfin.kang@gmail.com
+* @version 78.77
+* @date 2012-02-01
+*/
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
@@ -25,75 +29,36 @@
 
 #include "armdefs.h"
 #include "bank_defs.h"
-#if 0
-#define TLB_SIZE 1024 * 1024
-#define ASID 255
-static uint32_t tlb_entry_array[TLB_SIZE][ASID];
-static inline void invalidate_all_tlb(ARMul_State *state){
-	memset(&tlb_entry_array[0], 0xFF, sizeof(uint32_t) * TLB_SIZE * ASID);
-}
-static inline void invalidate_by_mva(ARMul_State *state, ARMword va){
-	memset(&tlb_entry_array[va >> 12][va & 0xFF], 0xFF, sizeof(uint32_t));
-	return;
-}
-static inline void invalidate_by_asid(ARMul_State *state, ARMword asid){
-	int i;
-	for(i = 0; i < TLB_SIZE; i++)
-		memset(&tlb_entry_array[i][asid & 0xFF], 0xFF, sizeof(uint32_t));
-	return;
-}
 
-static uint32_t get_phys_page(ARMul_State* state, ARMword va){
-	uint32_t phys_page = tlb_entry_array[va >> 12][state->mmu.context_id & 0xFF];
-	//printf("In %s, for va=0x%x, page=0x%x\n", __func__, va, phys_page);
-	return phys_page;
-}
 
-static inline void insert_tlb(ARMul_State* state, ARMword va, ARMword pa){
-	//printf("In %s, insert va=0x%x, pa=0x%x\n", __FUNCTION__, va, pa);
-	//printf("In %s, insert va=0x%x, va>>12=0x%x, pa=0x%x, pa>>12=0x%x\n", __FUNCTION__, va, va >> 12, pa, pa >> 12);
-	tlb_entry_array[va >> 12][state->mmu.context_id & 0xFF] = pa >> 12;
-
-	return;
-}
-#endif
-#define BANK0_START 0x50000000
-static void* mem_ptr = NULL;
+#define BANK0_START 0x80000000
 //static void mem_read_raw(uint32_t offset, uint32_t &value, int size)
-static void mem_read_raw(int size, uint32_t offset, uint32_t *value)
+static inline void mem_read_raw(int size, uint32_t offset, uint32_t *value)
 {
-#if 0
-	if(mem_ptr == NULL)
-		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
+	if(offset == 0)
+		return;
 	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
-	if(offset >= 0x50000000 && offset < 0x70000000){
-		mem_read(size, offset, value);	
-	}	
+	if(offset >= 0x80000000 && offset < 0x90000000){
+		mem_read(size, offset, value);
+	}
 	else{
 		bus_read(size, offset, value);
 	}
-#endif
-	bus_read(size, offset, value);
 }
 
 //static void mem_write_raw(uint32_t offset, uint32_t value, int size)
-static void mem_write_raw(int size, uint32_t offset, uint32_t value)
+static inline void mem_write_raw(int size, uint32_t offset, uint32_t value)
 {
-#if 0
-	if(mem_ptr == NULL)
-		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
 	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
-	if(offset >= 0x50000000 && offset < 0x70000000){
+	if(offset >= 0x80000000 && offset < 0x90000000){
 		mem_write(size, offset, value);
 	}
 	else{
 		bus_write(size, offset, value);
 	}
-#endif
-	bus_write(size, offset, value);
 }
 
-static int exclusive_detect(ARMul_State* state, ARMword addr){
+static inline int exclusive_detect(ARMul_State* state, ARMword addr){
 	int i;
 	#if 0
 	for(i = 0; i < 128; i++){
@@ -107,7 +72,7 @@ static int exclusive_detect(ARMul_State* state, ARMword addr){
 		return -1;
 }
 
-static void add_exclusive_addr(ARMul_State* state, ARMword addr){
+static inline void add_exclusive_addr(ARMul_State* state, ARMword addr){
 	int i;
 	#if 0
 	for(i = 0; i < 128; i++){
@@ -123,7 +88,7 @@ static void add_exclusive_addr(ARMul_State* state, ARMword addr){
 	return;
 }
 
-static void remove_exclusive(ARMul_State* state, ARMword addr){
+static inline void remove_exclusive(ARMul_State* state, ARMword addr){
 	#if 0
 	int i;
 	for(i = 0; i < 128; i++){
@@ -164,90 +129,11 @@ check_perms (ARMul_State *state, int ap, int read)
 	return 0;
 }
 
-#if 0
-fault_t
-check_access (ARMul_State *state, ARMword virt_addr, tlb_entry_t *tlb,
-	      int read)
-{
-	int access;
-
-	state->mmu.last_domain = tlb->domain;
-	access = (state->mmu.domain_access_control >> (tlb->domain * 2)) & 3;
-	if ((access == 0) || (access == 2)) {
-		/* It's unclear from the documentation whether this
-		   should always raise a section domain fault, or if
-		   it should be a page domain fault in the case of an
-		   L1 that describes a page table.  In the ARM710T
-		   datasheets, "Figure 8-9: Sequence for checking faults"
-		   seems to indicate the former, while "Table 8-4: Priority
-		   encoding of fault status" gives a value for FS[3210] in
-		   the event of a domain fault for a page.  Hmm. */
-		return SECTION_DOMAIN_FAULT;
-	}
-	if (access == 1) {
-		/* client access - check perms */
-		int subpage, ap;
-#if 0
-		switch (tlb->mapping) {
-			/*ks 2004-05-09
-			 *   only for XScale
-			 *   Extend Small Page(ESP) Format
-			 *   31-12 bits    the base addr of ESP
-			 *   11-10 bits    SBZ
-			 *   9-6   bits    TEX
-			 *   5-4   bits    AP
-			 *   3     bit     C
-			 *   2     bit     B
-			 *   1-0   bits    11
-			 * */
-		case TLB_ESMALLPAGE:	/* xj */
-			subpage = 0;
-			/* printf("TLB_ESMALLPAGE virt_addr=0x%x  \n",virt_addr ); */
-			break;
-
-		case TLB_TINYPAGE:
-			subpage = 0;
-			/* printf("TLB_TINYPAGE virt_addr=0x%x  \n",virt_addr ); */
-			break;
-
-		case TLB_SMALLPAGE:
-			subpage = (virt_addr >> 10) & 3;
-			break;
-		case TLB_LARGEPAGE:
-			subpage = (virt_addr >> 14) & 3;
-			break;
-		case TLB_SECTION:
-			subpage = 3;
-			break;
-		default:
-			assert (0);
-			subpage = 0;	/* cleans a warning */
-		}
-		ap = (tlb->perms >> (subpage * 2 + 4)) & 3;
-		if (!check_perms (state, ap, read)) {
-			if (tlb->mapping == TLB_SECTION) {
-				return SECTION_PERMISSION_FAULT;
-			} else {
-				return SUBPAGE_PERMISSION_FAULT;
-			}
-		}
-#endif
-	} else {			/* access == 3 */
-		/* manager access - don't check perms */
-	}
-	return NO_FAULT;
-}
-#endif
-
-#if 0
-fault_t
-mmu_translate (ARMul_State *state, ARMword virt_addr, ARMword *phys_addr)
-#endif
 
 /*  ap: AP bits value.
  *  sop: section or page description  0:section 1:page
  */
-fault_t
+static fault_t
 mmu_translate (ARMul_State *state, ARMword virt_addr, ARMword *phys_addr, int *ap, int *sop)
 {
 	{
@@ -347,13 +233,13 @@ mmu_translate (ARMul_State *state, ARMword virt_addr, ARMword *phys_addr, int *a
 }
 
 
-static fault_t arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va,
+fault_t cortex_a9_mmu_write (ARMul_State *state, ARMword va,
 				  ARMword data, ARMword datatype);
-static fault_t arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va,
+fault_t cortex_a9_mmu_read (ARMul_State *state, ARMword va,
 				 ARMword *data, ARMword datatype);
 
 int
-arm1176jzf_s_mmu_init (ARMul_State *state)
+cortex_a9_mmu_init (ARMul_State *state)
 {
 	state->mmu.control = 0x50078;
 	state->mmu.translation_table_base = 0xDEADC0DE;
@@ -363,19 +249,16 @@ arm1176jzf_s_mmu_init (ARMul_State *state)
 	state->mmu.process_id = 0;
 	state->mmu.context_id = 0;
 	state->mmu.thread_uro_id = 0;
-	//invalidate_all_tlb(state);
-
-	return No_exp;
 }
 
 void
-arm1176jzf_s_mmu_exit (ARMul_State *state)
+cortex_a9_mmu_exit (ARMul_State *state)
 {
 }
 
 
-static fault_t
-arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
+fault_t
+cortex_a9_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 {
 	fault_t fault;
 	int c;			/* cache bit */
@@ -440,33 +323,33 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 	return 0;
 }
 
-static fault_t
-arm1176jzf_s_mmu_read_byte (ARMul_State *state, ARMword virt_addr, ARMword *data)
+fault_t
+cortex_a9_mmu_read_byte (ARMul_State *state, ARMword virt_addr, ARMword *data)
 {
 	/* ARMword temp,offset; */
 	fault_t fault;
-	fault = arm1176jzf_s_mmu_read (state, virt_addr, data, ARM_BYTE_TYPE);
+	fault = cortex_a9_mmu_read (state, virt_addr, data, ARM_BYTE_TYPE);
 	return fault;
 }
 
-static fault_t
-arm1176jzf_s_mmu_read_halfword (ARMul_State *state, ARMword virt_addr,
+fault_t
+cortex_a9_mmu_read_halfword (ARMul_State *state, ARMword virt_addr,
 			   ARMword *data)
 {
 	/* ARMword temp,offset; */
 	fault_t fault;
-	fault = arm1176jzf_s_mmu_read (state, virt_addr, data, ARM_HALFWORD_TYPE);
+	fault = cortex_a9_mmu_read (state, virt_addr, data, ARM_HALFWORD_TYPE);
 	return fault;
 }
 
-static fault_t
-arm1176jzf_s_mmu_read_word (ARMul_State *state, ARMword virt_addr, ARMword *data)
+fault_t
+cortex_a9_mmu_read_word (ARMul_State *state, ARMword virt_addr, ARMword *data)
 {
-	return arm1176jzf_s_mmu_read (state, virt_addr, data, ARM_WORD_TYPE);
+	return cortex_a9_mmu_read (state, virt_addr, data, ARM_WORD_TYPE);
 }
 
-static fault_t
-arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
+fault_t
+cortex_a9_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 		  ARMword datatype)
 {
 	fault_t fault;
@@ -503,7 +386,7 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 			else
 				mem_read_raw(32, va, data);
 		else {
-			printf ("SKYEYE:1 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
+			printf ("SKYEYE:1 cortex_a9_mmu_read error: unknown data type %d\n", datatype);
 			skyeye_exit (-1);
 		}
 
@@ -519,15 +402,7 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 		return ALIGNMENT_FAULT;
 	}
 
-	/* va &= ~(WORD_SIZE - 1); */
-	#if 0
-	uint32_t page_base;
-	page_base = get_phys_page(state, va);
-	if((page_base & 0xFFF) == 0){
-		pa = (page_base << 12) | (va & 0xFFF);
-		goto skip_translation;
-	}
-	#endif
+
 	/*translate va to tlb */
 #if 0
 	fault = mmu_translate (state, va, ARM920T_D_TLB (), &tlb);
@@ -566,7 +441,6 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 		return fault;
 #endif
 
-	//insert_tlb(state, va, pa);
 skip_translation:
 		/* *data = mem_read_word(state, pa); */
 	if (datatype == ARM_BYTE_TYPE) {
@@ -585,16 +459,16 @@ skip_translation:
 		/* mem_read_raw(32, pa | (real_va & 2), data); */
 	} else if (datatype == ARM_WORD_TYPE)
 		/* *data = mem_read_word (state, pa); */
-		if(state->space.conf_obj != NULL)	
+		if(state->space.conf_obj != NULL)
 			state->space.read(state->space.conf_obj, pa , data, 4);
 		else
 			mem_read_raw(32, pa, data);
 	else {
-		printf ("SKYEYE:2 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
+		printf ("SKYEYE:2 cortex_a9_mmu_read error: unknown data type %d\n", datatype);
 		skyeye_exit (-1);
 	}
 	if(0 && (va == 0x2869c)){
-            	printf("In %s, pa is %x va=0x%x, value is %x pc %x, instr=0x%x\n", __FUNCTION__, pa, va, *data, state->Reg[15], state->CurrInstr);
+		printf("In %s, pa is %x va=0x%x, value is %x pc %x, instr=0x%x\n", __FUNCTION__, pa, va, *data, state->Reg[15], state->CurrInstr);
 	}
 
 	/* ldrex or ldrexb */
@@ -617,30 +491,27 @@ skip_translation:
 	return 0;
 }
 
-
-static fault_t
-arm1176jzf_s_mmu_write_byte (ARMul_State *state, ARMword virt_addr, ARMword data)
+fault_t
+cortex_a9_mmu_write_byte (ARMul_State *state, ARMword virt_addr, ARMword data)
 {
-	return arm1176jzf_s_mmu_write (state, virt_addr, data, ARM_BYTE_TYPE);
+	return cortex_a9_mmu_write (state, virt_addr, data, ARM_BYTE_TYPE);
 }
 
-static fault_t
-arm1176jzf_s_mmu_write_halfword (ARMul_State *state, ARMword virt_addr,
+fault_t
+cortex_a9_mmu_write_halfword (ARMul_State *state, ARMword virt_addr,
 			    ARMword data)
 {
-	return arm1176jzf_s_mmu_write (state, virt_addr, data, ARM_HALFWORD_TYPE);
+	return cortex_a9_mmu_write (state, virt_addr, data, ARM_HALFWORD_TYPE);
 }
 
-static fault_t
-arm1176jzf_s_mmu_write_word (ARMul_State *state, ARMword virt_addr, ARMword data)
+fault_t
+cortex_a9_mmu_write_word (ARMul_State *state, ARMword virt_addr, ARMword data)
 {
-	return arm1176jzf_s_mmu_write (state, virt_addr, data, ARM_WORD_TYPE);
+	return cortex_a9_mmu_write (state, virt_addr, data, ARM_WORD_TYPE);
 }
 
-
-
-static fault_t
-arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
+fault_t
+cortex_a9_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 		   ARMword datatype)
 {
 	int b;
@@ -686,7 +557,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 			else
 				mem_write_raw(32, va, data);
 		else {
-			printf ("SKYEYE:1 arm1176jzf_s_mmu_write error: unknown data type %d\n", datatype);
+			printf ("SKYEYE:1 cortex_a9_mmu_write error: unknown data type %d\n", datatype);
 			skyeye_exit (-1);
 		}
 		goto finished_write;
@@ -700,14 +571,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 		return ALIGNMENT_FAULT;
 	}
 	va &= ~(WORD_SIZE - 1);
-	#if 0
-	uint32_t page_base;
-	page_base = get_phys_page(state, va);
-	if((page_base & 0xFFF) == 0){
-		pa = (page_base << 12) | (va & 0xFFF);
-		goto skip_translation;
-	}
-	#endif
+
 	/*tlb translate */
 	fault = mmu_translate (state, va, &pa, &ap, &sop);
 #if 0
@@ -756,7 +620,6 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
             exit(-1);
     }
 #endif
-	//insert_tlb(state, va, pa);
 skip_translation:
 	/* strex */
 	if(((state->CurrInstr & 0x0FF000F0) == 0x01800090) ||
@@ -808,9 +671,13 @@ skip_translation:
                 printf("icounter is %lld\n", state->NumInstrs);
     }
 #endif
+	static int write_begin = 0;
 finished_write:
 #if DIFF_WRITE
-	if(state->icounter > state->debug_icounter){
+	if(state->CurrWrite == 0xdeadc0de || write_begin == 1){
+		if(state->CurrWrite == 0xdeadc0de)
+			state->CurrWrite = 0;
+		write_begin = 1;
 		if(state->CurrWrite >= 17 ){
 			printf("Wrong write array, 0x%x",  state->CurrWrite);
 			exit(-1);
@@ -833,7 +700,7 @@ finished_write:
 }
 
 ARMword
-arm1176jzf_s_mmu_mrc (ARMul_State *state, ARMword instr, ARMword *value)
+cortex_a9_mmu_mrc (ARMul_State *state, ARMword instr, ARMword *value)
 {
 	mmu_regnum_t creg = BITS (16, 19) & 0xf;
 	int OPC_1 = BITS (21, 23) & 0x7;
@@ -919,7 +786,7 @@ arm1176jzf_s_mmu_mrc (ARMul_State *state, ARMword instr, ARMword *value)
 
 
 static ARMword
-arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
+cortex_a9_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 {
 	mmu_regnum_t creg = BITS (16, 19) & 0xf;
 	mmu_regnum_t CRm = BITS (0, 3) & 0xf;
@@ -1000,15 +867,6 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 				case 5: /* ITLB */
 				{
 					switch(OPC_2){
-						case 0: /* invalidate all */
-							//invalidate_all_tlb(state);
-							break;
-						case 1: /* invalidate by MVA */
-							//invalidate_by_mva(state, value);
-							break;
-						case 2: /* invalidate by asid */
-							//invalidate_by_asid(state, value);
-							break;
 						default:
 							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
 							break;
@@ -1018,15 +876,6 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 				case 6: /* DTLB */
 				{
 					switch(OPC_2){
-						case 0: /* invalidate all */
-							//invalidate_all_tlb(state);
-							break;
-						case 1: /* invalidate by MVA */
-							//invalidate_by_mva(state, value);
-							break;
-						case 2: /* invalidate by asid */
-							//invalidate_by_asid(state, value);
-							break;
 						default:
 							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
 							break;
@@ -1036,15 +885,6 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 				case 7: /* Unified TLB */
 				{
 					switch(OPC_2){
-						case 0: /* invalidate all */
-							//invalidate_all_tlb(state);
-							break;
-						case 1: /* invalidate by MVA */
-							//invalidate_by_mva(state, value);
-							break;
-						case 2: /* invalidate by asid */
-							//invalidate_by_asid(state, value);
-							break;
 						default:
 							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
 							break;
@@ -1089,13 +929,10 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 			break;
 		}
 	}
-
-	return No_exp;
 }
 
-/* teawater add for arm2x86 2005.06.19------------------------------------------- */
 static int
-arm1176jzf_s_mmu_v2p_dbct (ARMul_State *state, ARMword virt_addr,
+cortex_a9_mmu_v2p_dbct (ARMul_State *state, ARMword virt_addr,
 		      ARMword *phys_addr)
 {
 	fault_t fault;
@@ -1127,14 +964,6 @@ arm1176jzf_s_mmu_v2p_dbct (ARMul_State *state, ARMword virt_addr,
 				return SUBPAGE_PERMISSION_FAULT;
 			}
 		}
-#if 0
-		/*check access */
-		fault = check_access (state, virt_addr, tlb, 1);
-		if (fault) {
-			d_msg ("check_fault\n");
-			return fault;
-		}
-#endif
 	}
 
 	if (MMU_Disabled) {
@@ -1144,22 +973,16 @@ arm1176jzf_s_mmu_v2p_dbct (ARMul_State *state, ARMword virt_addr,
 	return 0;
 }
 
-/* AJ2D-------------------------------------------------------------------------- */
-
-/*arm1176jzf-s mmu_ops_t*/
-mmu_ops_t arm1176jzf_s_mmu_ops = {
-	arm1176jzf_s_mmu_init,
-	arm1176jzf_s_mmu_exit,
-	arm1176jzf_s_mmu_read_byte,
-	arm1176jzf_s_mmu_write_byte,
-	arm1176jzf_s_mmu_read_halfword,
-	arm1176jzf_s_mmu_write_halfword,
-	arm1176jzf_s_mmu_read_word,
-	arm1176jzf_s_mmu_write_word,
-	arm1176jzf_s_mmu_load_instr,
-	arm1176jzf_s_mmu_mcr,
-	arm1176jzf_s_mmu_mrc
-/* teawater add for arm2x86 2005.06.19------------------------------------------- */
-/*	arm1176jzf_s_mmu_v2p_dbct, */
-/* AJ2D-------------------------------------------------------------------------- */
+mmu_ops_t cortex_a9_mmu_ops = {
+	cortex_a9_mmu_init,
+	cortex_a9_mmu_exit,
+	cortex_a9_mmu_read_byte,
+	cortex_a9_mmu_write_byte,
+	cortex_a9_mmu_read_halfword,
+	cortex_a9_mmu_write_halfword,
+	cortex_a9_mmu_read_word,
+	cortex_a9_mmu_write_word,
+	cortex_a9_mmu_load_instr,
+	cortex_a9_mmu_mcr,
+	cortex_a9_mmu_mrc
 };

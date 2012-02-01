@@ -375,7 +375,6 @@ ARMul_Emulate26 (ARMul_State * state)
 	ARMword decoded_addr=0;
 	ARMword loaded_addr=0;
 	ARMword have_bp=0;
-	static ARMword last_pc = 0;
 
 	int reg_index = 0;
 #if DIFF_STATE
@@ -417,9 +416,6 @@ ARMul_Emulate26 (ARMul_State * state)
 
 	do {
             //print_func_name(state->pc);
-            if (pc) {
-                    last_pc = pc;
-            }
 		/* Just keep going.  */
 		isize = INSN_SIZE;
 		

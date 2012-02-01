@@ -75,6 +75,9 @@ mmu_init (ARMul_State * state)
 		state->mmu.ops = arm1176jzf_s_mmu_ops;
 		break;
 
+	case 0xc09:
+		state->mmu.ops = cortex_a9_mmu_ops;
+		break;
 	default:
 		fprintf (stderr,
 			 "SKYEYE: armmmu.c : mmu_init: unknown cpu_val&cpu_mask 0x%x\n",

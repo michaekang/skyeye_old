@@ -214,7 +214,7 @@ static exception_t arm_signal(conf_object_t* opaque, interrupt_signal_t *signal)
 *
 * @return
 */
-const static cpu_config_t cortex_a9_cpu_info = {"armv7",  "cortex_a9", 0x0007b000, 0x0007f000, NONCACHE};
+const static cpu_config_t cortex_a9_cpu_info = {"armv7",  "cortex_a9", 0x413Fc090, 0x0000fff0, NONCACHE};
 static conf_object_t* new_cortex_a9_core(char* obj_name){
 	cortex_a9_core_t* core = skyeye_mm_zero(sizeof(cortex_a9_core_t));
 	core->obj = new_conf_object(obj_name, core);

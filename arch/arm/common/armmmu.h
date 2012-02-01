@@ -183,6 +183,7 @@ typedef struct mmu_ops_s
 #include "mmu/arm920t_mmu.h"
 #include "mmu/arm926ejs_mmu.h"
 #include "mmu/arm1176jzf_s_mmu.h"
+#include "mmu/cortex_a9_mmu.h"
 
 typedef struct mmu_state_t
 {
