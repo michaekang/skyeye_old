@@ -486,6 +486,7 @@ typedef ARMul_State arm_core_t;
 #define ARM_iWMMXt_Prop  0x800
 //chy 2005-09-19
 #define ARM_PXA27X_Prop  0x1000
+#define ARM_v7_Prop      0x2000
 
 /* ARM2 family */
 #define ARM2    (ARM_Fix26_Prop)
