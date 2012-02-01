@@ -904,17 +904,32 @@ typedef struct s3c6410_vic_dev{
 	conf_object_t* obj;
 }s3c6410_vic_device;
 static int vic_raise_signal(conf_object_t* target, int line){
-	int irq_no = line;
-	io.vic0rawintr |= 1 << irq_no;
-	io.vic0irqstatus |=  ((1 << irq_no) & ~(io.vic0intselect) & io.vic0intenable);
-	io.vic0fiqstatus |=  ((1 << irq_no) & io.vic0intselect & io.vic0intenable);
+	int irq_no;
+	if(line < 32){	/* line < 32 vic0 */
+		irq_no = line;
+		io.vic0rawintr |= 1 << irq_no;
+		io.vic0irqstatus |=  ((1 << irq_no) & ~(io.vic0intselect) & io.vic0intenable);
+		io.vic0fiqstatus |=  ((1 << irq_no) & io.vic0intselect & io.vic0intenable);
+	}else{		/* line >= 32 vic1 */
+		irq_no = line - 32;
+		io.vic1rawintr |= 1 << irq_no;
+		io.vic1irqstatus |=  ((1 << irq_no) & ~(io.vic1intselect) & io.vic1intenable);
+		io.vic1fiqstatus |=  ((1 << irq_no) & io.vic1intselect & io.vic1intenable);
+	}
 
 	s3c6410x_update_int (NULL);
 	return 0;
 }
 static int vic_lower_signal(conf_object_t* target, int line){
-	int irq_no = line;
-	io.vic0irqstatus &= ~irq_no;
+	int irq_no;
+	if(line < 32){	/* line < 32 vic0 */
+		irq_no = line;
+		io.vic0irqstatus &= ~irq_no;
+	}else{		/* line >= 32 vic1 */
+		irq_no = line - 32;
+		io.vic1irqstatus &= ~irq_no;
+	}
+
 	s3c6410x_update_int(NULL);
 	return 0;
 }
