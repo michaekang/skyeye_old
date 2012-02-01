@@ -71,7 +71,8 @@ io_do_cycle (void * state)
 			if (dev->update)
 				dev->update (dev);
 		}
-		config->mach->mach_io_do_cycle (state);
+		if(config->mach->mach_io_do_cycle != NULL)
+			config->mach->mach_io_do_cycle (state);
 	}
 }
 
