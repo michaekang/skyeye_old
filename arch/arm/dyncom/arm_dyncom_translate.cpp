@@ -604,10 +604,16 @@ int DYNCOM_TRANS(bkpt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
 int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	if (BITS(20, 27) == 0x12 && BITS(4, 7) == 0x3) {
+		
 		if (cpu->is_user_mode)
-			LET(14, CONST((pc + INSTR_SIZE) | 0x1));
+			LET(14, CONST(pc + INSTR_SIZE));
 		else
-			LET(14, OR(ADD(R(15),CONST(INSTR_SIZE)), CONST(0x1)));
+			LET(14, ADD(R(15),CONST(INSTR_SIZE)));
+		/* if thumb state, we need to Ored with one */
+		arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+		if(core->Cpsr & (1 << THUMB_BIT)){
+			LET(14, OR(R(14), CONST(0x1)));
+		}
 		LET(15, AND(R(RM), CONST(0xFFFFFFFE)));
 		/* Set thumb bit*/	
 		STORE(TRUNC1(AND(R(RM), CONST(0x1))), ptr_T);	

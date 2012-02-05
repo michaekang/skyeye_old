@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 //#include "armemu.h"
 #include "arm_dyncom_parallel.h"
 #include "arm_dyncom_mmu.h"
+#include "arm_dyncom_translate.h"
 
 #include <pthread.h>
 
@@ -703,6 +704,8 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 				return 1;
 			}
 		}
+		/* keep the tflag same with the bit in CPSR */
+		core->TFlag = core->Cpsr & (1 << THUMB_BIT);
 		//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
 		push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
 		return 0;
