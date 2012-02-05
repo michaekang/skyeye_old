@@ -879,6 +879,12 @@ int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			LET(CP15_MAIN_ID, R(RD));
 		} else if(CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
 			LET(CP15_CONTROL, R(RD));
+		} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
+			//LET(RD, R(CP15_CONTROL));
+			LET(CP15_AUXILIARY_CONTROL, R(RD));
+		} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 2) {
+			//LET(RD, R(CP15_CONTROL));
+			LET(CP15_COPROCESSOR_ACCESS_CONTROL, R(RD));
 		} else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
 			LET(CP15_DOMAIN_ACCESS_CONTROL, R(RD));
 		} else if (CRn == 2 && CRm == 0 && OPCODE_2 == 0) {
@@ -887,6 +893,23 @@ int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			LET(CP15_TRANSLATION_BASE_TABLE_1, R(RD));
 		} else if (CRn == 2 && CRm == 0 && OPCODE_2 == 2) {
 			LET(CP15_TRANSLATION_BASE_CONTROL, R(RD));
+		} else if(CRn == MMU_CACHE_OPS){
+			//SKYEYE_WARNING("cache operation have not implemented.\n");
+		} else if(CRn == MMU_TLB_OPS){
+			//SKYEYE_WARNING("tlb operation have not implemented.\n");
+			//		} else if (CRn == 7 && CRm == 14 && OPCODE_2 == 0) {
+			//			LET(R(RD));
+		} else if(CRn == MMU_PID){
+			if(OPCODE_2 == 0)
+				LET(CP15_PID, R(RD));
+			else if(OPCODE_2 == 1)
+				LET(CP15_CONTEXT_ID, R(RD));
+			else if(OPCODE_2 == 3){
+				LET(CP15_THREAD_URO, R(RD));
+			}
+			else{
+				printf ("mmu_mcr wrote UNKNOWN - reg %d\n", CRn);
+			}
 //		} else if (CRn == 7 && CRm == 14 && OPCODE_2 == 0) {
 //			LET(R(RD));
 		} else {
@@ -1033,6 +1056,10 @@ int DYNCOM_TRANS(mrc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			data = R(CP15_CACHE_TYPE);
 		} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
 			data = R(CP15_CONTROL);
+		} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
+			data = R(CP15_AUXILIARY_CONTROL);
+		} else if (CRn == 1 && CRm == 0 && OPCODE_2 == 2) {
+			data = R(CP15_COPROCESSOR_ACCESS_CONTROL);
 		} else if (CRn == 2 && CRm == 0 && OPCODE_2 == 0) {
 			data = R(CP15_TRANSLATION_BASE_TABLE_0);
 		} else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
@@ -1043,6 +1070,10 @@ int DYNCOM_TRANS(mrc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			data = R(CP15_INSTR_FAULT_STATUS);
 		} else if (CRn == 6 && CRm == 0 && OPCODE_2 == 0) {
 			data = R(CP15_FAULT_ADDRESS);
+		} else if (CRn == 13 && CRm == 0 && OPCODE_2 == 0) {
+			data = R(CP15_PID);
+		} else if (CRn == 13 && CRm == 0 && OPCODE_2 == 1) {
+			data = R(CP15_CONTEXT_ID);
 		} else if (CRn == 13 && CRm == 0 && OPCODE_2 == 3) {
 			data = R(CP15_THREAD_URO);
 		}
