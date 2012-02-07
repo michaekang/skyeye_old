@@ -11,10 +11,11 @@
 */
 #include <skyeye_types.h>
 #include <skyeye_sched.h>
-#include "skyeye_mach_goldfish.h"
-
+#include "goldfish_timer.h"
+#include <skyeye_mm.h>
 //#define DEBUG
 #include <skyeye_log.h>
+#include <skyeye_class.h>
 
 enum {
     TIMER_TIME_LOW          = 0x00, // get low bits of current time and update TIMER_TIME_HIGH
@@ -219,7 +220,7 @@ static struct timer_state rtc_state = {
 };
 
 #endif
-goldfish_timer_device* new_goldfish_timer_device(char* obj_name){
+static conf_object_t* new_goldfish_timer_device(char* obj_name){
 	goldfish_timer_device* dev = skyeye_mm_zero(sizeof(goldfish_timer_device));
 	dev->obj = new_conf_object(obj_name, dev);
 	timer_state_t* timer =  skyeye_mm_zero(sizeof(timer_state_t));
@@ -235,9 +236,9 @@ goldfish_timer_device* new_goldfish_timer_device(char* obj_name){
 	dev->io_memory->read = timer_read;
 	dev->io_memory->write = timer_write;
 	
-	return dev;
+	return dev->obj;
 }
-void del_goldfish_timer_device(conf_object_t* dev){
+static void del_goldfish_timer_device(conf_object_t* dev){
 	
 }
 
@@ -257,3 +258,14 @@ void goldfish_timer_device_init()
 #endif
 }
 
+void init_goldfish_timer(){
+	static skyeye_class_t class_data = {
+		.class_name = "goldfish_timer",
+		.class_desc = "goldfish timer",
+		.new_instance = new_goldfish_timer_device,
+		.free_instance = del_goldfish_timer_device,
+		.get_attr = NULL,
+		.set_attr = NULL
+	};
+	SKY_register_class(class_data.class_name,&class_data);
+}
