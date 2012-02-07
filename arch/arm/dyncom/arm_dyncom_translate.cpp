@@ -1221,7 +1221,11 @@ int DYNCOM_TRANS(qsub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
 int DYNCOM_TRANS(qsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
 int DYNCOM_TRANS(qsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
 int DYNCOM_TRANS(qsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(rev)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(rev)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	Value *ret = SWAP32(R(RM));
+	
+	LET(RD,ret);
+}
 int DYNCOM_TRANS(rev16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value *op1 = R(RM);
@@ -2224,7 +2228,19 @@ int DYNCOM_TAG(qsub)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 int DYNCOM_TAG(qsub16)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
 int DYNCOM_TAG(qsub8)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
 int DYNCOM_TAG(qsubaddx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
-int DYNCOM_TAG(rev)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
+int DYNCOM_TAG(rev)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){
+	int instr_size = INSTR_SIZE;
+	if ((RD == 15) || (RM == 15)) {
+		printf("in %s instruction is not implementated (Unpredictable).\n", __FUNCTION__);
+		exit(-1);
+	} else {
+		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	}
+	if(instr >> 28 != 0xe)
+		*tag |= TAG_CONDITIONAL;
+
+	return instr_size;
+}
 int DYNCOM_TAG(rev16)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){
 	int instr_size = INSTR_SIZE;
 	if ((RD == 15) || (RM == 15)) {
