@@ -1099,9 +1099,11 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 //	printf("pc is %x phys_pc is %x instr is %x\n", core->Reg[15], addr, instr);
 	fault = get_phys_addr(cpu, addr, &phys_addr, 32, rw);
 	if (fault) {
+		#if 0
 		printf("pc is %x phys_pc is %x instr is %x\n", core->Reg[15], addr, instr);
 		printf("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
 		printf("fault is %d\n", fault);
+		#endif
 		core->abortSig = true;
 		core->Aborted = ARMul_DataAbortV;
 		core->AbortAddr = addr;
@@ -1122,8 +1124,8 @@ static int arch_arm_effective_to_physical(cpu_t *cpu, uint32_t addr, uint32_t *r
 	} else {
 		fault = get_phys_addr(cpu, addr, &phys_addr, 32, 1);
 		if (fault) {
-			printf("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
-			printf("fault is %d\n", fault);
+			LOG("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
+			LOG("fault is %d\n", fault);
 			core->abortSig = true;
 			core->Aborted = ARMul_PrefetchAbortV;
 			core->AbortAddr = addr;
