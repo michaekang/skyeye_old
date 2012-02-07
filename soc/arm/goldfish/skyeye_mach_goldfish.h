@@ -19,49 +19,15 @@
  
 */
 
-#ifndef __SKYEYE_MACH_GOLDFISH_H___
-#define __SKYEYE_MACH_GOLDFISH_H___
+#ifndef __SKYEYE_MACH_GOLDFISH_H__
+#define __SKYEYE_MACH_GOLDFISH_H__
 
-#include <skyeye_types.h>
-#include <skyeye_mach.h>
-#include <skyeye_addr_space.h>
-typedef struct pic_state{
-    uint32_t level;
-    uint32_t pending_count;
-    uint32_t irq_enabled;
-    uint32_t fiq_enabled;
-}pic_state_t;
 
-typedef struct goldfish_pic_device {
-	conf_object_t* obj;
-	pic_state_t* state;
-	memory_space_intf* io_memory;
-	general_signal_intf* slave;
-}goldfish_pic_device;
 
-struct goldfish_timer_device;
-typedef struct timer_state {
-	struct goldfish_timer_device* dev;
-	/* timer id */
-	int id;
-	uint32_t alarm_low_us;
-	int32_t alarm_high_us;
-	int64_t now_us;
-	int     armed;
-}timer_state_t;
+#include "goldfish_timer.h"
+#include "goldfish_interrupt.h"
 
-#define TIMER0_IRQ 3
-typedef struct goldfish_timer_device{
-	conf_object_t* obj;
-	int line_no;
-	timer_state_t* timer;
 
-	conf_object_t* signal_target;
-	general_signal_intf* master;
 
-	memory_space_intf* io_memory;
-}goldfish_timer_device;
-
-void goldfish_mach_init (void *arch_instance, machine_config_t *this_mach);
 
 #endif /* __SKYEYE_MACH_GOLDFISH_H___ */
