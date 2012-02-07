@@ -12,8 +12,11 @@
 
 //#define DEBUG
 #include <skyeye_log.h>
-
-#include "skyeye_mach_goldfish.h"
+#include <skyeye_mm.h>
+#include <skyeye_obj.h>
+#include <skyeye_class.h>
+#include <skyeye_signal.h>
+#include "goldfish_interrupt.h"
 #include <stdio.h>
 enum {
 	INTERRUPT_STATUS        = 0x00, // number of pending interrupts
@@ -164,7 +167,7 @@ static exception_t pic_write(conf_object_t *opaque, generic_address_t offset, vo
 	return No_exp;
 }
 
-goldfish_pic_device* new_goldfish_pic_device(char* obj_name){
+static conf_object_t* new_goldfish_pic_device(char* obj_name){
 	goldfish_pic_device* dev = (goldfish_pic_device *)skyeye_mm_zero(sizeof(goldfish_pic_device));
 	if(dev == NULL){
 		fprintf(stderr, "MM failed in %s\n", __FUNCTION__);
@@ -181,9 +184,21 @@ goldfish_pic_device* new_goldfish_pic_device(char* obj_name){
 	dev->io_memory->write = pic_write;
 
 	dev->state = skyeye_mm_zero(sizeof(pic_state_t));
-	return dev;
+	return dev->obj;
 }
-void del_goldfish_pic_device(char* obj_name){
+static void del_goldfish_pic_device(char* obj_name){
+}
+
+void init_goldfish_pic(){
+	static skyeye_class_t goldfish_pic_class = {
+		.class_name = "goldfish_pic",
+		.class_desc = "goldfish pic",
+		.new_instance = new_goldfish_pic_device,
+		.free_instance = del_goldfish_pic_device,
+		.get_attr = NULL,
+		.set_attr = NULL
+	};
+	SKY_register_class(goldfish_pic_class.class_name,&goldfish_pic_class);
 }
 #if 0
 qemu_irq*  goldfish_interrupt_init(uint32_t base, qemu_irq parent_irq, qemu_irq parent_fiq)
