@@ -789,8 +789,8 @@ static void push_compiled_work(cpu_t* cpu, uint32_t pc){
 	else if (running_mode == PURE_DYNCOM) {
 		if (translated_block > 0x1800)
 		{
-			printf("\t(Dyncom) Cleaning %x translated blocks ----- \n", cpu->dyncom_engine->cur_tagging_pos);
-			clear_cache(cpu, cpu->dyncom_engine->fmap);
+			//printf("\t(Dyncom) Cleaning %x translated blocks ----- \n", cpu->dyncom_engine->cur_tagging_pos);
+			//clear_cache(cpu, cpu->dyncom_engine->fmap);
 		}
 		cpu_tag(cpu, pc);
 		cpu->dyncom_engine->cur_tagging_pos ++;
