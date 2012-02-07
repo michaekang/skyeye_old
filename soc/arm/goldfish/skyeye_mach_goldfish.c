@@ -31,7 +31,8 @@
 #endif
 
 #include "skyeye_mach_goldfish.h"
-
+#include "skyeye_addr_space.h"
+#include <skyeye_class.h>
 
 static uint32
 goldfish_io_read_word (void *arch_instance, uint32 addr)
@@ -185,9 +186,14 @@ goldfish_io_reset (generic_arch_t* arch_instance)
 void
 goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 {
-	goldfish_pic_device* goldfish_pic = new_goldfish_pic_device("goldfish_pic0");
+	conf_object_t *obj;
+	goldfish_pic_device* goldfish_pic;
+	obj = pre_conf_obj("goldfish_pic0","goldfish_pic");
+	goldfish_pic = (goldfish_pic_device *)obj->obj;
 
-	goldfish_timer_device* goldfish_timer = new_goldfish_timer_device("goldfish_timer0");
+	goldfish_timer_device* goldfish_timer;
+	obj	= pre_conf_obj("goldfish_timer0","goldfish_timer");
+	goldfish_timer = (goldfish_timer_device *)obj->obj;
 	goldfish_timer->line_no = TIMER0_IRQ;
 
 	goldfish_timer->master = goldfish_pic->slave;
@@ -196,10 +202,10 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	addr_space_t* phys_mem = new_addr_space("goldfish_mach_space");
 
 	exception_t ret;
-	ret = add_map(phys_mem, 0xff000000, 0x1000, 0x0, goldfish_pic->obj, goldfish_pic->io_memory, 1, 1);
+	ret = add_map(phys_mem, 0xff000000, 0x1000, 0x0, goldfish_pic->io_memory, 1, 1);
 	if(ret != No_exp)
 		printf("Warnning, pic can not be mapped\n");
-	ret = add_map(phys_mem, 0xff003000, 0x1000, 0x0, goldfish_timer->obj, goldfish_timer->io_memory, 1, 1);
+	ret = add_map(phys_mem, 0xff003000, 0x1000, 0x0, goldfish_timer->io_memory, 1, 1);
 	
 	if(ret != No_exp)
 		printf("Warnning, timer can not be mapped\n");
