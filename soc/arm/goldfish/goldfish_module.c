@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <skyeye_module.h>
 #include <skyeye_mach.h>
-#include "skyeye_mach_goldfish.h"
 
 const char* skyeye_module = "goldfish";
+
+extern void goldfish_mach_init();
 
 void module_init(){
         /*
