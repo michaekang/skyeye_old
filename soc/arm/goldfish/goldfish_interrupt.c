@@ -180,6 +180,7 @@ static conf_object_t* new_goldfish_pic_device(char* obj_name){
 	dev->slave->lower_signal = goldfish_pic_lower;
 
 	dev->io_memory = skyeye_mm_zero(sizeof(memory_space_intf));
+	dev->io_memory->conf_obj = dev->obj;
 	dev->io_memory->read = pic_read;
 	dev->io_memory->write = pic_write;
 
