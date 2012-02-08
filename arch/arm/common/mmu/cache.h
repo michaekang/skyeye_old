@@ -163,4 +163,6 @@ void mmu_cache_invalidate_all (ARMul_State * state, cache_s * cache_t);
 void
 mmu_cache_soft_flush (ARMul_State * state, cache_s * cache_t, ARMword pa);
 
+cache_line_t* mmu_cache_dirty_cache(ARMul_State * state, cache_s * cache_t);
+
 #endif /*_MMU_CACHE_H_*/
