@@ -354,3 +354,18 @@ mmu_cache_soft_flush (ARMul_State * state, cache_s * cache_t, ARMword pa)
 	mmu_cache_write_back (state, cache_t, cache);
 	cache->tag = 0;
 }
+
+cache_line_t*  mmu_cache_dirty_cache(ARMul_State *state,cache_s *cache){
+	int i;
+	int j;
+	cache_line_t *cache_line = NULL;
+	cache_set_t *cache_set = cache->sets;
+	int sets = cache->set;
+	for (i = 0; i < sets; i++){
+		for(j = 0,cache_line = &cache_set[i].lines[0]; j < cache->way; j++,cache_line++){
+			if((cache_line->tag & TAG_FIRST_HALF_DIRTY) || (cache_line->tag & TAG_LAST_HALF_DIRTY))
+				return cache_line;
+		}
+	}
+	return NULL;
+}
