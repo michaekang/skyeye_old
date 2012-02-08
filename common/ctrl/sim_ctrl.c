@@ -227,7 +227,8 @@ void SIM_start(void){
 		 * If no relocation is indicated, we will load elf file by 
 		 * virtual address
 		 */
-		if((((~pref->exec_load_mask) & pref->exec_load_base) == 0x0) &&
+		//if((((~pref->exec_load_mask) & pref->exec_load_base) == 0x0) &&
+		if(((pref->exec_load_mask) == 0x0) &&
 			(arch_instance->mmu_write != NULL))
 			ret = SKY_load_elf(pref->exec_file, Virt_addr);
 		else
