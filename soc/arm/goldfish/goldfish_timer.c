@@ -233,6 +233,7 @@ static conf_object_t* new_goldfish_timer_device(char* obj_name){
 
 	dev->timer = timer;
 	dev->io_memory = skyeye_mm_zero(sizeof(memory_space_intf));
+	dev->io_memory->conf_obj = dev->obj;
 	dev->io_memory->read = timer_read;
 	dev->io_memory->write = timer_write;
 	
