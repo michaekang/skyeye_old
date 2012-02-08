@@ -64,7 +64,7 @@ static fault_t arm926ejs_mmu_read (ARMul_State * state, ARMword va,
 static fault_t update_cache (ARMul_State * state, ARMword va, ARMword data,
 			     ARMword datatype, cache_line_t * cache,
 			     cache_s * cache_t, ARMword real_va);
-
+ARMword arm926ejs_mmu_cache_ops(ARMul_State *state,ARMword instr,ARMword *data);
 extern void                            
 mmu_wb_write_bytes (ARMul_State * state, wb_s * wb_t, ARMword pa,
                     ARMbyte * data, int n);
@@ -611,7 +611,7 @@ arm926ejs_mmu_mrc (ARMul_State * state, ARMword instr, ARMword * value)
 		break;
 	case MMU_CACHE_OPS:
 		/* TODO */
-		//arm926ejs_mmu_cache_ops(state, instr, value);
+		data = arm926ejs_mmu_cache_ops(state, instr, value);
 		break;
 	case MMU_TLB_LOCKDOWN:
 		/* FIXME:tlb lock down */
@@ -624,15 +624,15 @@ arm926ejs_mmu_mrc (ARMul_State * state, ARMword instr, ARMword * value)
 		data = 0;
 		break;
 	}
-//      printf("\t\t\t\t\tpc = 0x%08x\n", state->Reg[15]);
+      //printf("\t\t\t\t\tpc = 0x%08x,data = 0x%08x\n", state->Reg[15],data);
 	*value = data;
 	return data;
 }
 
 /* ARM926EJS Cache Operation, P44
  * */
-void
-arm926ejs_mmu_cache_ops (ARMul_State * state, ARMword instr, ARMword value)
+ARMword
+arm926ejs_mmu_cache_ops (ARMul_State * state, ARMword instr, ARMword *value)
 {
 	int CRm, OPC_2;
 
@@ -728,6 +728,27 @@ arm926ejs_mmu_cache_ops (ARMul_State * state, ARMword instr, ARMword value)
 	 * */
 	if (OPC_2 == 4 && CRm == 0) {
 		return;
+	}
+	/*test and clean and invalid cache
+	 * */
+	if(OPC_2 == 3 && CRm == 14){
+		//to do
+		cache_line_t *cache = NULL;
+		cache = mmu_cache_dirty_cache(state,ARM926EJS_D_CACHE ());
+		if(cache){
+			mmu_cache_clean(state,ARM926EJS_D_CACHE (),cache->tag);
+			mmu_cache_invalidate(state,ARM926EJS_D_CACHE (),cache->tag);
+			cache = mmu_cache_dirty_cache(state,ARM926EJS_D_CACHE ());
+			if(cache){
+				return (0x0ul << 30);
+			}
+			else{
+				return (0x1ul << 30);
+			}
+
+		}else{
+			return (0x1ul << 30);
+		}
 	}
 	err_msg ("Unknow OPC_2 = %x CRm = %x\n", OPC_2, CRm);
 }
