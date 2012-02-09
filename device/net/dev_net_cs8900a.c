@@ -36,6 +36,7 @@ static struct device_default_value cs8900a_net_def[] = {
 	/* name         base        size   interrupt array */
 	{"at91", 0xfffa0000, 0x20, {16, 0, 0, 0}},
 	{"s3c2410x", 0x19000300, 0x20, {9, 0, 0, 0}},
+	{"s3c6410x", 0x19000000, 0x20, {10, 0, 0, 0}},
 	{NULL},
 };
 
