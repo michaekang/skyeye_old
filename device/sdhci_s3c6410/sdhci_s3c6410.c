@@ -48,6 +48,8 @@ static exception_t s3c6410_sdhci_write(conf_object_t *opaque, generic_address_t 
         default:
             break;
 	}
+
+	return No_exp;
 }
 static conf_object_t* new_s3c6410_sdhci(char* obj_name){
 	s3c6410_sdhci_device* dev = skyeye_mm_zero(sizeof(s3c6410_sdhci_device));

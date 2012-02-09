@@ -54,13 +54,13 @@ goldfish_io_read_word (void *arch_instance, uint32 addr)
 static uint32
 goldfish_io_read_byte (void *arch_instance, uint32 addr)
 {
-        goldfish_io_read_word (arch_instance, addr);
+        return goldfish_io_read_word (arch_instance, addr);
 }
 
 static uint32
 goldfish_io_read_halfword (void *arch_instance, uint32 addr)
 {
-        goldfish_io_read_word (arch_instance, addr);
+        return goldfish_io_read_word (arch_instance, addr);
 }
 
 

@@ -44,7 +44,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define QUEUE_LENGTH 1024
 static uint32_t compiled_queue[QUEUE_LENGTH];
 static pthread_rwlock_t compiled_queue_rwlock;
-static void* compiled_worker(void* cpu);
+static void *compiled_worker(void* cpu);
 static void push_compiled_work(cpu_t* cpu, uint32_t pc);
 /*
  * Three running mode: PURE_INTERPRET, PURE_DYNCOM, HYBRID
@@ -194,4 +194,6 @@ try_compile:
 		}
 		usleep(1);
 	}
+
+	return NULL;
 }

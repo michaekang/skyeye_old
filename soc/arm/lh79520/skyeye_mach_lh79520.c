@@ -243,6 +243,7 @@ lh79520_io_read_byte (void *state, uint32_t addr)
 		system ("stty sane");
 		skyeye_exit (-1);
 	}
+	return No_exp;
 }
 
 uint32_t
@@ -256,6 +257,7 @@ lh79520_io_read_halfword (void *state, uint32_t addr)
 		system ("stty sane");
 		skyeye_exit (-1);
 	}
+	return No_exp;
 }
 
 void

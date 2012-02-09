@@ -75,6 +75,7 @@ static int s3c6410_fb_get_bytes_per_pixel(struct s3c6410_fb_device *s)
     }
     return s->fb->bytes_per_pixel;
 #endif
+    return 0;
 }
 
 static int
@@ -261,7 +262,7 @@ static exception_t s3c6410_fb_write(conf_object_t *opaque, generic_address_t off
 	lcd_control_intf* lcd_ctrl = dev->lcd_ctrl->u.ptr;
 	if(lcd_ctrl == NULL){
 		skyeye_log(Error_log, __FUNCTION__, "Need to set the lcd panel\n");
-		return;
+		return Invarg_exp;
 	}
 	switch(offset) {
 	case VIDCON0:

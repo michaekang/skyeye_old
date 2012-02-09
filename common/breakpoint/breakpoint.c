@@ -269,6 +269,8 @@ int com_list_bp(){
 			printf(format, bp->id, bp->address, bp->hits);	
 		i++;
 	}
+
+	return No_exp;
 }
 
 /**
@@ -282,7 +284,7 @@ int com_delete_bp(char*arg){
 	char** endptr;
 	int id;
 	if(arg == NULL && *arg == '\0'){
-		return;
+		return Invarg_exp;
 	}
 	else{
 		errno = 0;
@@ -311,7 +313,8 @@ int com_delete_bp(char*arg){
 		return 1;
 	}
 	printf("Delete breakpoint at id %d successfully.\n", id);
-	return 0;
+
+	return No_exp;
 }
 
 /**
@@ -326,12 +329,15 @@ int init_bp(){
 	add_command("list-bp", com_list_bp, "List all the breakpoint.\n");
 	add_command("delete-bp", com_delete_bp, "List all the breakpoint.\n");
 	//register_info_command("breakpoint", com_list_bp, "List all the breakpoint.\n");
+	return No_exp;
 }
 
 breakpoint_t* get_first_bp(){
+	return NULL;
 }
 
 breakpoint_t* get_next_bp(breakpoint_t* bp){
+	return NULL;
 }
 
 /**

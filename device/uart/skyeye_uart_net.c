@@ -258,6 +258,7 @@ static int init_ul_state(struct uart_link_state* ul_state){
         while (!ul_state->tty_attached) pthread_cond_wait(&ul_state->tty_cv, &ul_state->tty_lock);
         pthread_mutex_unlock(&ul_state->tty_lock);
 
+	return No_exp;
 }
 
 int uart_net_open(struct uart_device *uart_dev)

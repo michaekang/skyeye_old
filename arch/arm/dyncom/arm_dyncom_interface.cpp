@@ -362,6 +362,8 @@ static uint32 arm_get_regval_by_id(int id){
 	/* we return the reg value of core 0 by default */
 	int core_id = 0;
 	ARM_CPU_State* cpu = get_current_cpu();
+
+	return No_exp;
 }
 
 static uint32 arm_get_regnum(){

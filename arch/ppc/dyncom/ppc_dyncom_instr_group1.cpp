@@ -55,6 +55,8 @@ static int opc_bcctrx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	arch_store(AND(RS(CTR_REGNUM), CONST(0xfffffffc)), cpu->ptr_PHYS_PC, bb);
 	if(!is_user_mode(cpu))
 		arch_store(AND(RS(CTR_REGNUM), CONST(0xfffffffc)), cpu->ptr_PC, bb);
+
+	return No_exp;
 }
 /*
  *	bclrx		Branch Conditional to Link Register
@@ -100,6 +102,8 @@ static int opc_bclrx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	arch_store(tmp, cpu->ptr_PHYS_PC, bb);
 	if(!is_user_mode(cpu))
 		arch_store(tmp, cpu->ptr_PC, bb);
+
+	return No_exp;
 }
 /*
  *	isync		Instruction Synchronize
@@ -107,6 +111,7 @@ static int opc_bclrx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
  */
 static int opc_isync_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	// NO-OP
+	return No_exp;
 }
 /*
  *	rfi		Return from Interrupt
@@ -128,6 +133,7 @@ static int opc_rfi_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 //	arch_ppc_dyncom_effective_to_physical(cpu, bb, PPC_MMU_CODE);
 //	LETS(PC_REGNUM, SELECT(cond, RS(PC_REGNUM), RS(TMP_PHYSICAL_ADDR_REGNUM)));
 	//should update page base
+	return No_exp;
 }
 /*
  *	mcrf		Move Condition Register Field
@@ -144,6 +150,8 @@ static int opc_mcrf_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	Value *c_v = AND(LSHR(RS(CR_REGNUM), CONST(crS * 4)), CONST(0xf)); 
 	LETS(CR_REGNUM, AND(RS(CR_REGNUM), CONST(ppc_cmp_and_mask[crD])));
 	LETS(CR_REGNUM, OR(RS(CR_REGNUM), SHL(c_v, CONST(crD * 4))));
+
+	return No_exp;
 }
 /*
  *	cror		Condition Register OR
@@ -158,6 +166,8 @@ static int opc_cror_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 				OR(RS(CR_REGNUM), CONST(1<<(31-crD))),
 				AND(RS(CR_REGNUM), CONST(~(1<<(31-crD))))
 				));
+
+	return No_exp;
 }
 /*
  *	crnor		Condition Register NOR
@@ -173,6 +183,8 @@ static int opc_crnor_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 				AND(RS(CR_REGNUM), CONST(~(1<<(31-crD)))),
 				OR(RS(CR_REGNUM), CONST(1<<(31-crD)))
 				));
+
+	return No_exp;
 }
 /*
  *	crxor		Condition Register XOR
@@ -192,6 +204,8 @@ static int opc_crxor_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 			AND(ICMP_NE(AND(cr_v, tmp_a), CONST(0)), ICMP_EQ(AND(cr_v, tmp_b), CONST(0)))
 			);
 	LETS(CR_REGNUM, SELECT(cond, OR(cr_v, tmp_c), AND(cr_v, tmp_not_c)));
+
+	return No_exp;
 }
 /* Interfaces */
 ppc_opc_func_t ppc_opc_crnor_func = {

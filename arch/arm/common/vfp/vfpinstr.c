@@ -116,6 +116,8 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -213,6 +215,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -310,6 +313,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -407,6 +411,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -504,6 +509,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -601,6 +607,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -698,6 +705,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -795,6 +803,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -892,6 +901,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1015,6 +1025,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1129,6 +1140,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1226,6 +1238,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1323,6 +1336,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1420,6 +1434,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1517,6 +1532,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1614,6 +1630,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1711,6 +1728,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1808,6 +1826,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -1906,6 +1925,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -2030,6 +2050,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -2138,6 +2159,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -2233,6 +2255,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -2412,6 +2435,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -2507,6 +2531,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -2613,6 +2638,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -2736,6 +2762,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -2891,6 +2918,8 @@ int VSTR(ARMul_State * state, int type, ARMword instr, ARMword * value)
 				return ARMul_DONE;
 		}
 	}
+
+	return -1;
 }
 #endif
 #ifdef VFP_DYNCOM_TABLE
@@ -2909,6 +2938,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -3067,6 +3097,8 @@ int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword * value)
 				return ARMul_DONE;
 		}
 	}
+
+	return -1;
 }
 #endif
 #ifdef VFP_DYNCOM_TABLE
@@ -3085,6 +3117,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -3259,6 +3292,8 @@ int VSTM(ARMul_State * state, int type, ARMword instr, ARMword * value)
 				return ARMul_DONE;
 		}
 	}
+
+	return -1;
 }
 #endif
 #ifdef VFP_DYNCOM_TABLE
@@ -3277,6 +3312,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -3446,6 +3482,8 @@ int VPOP(ARMul_State * state, int type, ARMword instr, ARMword value)
 				return ARMul_DONE;
 		}
 	}
+
+	return -1;
 }
 #endif
 #ifdef VFP_DYNCOM_TABLE
@@ -3464,6 +3502,8 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -3619,6 +3659,8 @@ int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value)
 				return ARMul_DONE;
 		}
 	}
+
+	return -1;
 }
 #endif
 #ifdef VFP_DYNCOM_TABLE
@@ -3637,6 +3679,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr
@@ -3804,6 +3847,8 @@ int VLDM(ARMul_State * state, int type, ARMword instr, ARMword value)
 				return ARMul_DONE;
 		}
 	}
+
+	return -1;
 }
 #endif
 #ifdef VFP_DYNCOM_TABLE
@@ -3822,6 +3867,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 #endif
 #undef vfpinstr

@@ -58,6 +58,7 @@ int com_disassemble(char* arg){
 	/* we will disassemble count instructions once */
 	for(i = 0; i < count; i++)
 		disassemble(addr + (i * INSN_LENGTH));
+	return 1;
 }
 
 void module_init(){

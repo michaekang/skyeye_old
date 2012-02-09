@@ -453,13 +453,13 @@ s3c2440_io_read_word (void  *state, uint32_t addr)
 static uint32_t
 s3c2440_io_read_byte (void *state, uint32_t addr)
 {
-	s3c2440_io_read_word (state, addr);
+	return s3c2440_io_read_word (state, addr);
 }
 
 static uint32_t
 s3c2440_io_read_halfword (void *state, uint32_t addr)
 {
-	s3c2440_io_read_word (state, addr);
+	return s3c2440_io_read_word (state, addr);
 }
 
 static void

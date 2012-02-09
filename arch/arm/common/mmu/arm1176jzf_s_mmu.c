@@ -364,6 +364,8 @@ arm1176jzf_s_mmu_init (ARMul_State *state)
 	state->mmu.context_id = 0;
 	state->mmu.thread_uro_id = 0;
 	invalidate_all_tlb(state);
+
+	return No_exp;
 }
 
 void
@@ -1090,6 +1092,8 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 			break;
 		}
 	}
+
+	return No_exp;
 }
 
 /* teawater add for arm2x86 2005.06.19------------------------------------------- */

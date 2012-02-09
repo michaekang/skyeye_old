@@ -73,6 +73,7 @@ void SIM_main_loop(void){
 
 /* we try to do init in batch mode */
 static exception_t try_init(){
+	return No_exp;
 }
 
 //void SIM_cli();

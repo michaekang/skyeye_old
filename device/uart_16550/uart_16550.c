@@ -63,7 +63,7 @@ typedef struct uart_16550{
 
 const static char* class_name = "uart_16550";
 
-static char uart_16550_read(short size, int addr, unsigned int *result){
+static exception_t uart_16550_read(short size, int addr, unsigned int *result){
 	uint32 data;
 	mem_bank_t* bank = bank_ptr(addr);
 	assert(bank != NULL);
@@ -106,10 +106,10 @@ static char uart_16550_read(short size, int addr, unsigned int *result){
 		break;
 	}
 	*result = data;
-	return 0;
+	return No_exp;
 }
 
-static char uart_16550_write(short size, int addr, unsigned int data){
+static exception_t uart_16550_write(short size, int addr, unsigned int data){
 	mem_bank_t* bank = bank_ptr(addr);
 	assert(bank != NULL);
 	/* get a reference of object by its name */
@@ -135,6 +135,7 @@ static char uart_16550_write(short size, int addr, unsigned int data){
 		break;
 	}
 
+	return No_exp;
 }
 
 static void uart_16550_io_do_cycle(void* uart_16550){
@@ -221,6 +222,8 @@ static int do_16550_option(skyeye_option_t* this_option, int num_params,
                         SKYEYE_ERR ("Error: Unknown uart_16550 option  \"%s\"\n", params[i]);
 	}
 	create_16550_uart(addr, len, irq);
+
+	return No_exp;
 }
 
 /*

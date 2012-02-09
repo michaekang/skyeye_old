@@ -606,7 +606,7 @@ mpc8572_io_read_word (void *state, uint32_t offset)
                                 pc=0x%x\n", __FUNCTION__, offset,
 				 current_core->pc);
 			*/
-			return;
+			return 0;
 			//skyeye_exit(-1);
 
 		}
@@ -621,7 +621,7 @@ mpc8572_io_read_word (void *state, uint32_t offset)
                                 pc=0x%x\n", __FUNCTION__, offset,
 				 current_core->pc);
 			*/
-			return;
+			return 0;
 			//skyeye_exit(-1);
 		}
 	}
@@ -1255,7 +1255,7 @@ mpc8572_update_int (void *state)
 {
 }
 
-static mpc8572_set_intr(uint32_t irq){
+static void mpc8572_set_intr(uint32_t irq){
 
 }
 void

@@ -58,6 +58,7 @@ pxa250_io_write_halfword (void  *state, uint32_t addr, uint32_t data)
 	return;
 }
 
+void
 pxa_set_intr (u32 interrupt)
 {
 	pxa250_io.icpr |= (1 << interrupt);

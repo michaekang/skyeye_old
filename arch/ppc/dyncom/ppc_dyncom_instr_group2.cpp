@@ -411,6 +411,8 @@ static int opc_mtspr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	fprintf(stderr, "unknown mtspr: %i:%i\n", spr1, spr2);
 	//fprintf(stderr, "pc=0x%x\n",current_core->pc);
 	skyeye_exit(-1);
+
+	return 0;
 }
 /*
  *	mfspr		Move from Special-Purpose Register
@@ -682,6 +684,7 @@ static int opc_mfspr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	}
 	fprintf(stderr, "[warning:mfspr]line = %d, instr = 0x%x, spr1:spr2 = %i:%i\n",
 			__LINE__, instr, spr1, spr2);
+	return 0;
 }
 /*
  *	cntlzwx		Count Leading Zeros Word
@@ -701,6 +704,8 @@ static int opc_cntlzwx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	cmpl		Compare Logical
@@ -752,6 +757,8 @@ static int opc_dcbz_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	int i = 0;
 	for(; i < 32; i += 4)
 		arch_write_memory(cpu, bb, ADD(base, CONST(i)), CONST(0), 32);
+
+	return No_exp;
 }
 
 /*
@@ -772,6 +779,8 @@ static int opc_mullwx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// FIXME
 		PPC_ALU_ERR("mullwx unimplemented\n");
 	}
+
+	return No_exp;
 }
 /*
  *	negx		Negate
@@ -787,6 +796,8 @@ static int opc_negx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
 	}
+
+	return No_exp;
 }
 /*
  *	andx		AND
@@ -801,6 +812,8 @@ static int opc_andx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	srwx		Shift Right Word
@@ -816,6 +829,8 @@ static int opc_srwx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	norx		NOR
@@ -831,6 +846,8 @@ static int opc_norx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	mtcrf		Move to Condition Register Fields
@@ -973,6 +990,8 @@ static int opc_stwcx__translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	arch_write_memory(cpu, bb, addr, tmp, 32);
 	LETS(CR_REGNUM, SELECT(ICMP_EQ(v, RS(RESERVE_REGNUM)), OR(RS(CR_REGNUM), CONST(CR_CR0_EQ)), RS(CR_REGNUM)));
 	LETS(CR_REGNUM, SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(RS(CR_REGNUM), CONST(CR_CR0_SO)), RS(CR_REGNUM)));
+
+	return No_exp;
 }
 /*
  *	slwx		Shift Left Word
@@ -988,6 +1007,8 @@ static int opc_slwx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	srawix		Shift Right Algebraic Word Immediate
@@ -1044,6 +1065,8 @@ static int opc_xorx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	subfex		Subtract From Extended
@@ -1061,6 +1084,8 @@ static int opc_subfex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
 	}
+
+	return No_exp;
 }
 /*
  *	sync		Synchronize
@@ -1069,6 +1094,7 @@ static int opc_subfex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 static int opc_sync_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	// NO-OP
+	return No_exp;
 }
 /*
  *	mulhwux		Multiply High Word Unsigned
@@ -1084,6 +1110,8 @@ static int opc_mulhwux_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
 	}
+
+	return No_exp;
 }
 /*
  *	stwx		Store Word Indexed
@@ -1118,6 +1146,8 @@ static int opc_addzex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
 	}
+
+	return No_exp;
 }
 /*
  *	eieio		Enforce In-Order Execution of I/O
@@ -1126,6 +1156,7 @@ static int opc_addzex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 static int opc_eieio_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	// NO-OP
+	return No_exp;
 }
 /*
  *	divwux		Divide Word Unsigned
@@ -1144,6 +1175,8 @@ static int opc_divwux_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
 	}
+
+	return No_exp;
 }
 /*
  *	orcx		OR with Complement
@@ -1158,6 +1191,8 @@ static int opc_orcx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	extsbx		Extend Sign Byte
@@ -1174,6 +1209,8 @@ static int opc_extsbx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	lbzx		Load Byte and Zero Indexed
@@ -1250,6 +1287,8 @@ static int opc_divwx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
 	}
+
+	return No_exp;
 }
 /*
  *	mulhwx		Multiply High Word
@@ -1265,6 +1304,8 @@ static int opc_mulhwx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
 	}
+
+	return No_exp;
 }
 /*
  *	sthx		Store Half Word Indexed
@@ -1349,6 +1390,8 @@ static int opc_subfzex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
 	}
+
+	return No_exp;
 }
 
 /*
@@ -1458,6 +1501,8 @@ static int opc_srawx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	if (instr & PPC_OPC_Rc) {
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 /*
  *	dcbst		Data Cache Block Store
@@ -1466,6 +1511,7 @@ static int opc_srawx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 static int opc_dcbst_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	// NO-OP
+	return No_exp;
 }
 /*
  *	icbi		Instruction Cache Block Invalidate
@@ -1474,6 +1520,7 @@ static int opc_dcbst_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 static int opc_icbi_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	// NO-OP
+	return No_exp;
 }
 /*
  *	mfmsr		Move from Machine State Register
@@ -1491,6 +1538,8 @@ static int opc_mfmsr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	PPC_OPC_ASSERT((rA == 0) && (rB == 0));
 	Value *rd = R(rD);
 	LET(rD, SELECT(cond, rd, RS(MSR_REGNUM)));
+
+	return No_exp;
 }
 /*
  *	tlbie		Translation Lookaside Buffer Invalidate All
@@ -1504,6 +1553,8 @@ static int opc_tlbie_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	Value *cond = ICMP_NE(AND(RS(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PPC_EXC_PROGRAM, PPC_EXC_PROGRAM_PRIV, 0);
 	LETS(EFFECTIVE_CODE_PAGE_REGNUM, SELECT(cond, RS(EFFECTIVE_CODE_PAGE_REGNUM), CONST(0xffffffff)));
+
+	return No_exp;
 }
 /*
  *	mtmsr		Move to Machine State Register
@@ -1520,6 +1571,8 @@ static int opc_mtmsr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value *cond = ICMP_NE(AND(RS(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PPC_EXC_PROGRAM, PPC_EXC_PROGRAM_PRIV, 0);
 	ppc_dyncom_set_msr(cpu, bb, R(rS), cond);
+
+	return No_exp;
 }
 /*
  *	tlbsync		Translation Lookaside Buffer Syncronize
@@ -1537,6 +1590,8 @@ static int opc_tlbsync_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	PPC_OPC_TEMPL_X(instr, rS, rA, rB);
 	// FIXME: check rS.. for 0     
 	LETS(EFFECTIVE_CODE_PAGE_REGNUM, SELECT(cond, RS(EFFECTIVE_CODE_PAGE_REGNUM), CONST(0xffffffff)));
+
+	return No_exp;
 }
 /*
  *	mtsrin		Move to Segment Register Indirect
@@ -1558,6 +1613,8 @@ static int opc_mtsrin_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value *pointer = GetElementPtrInst::Create(base, index, "", bb);
 	Value *sr_v_orig = new LoadInst(pointer, "", false, bb);
 	new StoreInst(SELECT(cond, sr_v_orig, R(rS)), pointer, bb);
+
+	return No_exp;
 }
 /*
  *	mfsrin		Move from Segment Register Indirect
@@ -1579,6 +1636,8 @@ static int opc_mfsrin_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value *pointer = GetElementPtrInst::Create(base, index, "", bb);
 	Value *sr_v = new LoadInst(pointer, "", false, bb);
 	LET(rD, SELECT(cond, R(rD), sr_v));
+
+	return No_exp;
 }
 /*
  *	sthbrx		Store Half Word Byte-Reverse Indexed
@@ -1591,6 +1650,8 @@ static int opc_sthbrx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value *addr = rA ? ADD(R(rA), R(rB)) : R(rB);
 	Value *data = AND(OR(SHL(R(rS), CONST(8)), LSHR(R(rS), CONST(8))), CONST(0x0000ffff));
 	arch_write_memory(cpu, bb, addr, data, 16);
+
+	return No_exp;
 }
 /*
  *	lhbrx		Load Half Word Byte-Reverse Indexed
@@ -1604,6 +1665,8 @@ static int opc_lhbrx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value* result = arch_read_memory(cpu, bb, addr, 0, 16);
 	result = AND(OR(SHL(result, CONST(8)), LSHR(result, CONST(8))), CONST(0x0000ffff));
 	LET(rD, result);
+
+	return No_exp;
 }
 /*
  *	stwbrx		Store Word Byte-Reverse Indexed
@@ -1627,6 +1690,8 @@ static int opc_stwbrx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 			);
 	// FIXME: doppelt gemoppelt
 	arch_write_memory(cpu, bb, addr, rs, 32);
+
+	return No_exp;
 }
 /*
  *	lwzux		Load Word and Zero with Update Indexed
@@ -1658,6 +1723,8 @@ static int opc_lwzux_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		LET(rA, SELECT(exc_occur, R(rA), addr));
 		LET(rD, SELECT(exc_occur, R(rD), result));
 	}
+
+	return No_exp;
 }
 static int opc_isel_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
@@ -1666,6 +1733,8 @@ static int opc_isel_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	int crb = (instr >> 6) & 0x1f;
 	Value *cond = ICMP_NE(AND(RS(CR_REGNUM), CONST(1 << (31 - crb))), CONST(0));
 	LET(rD, SELECT(cond, R(rA), R(rB)));
+
+	return No_exp;
 }
 static int opc_iseleq_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
@@ -1673,6 +1742,8 @@ static int opc_iseleq_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	PPC_OPC_TEMPL_XO(instr, rD, rA, rB);
 	Value *cond = ICMP_NE(AND(RS(CR_REGNUM), CONST(CR_CR0_EQ)), CONST(0));
 	LET(rD, SELECT(cond, R(rA), R(rB)));
+
+	return No_exp;
 }
 /* Interfaces */
 ppc_opc_func_t ppc_opc_cmp_func = {

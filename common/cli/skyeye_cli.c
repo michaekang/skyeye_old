@@ -230,7 +230,7 @@ skyeye_completion (text, start, end)
 #endif
 
 /* Function which tells you that you can't do this. */
-too_dangerous (caller)
+void too_dangerous (caller)
      char *caller;
 {
   fprintf (stderr,

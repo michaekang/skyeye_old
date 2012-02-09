@@ -298,13 +298,15 @@ static void nandflash_sb_doaddr(struct nandflash_device *dev,struct nandflash_sb
 		break;
 	}
 }
-uint8   nandflash_sb_readio(struct nandflash_device *dev)
+uint8 nandflash_sb_readio(struct nandflash_device *dev)
 {
 	struct nandflash_sb_status *nf=(struct nandflash_sb_status*)dev->priv;
 	if (nf->CE==NF_LOW)
 	{
 		return nf->IOPIN;
 	}
+
+	return -1;
 }
 void nandflash_sb_writeio(struct nandflash_device *dev,uint8 iodata)
 {

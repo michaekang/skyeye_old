@@ -686,13 +686,13 @@ s3c6410x_io_read_word (void *arch_instance, uint32 addr)
 static uint32
 s3c6410x_io_read_byte (void *arch_instance, uint32 addr)
 {
-	s3c6410x_io_read_word (arch_instance, addr);
+	return s3c6410x_io_read_word (arch_instance, addr);
 }
 
 static uint32
 s3c6410x_io_read_halfword (void *arch_instance, uint32 addr)
 {
-	s3c6410x_io_read_word (arch_instance, addr);
+	return s3c6410x_io_read_word (arch_instance, addr);
 }
 
 static void

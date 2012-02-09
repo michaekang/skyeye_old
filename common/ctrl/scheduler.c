@@ -147,6 +147,8 @@ int init_thread_scheduler(){
 
 	/* creat a thread for  scheduling */
 	create_thread(thread_scheduler, NULL, &pid); 
+
+	return No_exp;
 }
 
 /**
@@ -189,7 +191,7 @@ int create_thread_scheduler(unsigned int ms, sched_mode_t mode, sched_func_t fun
 		*id = 0;
 	else
 		*id = LIST_FIRST(&thread_head)->id + 1;
-	e->id = *id; 	
+	e->id = *id;
 
 RW_WRLOCK(thread_lock);
 	/* insert the event to the list */
@@ -246,7 +248,7 @@ int del_thread_scheduler(int id){
 		if(tmp->id == id){
 			q = tmp;
 RW_WRLOCK(thread_lock);
-			LIST_REMOVE(tmp, list_entry);		
+			LIST_REMOVE(tmp, list_entry);
 RW_UNLOCK(thread_lock);
 			skyeye_free(q);
 			return No_exp;
@@ -287,6 +289,8 @@ RW_UNLOCK(thread_lock);
 	RWLOCK_DESTROY(thread_lock);
 	if(LIST_EMPTY(&thread_head))		
 		return No_exp;
+
+	return Invarg_exp;
 }
 /* thread shcheduler end */
 
@@ -351,6 +355,8 @@ int init_timer_scheduler(){
 	value.it_interval.tv_usec = 1000;
 
 	setitimer(ITIMER_VIRTUAL, &value, &ovalue);
+
+	return No_exp;
 }
 
 /* create and add an timer event */
@@ -383,7 +389,7 @@ int create_timer_scheduler(unsigned int ms, sched_mode_t mode, sched_func_t func
 		*id = 0;
 	else
 		*id = LIST_FIRST(&timer_head)->id + 1;
-	e->id = *id; 	
+	e->id = *id;
 
 RW_WRLOCK(timer_lock);
 	/* insert the event to the list */
@@ -420,7 +426,8 @@ RW_UNLOCK(timer_lock);
 }
 
 /* remove a timer scheduler from the queue */
-int del_timer_scheduler(int id){
+int del_timer_scheduler(int id)
+{
 	struct event *tmp ;
 	struct event *q = NULL;
 	LIST_FOREACH(tmp, &timer_head,list_entry){
@@ -448,7 +455,8 @@ void list_timer_scheduler(void)
 
 }
 
-int fini_timer_scheduler(){
+int fini_timer_scheduler()
+{
 	struct event *tmp ;
 	struct event *q = NULL;
 
@@ -465,5 +473,8 @@ RW_UNLOCK(timer_lock);
 	RWLOCK_DESTROY(timer_lock);
 	if(LIST_EMPTY(&timer_head))		
 		return No_exp;
+
+	return Invarg_exp;
 }
+
 /* timer cheduler end */

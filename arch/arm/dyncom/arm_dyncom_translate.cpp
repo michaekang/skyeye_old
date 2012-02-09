@@ -408,6 +408,7 @@ int arm_tag_trap(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_
 	*next_pc = pc + INSTR_SIZE;
 	if((instr >> 28 != 0xe) && (instr >> 28 != 0xf))
 		*tag |= TAG_CONDITIONAL;
+	return No_exp;
 }
 //#define instr_size 4
 int arm_tag_continue(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
@@ -416,6 +417,7 @@ int arm_tag_continue(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 	*next_pc = pc + INSTR_SIZE;
 	if((instr >> 28 != 0xe) && (instr >> 28 != 0xf))
 		*tag |= TAG_CONDITIONAL;
+	return No_exp;
 }
 
 int arm_tag_stop(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
@@ -424,6 +426,7 @@ int arm_tag_stop(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_
 	*next_pc = pc + INSTR_SIZE;
 	if((instr >> 28 != 0xe) && (instr >> 28 != 0xf))
 		*tag |= TAG_CONDITIONAL;
+	return No_exp;
 }
 int arm_tag_ret(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
@@ -431,6 +434,7 @@ int arm_tag_ret(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_p
 	*next_pc = pc + INSTR_SIZE;
 	if((instr >> 28 != 0xe) && (instr >> 28 != 0xf))
 		*tag |= TAG_CONDITIONAL;
+	return No_exp;
 }
 
 #define ARM_BRANCH_TARGET (BIT(23)?(pc - ((~(BITS(0,23) << 8) >> 6) + 1) + 8):(((BITS(0,23) << 8) >> 6) + pc + 8))
@@ -442,6 +446,7 @@ int arm_tag_call(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_
 	*next_pc = pc + INSTR_SIZE;
 	if((instr >> 28 != 0xe) && (instr >> 28 != 0xf))
 		*tag |= TAG_CONDITIONAL;
+	return No_exp;
 }
 
 int arm_tag_branch(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
@@ -460,6 +465,7 @@ int arm_tag_branch(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *ne
 	{
 		*tag |= TAG_CONDITIONAL;
 	}
+	return No_exp;
 }
 
 
@@ -520,6 +526,7 @@ int DYNCOM_TRANS(adc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			OVERFLOWFROMADD(op1,op2,ret,ptr_V);
 		}
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(add)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -541,6 +548,7 @@ int DYNCOM_TRANS(add)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		CARRYFROMADD(op1,ret,ptr_C);
 		OVERFLOWFROMADD(op1,op2,ret,ptr_V);
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(and)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -560,6 +568,7 @@ int DYNCOM_TRANS(and)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			/* C in SCO_OPERAND */
 		}
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(bbl)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -599,6 +608,7 @@ int DYNCOM_TRANS(bbl)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		}
 		SET_NEW_PAGE;
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(bic)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -618,8 +628,11 @@ int DYNCOM_TRANS(bic)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			/* C in SCO_OPERAND */
 		}
 	}
+	return No_exp;
 }
-int DYNCOM_TRANS(bkpt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(bkpt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	if (BITS(20, 27) == 0x12 && BITS(4, 7) == 0x3) {
@@ -642,6 +655,7 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		printf("in %s\n", __FUNCTION__);
 		exit(-1);
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(bx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -652,16 +666,24 @@ int DYNCOM_TRANS(bx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 
 	LET(15, ret);
 	SET_NEW_PAGE;
+	return No_exp;
 }
-int DYNCOM_TRANS(bxj)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(cdp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(clrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(bxj)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(cdp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(clrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(clz)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Type const *ty = getIntegerType(32);
 	Value* intrinsic_ctlz = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::ctlz, &ty, 1);
 	Value* result = CallInst::Create(intrinsic_ctlz, R(RM), "", bb);
 	LET(RD, result);
+	return No_exp;
 }
 int DYNCOM_TRANS(cmn)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -674,6 +696,7 @@ int DYNCOM_TRANS(cmn)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	EQZERO(ret,ptr_Z);
 	CARRYFROMADD(op1,ret,ptr_C);
 	OVERFLOWFROMADD(op1,op2,ret,ptr_V);
+	return No_exp;
 }
 #define ISNEG(VAL) TRUNC1(LSHR(VAL, CONST(31)))
 #define ISPOS(VAL) TRUNC1(LSHR(COM(VAL), CONST(31)))
@@ -689,6 +712,7 @@ int DYNCOM_TRANS(cmp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	EQZERO(ret,ptr_Z);
 	NOTBORROWFROMSUB(op1,op2,ptr_C);
 	OVERFLOWFROMSUB(op1,op2,ret,ptr_V);
+	return No_exp;
 }
 int DYNCOM_TRANS(cps)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -727,6 +751,7 @@ int DYNCOM_TRANS(cps)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		LET(CPSR_REG, cpsr_new);
 	}
 	#endif
+	return No_exp;
 }
 int DYNCOM_TRANS(cpy)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -745,6 +770,7 @@ int DYNCOM_TRANS(cpy)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	if(RD == 15) {
 		LET(PHYS_PC, op1);
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(eor)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -765,8 +791,11 @@ int DYNCOM_TRANS(eor)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			/* C in SCO_OPERAND */
 		}
 	}
+	return No_exp;
 }
-int DYNCOM_TRANS(ldc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(ldc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(ldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value *addr = GetAddr(cpu, instr, bb);
@@ -778,6 +807,7 @@ int DYNCOM_TRANS(ldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			cpu->f.emit_decode_reg(cpu, bb);
 		}
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -829,12 +859,14 @@ int DYNCOM_TRANS(ldrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 //	Value *addr = GetAddr(cpu, instr, bb);
 	Value *addr = R(RN);
 	LoadStore(cpu,instr,bb,addr);
+	return No_exp;
 }
 int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	//Value *addr = GetAddr(cpu, instr, bb);
 	Value *addr = R(RN);
 	LoadStore(cpu,instr,bb,addr);
+	return No_exp;
 }
 int DYNCOM_TRANS(ldrh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -917,8 +949,11 @@ int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			//exit(-1);
 		}
 	}
+	return No_exp;
 }
-int DYNCOM_TRANS(mcrr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(mcrr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(mla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* for 0x00, 0x01*/
@@ -934,6 +969,7 @@ int DYNCOM_TRANS(mla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		GETSIGN(ret,ptr_N);
 		EQZERO(ret,ptr_Z);
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1038,6 +1074,7 @@ int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	}
 	#endif
 #endif
+	return No_exp;
 }
 int DYNCOM_TRANS(mrc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1099,8 +1136,11 @@ int DYNCOM_TRANS(mrc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		else
 			LET(RD,data);
 	}
+	return No_exp;
 }
-int DYNCOM_TRANS(mrrc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(mrrc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(mrs)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	if (RD != 15) {
@@ -1116,6 +1156,7 @@ int DYNCOM_TRANS(mrs)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	{
 		UNPREDICTABLE(pc);
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(msr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1155,6 +1196,7 @@ int DYNCOM_TRANS(msr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		mask = byte_mask & (UserMask | PrivMask | StateMask);
 		LET(SPSR_REG, OR(AND(R(SPSR_REG), COM(CONST(mask))), AND(operand, CONST(mask))));
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(mul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1170,6 +1212,7 @@ int DYNCOM_TRANS(mul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		GETSIGN(ret,ptr_N);
 		EQZERO(ret,ptr_Z);
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(mvn)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1189,6 +1232,7 @@ int DYNCOM_TRANS(mvn)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			/* C in SCO_OPERAND */
 		}
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(orr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1207,24 +1251,52 @@ int DYNCOM_TRANS(orr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			/* C in SCO_OPERAND */
 		}
 	}
+	return No_exp;
 }
-int DYNCOM_TRANS(pkhbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(pkhtb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(pld)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qadd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qdadd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qdsub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qsub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(qsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(pkhbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(pkhtb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(pld)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qadd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qdadd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qdsub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qsub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(qsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(rev)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	Value *ret = SWAP32(R(RM));
 	
 	LET(RD,ret);
+	return No_exp;
 }
 int DYNCOM_TRANS(rev16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1233,9 +1305,14 @@ int DYNCOM_TRANS(rev16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *ret = OR(SHL(tmp,CONST(16)), LSHR(tmp,CONST(16)));
 	
 	LET(RD,ret);
+	return No_exp;
 }
-int DYNCOM_TRANS(revsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(rfe)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(revsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(rfe)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(rsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* for 0x06 0x07 0x26 0x27 */
@@ -1255,6 +1332,7 @@ int DYNCOM_TRANS(rsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		}
 	}
 
+	return No_exp;
 }
 int DYNCOM_TRANS(rsc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1275,10 +1353,17 @@ int DYNCOM_TRANS(rsc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			OVERFLOWFROMSUB(op2,op1,ret,ptr_V);
 		}
 	}
+	return No_exp;
 }
-int DYNCOM_TRANS(sadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(sadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(saddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(sadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(sadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(saddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(sbc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value *op1 = R(RN);
@@ -1305,17 +1390,39 @@ int DYNCOM_TRANS(sbc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			#endif
 		}
 	}
+
+	return No_exp;
 }
-int DYNCOM_TRANS(sel)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(setend)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(shadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(shadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(shaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(shsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(shsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(shsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smlad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(sel)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(setend)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(shadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(shadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(shaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(shsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(shsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(shsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smlad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(smlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value *tmp1 = ZEXT64(R(RS));
@@ -1327,17 +1434,38 @@ int DYNCOM_TRANS(smlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *carry = SELECT(ICMP_ULT(rdlo, result_lo), CONST(1), CONST(0));
 	LET(RDLo, rdlo);
 	LET(RDHi, ADD(ADD(result_hi, R(RDHi)), carry));
+	return No_exp;
 }
-int DYNCOM_TRANS(smlalxy)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smlald)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smlaw)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smlsd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smlsld)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smmla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smmls)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smmul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smuad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(smlalxy)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smlald)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smlaw)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smlsd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smlsld)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smmla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smmls)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smmul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smuad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(smull)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value *rs64 = SEXT64(R(RS));
@@ -1354,22 +1482,42 @@ int DYNCOM_TRANS(smull)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		Value *cpsr_z = SELECT(ICMP_EQ(result, CONST64(0)), CONST1(1), CONST1(0));
 		new StoreInst(cpsr_z, ptr_Z, bb);
 	}
+	return No_exp;
 }
-int DYNCOM_TRANS(smulw)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(smusd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(srs)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(ssat)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(ssat16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(ssub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(ssub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(ssubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(stc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(smulw)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(smusd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(srs)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(ssat)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(ssat16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(ssub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(ssub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(ssubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(stc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(stm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* Store, WriteBack, PreDec */
 	/* STM(1) P = 1, U = 0, W = 1 */
 	Value *addr = GetAddr(cpu, instr, bb);
 	LoadStore(cpu,instr,bb,addr);
+	return No_exp;
 }
 int DYNCOM_TRANS(str)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1378,6 +1526,7 @@ int DYNCOM_TRANS(str)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb);
 	//StoreWord(cpu, instr, bb, addr);
 	LoadStore(cpu,instr,bb,addr);
+	return No_exp;
 
 }
 int DYNCOM_TRANS(strb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1389,6 +1538,7 @@ int DYNCOM_TRANS(strb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/*  I = 0, P = 1, U = 1, B = 1, W = 0 */
 	Value *addr = GetAddr(cpu, instr, bb);
 	LoadStore(cpu,instr,bb,addr);
+	return No_exp;
 }
 int DYNCOM_TRANS(strbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1421,6 +1571,7 @@ int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *val = AND(R(RM), CONST(0xff));
 	arch_write_memory(cpu, bb, addr, val, 8);
 	LET(RD, CONST(0));
+	return No_exp;
 }
 int DYNCOM_TRANS(strh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1458,6 +1609,7 @@ int DYNCOM_TRANS(sub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			OVERFLOWFROMSUB(op1,op2,ret,ptr_V);
 		}
 	}
+	return No_exp;
 }
 int DYNCOM_TRANS(swi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1467,12 +1619,23 @@ int DYNCOM_TRANS(swi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 #else
 	arch_syscall(cpu, bb, BITS(0,19));
 #endif
+	return No_exp;
 }
-int DYNCOM_TRANS(swp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(swpb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(sxtab)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(sxtab16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(sxtah)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(swp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(swpb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(sxtab)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(sxtab16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(sxtah)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(sxtb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	#if 0
@@ -1491,8 +1654,11 @@ int DYNCOM_TRANS(sxtb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *result = SELECT(ICMP_EQ(AND(tmp2, CONST(0x80)), CONST(0)), tmp2, OR(CONST(0xffffff00), tmp2));
 	LET(RD, result);
 //	LET(RD, tmp2);
+	return No_exp;
 }
-int DYNCOM_TRANS(sxtb16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(sxtb16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(sxth)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	#if 0
@@ -1509,6 +1675,7 @@ int DYNCOM_TRANS(sxth)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 //	Value *tmp3 = TRUNC16(tmp2);
 //	Value *result = SEXT32(tmp2);
 	LET(RD, result);
+	return No_exp;
 }
 int DYNCOM_TRANS(teq)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1523,6 +1690,7 @@ int DYNCOM_TRANS(teq)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	GETSIGN(ret,ptr_N);
 	EQZERO(ret,ptr_Z);
 	/* C in SCO_OPERAND */
+	return No_exp;
 }
 int DYNCOM_TRANS(tst)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1534,17 +1702,38 @@ int DYNCOM_TRANS(tst)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	GETSIGN(ret,ptr_N);
 	EQZERO(ret,ptr_Z);
 	/* C in SCO_OPERAND */
+	return No_exp;
 }
-int DYNCOM_TRANS(uadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uhadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uhadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uhaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uhsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uhsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uhsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(umaal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(uadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uhadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uhadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uhaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uhsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uhsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uhsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(umaal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(umlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 #if 0
@@ -1587,6 +1776,7 @@ int DYNCOM_TRANS(umlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *carry = SELECT(ICMP_ULT(rdlo, result_lo), CONST(1), CONST(0));
 	LET(RDLo, rdlo);
 	LET(RDHi, ADD(ADD(result_hi, R(RDHi)), carry));
+	return No_exp;
 }
 int DYNCOM_TRANS(umull)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1619,28 +1809,58 @@ int DYNCOM_TRANS(umull)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 
 	LET(RDLo, tmp_RdLo);
 	LET(RDHi, tmp_RdHi);
+	return No_exp;
 }
-int DYNCOM_TRANS(uqadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uqadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uqaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uqsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uqsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(uqsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(usad8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(usada8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(usat)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(usat16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(usub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(usub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
-int DYNCOM_TRANS(usubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(uqadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uqadd8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uqaddsubx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uqsub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uqsub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(uqsubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(usad8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(usada8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(usat)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(usat16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(usub16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(usub8)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
+int DYNCOM_TRANS(usubaddx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(uxtab)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value *tmp1 = ROTL(R(RM), CONST(32 - 8 * BITS(10, 11)));
 	Value *tmp2 = AND(tmp1, CONST(0xff));
 
 	LET(RD, ADD(R(RN), tmp2));
+	return No_exp;
 }
-int DYNCOM_TRANS(uxtab16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(uxtab16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(uxtah)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 #if 0
@@ -1656,6 +1876,7 @@ int DYNCOM_TRANS(uxtah)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *tmp2 = AND(tmp1, CONST(0xffff));
 
 	LET(RD, ADD(R(RN), tmp2));
+	return No_exp;
 }
 int DYNCOM_TRANS(uxtb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
@@ -1675,8 +1896,11 @@ int DYNCOM_TRANS(uxtb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 
 
 	LET(RD, tmp2);
+	return No_exp;
 }
-int DYNCOM_TRANS(uxtb16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){}
+int DYNCOM_TRANS(uxtb16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	return No_exp;
+}
 int DYNCOM_TRANS(uxth)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	#if 0
@@ -1691,6 +1915,7 @@ int DYNCOM_TRANS(uxth)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *tmp1 = ROTL(R(RM), CONST(8 * BITS(10, 11)));
 	Value *tmp2 = AND(tmp1, CONST(0xffff));
 	LET(RD, tmp2);
+	return No_exp;
 }
 int DYNCOM_TRANS(b_2_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	uint32 tinstr = get_thumb_instr(instr, pc);
@@ -2678,6 +2903,7 @@ int DYNCOM_TAG(fmrx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 int DYNCOM_TRANS(fmrx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	printf("\t\tin %s instruction is not implementated.\n", __FUNCTION__);
 	arch_arm_undef(cpu, bb, instr);
+	return No_exp;
 }
 
 const INSTRACT arm_instruction_action[] = {

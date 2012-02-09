@@ -112,7 +112,7 @@ extern unsigned ARMul_OSHandleSWI (ARMul_State * state, ARMword number);
 
 unsigned arm_dyncom_SWI(ARMul_State * state, ARMword number)
 {
-	ARMul_OSHandleSWI(state, number);
+	return ARMul_OSHandleSWI(state, number);
 }
 
 mmap_area_t *mmap_global = NULL;

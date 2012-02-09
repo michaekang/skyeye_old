@@ -164,6 +164,8 @@ XScale_cp15_init (ARMul_State * state ATTRIBUTE_UNUSED)
 
 	/* Initialise the ARM Control Register.  */
 	XScale_cp15_opcode_2_is_0_Regs[1] = 0x00000078;
+
+	return No_exp;
 }
 
 /* Check an access to a register.  */
@@ -321,6 +323,8 @@ XScale_cp13_init (ARMul_State * state ATTRIBUTE_UNUSED)
 		XScale_cp13_CR0_Regs[i] = 0;
 		XScale_cp13_CR1_Regs[i] = 0;
 	}
+
+	return No_exp;
 }
 
 /* Check an access to a register.  */
@@ -371,6 +375,8 @@ XScale_cp14_init (ARMul_State * state ATTRIBUTE_UNUSED)
 
 	for (i = 16; i--;)
 		XScale_cp14_Regs[i] = 0;
+
+	return No_exp;
 }
 
 /* Check an access to a register.  */

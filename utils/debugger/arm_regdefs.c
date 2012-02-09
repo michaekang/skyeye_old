@@ -46,6 +46,8 @@ static int arm_register_byte(int x){
 		return (16 * 4 + 8 * 12);
 	if(x == CPSR_REGNUM)
 		return (16 * 4 + 8 * 12 + 4);
+
+	return -1;
 }
 static int arm_store_register(int rn, unsigned long * memory){
 	//bigendSig = state->bigendSig;

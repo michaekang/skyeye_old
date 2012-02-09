@@ -60,4 +60,6 @@ int do_os_option(skyeye_option_t *this_option, int num_params,
 			return 0;
 		}
 	}
+
+	return -1;
 }

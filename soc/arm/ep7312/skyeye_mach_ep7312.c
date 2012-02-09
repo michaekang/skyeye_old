@@ -242,6 +242,7 @@ ep7312_io_read_halfword (void  *state, uint32_t addr)
 {
 	printf ("SKYEYE: ep7312_io_read_halfword error\n");
 	skyeye_exit (-1);
+	return No_exp;
 }
 
 uint32_t

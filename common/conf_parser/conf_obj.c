@@ -175,6 +175,7 @@ conf_object_t* new_conf_object(const char* objname, void* obj){
 * @return 
 */
 void* list_all_obj(){
+	return NULL;
 }
 
 /**

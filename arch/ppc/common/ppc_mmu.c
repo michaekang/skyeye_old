@@ -487,6 +487,8 @@ int e500_mmu_init(e500_mmu_t * mmu)
 	entry->iprot = 1;	/* Page is protected from invalidation */
 	mmu->tlbcfg[0] = 0x4110200;
 	mmu->tlbcfg[1] = 0x101bc010;
+
+	return No_exp;
 }
 
 void ppc_mmu_tlb_invalidate(e500_core_t * core)

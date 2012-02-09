@@ -221,7 +221,7 @@ s3c4510b_io_read_byte (void *state, uint32_t addr)
 {
 
 	//printf("SKYEYE: s3c4510b_io_read_byte error\n");
-	s3c4510b_io_read_word (state, addr);
+	return s3c4510b_io_read_word (state, addr);
 }
 
 uint32_t
@@ -229,7 +229,7 @@ s3c4510b_io_read_halfword (void *state, uint32_t addr)
 {
 
 	//printf("SKYEYE: s3c4510b_io_read_halfword error\n");
-	s3c4510b_io_read_word (state, addr);
+	return s3c4510b_io_read_word (state, addr);
 }
 
 uint32_t

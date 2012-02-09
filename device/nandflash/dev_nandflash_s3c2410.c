@@ -122,6 +122,8 @@ int
 nandflash_s3c2410_read_byte(struct device_desc *dev, uint32 addr, uint8 * data)
 {
 	nandflash_s3c2410_read_word(dev,addr,(uint32*)data);
+
+	return No_exp;
 }
 
 
@@ -190,6 +192,7 @@ int
 nandflash_s3c2410_write_byte (struct device_desc *dev, uint32 addr, uint8 data)
 {
 	nandflash_s3c2410_write_word(dev,addr,(uint32)data);
+	return No_exp;
 }
 static int
 nandflash_s3c2410_setup (struct device_desc *dev)

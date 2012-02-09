@@ -235,6 +235,8 @@ fromhex (int a)
 		return a - 'A' + 10;
 	else
 		perror ("Reply contains invalid hex digit");
+
+	return -1;
 }
 
 /* Convert number NIB to a hex digit.  */

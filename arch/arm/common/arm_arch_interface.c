@@ -76,6 +76,7 @@ static void arm_step_once ();
 ARMword
 ARMul_Debug (ARMul_State *state, ARMword pc, ARMword instr)
 {
+	return 0;
 }
 
 void
@@ -97,16 +98,16 @@ base_termios_exit (void)
 //end --------------------------------------------------------------------------
 }
 
-static per_cpu_step()
+static void per_cpu_step()
 {
 	arm_step_once();
 }
 
-static per_cpu_stop()
+static void per_cpu_stop()
 {
 }
 
-static register_arm_core_chp(ARMul_State* core, int num)
+static void register_arm_core_chp(ARMul_State* core, int num)
 {
 	int j,k,l;
 	char buf[100];
@@ -269,7 +270,7 @@ static register_arm_core_chp(ARMul_State* core, int num)
 	};
 }
 
-static arm_cpu_init()
+static void arm_cpu_init()
 {
 	ARM_CPU_State *cpu = skyeye_mm_zero(sizeof(ARM_CPU_State));
         machine_config_t *mach = get_current_mach();

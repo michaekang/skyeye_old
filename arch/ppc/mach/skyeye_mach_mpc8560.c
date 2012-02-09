@@ -383,6 +383,8 @@ scc1_io_do_cycle (void *state, ppc_cpm_t * cpm)
 				curr_tx_bd += 8;	/* indicate to next BD */
 		}
 	}
+
+	return No_exp;
 }
 
 static void
@@ -473,6 +475,7 @@ mpc8560_io_read_byte (void *state, uint32_t offset)
 		//skyeye_exit(-1);
 	}
 
+	return 0;
 }
 static uint32_t
 mpc8560_io_read_halfword (void *state, uint32_t offset)
@@ -552,6 +555,7 @@ mpc8560_io_read_halfword (void *state, uint32_t offset)
 		//skyeye_exit(-1);
 	}
 
+	return 0;
 }
 static uint32_t
 mpc8560_io_read_word (void *state, uint32_t offset)
@@ -611,7 +615,7 @@ mpc8560_io_read_word (void *state, uint32_t offset)
 			fprintf (stderr,
 				 "in %s, error when write pic ram,offset=0x%x\n",
 				 __FUNCTION__, offset);
-			break;
+			return 0;
 		}
 	}
 
@@ -706,16 +710,17 @@ mpc8560_io_read_word (void *state, uint32_t offset)
 	/* DMA */
 	if (offset >= 0x21100 && offset <= 0x21300) {
 		switch (offset) {
-		case 0x21110:
-			/* source attribute register for DMA0 */
-			return io->dma.satr0;
-		case 0x21118:
-			return io->dma.satr0;
-		default:
-			fprintf (stderr, "in %s, error when read dma.offset=0x%x, \
-                                \n", __FUNCTION__, offset);
-			return;
-			//skyeye_exit(-1);
+			case 0x21110:
+				/* source attribute register for DMA0 */
+				return io->dma.satr0;
+			case 0x21118:
+				return io->dma.satr0;
+			default:
+				fprintf (stderr, "in %s, error when read dma.offset=0x%x, \
+						\n", __FUNCTION__, offset);
+				break;
+				//return;
+				//skyeye_exit(-1);
 		}
 	}
 	/* Input/Output port */
@@ -761,48 +766,50 @@ mpc8560_io_read_word (void *state, uint32_t offset)
 	if (offset >= 0x80000 && offset < 0x8C000) {
 		return	
 			ppc_word_from_BE (*((sint32 *) & io->cpm_reg.
-					   dpram[offset - 0x80000]));
+						dpram[offset - 0x80000]));
 		//printf("DBG_CPM:in %s,offset=0x%x,data=0x%x,pc=0x%x\n",__FUNCTION__, offset, *result,io->pc);
 	}
 
 	if (offset >= 0xE0000 && offset <= 0xE0020) {
 		switch (offset) {
-		case 0xE0000:
-			return io->por_conf.porpllsr;
-		case 0xE000C:
-			return io->por_conf.pordevsr;
-		default:
-			fprintf (stderr,
-				 "in %s, error when read CCSR.addr=0x%x\n",
-				 __FUNCTION__, offset);
-			skyeye_exit (-1);
+			case 0xE0000:
+				return io->por_conf.porpllsr;
+			case 0xE000C:
+				return io->por_conf.pordevsr;
+			default:
+				fprintf (stderr,
+						"in %s, error when read CCSR.addr=0x%x\n",
+						__FUNCTION__, offset);
+				skyeye_exit (-1);
 		}
 	}
 	switch (offset) {
-	case 0x0:
-		return cpu->ccsr;
-	case 0xC28:
-		return io->law.lawbar[1];
-	case 0xC30:
-		return io->law.lawar[1];
-	case 0x90C80:
-		return io->sccr;
-	case 0xe0e10:
-		return io->debug_ctrl.ddrdllcr;
-	case 0x50D4:
-		return io->lb_ctrl.lcrr;
-	case 0x20000:
-		return io->l2_reg.l2ctl;
-	case 0x8004:
-		return io->pci_cfg.cfg_data;
-	default:
-		fprintf (stderr,
-			 "in %s, error when read CCSR.offset=0x%x\n",
-			 __FUNCTION__, offset);
-		//skyeye_exit(-1);
+		case 0x0:
+			return cpu->ccsr;
+		case 0xC28:
+			return io->law.lawbar[1];
+		case 0xC30:
+			return io->law.lawar[1];
+		case 0x90C80:
+			return io->sccr;
+		case 0xe0e10:
+			return io->debug_ctrl.ddrdllcr;
+		case 0x50D4:
+			return io->lb_ctrl.lcrr;
+		case 0x20000:
+			return io->l2_reg.l2ctl;
+		case 0x8004:
+			return io->pci_cfg.cfg_data;
+		default:
+			fprintf (stderr,
+					"in %s, error when read CCSR.offset=0x%x\n",
+					__FUNCTION__, offset);
+			//skyeye_exit(-1);
 	}
 
+	return 0;
 }
+
 static void
 mpc8560_io_write_byte (void *state, uint32_t offset, uint32_t data)
 {

@@ -87,6 +87,7 @@ mem_read_byte (uint32_t addr)
 		return data;	
 	}
 
+	return 0;
 }
 
 /**
@@ -133,6 +134,8 @@ mem_read_halfword (uint32_t addr)
 	{
 		return half_from_BE(data);
 	}
+
+	return 0;
 }
 
 /**
@@ -175,6 +178,7 @@ mem_read_word (uint32_t addr)
 	else if(arch_instance->endianess == Big_endian)
 		return word_from_BE(data);
 	
+	return 0;
 }
 
 /**
@@ -359,7 +363,7 @@ mem_reset ()
 	
 	/* if direct mmap access, we just don't use membanks so we ignore the next part */
 	if (get_skyeye_exec_info()->mmap_access)
-		return ;
+		return No_exp;
 
 	/* 
 	 * scan all the bank in the memory map and allocate memory for memory bank	   */
@@ -446,6 +450,7 @@ mem_reset ()
 
 	}/*end  for(i = 0;i < num; i++) */
 
+	return No_exp;
 }
 
 /**
@@ -457,7 +462,7 @@ mem_reset ()
 *
 * @return the flash used to indicate the success or failure
 */
-char mem_read(short size, int offset, uint32_t * value){
+int mem_read(short size, int offset, uint32_t * value){
 	void * state;
 	switch(size){
 		case 8:
@@ -486,7 +491,7 @@ char mem_read(short size, int offset, uint32_t * value){
 *
 * @return the flag
 */
-char mem_write(short size, int offset, uint32_t value){
+int mem_write(short size, int offset, uint32_t value){
 	switch(size){
 		case 8:
                         mem_write_byte (offset, value);
@@ -560,8 +565,10 @@ unsigned long get_dma_addr(unsigned long guest_addr){
 *
 * @return 
 */
-char warn_write(short size, int offset, uint32_t value){
+int warn_write(short size, int offset, uint32_t value){
 	SKYEYE_ERR("Read-only ram\n");
+
+	return No_exp;
 }
 
 /**
@@ -591,7 +598,7 @@ int save_mem_to_file(char *dir)
 	if(access(dir, 0) == -1){
 		if(mkdir(dir, 0777)){
 			printf("create dir %s failed\n", dir);
-			return 0;
+			return File_open_exp;
 		}
 	}
 
@@ -613,6 +620,8 @@ int save_mem_to_file(char *dir)
 
 		fclose(fp);
 	}
+
+	return No_exp;
 }
 
 
@@ -658,4 +667,6 @@ int load_mem_from_file(char *dir)
 
 		fclose(fp);
 	}
+
+	return No_exp;
 }

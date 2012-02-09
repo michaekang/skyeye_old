@@ -215,6 +215,7 @@ inline int clear_cache(cpu_t *cpu, fast_map hash_map)
 	cpu->dyncom_engine->cur_tagging_pos = 0;
 	translated_block = 0;
 	//cpu->dyncom_engine->exec_engine = ExecutionEngine::create(cpu->dyncom_engine->mod);
+	return No_exp;
 }
 
 /* For HYBRID or PURE_INTERPRETER.
@@ -888,4 +889,5 @@ try_compile:
 		}
 		usleep(2);
 	}
+	return NULL;
 }

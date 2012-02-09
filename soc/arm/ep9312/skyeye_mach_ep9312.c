@@ -334,6 +334,7 @@ ep9312_io_read_halfword (void  *state, uint32_t addr)
 {
 
 	SKYEYE_DBG ("SKYEYE: %s error\n", __func__);
+	return No_exp;
 }
 
 uint32_t

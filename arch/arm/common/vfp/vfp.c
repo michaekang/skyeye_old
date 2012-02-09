@@ -39,6 +39,8 @@ VFPInit (ARMul_State *state)
 	
 	persistent_state = state;
 	/* Reset only specify VFP_FPEXC_EN = '0' */
+
+	return No_exp;
 }
 
 unsigned
@@ -64,6 +66,8 @@ VFPMRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value)
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n", 
 	       instr, CoProc, OPC_1, Rt, CRn, CRm, OPC_2);
+
+	return ARMul_CANT;
 }
 
 unsigned
@@ -88,6 +92,8 @@ VFPMCR (ARMul_State * state, unsigned type, ARMword instr, ARMword value)
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n", 
 	       instr, CoProc, OPC_1, Rt, CRn, CRm, OPC_2);
+
+	return ARMul_CANT;
 }
 
 unsigned
@@ -108,6 +114,8 @@ VFPMRRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value1, AR
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n", 
 	       instr, CoProc, OPC_1, Rt, Rt2, CRm);
+
+	return ARMul_CANT;
 }
 
 unsigned
@@ -132,6 +140,8 @@ VFPMCRR (ARMul_State * state, unsigned type, ARMword instr, ARMword value1, ARMw
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n", 
 	       instr, CoProc, OPC_1, Rt, Rt2, CRm);
+
+	return ARMul_CANT;
 }
 
 unsigned
@@ -173,6 +183,8 @@ VFPSTC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value)
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n", 
 	       instr, CoProc, CRd, Rn, imm8, P, U, D, W);
+
+	return ARMul_CANT;
 }
 
 unsigned
@@ -202,6 +214,8 @@ VFPLDC (ARMul_State * state, unsigned type, ARMword instr, ARMword value)
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n", 
 	       instr, CoProc, CRd, Rn, imm8, P, U, D, W);
+
+	return ARMul_CANT;
 }
 
 unsigned

@@ -22,6 +22,8 @@ void *clock_thread(void*){
 		thread_clock += 1;
 		usleep(THREAD_CLOCK_PER_SEC);
 	}
+
+	return NULL;
 }
 
 void update_timing(cpu_t *cpu, int index, bool start)

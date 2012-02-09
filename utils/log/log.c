@@ -95,7 +95,7 @@ int instr_log_parse(struct skyeye_option_t *option, int num_params, const char *
 			log_fd = fopen(log_filename, "w");
 			if(log_fd == NULL){
 				fprintf(stderr, "Can not open the file %s for log-pc module.\n", log_filename);
-				return;
+				return -1;
 			}
 		}
 		else
@@ -174,6 +174,7 @@ int log_init(){
 	register_option(log_option_name, instr_log_parse, "Log every executed instruction");
 	/* register callback function */
 	register_callback(log_pc_callback, Step_callback);
+	return No_exp;
 }
 
 /* destruction function for log functionality */
@@ -185,4 +186,5 @@ int log_fini(){
 		skyeye_free(reg_array);
 		reg_array = NULL;
 	}
+	return No_exp;
 }

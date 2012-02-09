@@ -149,6 +149,7 @@ cs89712_io_read_byte (void *state, uint32_t addr)
 {
 	/*printf("SKYEYE: cs89712_io_read_byte error\n"); */
 	skyeye_exit (-1);
+	return No_exp;
 }
 
 uint32_t
@@ -156,6 +157,7 @@ cs89712_io_read_halfword (void *state, uint32_t addr)
 {
 	/*printf("SKYEYE: cs89712_io_read_halfword error\n"); */
 	skyeye_exit (-1);
+	return No_exp;
 }
 
 uint32_t

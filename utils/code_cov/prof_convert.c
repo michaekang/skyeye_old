@@ -97,5 +97,5 @@ int main(int argc, char** argv){
 dump_exit:
 	free(header);
 	fclose(in_fp);
-	return;
+	return -1;
 }

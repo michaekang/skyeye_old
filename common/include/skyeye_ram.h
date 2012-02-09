@@ -38,9 +38,9 @@ void mem_write_halfword(void * state, uint32_t addr, uint32_t data);
 void mem_write_word(void * state, uint32_t addr, uint32_t data);
 #endif
 
-char mem_read(short size, int offset, uint32_t * value);
-char mem_write(short size, int offset, uint32_t value);
-char warn_write(short size, int offset, uint32_t value);
+int mem_read(short size, int offset, uint32_t * value);
+int mem_write(short size, int offset, uint32_t value);
+int warn_write(short size, int offset, uint32_t value);
 unsigned long get_dma_addr(unsigned long guest_addr);
 mem_state_t * get_global_memory();
 

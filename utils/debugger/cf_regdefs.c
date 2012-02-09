@@ -46,6 +46,8 @@ static int cf_register_raw_size(int x){
 		return 12;
 	if(x >=26 && x < 29)
 		return 4;
+
+	return -1;
 }
 static int cf_register_byte(int x){
 	if(x >= 0 && x < 18)
@@ -54,6 +56,8 @@ static int cf_register_byte(int x){
 		return (4*18 + (x-18)*12);
 	if(x >= 26 && x < 29)
 		return (4 * 18 + 8 * 12 + (x - 26) * 4);
+
+	return -1;
 }
 
 static int cf_store_register(int rn, unsigned char * memory){
@@ -74,8 +78,8 @@ static int cf_store_register(int rn, unsigned char * memory){
 			; /* Do nothing */
 	else
 		return -1;
-	return 0;
 #endif
+	return 0;
 }
 
 static int cf_fetch_register(int rn, unsigned char * memory){

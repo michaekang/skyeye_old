@@ -190,7 +190,7 @@ command_generator (text, state)
 
 /* Print out help for ARG, or for all of the commands if ARG is
    not present. */
-com_help (arg)
+int com_help (arg)
      char *arg;
 {
   int printed = 0;

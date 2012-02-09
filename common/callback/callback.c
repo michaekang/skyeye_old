@@ -70,7 +70,7 @@ static exception_t add_callback_func(callback_func_t func, callback_kind_t kind)
 	 */
 	if(queue->func == NULL){
 		queue->func = func;
-		return;
+		return No_exp;
 	}
 	callback_queue_t* node = skyeye_mm(sizeof(callback_queue_t));
 	if(node == NULL){
@@ -83,6 +83,8 @@ static exception_t add_callback_func(callback_func_t func, callback_kind_t kind)
 	 */
 	node->next = queue->next;
 	queue->next = node;
+
+	return No_exp;
 }
 
 /* remove a callback function from queue */
@@ -137,4 +139,6 @@ int exec_callback(callback_kind_t kind, generic_arch_t* arch_instance){
 			func(arch_instance);
 		queue = queue->next;
 	}
+
+	return No_exp;
 }

@@ -54,7 +54,7 @@ omap5912_io_reset ()
 	omap5912_io.ic.mpu_l1_mir = 0xffffffff;
 	omap5912_io.ic.mpu_l1_itr = 0x0;
 }
-static
+static void
 omap_set_intr (u32 interrupt)
 {
 }
@@ -62,6 +62,7 @@ omap_set_intr (u32 interrupt)
 static int
 omap_pending_intr (u32 interrupt)
 {
+	return 0;
 }
 
 static void

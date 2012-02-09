@@ -127,6 +127,7 @@ void add_to_default_cell(skyeye_exec_t* exec){
 bool_t start_cell(skyeye_cell_t* cell){
 	work_thread_t* thread = get_thread_by_cell(cell);
 	start_thread(thread);
+	return No_exp;
 }
 
 /**

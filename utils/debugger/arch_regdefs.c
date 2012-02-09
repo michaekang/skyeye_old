@@ -85,4 +85,6 @@ int init_register_type(){
 
         /* register ppc_arch */
 	init_ppc_register_defs ();
+
+	return No_exp;
 }

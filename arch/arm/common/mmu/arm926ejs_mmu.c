@@ -643,49 +643,49 @@ arm926ejs_mmu_cache_ops (ARMul_State * state, ARMword instr, ARMword *value)
 	if (OPC_2 == 0 && CRm == 7) {
 		mmu_cache_invalidate_all (state, ARM926EJS_I_CACHE ());
 		mmu_cache_invalidate_all (state, ARM926EJS_D_CACHE ());
-		return;
+		return No_exp;
 	}
 
 	if (OPC_2 == 0 && CRm == 5) {
 		mmu_cache_invalidate_all (state, ARM926EJS_I_CACHE ());
-		return;
+		return No_exp;
 	}
 	/*Invalidate ICache single entry
 	 **/
 	if (OPC_2 == 1 && CRm == 5) {
 		mmu_cache_invalidate (state, ARM926EJS_I_CACHE (), value);
-		return;
+		return No_exp;
 	}
 	/* Invalidate ICache single entry Set/way */
 	if (OPC_2 == 2 && CRm == 5) {
 		mmu_cache_invalidate_by_index (state, ARM926EJS_I_CACHE (),
 					       value);
-		return;
+		return No_exp;
 	}
 	/* TODO:
 	 * Prefetch ICache line (using MVA)
 	 * */
 	if (OPC_2 == 1 && CRm == 13) {
 		//mmu_cache_invalidate(state, ARM926EJS_I_CACHE(), value);
-		return;
+		return No_exp;
 	}
 
 	if (OPC_2 == 0 && CRm == 6) {
 		mmu_cache_invalidate_all (state, ARM926EJS_D_CACHE ());
-		return;
+		return No_exp;
 	}
 
 	/* Invalidate DCache single entry (using MVA)
 	 * */
 	if (OPC_2 == 1 && CRm == 6) {
 		mmu_cache_invalidate (state, ARM926EJS_D_CACHE (), value);
-		return;
+		return No_exp;
 	}
 	/* Invalidate DCache single entry Set/way */
 	if (OPC_2 == 2 && CRm == 6) {
 		mmu_cache_invalidate_by_index (state, ARM926EJS_D_CACHE (),
 					       value);
-		return;
+		return No_exp;
 	}
 
 
@@ -693,20 +693,20 @@ arm926ejs_mmu_cache_ops (ARMul_State * state, ARMword instr, ARMword *value)
 	 * */
 	if (OPC_2 == 1 && CRm == 0xa) {
 		mmu_cache_clean (state, ARM926EJS_D_CACHE (), value);
-		return;
+		return No_exp;
 	}
 	/* Clean and Invalidate DCache entry (using MVA)
 	 * */
 	if (OPC_2 == 1 && CRm == 14) {
 		mmu_cache_clean (state, ARM926EJS_D_CACHE (), value);
 		mmu_cache_invalidate (state, ARM926EJS_D_CACHE (), value);
-		return;
+		return No_exp;
 	}
 	/* Clean DCache single entry (Set Way)
 	 * */
 	if (OPC_2 == 2 && CRm == 0xa) {
 		mmu_cache_clean_by_index (state, ARM926EJS_D_CACHE (), value);
-		return;
+		return No_exp;
 	}
 	/* Clean and Invalidate DCache entry (Set/Way)
 	 * */
@@ -714,20 +714,20 @@ arm926ejs_mmu_cache_ops (ARMul_State * state, ARMword instr, ARMword *value)
 		mmu_cache_clean_by_index (state, ARM926EJS_D_CACHE (), value);
 		mmu_cache_invalidate_by_index (state, ARM926EJS_D_CACHE (),
 					       value);
-		return;
+		return No_exp;
 	}
 
 	/* Drain write buffer
 	 * */
 	if (OPC_2 == 4 && CRm == 0xa) {
 		mmu_wb_drain_all (state, ARM926EJS_WB ());
-		return;
+		return No_exp;
 	}
 	/* FIXME: how to do a waiting operation?
 	 * Wait for a interrupt
 	 * */
 	if (OPC_2 == 4 && CRm == 0) {
-		return;
+		return No_exp;
 	}
 	/*test and clean and invalid cache
 	 * */
@@ -751,6 +751,7 @@ arm926ejs_mmu_cache_ops (ARMul_State * state, ARMword instr, ARMword *value)
 		}
 	}
 	err_msg ("Unknow OPC_2 = %x CRm = %x\n", OPC_2, CRm);
+	return -1;
 }
 
 static void
@@ -841,6 +842,8 @@ arm926ejs_mmu_mcr (ARMul_State * state, ARMword instr, ARMword value)
 		printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
 		break;
 	}
+
+	return No_exp;
 }
 
 //teawater add for arm2x86 2005.06.19-------------------------------------------

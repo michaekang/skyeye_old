@@ -392,14 +392,14 @@ static uint32_t
 ns9750_io_read_byte (void  *state, uint32_t addr)
 {
 	SKYEYE_DBG ("SKYEYE: ns9750_io_read_byte error\n");
-	ns9750_io_read_word (state, addr);
+	return ns9750_io_read_word (state, addr);
 }
 
 static uint32_t
 ns9750_io_read_halfword (void  *state, uint32_t addr)
 {
 	SKYEYE_DBG ("SKYEYE: ns9750_io_read_halfword error\n");
-	ns9750_io_read_word (state, addr);
+	return ns9750_io_read_word (state, addr);
 }
 
 static void

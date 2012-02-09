@@ -433,6 +433,8 @@ mpc8641d_io_read_byte (void *state, uint32_t offset)
 		//skyeye_exit(-1);
 		}
 	}
+
+	return 0;
 }
 static uint32_t
 mpc8641d_io_read_halfword (void *state, uint32_t offset)
@@ -482,6 +484,8 @@ mpc8641d_io_read_halfword (void *state, uint32_t offset)
 				 __FUNCTION__, offset, core->pc);
 			//skyeye_exit(-1);
 	}
+
+	return 0;
 }
 static uint32_t
 mpc8641d_io_read_word (void *state, uint32_t offset)
@@ -605,7 +609,7 @@ mpc8641d_io_read_word (void *state, uint32_t offset)
 		}
 
 		if (offset >= 0x51680 && offset <= 0x51bf0)	 /* Reserved region for MPC8641d*/
-			return;
+			return 0;
 
 		if (offset >= 0x51c00 && offset <= 0x51cf0) {
 			int index = (offset - 0x51c00) >> 4;
@@ -616,7 +620,7 @@ mpc8641d_io_read_word (void *state, uint32_t offset)
 		}
 
 		if (offset >= 0x51d00 && offset <= 0x5fff0)	 /* Reserved region for MPC8641d*/
-			return;
+			return 0;
 
 		/*
 		   if(offset >= 0x50200 && offset <= 0x509F0){
@@ -667,7 +671,7 @@ mpc8641d_io_read_word (void *state, uint32_t offset)
 			fprintf (stderr, "in %s, error when read dma.offset=0x%x, \
                                 pc=0x%x\n", __FUNCTION__, offset,
 				 core->pc);
-			return;
+			return 0;
 			//skyeye_exit(-1);
 
 		}
@@ -680,7 +684,7 @@ mpc8641d_io_read_word (void *state, uint32_t offset)
 			fprintf (stderr, "in %s, error when read IO port.offset=0x%x, \
                                 pc=0x%x\n", __FUNCTION__, offset,
 				 core->pc);
-			return;
+			return 0;
 			//skyeye_exit(-1);
 		}
 	}
@@ -728,6 +732,8 @@ mpc8641d_io_read_word (void *state, uint32_t offset)
 				 __FUNCTION__, offset, core->pc);
 			//skyeye_exit(-1);
 	}
+
+	return 0;
 }
 static void
 mpc8641d_io_write_byte (void *state, uint32_t offset, uint32_t data)
@@ -1413,7 +1419,7 @@ mpc8641d_update_int (void *state)
 {
 }
 
-static mpc8641d_set_intr(uint32_t irq){
+static void mpc8641d_set_intr(uint32_t irq){
 
 }
 void

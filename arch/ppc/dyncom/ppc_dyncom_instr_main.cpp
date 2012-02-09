@@ -437,6 +437,8 @@ static int opc_twi_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb){
 				AND(ICMP_EQ(CONST(TO & 2), CONST(0)), ICMP_ULT(reg_a, CONST(imm)))),
 					AND(ICMP_EQ(CONST(TO & 1), CONST(0)), ICMP_UGT(reg_a, CONST(imm))));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PROG, PPC_EXC_PROGRAM_TRAP, 0);
+
+	return No_exp;
 }
 ppc_opc_func_t ppc_opc_twi_func = {
         opc_twi_tag,
@@ -457,6 +459,7 @@ static int opc_mulli_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	LET(rD,MUL(R(rA), CONST(imm)));
 	NOT_TEST;
 	//current_core->gpr[rD] = current_core->gpr[rA] * imm;
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_mulli_func = {
@@ -481,6 +484,8 @@ static int opc_subfic_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 			OR(RS(XER_REGNUM), CONST(XER_CA)),
 			AND(RS(XER_REGNUM), CONST(~XER_CA)))
 	);
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_subfic_func = {
@@ -530,6 +535,8 @@ static int opc_addic_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 		AND(RS(XER_REGNUM), CONST(~XER_CA)))
 	);
 	NOT_TEST;
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_addic_func = {
@@ -555,6 +562,8 @@ static int opc_addic__translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	);
 	// update cr0 flags
 	ppc_dyncom_update_cr0(cpu, bb, rD);
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_addic__func = {
@@ -610,6 +619,8 @@ static int opc_rlwimix_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_rlwimix_func = {
@@ -632,6 +643,8 @@ static int opc_rlwnmx_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rA);
 	}
+
+	return No_exp;
 }
 ppc_opc_func_t ppc_opc_rlwnmx_func = {
         opc_default_tag,
@@ -649,6 +662,8 @@ static int opc_ori_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	PPC_OPC_TEMPL_D_UImm(instr, rS, rA, imm);
 	LET(rA, OR(R(rS), CONST(imm)));
 	NOT_TEST;
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_ori_func = {
@@ -667,6 +682,8 @@ static int opc_oris_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	PPC_OPC_TEMPL_D_Shift16(instr, rS, rA, imm);
 	LET(rA, OR(R(rS), CONST(imm)));
 	NOT_TEST;
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_oris_func = {
@@ -684,6 +701,8 @@ static int opc_xori_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	uint32 imm;
 	PPC_OPC_TEMPL_D_UImm(instr, rS, rA, imm);
 	LET(rA, XOR(R(rS), CONST(imm)));
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_xori_func = {
@@ -701,6 +720,8 @@ static int opc_xoris_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	uint32 imm;
 	PPC_OPC_TEMPL_D_Shift16(instr, rS, rA, imm);
 	LET(rA, XOR(R(rS), CONST(imm)));
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_xoris_func = {
@@ -721,6 +742,8 @@ static int opc_andi__translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	NOT_TEST;
 	// update cr0 flags
 	ppc_dyncom_update_cr0(cpu, bb, rA);
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_andi__func = {
@@ -741,6 +764,8 @@ static int opc_andis__translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	NOT_TEST;
 	// update cr0 flags
 	ppc_dyncom_update_cr0(cpu, bb, rA);
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_andis__func = {
@@ -805,6 +830,8 @@ static int opc_lbzu_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	LET(rD, ret);
 	LET(rA, addr);
 	NOT_TEST;
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_lbzu_func = {
@@ -833,6 +860,8 @@ static int opc_stb_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	else
 		arch_write_memory(cpu, bb, CONST(imm), R(rS), 8);
 	NOT_TEST;		
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_stb_func = {
@@ -890,6 +919,8 @@ static int opc_lhz_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rD, SELECT(exc_occur, R(rD), ret));
 	}
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_lhz_func = {
@@ -913,6 +944,8 @@ static int opc_lhzu_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	LET(rD, ret);
 	LET(rA, addr);
 	NOT_TEST;
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_lhzu_func = {
@@ -936,6 +969,8 @@ static int opc_lha_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 		ret = arch_read_memory(cpu, bb,  CONST(imm), 0 ,16);
 	LET(rD, SELECT(ICMP_NE(AND(ret, CONST(0x8000)), CONST(0)), OR(ret, CONST(0xFFFF0000)), ret));
 	NOT_TEST;
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_lha_func = {
@@ -958,6 +993,8 @@ static int opc_lhau_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	LET(rD, SELECT(ICMP_NE(AND(ret, CONST(0x8000)), CONST(0)), OR(ret, CONST(0xFFFF0000)), ret));
 	LET(rA, addr);
 	NOT_TEST;
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_lhau_func = {
@@ -979,6 +1016,8 @@ static int opc_sth_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 		arch_write_memory(cpu, bb, ADD(R(rA), CONST(imm)), R(rS), 16);
 	else
 		arch_write_memory(cpu, bb, CONST(imm), R(rS), 16);
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_sth_func = {
@@ -998,6 +1037,8 @@ static int opc_sthu_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	Value *addr = ADD(R(rA), CONST(imm));
 	arch_write_memory(cpu, bb, addr, R(rS), 16);
 	LET(rA, addr);
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_sthu_func = {
@@ -1024,6 +1065,8 @@ static int opc_lmw_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 		rD++;
 		ea = ADD(ea, CONST(4));
 	}
+
+	return No_exp;
 }
 ppc_opc_func_t ppc_opc_lmw_func = {
         opc_default_tag,
@@ -1050,6 +1093,8 @@ static int opc_stmw_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 		rS++;
 		ea = ADD(ea, CONST(4));
 	}
+
+	return No_exp;
 }
 
 ppc_opc_func_t ppc_opc_stmw_func = {
@@ -1133,6 +1178,7 @@ ppc_opc_func_t ppc_opc_stfdu_func = {
         opc_invalid_translate_cond,
 };
 static int opc_none_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb){
+	return No_exp;
 }
 ppc_opc_func_t ppc_opc_none_func = {
         opc_default_tag,

@@ -739,7 +739,7 @@ ARMul_MRC (ARMul_State * state, ARMword instr)
 		//chy 2004-07-19 should fix in the future????!!!!
 		//printf("SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x\n",CPNum, instr);
 		ARMul_UndefInstr (state, instr);
-		return;
+		return -1;
 	}
 
 	cpab = (state->MRC[CPNum]) (state, ARMul_FIRST, instr, &result);

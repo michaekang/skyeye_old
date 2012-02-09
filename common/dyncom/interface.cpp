@@ -647,6 +647,8 @@ static void debug_func_init(cpu_t *cpu){
 extern "C" int syscall_func(cpu_t *cpu, uint32_t num){
 	if(cpu->syscall_func != NULL)
 		cpu->syscall_func(cpu, num);
+
+	return No_exp;
 };
 static void syscall_func_init(cpu_t *cpu){
 	//types

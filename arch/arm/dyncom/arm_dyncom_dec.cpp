@@ -500,6 +500,7 @@ Value *WOrUBGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		}
 	}
 	printf(" Error in WOrUB Get Imm Addr instr is %x \n", instr);
+	return NULL;
 }
 
 /* Getting Word or Unsigned Byte Address reg operand operations collection */
@@ -537,6 +538,7 @@ Value *WOrUBGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		return WOrUBGetAddrImmOffset(cpu, instr, bb);
 	}
 	printf(" Error in WOrUB Get Reg Addr inst is %x\n", instr);
+	return NULL;
 }
 
 /* Getting Word or Unsigned Byte Address operand operations collection */
@@ -634,6 +636,7 @@ Value *MisGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		}
 	}
 	printf(" Error in Mis Get Imm Addr \n");
+	return NULL;
 }
 
 /* Getting Miscellaneous Address register operand operation collection. */
@@ -654,6 +657,7 @@ Value *MisGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		}
 	}
 	printf(" (DEC) Error in Mis Get Reg Addr %x\n", instr);
+	return NULL;
 }
 
 
@@ -664,6 +668,8 @@ Value *MisGetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		return MisGetAddrImm(cpu, instr, bb);
 	else
 		return MisGetAddrReg(cpu, instr, bb);
+
+	return NULL;
 }
 
 /* Addr Mode 4 */
@@ -770,6 +776,7 @@ Value *LSMGetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	}
 
 	printf(" Error in LSM Get Imm Addr BITS(24,27) is 0x%x\n", BITS(24,27));
+	return NULL;
 }
 
 /* all,Getting Load Store Address operand operation collection */

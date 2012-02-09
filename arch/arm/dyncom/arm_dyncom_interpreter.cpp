@@ -1776,6 +1776,7 @@ shtop_fp_t get_shtop(unsigned int inst)
 	} else if (BITS(inst, 4, 7) == 7) {
 		return DPO(RotateRightByRegister);
 	}
+	return NULL;
 }
 
 get_addr_fp_t get_calc_addr_op(unsigned int inst)

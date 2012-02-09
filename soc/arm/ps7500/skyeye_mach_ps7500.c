@@ -43,7 +43,7 @@
 extern int skyeye_net_maxfd;
 extern int skyeye_net_on;
 
-ps7500_kb_next(void *state);
+void ps7500_kb_next(void *state);
 
 #define TC_DIVISOR	(32)	/* Set your BogoMips here :) */
 #define FLYBACK_DIVISOR	(1000000)
@@ -249,7 +249,7 @@ static void ps7500_io_reset(void *state)
 	//state->Exception = TRUE;
 }
 
-ps7500_kb_queue(void *state, uint8_t c)
+void ps7500_kb_queue(void *state, uint8_t c)
 {
 	io.kb_queued[io.kb_count++] = c;
 
@@ -257,7 +257,7 @@ ps7500_kb_queue(void *state, uint8_t c)
 		ps7500_kb_next(state);
 }
 
-ps7500_kb_next(void *state)
+void ps7500_kb_next(void *state)
 {
 	int i;
 	int p;
@@ -498,6 +498,7 @@ uint32_t ps7500_io_read_byte(void *state, uint32_t addr)
 uint32_t ps7500_io_read_halfword(void *state, uint32_t addr)
 {
 	DBG_PRINT("SKYEYE: ps7500_io_read_halfword error\n");
+	return No_exp;
 }
 
 FILE *fo = NULL;

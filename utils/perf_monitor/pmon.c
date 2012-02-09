@@ -45,13 +45,13 @@ static void com_count_stop(char* arg){
 }
 
 /* enable log functionality */
-void com_pmon(char *arg) {
+exception_t com_pmon(char *arg) {
 	enable_pmon_flag = 1;
 	/* open file for record performance data */
 	pmon_fd = fopen(pmon_filename, "w");	
 	if(pmon_fd == NULL){
 		fprintf(stderr, "Can not open the file %s for pmon module.\n", pmon_filename);
-		return;
+		return Invarg_exp;
 	}
 	pthread_t id;
 	generic_arch_t* arch_instance = get_arch_instance("");
@@ -61,6 +61,8 @@ void com_pmon(char *arg) {
 	exec->run = pmon_count_start;
 	exec->stop = com_count_stop;
 	add_to_default_cell(exec);
+
+	return No_exp;
 }
 static void com_pon_stop(char* arg){
 	enable_pmon_flag = 0;
@@ -73,6 +75,8 @@ int pmon_init(){
 	/* add correspinding command */
 	add_command("pmon", com_pmon, "enable the performance monitor.\n");
 	add_command("pmon-stop", com_count_stop, "disable the performance monitor.\n");
+
+	return No_exp;
 }
 
 /* destruction function for log functionality */
@@ -80,4 +84,6 @@ int pmon_fini(){
 	if(pmon_fd != NULL){
 		fclose(pmon_fd);
 	}
+
+	return No_exp;
 }

@@ -35,5 +35,7 @@
 exception_t send_signal(interrupt_signal_t* signal){
 	generic_arch_t* arch_instance = get_arch_instance("");
 	arch_instance->signal(signal);
+
+	return No_exp;
 }
 

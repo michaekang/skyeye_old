@@ -474,14 +474,14 @@ static u32
 at91rm92_io_read_byte (void *arch_instance, u32 addr)
 {
 	SKYEYE_DBG ("SKYEYE: at91rm92_io_read_byte error\n");
-	at91rm92_io_read_word (arch_instance, addr);
+	return at91rm92_io_read_word (arch_instance, addr);
 }
 
 static u32
 at91rm92_io_read_halfword (void *arch_instance, u32 addr)
 {
 	SKYEYE_DBG ("SKYEYE: at91rm92_io_read_halfword error\n");
-	at91rm92_io_read_word (arch_instance, addr);
+	return at91rm92_io_read_word (arch_instance, addr);
 }
 
 static void

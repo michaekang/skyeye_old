@@ -186,6 +186,7 @@ shp_io_read_halfword (void *state, uint32_t addr)
 {
 	printf ("SKYEYE: shp_io_read_halfword error\n");
 	skyeye_exit (-1);
+	return 0;
 }
 
 static uint32_t

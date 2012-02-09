@@ -81,18 +81,22 @@ void com_log_bus(char *arg) {
 }
 
 /* some initialization for log functionality */
-int bus_log_init(){
+exception_t bus_log_init(){
 	exception_t exp;
 	/* register callback function */
 	register_callback(log_bus_callback, Bus_read_callback);
 	register_callback(log_bus_callback, Bus_write_callback);
 	/* add corresponding command */
 	add_command("log-bus", com_log_bus, "record every bus access to log file.\n");
+
+	return No_exp;
 }
 
 /* destruction function for log functionality */
-int bus_log_fini(){
+exception_t bus_log_fini(){
 	if(log_fd != NULL){
 		fclose(log_fd);
 	}
+
+	return No_exp;
 }

@@ -16,7 +16,7 @@
 /*
  * Run SkyEye from the beginning 
  */
-com_run (arg)
+int com_run (arg)
      char *arg;
 {
   if (!arg)
@@ -31,7 +31,7 @@ com_run (arg)
 /*
  * Continue running of the interrupted SkyEye 
  */
-com_cont (arg)
+int com_cont (arg)
      char *arg;
 {
   if (!arg)
@@ -45,7 +45,7 @@ com_cont (arg)
 /*
  * stop running of  SkyEye 
  */
-com_stop (arg)
+int com_stop (arg)
      char *arg;
 {
   if (!arg)
@@ -60,7 +60,7 @@ com_stop (arg)
  * stop running of  SkyEye 
  */
 
-com_start (arg)
+int com_start (arg)
      char *arg;
 {
 	int flag = 0;
@@ -71,7 +71,7 @@ com_start (arg)
 /*
  * step run of SkyEye
  */
-com_si(char* arg){
+int com_si(char* arg){
 	int flag = 0;
 	char** endptr;
 	int steps;
@@ -104,13 +104,13 @@ com_si(char* arg){
 	return flag;
 }
 
-com_x(char* arg){
+int com_x(char* arg){
 	int flag = 0;
 	char** endptr;
 	int addr;
 	uint32 value;
 	if(arg == NULL || *arg == '\0') 
-		return;
+		return Invarg_exp;
 	else{
 		errno = 0;
 		addr = strtoul(arg, endptr, 16);
@@ -144,7 +144,7 @@ com_x(char* arg){
 static char syscom[1024];
 
 /* List the file(s) named in arg. */
-com_list (arg)
+int com_list (arg)
      char *arg;
 {
   if (!arg)
@@ -154,7 +154,7 @@ com_list (arg)
   return (system (syscom));
 }
 
-com_view (arg)
+int com_view (arg)
      char *arg;
 {
   if (!valid_argument ("view", arg))
@@ -169,14 +169,14 @@ com_view (arg)
   return (system (syscom));
 }
 
-com_rename (arg)
+int com_rename (arg)
      char *arg;
 {
   too_dangerous ("rename");
   return (1);
 }
 
-com_stat (arg)
+int com_stat (arg)
      char *arg;
 {
   struct stat finfo;
@@ -204,7 +204,7 @@ com_stat (arg)
   return (0);
 }
 
-com_delete (arg)
+int com_delete (arg)
      char *arg;
 {
   too_dangerous ("delete");
@@ -213,7 +213,7 @@ com_delete (arg)
 
 
 /* Change to the directory ARG. */
-com_cd (arg)
+int com_cd (arg)
      char *arg;
 {
   if (chdir (arg) == -1)
@@ -227,7 +227,7 @@ com_cd (arg)
 }
 
 /* Print out the current working directory. */
-com_pwd (ignore)
+int com_pwd (ignore)
      char *ignore;
 {
   char dir[1024], *s;
@@ -245,12 +245,14 @@ com_pwd (ignore)
 
 extern void set_cli_done();
 /* The user wishes to quit using this program.  Just set DONE non-zero. */
-com_quit (arg)
+int com_quit (arg)
      char *arg;
 {
   set_cli_done();  
   SIM_fini();
   exit (0);
+
+  return 0;
 }
 
 int com_list_modules(char* arg){
@@ -328,7 +330,7 @@ int com_info(char* arg){
 	/* display the information of int register */
 		generic_arch_t* arch_instance = get_arch_instance("");
 		if(arch_instance == NULL)
-			return;
+			return Invarg_exp;
 		if(arch_instance->get_regval_by_id){
 			/* only for arm */		
 			int i = 0;
@@ -351,6 +353,7 @@ int com_info(char* arg){
 	else{
 		printf("can not find information for the object %s\n", arg);
 	}
+	return 0;
 }
 int com_load_conf(char* arg){
 	exception_t ret;

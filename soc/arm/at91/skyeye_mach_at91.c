@@ -172,6 +172,7 @@ at91_mem_read_byte (void *arch_instance, u32 addr, u32 *data)
 {
 //	*data = (u32) mem_read_char (arch_instance, addr);
 	printf("in mem read \n");
+	return No_exp;
 }
 
 static int
@@ -179,6 +180,7 @@ at91_mem_write_byte (void *arch_instance, u32 addr, u32 data)
 {
 //	mem_write_char (arch_instance, addr, (char) data);
 	printf("in mem write \n");
+	return No_exp;
 }
 
 static void

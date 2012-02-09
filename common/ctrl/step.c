@@ -45,6 +45,8 @@ int com_show_step(char *arg) {
 		return 1;
 	uint32 step = arch_instance->get_step();
 	printf("steps: %d\n", step);
+
+	return No_exp;
 }
 
 /**

@@ -453,7 +453,7 @@ static exception_t mach_write(conf_object_t *opaque, generic_address_t addr, uin
 	ret = phys_mem->memory_space->write(phys_mem->obj, addr, &data, count);
 	/* Read the data successfully */
 	if(ret == No_exp){
-		return;
+		return No_exp;
 	}
 
 	s3c6410x_io_t* io = mach->io;
@@ -465,12 +465,12 @@ static exception_t mach_write(conf_object_t *opaque, generic_address_t addr, uin
 #endif
 		s3c6410x_uart_write (mach, (addr - UART_CTL_BASE0) % 0x400,
 				     data, (addr - UART_CTL_BASE0) / 0x400);
-		return;
+		return No_exp;
 	}
 
 	if ((addr >= PWM_CTL_BASE) && (addr < (PWM_CTL_BASE + PWM_CTL_SIZE))) {
 		s3c6410x_timer_write (mach, addr - PWM_CTL_BASE, data);
-		return;
+		return No_exp;
 	}
 
 	switch (addr) {

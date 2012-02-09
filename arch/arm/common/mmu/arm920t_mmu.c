@@ -779,6 +779,8 @@ arm920t_mmu_mcr (ARMul_State * state, ARMword instr, ARMword value)
 			break;
 		}
 	}
+
+	return No_exp;
 }
 
 //teawater add for arm2x86 2005.06.19-------------------------------------------

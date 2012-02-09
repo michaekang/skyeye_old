@@ -120,6 +120,8 @@ do_deprecated_option (skyeye_option_t * this_option, int num_params,
 		 const char *params[])
 {
 	skyeye_log(Warning_log, __FUNCTION__, "Deprecated option. Do not use any more.\n");
+
+	return No_exp;
 }
 
 /**

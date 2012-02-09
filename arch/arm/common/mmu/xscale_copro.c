@@ -149,6 +149,7 @@ xscale_cp13_ldc (ARMul_State * state, unsigned type, ARMword instr,
 	SKYEYE_OUTREGS (stderr);
 	fprintf (stderr, "\n");
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 
 unsigned
@@ -159,6 +160,7 @@ xscale_cp13_stc (ARMul_State * state, unsigned type, ARMword instr,
 	SKYEYE_OUTREGS (stderr);
 	fprintf (stderr, "\n");
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 
 unsigned
@@ -169,6 +171,7 @@ xscale_cp13_mrc (ARMul_State * state, unsigned type, ARMword instr,
 	SKYEYE_OUTREGS (stderr);
 	fprintf (stderr, "\n");
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 
 unsigned
@@ -179,6 +182,7 @@ xscale_cp13_mcr (ARMul_State * state, unsigned type, ARMword instr,
 	SKYEYE_OUTREGS (stderr);
 	fprintf (stderr, "\n");
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 
 unsigned
@@ -188,6 +192,7 @@ xscale_cp13_cdp (ARMul_State * state, unsigned type, ARMword instr)
 	SKYEYE_OUTREGS (stderr);
 	fprintf (stderr, "\n");
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 
 unsigned
@@ -207,6 +212,7 @@ xscale_cp13_write_reg (ARMul_State * state, unsigned reg, ARMword data)
 	SKYEYE_OUTREGS (stderr);
 	fprintf (stderr, "\n");
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 
 //------------------------------------------------------------------
@@ -235,6 +241,7 @@ xscale_cp14_ldc (ARMul_State * state, unsigned type, ARMword instr,
 		state->Reg[15]);
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 
 unsigned
@@ -245,6 +252,7 @@ xscale_cp14_stc (ARMul_State * state, unsigned type, ARMword instr,
 		state->Reg[15]);
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 
 unsigned
@@ -306,6 +314,7 @@ unsigned xscale_cp14_cdp (ARMul_State * state, unsigned type, ARMword instr)
 		state->Reg[15]);
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 unsigned xscale_cp14_read_reg (ARMul_State * state, unsigned reg,
 			       ARMword * data)
@@ -313,6 +322,7 @@ unsigned xscale_cp14_read_reg (ARMul_State * state, unsigned reg,
 	printf ("SKYEYE: xscale_cp14_read_reg: ERROR isn't existed, reg15 0x%x\n", state->Reg[15]);
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
 }
 unsigned xscale_cp14_write_reg (ARMul_State * state, unsigned reg,
 				ARMword data)
@@ -320,6 +330,8 @@ unsigned xscale_cp14_write_reg (ARMul_State * state, unsigned reg,
 	printf ("SKYEYE: xscale_cp14_write_reg: ERROR isn't existed, reg15 0x%x\n", state->Reg[15]);
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+
+	return 0; //No matter return value, only for compiler.
 }
 
 //------------------------------------------------------------------
@@ -330,6 +342,8 @@ unsigned xscale_cp15_ldc (ARMul_State * state, unsigned type, ARMword instr,
 	printf ("SKYEYE: xscale_cp15_ldc: ERROR isn't existed\n");
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+
+	return 0; //No matter return value, only for compiler.
 }
 unsigned xscale_cp15_stc (ARMul_State * state, unsigned type, ARMword instr,
 			  ARMword * data)
@@ -337,12 +351,16 @@ unsigned xscale_cp15_stc (ARMul_State * state, unsigned type, ARMword instr,
 	printf ("SKYEYE: xscale_cp15_stc: ERROR isn't existed\n");
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+
+	return 0; //No matter return value, only for compiler.
 }
 unsigned xscale_cp15_cdp (ARMul_State * state, unsigned type, ARMword instr)
 {
 	printf ("SKYEYE: xscale_cp15_cdp: ERROR isn't existed\n");
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+
+	return 0; //No matter return value, only for compiler.
 }
 unsigned xscale_cp15_read_reg (ARMul_State * state, unsigned reg,
 			       ARMword * data)
@@ -356,6 +374,8 @@ unsigned xscale_cp15_read_reg (ARMul_State * state, unsigned reg,
 	printf ("SKYEYE: xscale_cp15_read_reg: reg 0x%x, ERROR isn't existed\n", reg);
 	SKYEYE_OUTREGS (stderr);
 	skyeye_exit (-1);
+
+	return 0; //No matter return value, only for compiler.
 }
 
 //chy 2003-09-03 used by macro CP_ACCESS_ALLOWED in armemu.h

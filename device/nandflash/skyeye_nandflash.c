@@ -80,6 +80,8 @@ int nandflash_module_setup(struct nandflash_device *dev,char *name)
 		printf("nandflash not support this:%s\n",name);
 		exit(1);
 	}
+
+	return No_exp;
 }
 
 static int
