@@ -70,6 +70,9 @@ static exception_t s3c6410_gpio_read(conf_object_t *opaque, generic_address_t of
 		case 0x920:
 			*(uint32_t*)buf = regs->eint0mask;
 			break;
+		case 0x924:
+			*(uint32_t*)buf = regs->eint0pend;
+			break;
 
 		default:
 			printf("Can not read the register at 0x%x in gpio\n", offset);
@@ -111,6 +114,9 @@ static exception_t s3c6410_gpio_write(conf_object_t *opaque, generic_address_t o
 			break;
 		case 0x920:
 			regs->eint0mask = val;
+			break;
+		case 0x924:
+			regs->eint0pend = val;
 			break;
 		default:
 			printf("Can not write the register at 0x%x in gpio\n", offset);
