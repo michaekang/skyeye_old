@@ -1,3 +1,28 @@
+/* Copyright (C) 
+* 2012 - Michael.Kang blackfin.kang@gmail.com
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+* 
+*/
+/**
+* @file ppc_dyncom_instr_main.cpp
+* @brief The translation of main group instruction
+* @author Michael.Kang blackfin.kang@gmail.com
+* @version 78.77
+* @date 2012-02-10
+*/
+
 #include "debug.h"
 #include "tracers.h"
 #include "ppc_dyncom_dec.h"
@@ -89,9 +114,9 @@ static int opc_cmpi_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	cr = 7 - cr;
 	Value* c;
 	c = SELECT(ICMP_SLT(R(rA), CONST(imm)), CONST(8), SELECT(ICMP_SGT(R(rA), CONST(imm)), CONST(4), CONST(2)));
-	c = SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(c, CONST(1)), c);
-	LETS(CR_REGNUM, AND(RS(CR_REGNUM), CONST(ppc_cmp_and_mask[cr])));
-	LETS(CR_REGNUM, OR(RS(CR_REGNUM), SHL(c, CONST(cr * 4))));
+	c = SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(c, CONST(1)), c);
+	LETS(CR_REGNUM, AND(RSPR(CR_REGNUM), CONST(ppc_cmp_and_mask[cr])));
+	LETS(CR_REGNUM, OR(RSPR(CR_REGNUM), SHL(c, CONST(cr * 4))));
 	return 0;
 }
 
@@ -155,7 +180,7 @@ static int opc_lwz_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	if(is_user_mode(cpu)){
 		LET(rD, result);
 	}else{
-		Value *current_pc = RS(PHYS_PC_REGNUM);
+		Value *current_pc = RSPR(PHYS_PC_REGNUM);
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rD, SELECT(exc_occur, old_rd, result));
 	}
@@ -194,7 +219,7 @@ static int opc_lwzu_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		LET(rA, addr);
 		LET(rD, result);
 	}else{
-		Value *current_pc = RS(PHYS_PC_REGNUM);
+		Value *current_pc = RSPR(PHYS_PC_REGNUM);
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rA, SELECT(exc_occur, R(rA), addr));
 		LET(rD, SELECT(exc_occur, R(rD), result));
@@ -265,7 +290,7 @@ static int opc_stwu_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	if(is_user_mode(cpu)){
 		LET(rA, addr);
 	}else{
-		Value *current_pc = RS(PHYS_PC_REGNUM);
+		Value *current_pc = RSPR(PHYS_PC_REGNUM);
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rA, SELECT(exc_occur, R(rA), addr));
 	}
@@ -319,14 +344,14 @@ static int opc_bx_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	PPC_OPC_TEMPL_I(instr, li);
 	if (instr & PPC_OPC_LK) {
 		if(is_user_mode(cpu))
-			LETS(LR_REGNUM, ADD(CONST(4), RS(PHYS_PC_REGNUM)));
+			LETS(LR_REGNUM, ADD(CONST(4), RSPR(PHYS_PC_REGNUM)));
 		else
-			LETS(LR_REGNUM, ADD(CONST(4), RS(PC_REGNUM)));
+			LETS(LR_REGNUM, ADD(CONST(4), RSPR(PC_REGNUM)));
 	}
 	if (!(instr & PPC_OPC_AA)) {
-		LETS(PHYS_PC_REGNUM, ADD(CONST(li), RS(PHYS_PC_REGNUM)));
+		LETS(PHYS_PC_REGNUM, ADD(CONST(li), RSPR(PHYS_PC_REGNUM)));
 		if(!is_user_mode(cpu))
-			LETS(PC_REGNUM, ADD(CONST(li), RS(PC_REGNUM)));
+			LETS(PC_REGNUM, ADD(CONST(li), RSPR(PC_REGNUM)));
 		debug(DEBUG_TRANSLATE, "In %s, li=0x%x\n",__FUNCTION__, li);
 	}else{
 		LETS(PHYS_PC_REGNUM, CONST(li));
@@ -375,13 +400,13 @@ Value* opc_bcx_translate_cond(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	uint32 BO, BI, BD;
 	PPC_OPC_TEMPL_B(instr, BO, BI, BD);
 	if (!(BO & 4)) {
-		LETS(CTR_REGNUM, SUB(RS(CTR_REGNUM), CONST(1)));
+		LETS(CTR_REGNUM, SUB(RSPR(CTR_REGNUM), CONST(1)));
 	}
 	bool_t bo2 = ((BO & 2)?True: False); //branch if ctr==0 when true
 	bool_t bo8 = ((BO & 8)?True: False); // branch condition true
-	Value* cr_value = SELECT(ICMP_NE(AND(RS(CR_REGNUM), CONST(1<<(31-BI))), CONST(0)), CONST(1), CONST(0));
+	Value* cr_value = SELECT(ICMP_NE(AND(RSPR(CR_REGNUM), CONST(1<<(31-BI))), CONST(0)), CONST(1), CONST(0));
 	Value* tmp1 = ICMP_NE(AND(CONST(BO), CONST(4)), CONST(0));
-	Value* tmp2 = XOR(ICMP_NE(RS(CTR_REGNUM), CONST(0)), ICMP_NE(CONST(bo2), CONST(0)));
+	Value* tmp2 = XOR(ICMP_NE(RSPR(CTR_REGNUM), CONST(0)), ICMP_NE(CONST(bo2), CONST(0)));
 	Value* tmp3 = ICMP_NE(AND(CONST(BO), CONST(16)), CONST(0));
 	Value* tmp4 = ICMP_EQ(XOR(cr_value, CONST(bo8)), CONST(0));
 	return AND(OR(tmp1, tmp2), OR(tmp3, tmp4));
@@ -396,14 +421,14 @@ static int opc_bcx_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	PPC_OPC_TEMPL_B(instr, BO, BI, BD);
 	if (instr & PPC_OPC_LK) {
 		if(is_user_mode(cpu))
-			LETS(LR_REGNUM, ADD(RS(PHYS_PC_REGNUM), CONST(4)));
+			LETS(LR_REGNUM, ADD(RSPR(PHYS_PC_REGNUM), CONST(4)));
 		else
-			LETS(LR_REGNUM, ADD(RS(PC_REGNUM), CONST(4)));
+			LETS(LR_REGNUM, ADD(RSPR(PC_REGNUM), CONST(4)));
 	}
 	if (!(instr & PPC_OPC_AA)) {
-		arch_store(ADD(CONST(BD), RS(PHYS_PC_REGNUM)), cpu->ptr_PHYS_PC, bb);
+		arch_store(ADD(CONST(BD), RSPR(PHYS_PC_REGNUM)), cpu->ptr_PHYS_PC, bb);
 		if(!is_user_mode(cpu))
-			arch_store(ADD(CONST(BD), RS(PC_REGNUM)), cpu->ptr_PC, bb);
+			arch_store(ADD(CONST(BD), RSPR(PC_REGNUM)), cpu->ptr_PC, bb);
 	}else{
 		arch_store(CONST(BD), cpu->ptr_PHYS_PC, bb);
 		if(!is_user_mode(cpu))
@@ -481,8 +506,8 @@ static int opc_subfic_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	// update XER
 	Value* cond = ppc_dyncom_carry_3(cpu, bb, XOR(v_ra, CONST(-1)), CONST(imm), CONST(1));
 	LETS(XER_REGNUM, SELECT(cond,
-			OR(RS(XER_REGNUM), CONST(XER_CA)),
-			AND(RS(XER_REGNUM), CONST(~XER_CA)))
+			OR(RSPR(XER_REGNUM), CONST(XER_CA)),
+			AND(RSPR(XER_REGNUM), CONST(~XER_CA)))
 	);
 
 	return No_exp;
@@ -507,9 +532,9 @@ static int opc_cmpli_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	cr = 7-cr;
 	Value* c;
 	c = SELECT(ICMP_ULT(R(rA), CONST(imm)), CONST(8), SELECT(ICMP_UGT(R(rA), CONST(imm)), CONST(4), CONST(2)));
-	c = SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(c, CONST(1)), c);
-	LETS(CR_REGNUM, AND(RS(CR_REGNUM), CONST(ppc_cmp_and_mask[cr])));
-	LETS(CR_REGNUM, OR(RS(CR_REGNUM), SHL(c, CONST(cr * 4))));
+	c = SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(c, CONST(1)), c);
+	LETS(CR_REGNUM, AND(RSPR(CR_REGNUM), CONST(ppc_cmp_and_mask[cr])));
+	LETS(CR_REGNUM, OR(RSPR(CR_REGNUM), SHL(c, CONST(cr * 4))));
 	return 0;
 }
 
@@ -531,8 +556,8 @@ static int opc_addic_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	LET(rD, ADD(v_ra, CONST(imm)));
 	// update XER
 	LETS(XER_REGNUM, SELECT(ICMP_ULT(R(rD), v_ra), 
-		OR(RS(XER_REGNUM), CONST(XER_CA)), 
-		AND(RS(XER_REGNUM), CONST(~XER_CA)))
+		OR(RSPR(XER_REGNUM), CONST(XER_CA)), 
+		AND(RSPR(XER_REGNUM), CONST(~XER_CA)))
 	);
 	NOT_TEST;
 
@@ -557,8 +582,8 @@ static int opc_addic__translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	LET(rD, ADD(v_ra, CONST(imm)));
 	// update XER
 	LETS(XER_REGNUM, SELECT(ICMP_ULT(R(rD), v_ra), 
-		OR(RS(XER_REGNUM), CONST(XER_CA)), 
-		AND(RS(XER_REGNUM), CONST(~XER_CA)))
+		OR(RSPR(XER_REGNUM), CONST(XER_CA)), 
+		AND(RSPR(XER_REGNUM), CONST(~XER_CA)))
 	);
 	// update cr0 flags
 	ppc_dyncom_update_cr0(cpu, bb, rD);
@@ -801,7 +826,7 @@ static int opc_lbz_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	if(is_user_mode(cpu)){
 		LET(rD, ret);
 	}else{
-		Value *current_pc = RS(PHYS_PC_REGNUM);
+		Value *current_pc = RSPR(PHYS_PC_REGNUM);
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rD, SELECT(exc_occur, rd_old, ret));
 	}
@@ -915,7 +940,7 @@ static int opc_lhz_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 	if(is_user_mode(cpu)){
 		LET(rD, ret);
 	}else{
-		Value *current_pc = RS(PHYS_PC_REGNUM);
+		Value *current_pc = RSPR(PHYS_PC_REGNUM);
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rD, SELECT(exc_occur, R(rD), ret));
 	}

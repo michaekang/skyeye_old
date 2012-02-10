@@ -1,3 +1,28 @@
+/* Copyright (C) 
+* 2012 - Michael.Kang blackfin.kang@gmail.com
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+* 
+*/
+/**
+* @file ppc_dyncom_instr_group2.cpp
+* @brief The instruction translation for group2
+* @author Michael.Kang blackfin.kang@gmail.com
+* @version 78.77
+* @date 2012-02-10
+*/
+
 #include "debug.h"
 #include "tracers.h"
 #include "ppc_dyncom_dec.h"
@@ -45,9 +70,9 @@ static int opc_cmp_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value * tmp1 = ICMP_SLT(R(rA), R(rB));
 	Value * tmp2 = ICMP_SGT(R(rA), R(rB));
 	Value * c = SELECT(tmp1, CONST(8),SELECT(tmp2, CONST(4), CONST(2)));
-	c = SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(c, CONST(1)), c);
-	LETS(CR_REGNUM, AND(RS(CR_REGNUM), CONST(ppc_cmp_and_mask[cr])));
-	LETS(CR_REGNUM, OR(RS(CR_REGNUM), SHL(c, CONST(cr * 4))));
+	c = SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(c, CONST(1)), c);
+	LETS(CR_REGNUM, AND(RSPR(CR_REGNUM), CONST(ppc_cmp_and_mask[cr])));
+	LETS(CR_REGNUM, OR(RSPR(CR_REGNUM), SHL(c, CONST(cr * 4))));
 	return 0;
 }
 
@@ -103,7 +128,7 @@ static int opc_lwzx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	if(is_user_mode(cpu)){
 		LET(rD, result);
 	}else{
-		Value *current_pc = RS(PHYS_PC_REGNUM);
+		Value *current_pc = RSPR(PHYS_PC_REGNUM);
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rD, SELECT(exc_occur, R(rD), result));
 	}
@@ -208,56 +233,56 @@ static int opc_mtspr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 			return 0;
 		case 16:
 			LETS(IBATU_REGNUM, R(rS));
-			LETS(IBAT_BL17_REGNUM, XOR((SHL(dyncom_BATU_BL(RS(IBATU_REGNUM)), CONST(17))), CONST(-1)));
+			LETS(IBAT_BL17_REGNUM, XOR((SHL(dyncom_BATU_BL(RSPR(IBATU_REGNUM)), CONST(17))), CONST(-1)));
 			return 0;
 		case 17:
 			LETS(IBATL_REGNUM, R(rS));
 			return 0;
 		case 18:
 			LETS(IBATU_REGNUM + 1, R(rS));
-			LETS(IBAT_BL17_REGNUM + 1, XOR((SHL(dyncom_BATU_BL(RS(IBATU_REGNUM + 1)), CONST(17))), CONST(-1)));
+			LETS(IBAT_BL17_REGNUM + 1, XOR((SHL(dyncom_BATU_BL(RSPR(IBATU_REGNUM + 1)), CONST(17))), CONST(-1)));
 			return 0;
 		case 19:
 			LETS(IBATL_REGNUM + 1, R(rS));
 			return 0;
 		case 20:
 			LETS(IBATU_REGNUM + 2, R(rS));
-			LETS(IBAT_BL17_REGNUM + 2, XOR((SHL(dyncom_BATU_BL(RS(IBATU_REGNUM + 2)), CONST(17))), CONST(-1)));
+			LETS(IBAT_BL17_REGNUM + 2, XOR((SHL(dyncom_BATU_BL(RSPR(IBATU_REGNUM + 2)), CONST(17))), CONST(-1)));
 			return 0;
 		case 21:
 			LETS(IBATL_REGNUM + 2, R(rS));
 			return 0;
 		case 22:
 			LETS(IBATU_REGNUM + 3, R(rS));
-			LETS(IBAT_BL17_REGNUM + 3, XOR((SHL(dyncom_BATU_BL(RS(IBATU_REGNUM + 3)), CONST(17))), CONST(-1)));
+			LETS(IBAT_BL17_REGNUM + 3, XOR((SHL(dyncom_BATU_BL(RSPR(IBATU_REGNUM + 3)), CONST(17))), CONST(-1)));
 			return 0;
 		case 23:
 			LETS(IBATL_REGNUM + 3, R(rS));
 			return 0;
 		case 24:
 			LETS(DBATU_REGNUM, R(rS));
-			LETS(DBAT_BL17_REGNUM, XOR((SHL(dyncom_BATU_BL(RS(DBATU_REGNUM)), CONST(17))), CONST(-1)));
+			LETS(DBAT_BL17_REGNUM, XOR((SHL(dyncom_BATU_BL(RSPR(DBATU_REGNUM)), CONST(17))), CONST(-1)));
 			return 0;
 		case 25:
 			LETS(DBATL_REGNUM, R(rS));
 			return 0;
 		case 26:
 			LETS(DBATU_REGNUM + 1, R(rS));
-			LETS(DBAT_BL17_REGNUM + 1, XOR((SHL(dyncom_BATU_BL(RS(DBATU_REGNUM + 1)), CONST(17))), CONST(-1)));
+			LETS(DBAT_BL17_REGNUM + 1, XOR((SHL(dyncom_BATU_BL(RSPR(DBATU_REGNUM + 1)), CONST(17))), CONST(-1)));
 			return 0;
 		case 27:
 			LETS(DBATL_REGNUM + 1, R(rS));
 			return 0;
 		case 28:
 			LETS(DBATU_REGNUM + 2, R(rS));
-			LETS(DBAT_BL17_REGNUM + 2, XOR((SHL(dyncom_BATU_BL(RS(DBATU_REGNUM + 2)), CONST(17))), CONST(-1)));
+			LETS(DBAT_BL17_REGNUM + 2, XOR((SHL(dyncom_BATU_BL(RSPR(DBATU_REGNUM + 2)), CONST(17))), CONST(-1)));
 			return 0;
 		case 29:
 			LETS(DBATL_REGNUM + 2, R(rS));
 			return 0;
 		case 30:
 			LETS(DBATU_REGNUM + 3, R(rS));
-			LETS(DBAT_BL17_REGNUM + 3, XOR((SHL(dyncom_BATU_BL(RS(DBATU_REGNUM + 3)), CONST(17))), CONST(-1)));
+			LETS(DBAT_BL17_REGNUM + 3, XOR((SHL(dyncom_BATU_BL(RSPR(DBATU_REGNUM + 3)), CONST(17))), CONST(-1)));
 			return 0;
 		case 31:
 			LETS(DBATL_REGNUM + 3, R(rS));
@@ -436,19 +461,19 @@ static int opc_mfspr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	switch(spr2) {
 	case 0:
 		switch (spr1) {
-		case 1: LET(rD, RS(XER_REGNUM)); return 0;
-		case 8: LET(rD, RS(LR_REGNUM)); return 0;
-		case 9: LET(rD, RS(CTR_REGNUM)); return 0;
-		case 18: LET(rD, RS(DSISR_REGNUM)); return 0;
-		case 19: LET(rD, RS(DAR_REGNUM)); return 0;
+		case 1: LET(rD, RSPR(XER_REGNUM)); return 0;
+		case 8: LET(rD, RSPR(LR_REGNUM)); return 0;
+		case 9: LET(rD, RSPR(CTR_REGNUM)); return 0;
+		case 18: LET(rD, RSPR(DSISR_REGNUM)); return 0;
+		case 19: LET(rD, RSPR(DAR_REGNUM)); return 0;
 		case 22: {
-			LETS(DEC_REGNUM, UDIV(RS(PDEC_REGNUM), CONST(TB_TO_PTB_FACTOR)));
-			LET(rD, RS(DEC_REGNUM));
+			LETS(DEC_REGNUM, UDIV(RSPR(PDEC_REGNUM), CONST(TB_TO_PTB_FACTOR)));
+			LET(rD, RSPR(DEC_REGNUM));
 			return 0;
 		}
-		case 25: LET(rD, RS(SDR1_REGNUM)); return 0;
-		case 26: LET(rD, RS(SRR_REGNUM)); return 0;
-		case 27: LET(rD, RS(SRR_REGNUM + 1)); return 0;
+		case 25: LET(rD, RSPR(SDR1_REGNUM)); return 0;
+		case 26: LET(rD, RSPR(SRR_REGNUM)); return 0;
+		case 27: LET(rD, RSPR(SRR_REGNUM + 1)); return 0;
 		}
 		break;
 	case 1:
@@ -457,34 +482,34 @@ static int opc_mfspr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 				printf("NOT IMPLEMENT... IN %s, line %d\n", __func__, __LINE__);
 				//current_core->gpr[rD] = current_core->mmu.pid[0];
 				return 0;
-			case 29: LET(rD, RS(DEAR_REGNUM)); return 0;
-			case 30: LET(rD, RS(ESR_REGNUM)); return 0;
+			case 29: LET(rD, RSPR(DEAR_REGNUM)); return 0;
+			case 30: LET(rD, RSPR(ESR_REGNUM)); return 0;
 			default:fprintf(stderr, "spr2=0x%x,spr1=0x%x,no such spr\n", spr2,spr1);break;
 		}
 		break;
 	case 8:
 		switch (spr1) {
-		case 12: LET(rD, RS(TBL_REGNUM)); return 0;
-		case 13: LET(rD, RS(TBU_REGNUM)); return 0;
-		case 0: LET(rD, RS(VRSAVE_REGNUM)); return 0;
-		case 16: LET(rD, RS(SPRG_REGNUM)); return 0;
+		case 12: LET(rD, RSPR(TBL_REGNUM)); return 0;
+		case 13: LET(rD, RSPR(TBU_REGNUM)); return 0;
+		case 0: LET(rD, RSPR(VRSAVE_REGNUM)); return 0;
+		case 16: LET(rD, RSPR(SPRG_REGNUM)); return 0;
 		case 1:
-		case 17: LET(rD, RS(SPRG_REGNUM + 1)); return 0;
+		case 17: LET(rD, RSPR(SPRG_REGNUM + 1)); return 0;
 		case 2:
-		case 18: LET(rD, RS(SPRG_REGNUM + 2)); return 0;
+		case 18: LET(rD, RSPR(SPRG_REGNUM + 2)); return 0;
 		case 3:
-		case 19: LET(rD, RS(SPRG_REGNUM + 3)); return 0;
+		case 19: LET(rD, RSPR(SPRG_REGNUM + 3)); return 0;
 		case 4:
-		case 20: LET(rD, RS(SPRG_REGNUM + 4)); return 0;
+		case 20: LET(rD, RSPR(SPRG_REGNUM + 4)); return 0;
 		case 5:
-		case 21: LET(rD, RS(SPRG_REGNUM + 5)); return 0;
+		case 21: LET(rD, RSPR(SPRG_REGNUM + 5)); return 0;
 		case 6:
-		case 22: LET(rD, RS(SPRG_REGNUM + 6)); return 0;
+		case 22: LET(rD, RSPR(SPRG_REGNUM + 6)); return 0;
 		case 7:
-		case 23: LET(rD, RS(SPRG_REGNUM + 7)); return 0;
-		case 26: LET(rD, RS(EAR_REGNUM)); return 0;
-		case 30: LET(rD, RS(PIR_REGNUM)); return 0;
-		case 31: LET(rD, RS(PVR_REGNUM)); return 0;
+		case 23: LET(rD, RSPR(SPRG_REGNUM + 7)); return 0;
+		case 26: LET(rD, RSPR(EAR_REGNUM)); return 0;
+		case 30: LET(rD, RSPR(PIR_REGNUM)); return 0;
+		case 31: LET(rD, RSPR(PVR_REGNUM)); return 0;
 		default:
 			fprintf(stderr, "[warning:mfspr]line = %d, instr = 0x%x, spr1:spr2 = %i:%i\n",
 					__LINE__, instr, spr1, spr2);
@@ -492,39 +517,39 @@ static int opc_mfspr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		break;
 	case 9:
 		switch(spr1) {
-			case 16:LET(rD, RS(DBSR_REGNUM)); return 0;
-			case 20:LET(rD, RS(DBCR_REGNUM)); return 0;
-			case 21:LET(rD, RS(DBCR_REGNUM + 1)); return 0;
-			case 22:LET(rD, RS(DBCR_REGNUM + 2)); return 0;
-			case 28:LET(rD, RS(DAC_REGNUM)); return 0;
-			case 29:LET(rD, RS(DAC_REGNUM + 1)); return 0;
+			case 16:LET(rD, RSPR(DBSR_REGNUM)); return 0;
+			case 20:LET(rD, RSPR(DBCR_REGNUM)); return 0;
+			case 21:LET(rD, RSPR(DBCR_REGNUM + 1)); return 0;
+			case 22:LET(rD, RSPR(DBCR_REGNUM + 2)); return 0;
+			case 28:LET(rD, RSPR(DAC_REGNUM)); return 0;
+			case 29:LET(rD, RSPR(DAC_REGNUM + 1)); return 0;
 		}
 		break;
 	case 10:
 		switch(spr1){
-			case 20:LET(rD, RS(TCR_REGNUM)); return 0;
+			case 20:LET(rD, RSPR(TCR_REGNUM)); return 0;
 			default:break;
 		}
 		break;
 	case 16:
 		switch (spr1) {
-		case 0: LET(rD, RS(SPEFSCR_REGNUM)); return 0;
-		case 16: LET(rD, RS(IBATU_REGNUM)); return 0;
-		case 17: LET(rD, RS(IBATL_REGNUM)); return 0;
-		case 18: LET(rD, RS(IBATU_REGNUM + 1)); return 0;
-		case 19: LET(rD, RS(IBATL_REGNUM + 1)); return 0;
-		case 20: LET(rD, RS(IBATU_REGNUM + 2)); return 0;
-		case 21: LET(rD, RS(IBATL_REGNUM + 2)); return 0;
-		case 22: LET(rD, RS(IBATU_REGNUM + 3)); return 0;
-		case 23: LET(rD, RS(IBATL_REGNUM + 3)); return 0;
-		case 24: LET(rD, RS(DBATU_REGNUM)); return 0;
-		case 25: LET(rD, RS(DBATL_REGNUM)); return 0;
-		case 26: LET(rD, RS(DBATU_REGNUM + 1)); return 0;
-		case 27: LET(rD, RS(DBATL_REGNUM + 1)); return 0;
-		case 28: LET(rD, RS(DBATU_REGNUM + 2)); return 0;
-		case 29: LET(rD, RS(DBATL_REGNUM + 2)); return 0;
-		case 30: LET(rD, RS(DBATU_REGNUM + 3)); return 0;
-		case 31: LET(rD, RS(DBATL_REGNUM + 3)); return 0;
+		case 0: LET(rD, RSPR(SPEFSCR_REGNUM)); return 0;
+		case 16: LET(rD, RSPR(IBATU_REGNUM)); return 0;
+		case 17: LET(rD, RSPR(IBATL_REGNUM)); return 0;
+		case 18: LET(rD, RSPR(IBATU_REGNUM + 1)); return 0;
+		case 19: LET(rD, RSPR(IBATL_REGNUM + 1)); return 0;
+		case 20: LET(rD, RSPR(IBATU_REGNUM + 2)); return 0;
+		case 21: LET(rD, RSPR(IBATL_REGNUM + 2)); return 0;
+		case 22: LET(rD, RSPR(IBATU_REGNUM + 3)); return 0;
+		case 23: LET(rD, RSPR(IBATL_REGNUM + 3)); return 0;
+		case 24: LET(rD, RSPR(DBATU_REGNUM)); return 0;
+		case 25: LET(rD, RSPR(DBATL_REGNUM)); return 0;
+		case 26: LET(rD, RSPR(DBATU_REGNUM + 1)); return 0;
+		case 27: LET(rD, RSPR(DBATL_REGNUM + 1)); return 0;
+		case 28: LET(rD, RSPR(DBATU_REGNUM + 2)); return 0;
+		case 29: LET(rD, RSPR(DBATL_REGNUM + 2)); return 0;
+		case 30: LET(rD, RSPR(DBATU_REGNUM + 3)); return 0;
+		case 31: LET(rD, RSPR(DBATL_REGNUM + 3)); return 0;
 		}
 		break;
 	case 17://LCH
@@ -628,20 +653,20 @@ static int opc_mfspr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		switch (spr1) {
 		case 16:
 //			PPC_OPC_WARN("read from spr %d:%d (HID0) not supported!\n", spr1, spr2);
-			LET(rD, RS(HID_REGNUM));
+			LET(rD, RSPR(HID_REGNUM));
 			return 0;
 		case 17:
 			PPC_OPC_WARN("read from spr %d:%d (HID1) not supported!\n", spr1, spr2);
-			LET(rD, RS(HID_REGNUM + 1));
+			LET(rD, RSPR(HID_REGNUM + 1));
 			return 0;
 		case 18:
 			LET(rD, CONST(0));
 			return 0;
 		case 19:
-			LET(rD, RS(E600_ICTRL_REGNUM));
+			LET(rD, RSPR(E600_ICTRL_REGNUM));
 			return 0;
 		case 20:
-			LET(rD, RS(E600_LDSTDB_REGNUM));
+			LET(rD, RSPR(E600_LDSTDB_REGNUM));
 			return 0;
 		case 21:
 			LET(rD, CONST(0));
@@ -720,9 +745,9 @@ static int opc_cmpl_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	cr = 7-cr;
 	Value* c;
 	c = SELECT(ICMP_ULT(R(rA), R(rB)), CONST(8), SELECT(ICMP_UGT(R(rA), R(rB)), CONST(4), CONST(2)));
-	c = SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(c, CONST(1)), c);
-	LETS(CR_REGNUM, AND(RS(CR_REGNUM), CONST(ppc_cmp_and_mask[cr])));
-	LETS(CR_REGNUM, OR(RS(CR_REGNUM), SHL(c, CONST(cr * 4))));
+	c = SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(c, CONST(1)), c);
+	LETS(CR_REGNUM, AND(RSPR(CR_REGNUM), CONST(ppc_cmp_and_mask[cr])));
+	LETS(CR_REGNUM, OR(RSPR(CR_REGNUM), SHL(c, CONST(cr * 4))));
 	return 0;
 #if 0
 	Value * tmp1 = ICMP_SLT(R(rA), R(rB));
@@ -867,7 +892,7 @@ static int opc_mtcrf_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value* tmp7 = SELECT(ICMP_NE(AND(CONST(crm), CONST(0x02)), CONST(0)), CONST(0x000000f0), CONST(0));
 	Value* tmp8 = SELECT(ICMP_NE(AND(CONST(crm), CONST(0x01)), CONST(0)), CONST(0x0000000f), CONST(0));
 	Value* CRMv = OR(OR(OR(tmp1, tmp2), OR(tmp3, tmp4)), OR(OR(tmp5, tmp6), OR(tmp7, tmp8)));
-	LETS(CR_REGNUM, OR(AND(R(rS), CRMv), AND(RS(CR_REGNUM), XOR(CRMv, CONST(-1)))));
+	LETS(CR_REGNUM, OR(AND(R(rS), CRMv), AND(RSPR(CR_REGNUM), XOR(CRMv, CONST(-1)))));
 	return 0;
 }
 /*
@@ -926,7 +951,7 @@ static int opc_mfcr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_X(instr, rD, rA, rB);
 	PPC_OPC_ASSERT(rA==0 && rB==0);
-	LET(rD, RS(CR_REGNUM));
+	LET(rD, RSPR(CR_REGNUM));
 	return 0;
 }
 /*
@@ -955,11 +980,11 @@ static int opc_lwarx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		LETS(RESERVE_REGNUM, result);
 		LETS(HAVE_RESERVATION_REGNUM, CONST(1));
 	}else{
-		Value *current_pc = RS(PHYS_PC_REGNUM);
+		Value *current_pc = RSPR(PHYS_PC_REGNUM);
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rD, SELECT(exc_occur, R(rD), result));
-		LETS(RESERVE_REGNUM, SELECT(exc_occur, RS(RESERVE_REGNUM), result));
-		LETS(HAVE_RESERVATION_REGNUM, SELECT(exc_occur, RS(HAVE_RESERVATION_REGNUM), CONST(1)));
+		LETS(RESERVE_REGNUM, SELECT(exc_occur, RSPR(RESERVE_REGNUM), result));
+		LETS(HAVE_RESERVATION_REGNUM, SELECT(exc_occur, RSPR(HAVE_RESERVATION_REGNUM), CONST(1)));
 	}
 	return 0;
 }
@@ -976,8 +1001,8 @@ int opc_stwcx__tag(cpu_t *cpu, uint32_t instr, addr_t phys_pc, tag_t *tag, addr_
 Value* opc_stwcx__translate_cond(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	int rA, rS, rB;
 	PPC_OPC_TEMPL_X(instr, rS, rA, rB);
-	LETS(CR_REGNUM, AND(RS(CR_REGNUM), CONST(0x0fffffff)));
-	return ICMP_NE(RS(HAVE_RESERVATION_REGNUM), CONST(0));
+	LETS(CR_REGNUM, AND(RSPR(CR_REGNUM), CONST(0x0fffffff)));
+	return ICMP_NE(RSPR(HAVE_RESERVATION_REGNUM), CONST(0));
 }
 static int opc_stwcx__translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
@@ -986,10 +1011,10 @@ static int opc_stwcx__translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	LETS(HAVE_RESERVATION_REGNUM, CONST(0));
 	Value* addr = rA? ADD(R(rA), R(rB)): R(rB);
 	Value* v = arch_read_memory(cpu, bb, addr, 0, 32);
-	Value* tmp = SELECT(ICMP_EQ(v, RS(RESERVE_REGNUM)), R(rS), v);
+	Value* tmp = SELECT(ICMP_EQ(v, RSPR(RESERVE_REGNUM)), R(rS), v);
 	arch_write_memory(cpu, bb, addr, tmp, 32);
-	LETS(CR_REGNUM, SELECT(ICMP_EQ(v, RS(RESERVE_REGNUM)), OR(RS(CR_REGNUM), CONST(CR_CR0_EQ)), RS(CR_REGNUM)));
-	LETS(CR_REGNUM, SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(RS(CR_REGNUM), CONST(CR_CR0_SO)), RS(CR_REGNUM)));
+	LETS(CR_REGNUM, SELECT(ICMP_EQ(v, RSPR(RESERVE_REGNUM)), OR(RSPR(CR_REGNUM), CONST(CR_CR0_EQ)), RSPR(CR_REGNUM)));
+	LETS(CR_REGNUM, SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_SO)), CONST(0)), OR(RSPR(CR_REGNUM), CONST(CR_CR0_SO)), RSPR(CR_REGNUM)));
 
 	return No_exp;
 }
@@ -1026,7 +1051,7 @@ Value* opc_srawix_translate_cond(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 	uint32 SH;
 	PPC_OPC_TEMPL_X(instr, rS, rA, SH);
 	LET(rA, R(rS));
-	LETS(XER_REGNUM, AND(RS(XER_REGNUM), CONST(~XER_CA)));
+	LETS(XER_REGNUM, AND(RSPR(XER_REGNUM), CONST(~XER_CA)));
 	Value* tmp = SELECT(ICMP_UGT(CONST(SH), CONST(31)), CONST(0), LSHR(R(rA), UREM(CONST(SH), CONST(32))));
 	Value* result = AND(R(rA), CONST(0x80000000));
 	Value* cond = ICMP_NE(result, CONST(0));
@@ -1044,7 +1069,7 @@ static int opc_srawix_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	PPC_OPC_TEMPL_X(instr, rS, rA, SH);
 	Value* ca = CONST(0);
 	Value* mask = LSHR(CONST(0xffffffff), CONST((32 - SH) & 0x1f));
-	LETS(XER_REGNUM, SELECT(ICMP_NE(AND(R(rA), mask), CONST(0)), OR(RS(XER_REGNUM), CONST(XER_CA)), RS(XER_REGNUM)));
+	LETS(XER_REGNUM, SELECT(ICMP_NE(AND(R(rA), mask), CONST(0)), OR(RSPR(XER_REGNUM), CONST(XER_CA)), RSPR(XER_REGNUM)));
 	LET(rA, OR(LSHR(R(rA), UREM(CONST(SH),CONST(32))), SHL(CONST(0xffffffff), UREM(SUB(CONST(32), CONST(SH)), CONST(32)))));
 	if (instr & PPC_OPC_Rc) {
 		// update cr0 flags
@@ -1076,10 +1101,10 @@ static int opc_subfex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_XO(instr, rD, rA, rB);
-	Value* ca = SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_CA)), CONST(0)), CONST(1), CONST(0));
+	Value* ca = SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_CA)), CONST(0)), CONST(1), CONST(0));
 	LET(rD, ADD(ADD(XOR(R(rA), CONST(-1)), R(rB)), ca));
 	// update xer
-	SELECT(ppc_dyncom_carry_3(cpu, bb, XOR(R(rA), CONST(-1)), R(rB), ca), OR(RS(XER_REGNUM), CONST(XER_CA)), AND(RS(XER_REGNUM), CONST(~XER_CA)));
+	SELECT(ppc_dyncom_carry_3(cpu, bb, XOR(R(rA), CONST(-1)), R(rB), ca), OR(RSPR(XER_REGNUM), CONST(XER_CA)), AND(RSPR(XER_REGNUM), CONST(~XER_CA)));
 	if (instr & PPC_OPC_Rc) {
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
@@ -1138,9 +1163,9 @@ static int opc_addzex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_XO(instr, rD, rA, rB);
 	PPC_OPC_ASSERT(rB == 0);
-	Value* ca = SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_CA)), CONST(0)), CONST(1), CONST(0));
+	Value* ca = SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_CA)), CONST(0)), CONST(1), CONST(0));
 	LET(rD, ADD(ca, R(rA)));
-	LETS(XER_REGNUM, SELECT(AND(ICMP_EQ(R(rA), CONST(0xffffffff)), ICMP_NE(ca, CONST(0))), OR(RS(XER_REGNUM), CONST(XER_CA)), AND(RS(XER_REGNUM), CONST(~XER_CA))));
+	LETS(XER_REGNUM, SELECT(AND(ICMP_EQ(R(rA), CONST(0xffffffff)), ICMP_NE(ca, CONST(0))), OR(RSPR(XER_REGNUM), CONST(XER_CA)), AND(RSPR(XER_REGNUM), CONST(~XER_CA))));
 	// update xer
 	if (instr & PPC_OPC_Rc) {
 		// update cr0 flags
@@ -1367,7 +1392,7 @@ static int opc_subfcx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value* b = R(rB);
 	LET(rD, ADD(XOR(a, CONST(-1)), ADD(b, CONST(1))));
 	Value* cond = ppc_dyncom_carry_3(cpu, bb, XOR(a, CONST(-1)), b, CONST(1));
-	LETS(XER_REGNUM, SELECT(cond, OR(RS(XER_REGNUM), CONST(XER_CA)), AND(RS(XER_REGNUM), CONST(~XER_CA))));
+	LETS(XER_REGNUM, SELECT(cond, OR(RSPR(XER_REGNUM), CONST(XER_CA)), AND(RSPR(XER_REGNUM), CONST(~XER_CA))));
 	if (instr & PPC_OPC_Rc) {
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
@@ -1416,12 +1441,12 @@ static int opc_addex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_XO(instr, rD, rA, rB);
-	Value* ca = SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_CA)), CONST(0)), CONST(1), CONST(0));
+	Value* ca = SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_CA)), CONST(0)), CONST(1), CONST(0));
 	Value* ra = R(rA);
 	Value* rb = R(rB);
 	LET(rD, ADD(ra, ADD(rb, ca)));
 	Value* cond = ppc_dyncom_carry_3(cpu, bb, ra, rb, ca);
-	LETS(XER_REGNUM, SELECT(cond, OR(RS(XER_REGNUM), CONST(XER_CA)), AND(RS(XER_REGNUM), CONST(~XER_CA))));
+	LETS(XER_REGNUM, SELECT(cond, OR(RSPR(XER_REGNUM), CONST(XER_CA)), AND(RSPR(XER_REGNUM), CONST(~XER_CA))));
 	if (instr & PPC_OPC_Rc) {
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
@@ -1456,7 +1481,7 @@ static int opc_addcx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value* ra = R(rA);
 	LET(rD, ADD(ra, R(rB)));
 	Value* cond = ICMP_ULT(R(rD), ra);
-	LETS(XER_REGNUM, SELECT(cond, OR(RS(XER_REGNUM), CONST(XER_CA)), AND(RS(XER_REGNUM), CONST(~XER_CA))));
+	LETS(XER_REGNUM, SELECT(cond, OR(RSPR(XER_REGNUM), CONST(XER_CA)), AND(RSPR(XER_REGNUM), CONST(~XER_CA))));
 	if (instr & PPC_OPC_Rc) {
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
@@ -1473,9 +1498,9 @@ static int opc_addmex_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_XO(instr, rD, rA, rB);
 	PPC_OPC_ASSERT(rB == 0);
-	Value* ca = SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_CA)), CONST(0)), CONST(1), CONST(0));
+	Value* ca = SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_CA)), CONST(0)), CONST(1), CONST(0));
 	LET(rD, ADD(R(rA), ADD(ca, CONST(0xffffffff))));
-	LETS(XER_REGNUM, SELECT(OR(ICMP_NE(R(rA), CONST(0)), ICMP_NE(ca, CONST(0))), OR(RS(XER_REGNUM), CONST(XER_CA)), AND(RS(XER_REGNUM), CONST(~XER_CA))));
+	LETS(XER_REGNUM, SELECT(OR(ICMP_NE(R(rA), CONST(0)), ICMP_NE(ca, CONST(0))), OR(RSPR(XER_REGNUM), CONST(XER_CA)), AND(RSPR(XER_REGNUM), CONST(~XER_CA))));
 	if (instr & PPC_OPC_Rc) {
 		// update cr0 flags
 		ppc_dyncom_update_cr0(cpu, bb, rD);
@@ -1496,7 +1521,7 @@ static int opc_srawx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	LET(rA, ASHR(rS_v, sh));
 	Value *ca_flag = ICMP_NE(AND(rS_v, SUB(LSHR(CONST(0x80000000),SUB(sh, CONST(1))), CONST(1))), CONST(0));
 	Value *is_negtive = ICMP_EQ(AND(rS_v, CONST(0x80000000)), CONST(1));
-	Value *xer_v = RS(XER_REGNUM);
+	Value *xer_v = RSPR(XER_REGNUM);
 	LETS(XER_REGNUM, SELECT(ICMP_EQ(AND(ca_flag, is_negtive), CONST1(1)), OR(xer_v, CONST(XER_CA)), AND(xer_v, CONST(~XER_CA))));
 	if (instr & PPC_OPC_Rc) {
 		ppc_dyncom_update_cr0(cpu, bb, rA);
@@ -1531,13 +1556,13 @@ int opc_mfmsr_tag(cpu_t *cpu, uint32_t instr, addr_t phys_pc, tag_t *tag, addr_t
 	return PPC_INSN_SIZE;
 }
 static int opc_mfmsr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
-	Value *cond = ICMP_NE(AND(RS(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
+	Value *cond = ICMP_NE(AND(RSPR(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PPC_EXC_PROGRAM, PPC_EXC_PROGRAM_PRIV, 0);
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_X(instr, rD, rA, rB);
 	PPC_OPC_ASSERT((rA == 0) && (rB == 0));
 	Value *rd = R(rD);
-	LET(rD, SELECT(cond, rd, RS(MSR_REGNUM)));
+	LET(rD, SELECT(cond, rd, RSPR(MSR_REGNUM)));
 
 	return No_exp;
 }
@@ -1550,9 +1575,9 @@ int opc_tlbie_tag(cpu_t *cpu, uint32_t instr, addr_t phys_pc, tag_t *tag, addr_t
 	return PPC_INSN_SIZE;
 }
 static int opc_tlbie_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
-	Value *cond = ICMP_NE(AND(RS(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
+	Value *cond = ICMP_NE(AND(RSPR(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PPC_EXC_PROGRAM, PPC_EXC_PROGRAM_PRIV, 0);
-	LETS(EFFECTIVE_CODE_PAGE_REGNUM, SELECT(cond, RS(EFFECTIVE_CODE_PAGE_REGNUM), CONST(0xffffffff)));
+	LETS(EFFECTIVE_CODE_PAGE_REGNUM, SELECT(cond, RSPR(EFFECTIVE_CODE_PAGE_REGNUM), CONST(0xffffffff)));
 
 	return No_exp;
 }
@@ -1568,7 +1593,7 @@ static int opc_mtmsr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	int rS, rA, rB;
 	PPC_OPC_TEMPL_X(instr, rS, rA, rB);
-	Value *cond = ICMP_NE(AND(RS(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
+	Value *cond = ICMP_NE(AND(RSPR(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PPC_EXC_PROGRAM, PPC_EXC_PROGRAM_PRIV, 0);
 	ppc_dyncom_set_msr(cpu, bb, R(rS), cond);
 
@@ -1584,12 +1609,12 @@ int opc_tlbsync_tag(cpu_t *cpu, uint32_t instr, addr_t phys_pc, tag_t *tag, addr
 }
 static int opc_tlbsync_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
-	Value *cond = ICMP_NE(AND(RS(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
+	Value *cond = ICMP_NE(AND(RSPR(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PPC_EXC_PROGRAM, PPC_EXC_PROGRAM_PRIV, 0);
 	int rS, rA, rB;
 	PPC_OPC_TEMPL_X(instr, rS, rA, rB);
 	// FIXME: check rS.. for 0     
-	LETS(EFFECTIVE_CODE_PAGE_REGNUM, SELECT(cond, RS(EFFECTIVE_CODE_PAGE_REGNUM), CONST(0xffffffff)));
+	LETS(EFFECTIVE_CODE_PAGE_REGNUM, SELECT(cond, RSPR(EFFECTIVE_CODE_PAGE_REGNUM), CONST(0xffffffff)));
 
 	return No_exp;
 }
@@ -1603,7 +1628,7 @@ int opc_mtsrin_tag(cpu_t *cpu, uint32_t instr, addr_t phys_pc, tag_t *tag, addr_
 }
 static int opc_mtsrin_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
-	Value *cond = ICMP_NE(AND(RS(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
+	Value *cond = ICMP_NE(AND(RSPR(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PPC_EXC_PROGRAM, PPC_EXC_PROGRAM_PRIV, 0);
 	int rS, rA, rB;
 	PPC_OPC_TEMPL_X(instr, rS, rA, rB);
@@ -1626,7 +1651,7 @@ int opc_mfsrin_tag(cpu_t *cpu, uint32_t instr, addr_t phys_pc, tag_t *tag, addr_
 }
 static int opc_mfsrin_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
-	Value *cond = ICMP_NE(AND(RS(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
+	Value *cond = ICMP_NE(AND(RSPR(MSR_REGNUM), CONST(MSR_PR)), CONST(0));
 	arch_ppc_dyncom_exception(cpu, bb, cond, PPC_EXC_PROGRAM, PPC_EXC_PROGRAM_PRIV, 0);
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_X(instr, rD, rA, rB);
@@ -1718,7 +1743,7 @@ static int opc_lwzux_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		LET(rA, addr);
 		LET(rD, result);
 	}else{
-		Value *current_pc = RS(PHYS_PC_REGNUM);
+		Value *current_pc = RSPR(PHYS_PC_REGNUM);
 		Value *exc_occur = ICMP_EQ(current_pc, CONST(PPC_EXC_DSI_ADDR));
 		LET(rA, SELECT(exc_occur, R(rA), addr));
 		LET(rD, SELECT(exc_occur, R(rD), result));
@@ -1731,7 +1756,7 @@ static int opc_isel_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_XO(instr, rD, rA, rB);
 	int crb = (instr >> 6) & 0x1f;
-	Value *cond = ICMP_NE(AND(RS(CR_REGNUM), CONST(1 << (31 - crb))), CONST(0));
+	Value *cond = ICMP_NE(AND(RSPR(CR_REGNUM), CONST(1 << (31 - crb))), CONST(0));
 	LET(rD, SELECT(cond, R(rA), R(rB)));
 
 	return No_exp;
@@ -1740,7 +1765,7 @@ static int opc_iseleq_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	int rD, rA, rB;
 	PPC_OPC_TEMPL_XO(instr, rD, rA, rB);
-	Value *cond = ICMP_NE(AND(RS(CR_REGNUM), CONST(CR_CR0_EQ)), CONST(0));
+	Value *cond = ICMP_NE(AND(RSPR(CR_REGNUM), CONST(CR_CR0_EQ)), CONST(0));
 	LET(rD, SELECT(cond, R(rA), R(rB)));
 
 	return No_exp;

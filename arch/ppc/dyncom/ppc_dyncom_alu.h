@@ -38,15 +38,15 @@
 
 static inline void ppc_dyncom_update_cr0(cpu_t* cpu, BasicBlock *bb, uint32 r)
 {
-	LETS(CR_REGNUM, AND(RS(CR_REGNUM), CONST(0x0fffffff)));
+	LETS(CR_REGNUM, AND(RSPR(CR_REGNUM), CONST(0x0fffffff)));
 	LETS(CR_REGNUM, 
-		SELECT(ICMP_EQ(R(r), CONST(0)), OR(RS(CR_REGNUM), CONST(CR_CR0_EQ)), 
+		SELECT(ICMP_EQ(R(r), CONST(0)), OR(RSPR(CR_REGNUM), CONST(CR_CR0_EQ)), 
 			SELECT(ICMP_NE(AND(R(r), CONST(0x80000000)), CONST(0)), 
-				OR(RS(CR_REGNUM), CONST(CR_CR0_LT)), 
-				OR(RS(CR_REGNUM), CONST(CR_CR0_GT)))));
+				OR(RSPR(CR_REGNUM), CONST(CR_CR0_LT)), 
+				OR(RSPR(CR_REGNUM), CONST(CR_CR0_GT)))));
 
-	LETS(CR_REGNUM, SELECT(ICMP_NE(AND(RS(XER_REGNUM), CONST(XER_SO)), CONST(0)), 
-		OR(RS(CR_REGNUM), CONST(CR_CR0_SO)), RS(CR_REGNUM)));
+	LETS(CR_REGNUM, SELECT(ICMP_NE(AND(RSPR(XER_REGNUM), CONST(XER_SO)), CONST(0)), 
+		OR(RSPR(CR_REGNUM), CONST(CR_CR0_SO)), RSPR(CR_REGNUM)));
 }
 static int inline ppc_dyncom_mask(int MB, int ME){
 	uint32 mask;
@@ -70,8 +70,8 @@ static inline Value* ppc_dyncom_carry_3(cpu_t* cpu, BasicBlock *bb, Value* a, Va
 }
 static void ppc_dyncom_set_msr(cpu_t *cpu, BasicBlock *bb, Value *newmsr, Value *cond)
 {
-	LETS(EFFECTIVE_CODE_PAGE_REGNUM, SELECT(cond, RS(EFFECTIVE_CODE_PAGE_REGNUM), CONST(0xffffffff)));
+	LETS(EFFECTIVE_CODE_PAGE_REGNUM, SELECT(cond, RSPR(EFFECTIVE_CODE_PAGE_REGNUM), CONST(0xffffffff)));
 	newmsr = SELECT(ICMP_NE(AND(newmsr, CONST(MSR_POW)), CONST(0)), AND(newmsr,CONST(~MSR_POW)), newmsr);
-	LETS(MSR_REGNUM, SELECT(cond, RS(MSR_REGNUM), newmsr));
+	LETS(MSR_REGNUM, SELECT(cond, RSPR(MSR_REGNUM), newmsr));
 }
 #endif
