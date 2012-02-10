@@ -954,7 +954,7 @@ static addr_t MisGetAddr(cpu_t *cpu, uint32_t instr)
 
 /* Addr Mode 4 */
 /* Getting Load Store Multiple Address and Increment After operand */
-static addr_t LSMGetAddrIA(cpu_t *cpu, uint32_t instr)
+static addr_t LSMGetAddrIA(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	int i =  BITS(0,15);
@@ -968,6 +968,7 @@ static addr_t LSMGetAddrIA(cpu_t *cpu, uint32_t instr)
 
 //	Addr = R(RN);
 	Addr = core->Reg[RN];
+	*end_addr = Addr + count * 4;
 #if 0
 	if(LSWBIT)
 		core->Reg[RN] = core->Reg[RN] + count * 4;
@@ -978,7 +979,7 @@ static addr_t LSMGetAddrIA(cpu_t *cpu, uint32_t instr)
 }
 
 /* Getting Load Store Multiple Address and Increment Before operand */
-static addr_t LSMGetAddrIB(cpu_t *cpu, uint32_t instr)
+static addr_t LSMGetAddrIB(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	int i =  BITS(0,15);
@@ -990,6 +991,7 @@ static addr_t LSMGetAddrIB(cpu_t *cpu, uint32_t instr)
 		i = i >> 1;
 	}
 	Addr = core->Reg[RN] + 4;
+	*end_addr = Addr + count * 4;
 //	Addr = ADD(R(RN), CONST(4));
 #if 0
 	if(LSWBIT)
@@ -1001,7 +1003,7 @@ static addr_t LSMGetAddrIB(cpu_t *cpu, uint32_t instr)
 }
 
 /* Getting Load Store Multiple Address and Decrement After operand. */
-static addr_t LSMGetAddrDA(cpu_t *cpu, uint32_t instr)
+static addr_t LSMGetAddrDA(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	int i =  BITS(0,15);
@@ -1015,6 +1017,7 @@ static addr_t LSMGetAddrDA(cpu_t *cpu, uint32_t instr)
 
 //	Addr = ADD(SUB(R(RN), CONST(count * 4)), CONST(4));
 	Addr = core->Reg[RN] - count * 4 + 4;
+	*end_addr = core->Reg[RN] + 4;
 //	if(LSWBIT)
 //		LET(RN, SUB(R(RN), CONST(count * 4)));
 //		core->Reg[RN] = core->Reg[RN] - count * 4;
@@ -1024,7 +1027,7 @@ static addr_t LSMGetAddrDA(cpu_t *cpu, uint32_t instr)
 }
 
 /* Getting Load Store Multiple Address and Decrement Before operand. */
-static addr_t LSMGetAddrDB(cpu_t *cpu, uint32_t instr)
+static addr_t LSMGetAddrDB(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	int i =  BITS(0,15);
@@ -1037,6 +1040,7 @@ static addr_t LSMGetAddrDB(cpu_t *cpu, uint32_t instr)
 	}
 
 	Addr = core->Reg[RN] - count * 4;
+	*end_addr = core->Reg[RN];
 //	if(LSWBIT)
 //		LET(RN, SUB(R(RN), CONST(count * 4)));
 //		core->Reg[RN] = Addr;
@@ -1046,23 +1050,23 @@ static addr_t LSMGetAddrDB(cpu_t *cpu, uint32_t instr)
 }
 
 /* Getting Load Store Multiple Address operand operation collection. */
-static addr_t LSMGetAddr(cpu_t *cpu, uint32_t instr)
+static addr_t LSMGetAddr(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
 	if(BITS(24,27) == 0x8){
 		if(BIT(23)){
 		/* IA */
-			return LSMGetAddrIA(cpu, instr);
+			return LSMGetAddrIA(cpu, instr, end_addr);
 		}else{
 		/* DA */
-			return LSMGetAddrDA(cpu, instr);
+			return LSMGetAddrDA(cpu, instr, end_addr);
 		}
 	}else if(BITS(24,27) == 0x9){
 		if(BIT(23)){
 		/* IB */
-			return LSMGetAddrIB(cpu, instr);
+			return LSMGetAddrIB(cpu, instr, end_addr);
 		}else{
 		/* DB */
-			return LSMGetAddrDB(cpu, instr);
+			return LSMGetAddrDB(cpu, instr, end_addr);
 		}
 	}
 
@@ -1071,14 +1075,19 @@ static addr_t LSMGetAddr(cpu_t *cpu, uint32_t instr)
 	return 0;
 }
 
-static addr_t GetAddr(cpu_t *cpu, uint32_t instr)
+static addr_t GetAddr(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
+	addr_t ret;
 	if(BITS(24,27) == 0x1 || BITS(24,27) == 0x2 || BITS(24, 27) == 0){
-		return MisGetAddr(cpu,instr);
+		ret = MisGetAddr(cpu,instr);	
+		*end_addr = ret + 4;
+		return ret;
 	}else if(BITS(24,27) == 0x4 || BITS(24,27) == 0x5 || BITS(24,27) == 0x6 || BITS(24,27) == 0x7 ){
-		return WOrUBGetAddr(cpu,instr);
+		ret = WOrUBGetAddr(cpu,instr);
+		*end_addr = ret + 4;
+		return ret;
 	}else if(BITS(24,27) == 0x8 || BITS(24,27) == 0x9){
-		return LSMGetAddr(cpu,instr);
+		return LSMGetAddr(cpu,instr, end_addr);
 	}
 
 	printf("Not a Load Store Addr operation %x\n", instr);
@@ -1094,17 +1103,25 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 	addr_t addr;
 	fault_t fault = NO_FAULT;
 	addr_t phys_addr;
+	addr_t end_addr;
 	uint32_t rw = BIT(20) ? 1 : 0;
 	if (BITS(20, 27) == 0x19 && BITS(4, 7) == 9) {
 		/* ldrex */
 		addr = core->Reg[RN];
+		end_addr = addr + 4;
 	} else if (BITS(20, 27) == 0x18 && BITS(4, 7) == 9) {
 		/* strex */
 		addr = core->Reg[RN];
+		end_addr = addr + 4;
 	} else
-		addr = GetAddr(cpu, instr);
-//	printf("pc is %x phys_pc is %x instr is %x\n", core->Reg[15], addr, instr);
-	fault = get_phys_addr(cpu, addr, &phys_addr, 32, rw);
+		addr = GetAddr(cpu, instr, &end_addr);
+	LOG("In %s, pc is %x phys_pc is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);
+	while(addr != end_addr){
+		fault = get_phys_addr(cpu, addr, &phys_addr, 32, rw);
+		if(fault)
+			break;
+		addr += 4;
+	}
 	if (fault) {
 		#if 0
 		printf("pc is %x phys_pc is %x instr is %x\n", core->Reg[15], addr, instr);
