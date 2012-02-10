@@ -187,7 +187,7 @@ uint32_t RAM32LE(uint8_t *RAM, addr_t a);
 #define R32(i) arch_get_reg(cpu, i, 32, bb)
 
 /* interface to the SPRs */
-#define RS(i) arch_get_spr_reg(cpu, i, 0, bb)
+#define RSPR(i) arch_get_spr_reg(cpu, i, 0, bb)
 #define RS32(i) arch_get_spr_reg(cpu, i, 32, bb)
 
 #define LET(i,v) arch_put_reg(cpu, i, v, 0, false, bb)
