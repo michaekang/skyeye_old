@@ -1193,6 +1193,15 @@ typedef struct _smlad_inst {
 	unsigned int Rn;
 } smlad_inst;
 
+typedef struct _smla_inst {
+	unsigned int x;
+	unsigned int y;
+	unsigned int Rm;
+	unsigned int Rd;
+	unsigned int Rs;
+	unsigned int Rn;
+} smla_inst;
+
 typedef struct _umlal_inst {
 	unsigned int S;
 	unsigned int Rm;
@@ -2791,7 +2800,25 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(shaddsubx)(unsigned int inst, int index){prin
 ARM_INST_PTR INTERPRETER_TRANSLATE(shsub16)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(shsub8)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(shsubaddx)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smla)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smla)(unsigned int inst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smla_inst));
+	smla_inst *inst_cream = (smla_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->x	 = BIT(inst, 5);
+	inst_cream->y	 = BIT(inst, 6);
+	inst_cream->Rm	 = BITS(inst, 0, 3);
+	inst_cream->Rs	 = BITS(inst, 8, 11);
+	inst_cream->Rd = BITS(inst, 16, 19);
+	inst_cream->Rn = BITS(inst, 12, 15);
+
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlad)(unsigned int inst, int index){
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
 	smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
@@ -5971,6 +5998,38 @@ void InterpreterMainLoop(cpu_t *core)
 	SHSUB8_INST:
 	SHSUBADDX_INST:
 	SMLA_INST:
+	{
+		INC_ICOUNTER;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			smla_inst *inst_cream = (smla_inst *)inst_base->component;
+			int32_t operand1, operand2;
+			if (inst_cream->x == 0)
+				operand1 = (BIT(RM, 15)) ? (BITS(RM, 0, 15) | 0xffff0000) : BITS(RM, 0, 15);
+			else
+				operand1 = (BIT(RM, 31)) ? (BITS(RM, 16, 31) | 0xffff0000) : BITS(RM, 16, 31);
+
+			if (inst_cream->y == 0)
+				operand2 = (BIT(RS, 15)) ? (BITS(RS, 0, 15) | 0xffff0000) : BITS(RS, 0, 15);
+			else
+				operand2 = (BIT(RS, 31)) ? (BITS(RS, 16, 31) | 0xffff0000) : BITS(RS, 16, 31);
+			if (cpu->icounter == 3539539214) {
+				printf("RM  : %08x\n", RM);
+				printf("RS  : %08x\n", RS);
+				printf("op1 : %08x\n", operand1);
+				printf("op2 : %08x\n", operand2);
+				printf("RN  : %08x\n", RN);
+			}
+			RD = operand1 * operand2 + RN;
+			if (cpu->icounter == 3539539214) {
+				printf("RD  : %08x\n", RD);
+			}
+			//FIXME: UPDATE Q FLAGS
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(smla_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
 	SMLAD_INST:
 	{
 		INC_ICOUNTER;
