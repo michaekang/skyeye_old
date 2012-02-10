@@ -6078,12 +6078,18 @@ void InterpreterMainLoop(cpu_t *core)
 			umlal_inst *inst_cream = (umlal_inst *)inst_base->component;
 			long long int rm = RM;
 			long long int rs = RS;
+			if (BIT(rm, 31)) {
+				rm |= 0xffffffff00000000;
+			}
+			if (BIT(rs, 31)) {
+				rs |= 0xffffffff00000000;
+			}
 			long long int rst = rm * rs;
-//			printf("rm : [%llx] rs : [%llx] rst [%llx]\n", RM, RS, rst);
-			rst += RDLO + (RDHI << 32);
+			long long int rdhi32 = RDHI;
+			long long int hilo = (rdhi32 << 32) + RDLO;
+			rst += hilo;
 			RDLO = BITS(rst,  0, 31);
 			RDHI = BITS(rst, 32, 63);
-
 			if (inst_cream->S) {
 				cpu->NFlag = BIT(RDHI, 31);
 				cpu->ZFlag = (RDHI == 0 && RDLO == 0);
