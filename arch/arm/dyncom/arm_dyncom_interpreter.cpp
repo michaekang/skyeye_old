@@ -4848,7 +4848,9 @@ void InterpreterMainLoop(cpu_t *core)
 	CLREX_INST:
 	{
 		INC_ICOUNTER;
-		/* NOT IMPL */
+		remove_exclusive(cpu, 0);
+		cpu->exclusive_access_state = 0;
+
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(clrex_inst));
 		FETCH_INST;
