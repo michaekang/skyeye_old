@@ -2150,15 +2150,43 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//arch_arm_undef(cpu, bb, instr);
+	DBG("VMSR :");
+	if(RD == 15) {
+		printf("in %s is not implementation.\n", __FUNCTION__);
+		exit(-1);
+	}
+	
+	Value *data = NULL;
+	int reg = RN;
+	int Rt   = RD;
+	if (reg == 1)
+	{
+		LET(VFP_FPSCR, R(Rt));
+		DBG("\tflags <= fpscr\n");
+	}
+	else
+	{
+		switch (reg)
+		{
+		case 8:
+			LET(VFP_FPEXC, R(Rt));
+			DBG("\tfpexc <= r%d \n", Rt);
+			break;
+		default:
+			DBG("\tSUBARCHITECTURE DEFINED\n");
+			break;
+		}
+	}
 	return No_exp;
 }
 #endif
@@ -2426,15 +2454,64 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//arch_arm_undef(cpu, bb, instr);
+	DBG("VMRS :");
+	if(RD == 15) {
+		printf("in %s is not implementation.\n", __FUNCTION__);
+		exit(-1);
+	}
+	
+	Value *data = NULL;
+	int reg = RN;
+	int Rt   = RD;
+	if (reg == 1)
+	{
+		if (Rt != 15)
+		{
+			LET(Rt, R(VFP_FPSCR));
+			DBG("\tr%d <= fpscr\n", Rt);
+		}
+		else
+		{
+			LET(Rt, R(VFP_FPSCR));
+			DBG("\tflags <= fpscr\n");
+		}
+	}
+	else
+	{
+		switch (reg)
+		{
+		case 0:
+			LET(Rt, R(VFP_FPSID));
+			DBG("\tr%d <= fpsid\n", Rt);
+			break;
+		case 6:
+			/* MVFR1, VFPv3 only ? */
+			DBG("\tr%d <= MVFR1 unimplemented\n", Rt);
+			break;
+		case 7:
+			/* MVFR0, VFPv3 only? */
+			DBG("\tr%d <= MVFR0 unimplemented\n", Rt);
+			break;
+		case 8:
+			LET(Rt, R(VFP_FPEXC));
+			DBG("\tr%d <= fpexc\n", Rt);
+			break;
+		default:
+			DBG("\tSUBARCHITECTURE DEFINED\n");
+			break;
+		}
+	}
+
 	return No_exp;
 }
 #endif
