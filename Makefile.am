@@ -94,6 +94,7 @@ if LINUX
 all:third-party/libiberty/libiberty.a third-party/bfd/.libs/libbfd.so third-party/opcodes/.libs/libopcodes.so
 endif
 
+include Makefile.android
 skyeye_gui:
 	cd gui/qt4_src && rm -f skyeye_gui && $(MAKE)
 	cp -f gui/qt4_src/skyeye-gui $(prefix)/bin/

@@ -1,0 +1,2 @@
+SUBDIRS +=  android/
+#skyeye_LDADD =  -L./android -landroid

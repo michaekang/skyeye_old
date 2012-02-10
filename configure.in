@@ -328,6 +328,7 @@ AC_CONFIG_FILES(device/Makefile)
 AC_CONFIG_FILES(common/Makefile)
 AC_CONFIG_FILES(soc/arm/Makefile)
 AC_CONFIG_FILES(utils/Makefile)
+AC_CONFIG_FILES(android/Makefile)
 
 if test ["${ENABLE_TARGETS}" = "all"] ;then
     AC_CONFIG_FILES(arch/arm/Makefile)
