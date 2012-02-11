@@ -178,6 +178,7 @@ enum {
 };
 
 typedef struct cpu_flags_layout {
+	void* flag_address;
 	int shift;	/* bit position */
 	char type;	/* 'N', 'V', 'Z', 'C' or 0 (some other flag unknown to the generic code) */
 	const char *name; /* symbolic name */
@@ -236,7 +237,7 @@ typedef struct cpu_archinfo {
 
 	cpu_register_layout_t const *register_layout;
 	uint32_t register_count2;
-	cpu_flags_layout_t const *flags_layout;
+	cpu_flags_layout_t *flags_layout;
 	uint32_t flags_count;
 	/* indicate the pc location in gpr array, only for arm now */
 	int pc_index_in_gpr;

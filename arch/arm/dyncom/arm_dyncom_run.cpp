@@ -459,7 +459,7 @@ void printinfo(int signum)
 }
 #endif
 
-static cpu_flags_layout_t arm_flags_layout[5] ={{4, 'T', "TFLAG"}, {3,'N',"NFLAG"},{2,'Z',"ZFLAG"},{1,'C',"CFLAG"},{0,'V',"VFLAG"}} ;
+static cpu_flags_layout_t arm_flags_layout[5] ={{NULL, 4, 'T', "TFLAG"}, {NULL, 3,'N',"NFLAG"},{NULL, 2,'Z',"ZFLAG"},{NULL, 1,'C',"CFLAG"},{NULL, 0,'V',"VFLAG"}} ;
 /* physical register for arm archtecture */
 static void arch_arm_init(cpu_t *cpu, cpu_archinfo_t *info, cpu_archrf_t *rf)
 {
@@ -495,8 +495,7 @@ static void arch_arm_init(cpu_t *cpu, cpu_archinfo_t *info, cpu_archrf_t *rf)
 	info->register_size[CPU_REG_SPR] = 32;
 	info->psr_size = 32;
 	/* The flag count */
-	info->flags_count = 5;
-
+	info->flags_count = sizeof(arm_flags_layout)/sizeof(cpu_flags_layout_t);
 	info->flags_layout = arm_flags_layout;
 	/* Indicate the pc index for OPT_LOCAL_REGISTERS */
 	info->pc_index_in_gpr = 15;
@@ -1156,7 +1155,12 @@ void arm_dyncom_init(arm_core_t* core){
 	//cpu->rf.srf = core->Spsr;
 	//cpu->rf.srf = &core->phys_pc;
 	cpu->rf.srf = core->Reg_usr;
-
+       /* The flag address  */
+	cpu->info.flags_layout[0].flag_address = &core->TFlag;
+	cpu->info.flags_layout[1].flag_address = &core->NFlag;
+	cpu->info.flags_layout[2].flag_address = &core->ZFlag;
+	cpu->info.flags_layout[3].flag_address = &core->CFlag;
+	cpu->info.flags_layout[4].flag_address = &core->VFlag;
 	
 	cpu->debug_func = arm_debug_func;
 	

@@ -284,8 +284,15 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 		// declare flags
 		cpu_flags_layout_t const *flags_layout = cpu->info.flags_layout;
 		for (size_t i = 0; i < cpu->info.flags_count; i++) {
+			#ifdef OPT_LOCAL_REGISTERS
 			Value *f = new AllocaInst(getIntegerType(1), flags_layout[i].name,
 					bb);
+			#else
+			Constant *flag = ConstantInt::get(intptr_type, (uintptr_t)flags_layout[i].flag_address);
+			Value* f = ConstantExpr::getIntToPtr(flag, PointerType::getUnqual(getIntegerType(1)));
+			f->setName(flags_layout[i].name);
+			#endif
+
 			cpu->ptr_FLAG[flags_layout[i].shift] = f;
 			/* set pointers to standard NVZC flags */
 			switch (flags_layout[i].type) {
