@@ -215,6 +215,7 @@ typedef struct
 	mem_bank_t mem_banks[MAX_BANK];
 } mem_config_t;
 #endif
+#define VFP_REG_NUM 64
 struct ARMul_State
 {
 	ARMword Emulate;	/* to start and stop emulation */
@@ -238,7 +239,7 @@ struct ARMul_State
 	/* VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).
 	   VFPv3-D32/ASIMD may have up to 32 doubleword registers (D0-D31),
 		and only 32 singleword registers are accessible (S0-S31). */
-	ARMword ExtReg[64];	
+	ARMword ExtReg[VFP_REG_NUM];
 	/* ---- End of the ordered registers ---- */
 	
 	ARMword RegBank[7][16];	/* all the registers */

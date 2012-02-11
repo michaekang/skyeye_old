@@ -1162,6 +1162,19 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 		/* strex */
 		addr = core->Reg[RN];
 		end_addr = addr + 4;
+	} else if(BITS(25, 27) == 0x6 && BITS(8, 11) == 0xb && BIT(20) == 0){
+		/* VSTM */
+		int add    = BIT(23);
+		int single = BIT(8) == 0;
+		int regs   = single ? BITS(0, 7) : BITS(1, 7);
+		int n      = BITS(16, 19);
+		int imm32  = BITS(0, 7)<<2;
+		addr = add ? core->Reg[n] : (core->Reg[n] - imm32);
+		if(single){
+			end_addr = regs * 4 + addr;
+		}
+		else
+			end_addr = regs * 8 + addr;
 	} else
 		addr = GetAddr(cpu, instr, &end_addr);
 	LOG("In %s, pc is %x phys_pc is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);
