@@ -613,6 +613,9 @@ static arch_func_t arm_arch_func = {
 static uint32_t arm_debug_func(cpu_t* cpu){
 	int idx = 0;
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	core->icounter++;
+        extern int diff_single_step(cpu_t *cpu);
+        return diff_single_step(cpu);
 #if 0	
 	for (idx = 0;idx < 16; idx ++) {
 		LOG_IN_CLR(RED, "R%d:0x%x\t", idx, core->Reg[idx]);
