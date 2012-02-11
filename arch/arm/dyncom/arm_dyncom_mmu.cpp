@@ -618,6 +618,55 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 		}
 	}
 
+#if DIFF_WRITE
+	static int write_begin = 0;
+	//virt_addr &= ~(WORD_SIZE - 1);
+	//phys_addr &= ~(WORD_SIZE - 1);
+	if(core->CurrWrite == 0xdeadc0de || write_begin == 1){
+		if(core->CurrWrite == 0xdeadc0de)
+			core->CurrWrite = 0;
+		/* out of the array */
+		if(core->CurrWrite >= 17 ){
+			printf("In %s, Wrong write array, %d@0x%x",  __FUNCTION__, core->CurrWrite, core->Reg[15]);
+			exit(-1);
+		}
+		write_begin = 1;
+		core->WriteAddr[core->CurrWrite] = phys_addr | (virt_addr & 3);
+		core->WriteData[core->CurrWrite] = value;
+		core->WritePc[core->CurrWrite] = core->Reg[15];
+		core->CurrWrite++;
+		//printf("In %s, pc=0x%x, addr=0x%x, data=0x%x\n", __FUNCTION__, core->Reg[15],  phys_addr | (virt_addr & 3), value);
+		#if 0
+		/* found the instruction of write action */
+		if(value == 0xbee0f770 && core->Reg[15] == 0x400bb584){
+			printf("############In %s,  va=0x%x, phys_addr=0x%x, value=0x%x\n", __FUNCTION__, virt_addr, phys_addr, value);
+			int j, nptrs;
+			#define SIZE 100
+	       	   	void *buffer[100];
+	        	   char **strings;
+
+        		   nptrs = backtrace(buffer, SIZE);
+		           printf("backtrace() returned %d addresses\n", nptrs);
+
+           /* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
+              would produce similar output to the following: */
+
+	           strings = backtrace_symbols(buffer, nptrs);
+        	   if (strings == NULL) {
+	               perror("backtrace_symbols");
+        	       exit(EXIT_FAILURE);
+	           }
+
+        	   for (j = 0; j < nptrs; j++)
+	               printf("%s\n", strings[j]);
+
+        	   free(strings);
+
+		}
+	#endif
+	}
+#endif
+
 	//bus_write(size, phys_addr, value);
 	if (size == 8) {
 		bus_write(8, phys_addr | (virt_addr & 3), value);
