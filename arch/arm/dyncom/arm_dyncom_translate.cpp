@@ -1560,7 +1560,6 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = R(RN);
 	Value *val = R(RM);
 	arch_write_memory(cpu, bb, addr, val, 32);
-	LET(RD, CONST(0));
 	return 0;
 }
 int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1570,7 +1569,6 @@ int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = R(RN);
 	Value *val = AND(R(RM), CONST(0xff));
 	arch_write_memory(cpu, bb, addr, val, 8);
-	LET(RD, CONST(0));
 	return No_exp;
 }
 int DYNCOM_TRANS(strh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
