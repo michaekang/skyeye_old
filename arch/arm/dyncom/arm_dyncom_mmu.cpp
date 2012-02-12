@@ -511,6 +511,12 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 		bus_read(16, phys_addr | (virt_addr & 3), &value);
 	} else {
 		bus_read(32, phys_addr, &value);
+		/* Unaligned read word */
+		if ((virt_addr & 3) && (size == 32)) {
+			virt_addr = (virt_addr & 3) << 3;       /* Get the word address.  */
+			value =  ((value >> virt_addr) | (value << (32 - virt_addr)));  /* rot right */
+		}
+
 	}
 	/* ldrex or ldrexb */
 	uint32 instr;
