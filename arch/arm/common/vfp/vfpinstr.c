@@ -3382,15 +3382,8 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 	int instr_size = INSTR_SIZE;
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-	if (BIT(15)) {
-		arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
-		*new_pc = NEW_PC_NONE;
-		if (BITS(25, 27) == 4 && BIT(22) == 1 && BIT(20) == 1 && BIT(15) == 1) {
-			*tag |= TAG_TRAP;
-		}
-	} else {
-		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	}
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
 	*tag |= TAG_MEMORY;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
@@ -3400,7 +3393,6 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
 	int single = BIT(8) == 0;
 	int add    = BIT(23);
@@ -3411,7 +3403,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	int regs   = single ? BITS(0, 7) : BITS(1, 7);
 
 	Value* Addr = SELECT(CONST1(add), R(n), SUB(R(n), CONST(imm32)));
-	//DBG("VSTM : addr[%x]\n", addr);
+	DBG("VSTM \n");
 	int i;	
 	for (i = 0; i < regs; i++)
 	{
@@ -3433,7 +3425,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			//if (fault) goto MMU_EXCEPTION;
 
 			//fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
-			arch_write_memory(cpu, bb, Addr, RSPR((d + i) * 2 + 1), 32);
+			arch_write_memory(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
 			//addr += 8;
@@ -3443,8 +3435,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	if (wback){
 		//cpu->Reg[n] = (add ? cpu->Reg[n] + imm32 : 
 		//			   cpu->Reg[n] - imm32);
-		LETS(n, SELECT(CONST1(add), ADD(R(n), CONST(imm32)), SUB(R(n), CONST(imm32))));
-		//DBG("\twback r%d[%x]\n", inst_cream->n, cpu->Reg[inst_cream->n]);
+		LET(n, SELECT(CONST1(add), ADD(R(n), CONST(imm32)), SUB(R(n), CONST(imm32))));
+		DBG("\twback r%d, add=%d, imm32=%d\n", n, add, imm32);
 	}
 	return No_exp;
 }
