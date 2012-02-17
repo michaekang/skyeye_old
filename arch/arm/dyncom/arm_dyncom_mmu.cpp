@@ -404,23 +404,17 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 	fault_t fault = NO_FAULT;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 #if DIFF_WRITE
-	static int write_begin = 0;
-	//virt_addr &= ~(WORD_SIZE - 1);
-	//phys_addr &= ~(WORD_SIZE - 1);
-	if(core->CurrWrite == 0xdeadc0de || write_begin == 1){
-		if(core->CurrWrite == 0xdeadc0de)
-			core->CurrWrite = 0;
+	if(core->icounter > core->debug_icounter){
 		/* out of the array */
 		if(core->CurrWrite >= 17 ){
 			printf("In %s, Wrong write array, %d@0x%x",  __FUNCTION__, core->CurrWrite, core->Reg[15]);
 			exit(-1);
 		}
-		write_begin = 1;
 		core->WriteAddr[core->CurrWrite] = phys_addr | (virt_addr & 3);
 		core->WriteData[core->CurrWrite] = value;
 		core->WritePc[core->CurrWrite] = core->Reg[15];
 		core->CurrWrite++;
-		//printf("In %s, pc=0x%x, addr=0x%x, data=0x%x\n", __FUNCTION__, core->Reg[15],  phys_addr | (virt_addr & 3), value);
+		printf("In %s, pc=0x%x, addr=0x%x, data=0x%x\n", __FUNCTION__, core->Reg[15],  phys_addr | (virt_addr & 3), value);
 		#if 0
 		/* found the instruction of write action */
 		if(value == 0xbee0f770 && core->Reg[15] == 0x400bb584){
@@ -623,20 +617,13 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 			return;
 		}
 	}
-
 #if DIFF_WRITE
-	static int write_begin = 0;
-	//virt_addr &= ~(WORD_SIZE - 1);
-	//phys_addr &= ~(WORD_SIZE - 1);
-	if(core->CurrWrite == 0xdeadc0de || write_begin == 1){
-		if(core->CurrWrite == 0xdeadc0de)
-			core->CurrWrite = 0;
+	if(core->icounter > core->debug_icounter){
 		/* out of the array */
 		if(core->CurrWrite >= 17 ){
 			printf("In %s, Wrong write array, %d@0x%x",  __FUNCTION__, core->CurrWrite, core->Reg[15]);
 			exit(-1);
 		}
-		write_begin = 1;
 		core->WriteAddr[core->CurrWrite] = phys_addr | (virt_addr & 3);
 		core->WriteData[core->CurrWrite] = value;
 		core->WritePc[core->CurrWrite] = core->Reg[15];

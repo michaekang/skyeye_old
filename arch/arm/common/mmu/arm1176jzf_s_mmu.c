@@ -807,13 +807,9 @@ skip_translation:
                 printf("icounter is %lld\n", state->NumInstrs);
     }
 #endif
-	static int write_begin = 0;
 finished_write:
 #if DIFF_WRITE
-	if(state->CurrWrite == 0xdeadc0de || write_begin == 1){
-		if(state->CurrWrite == 0xdeadc0de)
-			state->CurrWrite = 0;
-		write_begin = 1;
+	if(state->icounter > state->debug_icounter){
 		if(state->CurrWrite >= 17 ){
 			printf("Wrong write array, 0x%x",  state->CurrWrite);
 			exit(-1);
