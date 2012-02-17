@@ -160,6 +160,13 @@ static tdstate decode_dyncom_thumb_instr(arm_core_t *core, uint32_t inst, uint32
 extern const INSTRACT arm_instruction_action[];
 extern const ISEITEM arm_instruction[];
 
+void update_cond_from_fpscr(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	new StoreInst(TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(31)), CONST(0x1))), ptr_N, bb);
+	new StoreInst(TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(30)), CONST(0x1))), ptr_Z, bb);
+	new StoreInst(TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(29)), CONST(0x1))), ptr_C, bb);
+	new StoreInst(TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(28)), CONST(0x1))), ptr_V, bb);
+	return;
+}
 
 Value * arch_arm_translate_cond(cpu_t *cpu, addr_t pc, BasicBlock *bb)
 {
@@ -2352,8 +2359,8 @@ int DYNCOM_TAG(mrc)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 {
 	int instr_size = INSTR_SIZE;
 	if (instr == 0xeef04a10) {
-		arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-		return instr_size;
+		//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+		//return instr_size;
 	}
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	#if 0

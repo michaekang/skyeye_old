@@ -1217,6 +1217,53 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 		}
 		else
 			end_addr = regs * 8 + addr;
+	} else if(BITS(25, 27) == 0x6 && BITS(8, 11) == 0xb && BIT(20) == 1){
+		/* VLDM */
+		int add    = BIT(23);
+		int single = BIT(8) == 0;
+		int regs   = single ? BITS(0, 7) : BITS(1, 7);
+		int n      = BITS(16, 19);
+		int imm32  = BITS(0, 7)<<2;
+		addr = add ? core->Reg[n] : (core->Reg[n] - imm32);
+		if(single){
+			end_addr = regs * 4 + addr;
+		}
+		else
+			end_addr = regs * 8 + addr;
+	} else if(BITS(23, 27) == 0x1a && BITS(8, 11) == 0xb && BITS(16, 21) == 0x2d){
+		/* VPUSH */
+		int add    = BIT(23);
+		int single = BIT(8) == 0;
+		int regs   = single ? BITS(0, 7) : BITS(1, 7);
+		int n      = BITS(16, 19);
+		int imm32  = BITS(0, 7)<<2;
+		addr = (core->Reg[n] - imm32);
+		if(single){
+			end_addr = regs * 4 + addr;
+		}
+		else
+			end_addr = regs * 8 + addr;
+	} else if(BITS(23, 27) == 0x1a && BITS(8, 11) == 0xb && BITS(16, 21) == 0x2d){
+		/* VLDR */
+		int single = BIT(8) == 0;
+		int add    = BIT(23);
+		int wback  = BIT(21);
+		int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4);
+		int n      = BITS(16, 19);
+		int imm32  = BITS(0, 7)<<2;
+		int regs   = (single ? BITS(0, 7) : BITS(1, 7));
+		addr_t base = core->Reg[n];
+		if(n == 15){
+			base = base & 0xFFFFFFFC + 8;
+		}
+		addr_t addr = add ? (base + imm32) : (base - imm32);
+		if(single){
+			end_addr = addr + 4;
+		}
+		else
+			end_addr = addr + 8;
+
+
 	} else
 		addr = GetAddr(cpu, instr, &end_addr);
 	LOG("In %s, pc is %x phys_pc is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);

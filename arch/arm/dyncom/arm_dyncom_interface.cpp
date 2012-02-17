@@ -231,6 +231,14 @@ static void per_cpu_step(conf_object_t * running_core){
 
 static void per_cpu_stop(conf_object_t * core){
 }
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+extern unsigned VFPInit(arm_core_t* core);
+#ifdef __cplusplus
+}
+#endif
 
 static bool arm_cpu_init()
 {
@@ -265,6 +273,8 @@ static bool arm_cpu_init()
 		arm_core_t* core = &cpu->core[i];
 		arm_core_init(core, i);
 		arm_dyncom_init(core);
+		/* initialization the VFP */
+		VFPInit(core);
 
 		skyeye_exec_t* exec = create_exec();
 		exec->priv_data = get_conf_obj_by_cast(core, "arm_core_t");

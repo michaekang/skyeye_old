@@ -742,8 +742,37 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		uint32_t mode = core->Cpsr & 0x1f;
 		if ( (mode != core->Mode) && (!is_user_mode(cpu)) ) {
 			switch_mode(core, mode);
+			core->Reg[15] += 4;
+			return 1;
 		}
-		
+		uint32 instr = 0xdeadc0de;
+		bus_read(32, core->phys_pc, &instr);
+		if((instr & 0xFFB30E10)== 0xf3b30600){ /* some instruction need to implemented here */
+			/* VCVTBFI */
+			printf("VCVTBFI executed:\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}
+		if((instr & 0xFFA00F10)== 0xf2000d00){ /* some instruction need to implemented here */
+			/* VADD */
+			printf("VADD executed:\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+		if((instr & 0x0FBF0E50)== 0x0eb40a40){ /* some instruction need to implemented here */
+			/* VCMP */
+			printf("VCMP executed:\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+		if((instr & 0x0FBF0E50)== 0x0eb50a40){ /* some instruction need to implemented here */
+			/* VCMP2 */
+			printf("VCMP executed:\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+
+
 		core->Reg[15] += 4;
 		return 1;
 	}

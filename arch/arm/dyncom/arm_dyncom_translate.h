@@ -29,4 +29,13 @@ static int get_instr_size(cpu_t* cpu){
 #define INSTR_SIZE get_instr_size(cpu)
 #endif
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+void update_cond_from_fpscr(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
