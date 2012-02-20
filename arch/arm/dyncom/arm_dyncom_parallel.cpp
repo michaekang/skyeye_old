@@ -747,31 +747,33 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		}
 		uint32 instr = 0xdeadc0de;
 		bus_read(32, core->phys_pc, &instr);
-		if((instr & 0xFFB30E10)== 0xf3b30600){ /* some instruction need to implemented here */
+		if((instr & 0x0FB80e50)== 0x0eb80a40){ /* some instruction need to implemented here */
 			/* VCVTBFI */
 			printf("VCVTBFI executed:\n");
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}
-		if((instr & 0xFFA00F10)== 0xf2000d00){ /* some instruction need to implemented here */
+		else if((instr & 0x0fb00e50) == 0x0e300a00){ /* some instruction need to implemented here */
 			/* VADD */
 			printf("VADD executed:\n");
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}	
-		if((instr & 0x0FBF0E50)== 0x0eb40a40){ /* some instruction need to implemented here */
+		else if((instr & 0x0FBF0E50)== 0x0eb40a40){ /* some instruction need to implemented here */
 			/* VCMP */
 			printf("VCMP executed:\n");
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}	
-		if((instr & 0x0FBF0E50)== 0x0eb50a40){ /* some instruction need to implemented here */
+		else if((instr & 0x0FBF0E50)== 0x0eb50a40){ /* some instruction need to implemented here */
 			/* VCMP2 */
-			printf("VCMP executed:\n");
+			printf("VCMP2 executed:\n");
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}	
-
+		else{
+			//printf("Unknown instruction 0x%x\n", instr);
+		}
 
 		core->Reg[15] += 4;
 		return 1;
