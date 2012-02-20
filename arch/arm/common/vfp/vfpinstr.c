@@ -82,9 +82,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -181,9 +181,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -279,9 +279,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -377,9 +377,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -475,9 +475,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -573,9 +573,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -671,9 +671,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -769,9 +769,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -867,9 +867,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1204,9 +1204,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1302,9 +1302,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1400,9 +1400,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1498,9 +1498,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1595,9 +1595,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1692,9 +1692,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1790,9 +1790,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1889,9 +1889,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 		else
-			ret = vfp_single_cpdo(inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1939,11 +1939,11 @@ int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr){
 	int dp_operation = BIT(8);
 	int ret;
 	if (dp_operation)
-		ret = vfp_double_cpdo(instr, cpu->VFP[VFP_FPSCR]);
+		ret = vfp_double_cpdo(cpu, instr, cpu->VFP[VFP_FPSCR]);
 	else
-		ret = vfp_single_cpdo(instr, cpu->VFP[VFP_FPSCR]);
+		ret = vfp_single_cpdo(cpu, instr, cpu->VFP[VFP_FPSCR]);
 
-	vfp_raise_exceptions(ret, instr, cpu->VFP[VFP_FPSCR]);
+	vfp_raise_exceptions(cpu, ret, instr, cpu->VFP[VFP_FPSCR]);
 	return 0;
 }
 #endif
@@ -4134,4 +4134,4 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 
 #define CHECK_VFP_ENABLED	
 	
-#define CHECK_VFP_CDP_RET	vfp_raise_exceptions(ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}
+#define CHECK_VFP_CDP_RET	vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}

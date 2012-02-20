@@ -77,13 +77,13 @@ unsigned VFPCDP (ARMul_State * state, unsigned type, ARMword instr);
 #ifdef __cplusplus
  extern "C" {
 #endif
-int32_t vfp_get_float(unsigned int reg);
-void vfp_put_float(int32_t val, unsigned int reg);
-uint64_t vfp_get_double(unsigned int reg);
-void vfp_put_double(uint64_t val, unsigned int reg);
-void vfp_raise_exceptions(uint32_t exceptions, uint32_t inst, uint32_t fpscr);
-extern uint32_t vfp_single_cpdo(uint32_t inst, uint32_t fpscr);
-extern uint32_t vfp_double_cpdo(uint32_t inst, uint32_t fpscr);
+int32_t vfp_get_float(ARMul_State * state, unsigned int reg);
+void vfp_put_float(ARMul_State * state, int32_t val, unsigned int reg);
+uint64_t vfp_get_double(ARMul_State * state, unsigned int reg);
+void vfp_put_double(ARMul_State * state, uint64_t val, unsigned int reg);
+void vfp_raise_exceptions(ARMul_State * state, uint32_t exceptions, uint32_t inst, uint32_t fpscr);
+extern uint32_t vfp_single_cpdo(ARMul_State * state, uint32_t inst, uint32_t fpscr);
+extern uint32_t vfp_double_cpdo(ARMul_State * state, uint32_t inst, uint32_t fpscr);
 
 /* MRC */
 inline void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword *value);

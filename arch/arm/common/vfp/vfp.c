@@ -27,7 +27,7 @@
 #include "vfp/vfp.h"
 #include <skyeye_log.h>
 
-ARMul_State* persistent_state; /* function calls from SoftFloat lib don't have an access to ARMul_state. */
+//ARMul_State* persistent_state; /* function calls from SoftFloat lib don't have an access to ARMul_state. */
 
 unsigned
 VFPInit (ARMul_State *state)
@@ -37,7 +37,7 @@ VFPInit (ARMul_State *state)
 	state->VFP[VFP_FPEXC] = 0;
 	state->VFP[VFP_FPSCR] = 0;
 	
-	persistent_state = state;
+	//persistent_state = state;
 	/* Reset only specify VFP_FPEXC_EN = '0' */
 
 	return No_exp;
@@ -242,11 +242,11 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 		int exceptions = 0;
 
 		if (CoProc == 10)
-			exceptions = vfp_single_cpdo(instr, state->VFP[VFP_FPSCR]);
+			exceptions = vfp_single_cpdo(state, instr, state->VFP[VFP_FPSCR]);
 		else 
-			exceptions = vfp_double_cpdo(instr, state->VFP[VFP_FPSCR]);
+			exceptions = vfp_double_cpdo(state, instr, state->VFP[VFP_FPSCR]);
 
-		vfp_raise_exceptions(exceptions, instr, state->VFP[VFP_FPSCR]);
+		vfp_raise_exceptions(state, exceptions, instr, state->VFP[VFP_FPSCR]);
 
 		return ARMul_DONE;
 	}
@@ -299,31 +299,31 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 #undef VFP_CDP_IMPL
 
 /* Miscellaneous functions */
-int32_t vfp_get_float(unsigned int reg)
+int32_t vfp_get_float(arm_core_t* state, unsigned int reg)
 {
-	DBG("VFP get float: s%d=[%08x]\n", reg, persistent_state->ExtReg[reg]);
-	return persistent_state->ExtReg[reg];
+	DBG("VFP get float: s%d=[%08x]\n", reg, state->ExtReg[reg]);
+	return state->ExtReg[reg];
 }
 
-void vfp_put_float(int32_t val, unsigned int reg)
+void vfp_put_float(arm_core_t* state, int32_t val, unsigned int reg)
 {
 	DBG("VFP put float: s%d <= [%08x]\n", reg, val);
-	persistent_state->ExtReg[reg] = val;
+	state->ExtReg[reg] = val;
 }
 
-uint64_t vfp_get_double(unsigned int reg)
+uint64_t vfp_get_double(arm_core_t* state, unsigned int reg)
 {
 	uint64_t result;
-	result = ((uint64_t) persistent_state->ExtReg[reg*2+1])<<32 | persistent_state->ExtReg[reg*2];
+	result = ((uint64_t) state->ExtReg[reg*2+1])<<32 | state->ExtReg[reg*2];
 	DBG("VFP get double: s[%d-%d]=[%016llx]\n", reg*2+1, reg*2, result);
 	return result;
 }
 
-void vfp_put_double(uint64_t val, unsigned int reg)
+void vfp_put_double(arm_core_t* state, uint64_t val, unsigned int reg)
 {
 	DBG("VFP put double: s[%d-%d] <= [%08x-%08x]\n", reg*2+1, reg*2, (uint32_t) (val>>32), (uint32_t) (val & 0xffffffff));
-	persistent_state->ExtReg[reg*2] = (uint32_t) (val & 0xffffffff);
-	persistent_state->ExtReg[reg*2+1] = (uint32_t) (val>>32);
+	state->ExtReg[reg*2] = (uint32_t) (val & 0xffffffff);
+	state->ExtReg[reg*2+1] = (uint32_t) (val>>32);
 }
 
 
@@ -331,7 +331,7 @@ void vfp_put_double(uint64_t val, unsigned int reg)
 /*
  * Process bitmask of exception conditions. (from vfpmodule.c)
  */
-void vfp_raise_exceptions(u32 exceptions, u32 inst, u32 fpscr)
+void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpscr)
 {
 	int si_code = 0;
 
@@ -353,5 +353,5 @@ void vfp_raise_exceptions(u32 exceptions, u32 inst, u32 fpscr)
 
 	fpscr |= exceptions;
 
-	persistent_state->VFP[VFP_FPSCR] = fpscr;
+	state->VFP[VFP_FPSCR] = fpscr;
 }

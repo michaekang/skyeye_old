@@ -81,7 +81,7 @@ static void vfp_single_normalise_denormal(struct vfp_single *vs)
 }
 
 
-u32 vfp_single_normaliseround(int sd, struct vfp_single *vs, u32 fpscr, u32 exceptions, const char *func)
+u32 vfp_single_normaliseround(ARMul_State* state, int sd, struct vfp_single *vs, u32 fpscr, u32 exceptions, const char *func)
 {
 	u32 significand, incr, rmode;
 	int exponent, shift, underflow;
@@ -212,7 +212,7 @@ u32 vfp_single_normaliseround(int sd, struct vfp_single *vs, u32 fpscr, u32 exce
 		pr_debug("VFP: %s: d(s%d)=%08x exceptions=%08x\n", func,
 			 sd, d, exceptions);
 #endif
-		vfp_put_float(d, sd);
+		vfp_put_float(state, d, sd);
 	}
 
 	return exceptions;
@@ -267,21 +267,21 @@ vfp_propagate_nan(struct vfp_single *vsd, struct vfp_single *vsn,
 /*
  * Extended operations
  */
-static u32 vfp_single_fabs(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fabs(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	vfp_put_float(vfp_single_packed_abs(m), sd);
+	vfp_put_float(state, vfp_single_packed_abs(m), sd);
 	return 0;
 }
 
-static u32 vfp_single_fcpy(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fcpy(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	vfp_put_float(m, sd);
+	vfp_put_float(state, m, sd);
 	return 0;
 }
 
-static u32 vfp_single_fneg(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fneg(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	vfp_put_float(vfp_single_packed_negate(m), sd);
+	vfp_put_float(state, vfp_single_packed_negate(m), sd);
 	return 0;
 }
 
@@ -324,7 +324,7 @@ u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand)
 	}
 }
 
-static u32 vfp_single_fsqrt(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fsqrt(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
 	struct vfp_single vsm, vsd;
 	int ret, tm;
@@ -345,7 +345,7 @@ static u32 vfp_single_fsqrt(int sd, int unused, s32 m, u32 fpscr)
 			vsp = &vfp_single_default_qnan;
 			ret = FPSCR_IOC;
 		}
-		vfp_put_float(vfp_single_pack(vsp), sd);
+		vfp_put_float(state, vfp_single_pack(vsp), sd);
 		return ret;
 	}
 
@@ -402,7 +402,7 @@ static u32 vfp_single_fsqrt(int sd, int unused, s32 m, u32 fpscr)
 	}
 	vsd.significand = vfp_shiftright32jamming(vsd.significand, 1);
 
-	return vfp_single_normaliseround(sd, &vsd, fpscr, 0, "fsqrt");
+	return vfp_single_normaliseround(state, sd, &vsd, fpscr, 0, "fsqrt");
 }
 
 /*
@@ -411,12 +411,12 @@ static u32 vfp_single_fsqrt(int sd, int unused, s32 m, u32 fpscr)
  * Greater than	:= C
  * Unordered	:= CV
  */
-static u32 vfp_compare(int sd, int signal_on_qnan, s32 m, u32 fpscr)
+static u32 vfp_compare(ARMul_State* state, int sd, int signal_on_qnan, s32 m, u32 fpscr)
 {
 	s32 d;
 	u32 ret = 0;
 
-	d = vfp_get_float(sd);
+	d = vfp_get_float(state, sd);
 	if (vfp_single_packed_exponent(m) == 255 && vfp_single_packed_mantissa(m)) {
 		ret |= FPSCR_C | FPSCR_V;
 		if (signal_on_qnan || !(vfp_single_packed_mantissa(m) & (1 << (VFP_SINGLE_MANTISSA_BITS - 1))))
@@ -470,27 +470,27 @@ static u32 vfp_compare(int sd, int signal_on_qnan, s32 m, u32 fpscr)
 	return ret;
 }
 
-static u32 vfp_single_fcmp(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fcmp(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	return vfp_compare(sd, 0, m, fpscr);
+	return vfp_compare(state, sd, 0, m, fpscr);
 }
 
-static u32 vfp_single_fcmpe(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fcmpe(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	return vfp_compare(sd, 1, m, fpscr);
+	return vfp_compare(state, sd, 1, m, fpscr);
 }
 
-static u32 vfp_single_fcmpz(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fcmpz(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	return vfp_compare(sd, 0, 0, fpscr);
+	return vfp_compare(state, sd, 0, 0, fpscr);
 }
 
-static u32 vfp_single_fcmpez(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fcmpez(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	return vfp_compare(sd, 1, 0, fpscr);
+	return vfp_compare(state, sd, 1, 0, fpscr);
 }
 
-static u32 vfp_single_fcvtd(int dd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fcvtd(ARMul_State* state, int dd, int unused, s32 m, u32 fpscr)
 {
 	struct vfp_single vsm;
 	struct vfp_double vdd;
@@ -526,14 +526,14 @@ static u32 vfp_single_fcvtd(int dd, int unused, s32 m, u32 fpscr)
 	else
 		vdd.exponent = vsm.exponent + (1023 - 127);
 
-	return vfp_double_normaliseround(dd, &vdd, fpscr, exceptions, "fcvtd");
+	return vfp_double_normaliseround(state, dd, &vdd, fpscr, exceptions, "fcvtd");
 
  pack_nan:
-	vfp_put_double(vfp_double_pack(&vdd), dd);
+	vfp_put_double(state, vfp_double_pack(&vdd), dd);
 	return exceptions;
 }
 
-static u32 vfp_single_fuito(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fuito(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
 	struct vfp_single vs;
 
@@ -541,10 +541,10 @@ static u32 vfp_single_fuito(int sd, int unused, s32 m, u32 fpscr)
 	vs.exponent = 127 + 31 - 1;
 	vs.significand = (u32)m;
 
-	return vfp_single_normaliseround(sd, &vs, fpscr, 0, "fuito");
+	return vfp_single_normaliseround(state, sd, &vs, fpscr, 0, "fuito");
 }
 
-static u32 vfp_single_fsito(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_fsito(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
 	struct vfp_single vs;
 
@@ -552,10 +552,10 @@ static u32 vfp_single_fsito(int sd, int unused, s32 m, u32 fpscr)
 	vs.exponent = 127 + 31 - 1;
 	vs.significand = vs.sign ? -m : m;
 
-	return vfp_single_normaliseround(sd, &vs, fpscr, 0, "fsito");
+	return vfp_single_normaliseround(state, sd, &vs, fpscr, 0, "fsito");
 }
 
-static u32 vfp_single_ftoui(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_ftoui(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
 	struct vfp_single vsm;
 	u32 d, exceptions = 0;
@@ -625,17 +625,17 @@ static u32 vfp_single_ftoui(int sd, int unused, s32 m, u32 fpscr)
 
 	pr_debug("VFP: ftoui: d(s%d)=%08x exceptions=%08x\n", sd, d, exceptions);
 
-	vfp_put_float(d, sd);
+	vfp_put_float(state, d, sd);
 
 	return exceptions;
 }
 
-static u32 vfp_single_ftouiz(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_ftouiz(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	return vfp_single_ftoui(sd, unused, m, FPSCR_ROUND_TOZERO);
+	return vfp_single_ftoui(state, sd, unused, m, FPSCR_ROUND_TOZERO);
 }
 
-static u32 vfp_single_ftosi(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
 	struct vfp_single vsm;
 	u32 d, exceptions = 0;
@@ -704,14 +704,14 @@ static u32 vfp_single_ftosi(int sd, int unused, s32 m, u32 fpscr)
 
 	pr_debug("VFP: ftosi: d(s%d)=%08x exceptions=%08x\n", sd, d, exceptions);
 
-	vfp_put_float((s32)d, sd);
+	vfp_put_float(state, (s32)d, sd);
 
 	return exceptions;
 }
 
-static u32 vfp_single_ftosiz(int sd, int unused, s32 m, u32 fpscr)
+static u32 vfp_single_ftosiz(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	return vfp_single_ftosi(sd, unused, m, FPSCR_ROUND_TOZERO);
+	return vfp_single_ftosi(state, sd, unused, m, FPSCR_ROUND_TOZERO);
 }
 
 static struct op fops_ext[32] = {
@@ -903,13 +903,13 @@ vfp_single_multiply(struct vfp_single *vsd, struct vfp_single *vsn, struct vfp_s
 #define NEG_SUBTRACT	(1 << 1)
 
 static u32
-vfp_single_multiply_accumulate(int sd, int sn, s32 m, u32 fpscr, u32 negate, char *func)
+vfp_single_multiply_accumulate(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr, u32 negate, char *func)
 {
 	struct vfp_single vsd, vsp, vsn, vsm;
 	u32 exceptions;
 	s32 v;
 
-	v = vfp_get_float(sn);
+	v = vfp_get_float(state, sn);
 	pr_debug("VFP: s%u = %08x\n", sn, v);
 	vfp_single_unpack(&vsn, v);
 	if (vsn.exponent == 0 && vsn.significand)
@@ -923,7 +923,7 @@ vfp_single_multiply_accumulate(int sd, int sn, s32 m, u32 fpscr, u32 negate, cha
 	if (negate & NEG_MULTIPLY)
 		vsp.sign = vfp_sign_negate(vsp.sign);
 
-	v = vfp_get_float(sd);
+	v = vfp_get_float(state, sd);
 	pr_debug("VFP: s%u = %08x\n", sd, v);
 	vfp_single_unpack(&vsn, v);
 	if (negate & NEG_SUBTRACT)
@@ -931,7 +931,7 @@ vfp_single_multiply_accumulate(int sd, int sn, s32 m, u32 fpscr, u32 negate, cha
 
 	exceptions |= vfp_single_add(&vsd, &vsn, &vsp, fpscr);
 
-	return vfp_single_normaliseround(sd, &vsd, fpscr, exceptions, func);
+	return vfp_single_normaliseround(state, sd, &vsd, fpscr, exceptions, func);
 }
 
 /*
@@ -941,45 +941,49 @@ vfp_single_multiply_accumulate(int sd, int sn, s32 m, u32 fpscr, u32 negate, cha
 /*
  * sd = sd + (sn * sm)
  */
-static u32 vfp_single_fmac(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fmac(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
-	return vfp_single_multiply_accumulate(sd, sn, m, fpscr, 0, "fmac");
+	pr_debug("In %sVFP: s%u = %08x\n", __FUNCTION__, sn, sd);
+	return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, 0, "fmac");
 }
 
 /*
  * sd = sd - (sn * sm)
  */
-static u32 vfp_single_fnmac(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fnmac(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
-	return vfp_single_multiply_accumulate(sd, sn, m, fpscr, NEG_MULTIPLY, "fnmac");
+	pr_debug("In %sVFP: s%u = %08x\n", __FUNCTION__, sd, sn);
+	return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_MULTIPLY, "fnmac");
 }
 
 /*
  * sd = -sd + (sn * sm)
  */
-static u32 vfp_single_fmsc(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fmsc(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
-	return vfp_single_multiply_accumulate(sd, sn, m, fpscr, NEG_SUBTRACT, "fmsc");
+	pr_debug("In %sVFP: s%u = %08x\n", __FUNCTION__, sn, sd);
+	return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_SUBTRACT, "fmsc");
 }
 
 /*
  * sd = -sd - (sn * sm)
  */
-static u32 vfp_single_fnmsc(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fnmsc(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
-	return vfp_single_multiply_accumulate(sd, sn, m, fpscr, NEG_SUBTRACT | NEG_MULTIPLY, "fnmsc");
+	pr_debug("In %sVFP: s%u = %08x\n", __FUNCTION__, sn, sd);
+	return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_SUBTRACT | NEG_MULTIPLY, "fnmsc");
 }
 
 /*
  * sd = sn * sm
  */
-static u32 vfp_single_fmul(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fmul(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
 	struct vfp_single vsd, vsn, vsm;
 	u32 exceptions;
-	s32 n = vfp_get_float(sn);
+	s32 n = vfp_get_float(state, sn);
 
-	pr_debug("VFP: s%u = %08x\n", sn, n);
+	pr_debug("In %sVFP: s%u = %08x\n", __FUNCTION__, sn, n);
 
 	vfp_single_unpack(&vsn, n);
 	if (vsn.exponent == 0 && vsn.significand)
@@ -990,17 +994,17 @@ static u32 vfp_single_fmul(int sd, int sn, s32 m, u32 fpscr)
 		vfp_single_normalise_denormal(&vsm);
 
 	exceptions = vfp_single_multiply(&vsd, &vsn, &vsm, fpscr);
-	return vfp_single_normaliseround(sd, &vsd, fpscr, exceptions, "fmul");
+	return vfp_single_normaliseround(state, sd, &vsd, fpscr, exceptions, "fmul");
 }
 
 /*
  * sd = -(sn * sm)
  */
-static u32 vfp_single_fnmul(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fnmul(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
 	struct vfp_single vsd, vsn, vsm;
 	u32 exceptions;
-	s32 n = vfp_get_float(sn);
+	s32 n = vfp_get_float(state, sn);
 
 	pr_debug("VFP: s%u = %08x\n", sn, n);
 
@@ -1014,17 +1018,17 @@ static u32 vfp_single_fnmul(int sd, int sn, s32 m, u32 fpscr)
 
 	exceptions = vfp_single_multiply(&vsd, &vsn, &vsm, fpscr);
 	vsd.sign = vfp_sign_negate(vsd.sign);
-	return vfp_single_normaliseround(sd, &vsd, fpscr, exceptions, "fnmul");
+	return vfp_single_normaliseround(state, sd, &vsd, fpscr, exceptions, "fnmul");
 }
 
 /*
  * sd = sn + sm
  */
-static u32 vfp_single_fadd(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fadd(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
 	struct vfp_single vsd, vsn, vsm;
 	u32 exceptions;
-	s32 n = vfp_get_float(sn);
+	s32 n = vfp_get_float(state, sn);
 
 	pr_debug("VFP: s%u = %08x\n", sn, n);
 
@@ -1041,28 +1045,29 @@ static u32 vfp_single_fadd(int sd, int sn, s32 m, u32 fpscr)
 
 	exceptions = vfp_single_add(&vsd, &vsn, &vsm, fpscr);
 
-	return vfp_single_normaliseround(sd, &vsd, fpscr, exceptions, "fadd");
+	return vfp_single_normaliseround(state, sd, &vsd, fpscr, exceptions, "fadd");
 }
 
 /*
  * sd = sn - sm
  */
-static u32 vfp_single_fsub(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fsub(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
+	pr_debug("In %sVFP: s%u = %08x\n", __FUNCTION__, sn, sd);
 	/*
 	 * Subtraction is addition with one sign inverted.
 	 */
-	return vfp_single_fadd(sd, sn, vfp_single_packed_negate(m), fpscr);
+	return vfp_single_fadd(state, sd, sn, vfp_single_packed_negate(m), fpscr);
 }
 
 /*
  * sd = sn / sm
  */
-static u32 vfp_single_fdiv(int sd, int sn, s32 m, u32 fpscr)
+static u32 vfp_single_fdiv(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 {
 	struct vfp_single vsd, vsn, vsm;
 	u32 exceptions = 0;
-	s32 n = vfp_get_float(sn);
+	s32 n = vfp_get_float(state, sn);
 	int tm, tn;
 
 	pr_debug("VFP: s%u = %08x\n", sn, n);
@@ -1134,12 +1139,12 @@ static u32 vfp_single_fdiv(int sd, int sn, s32 m, u32 fpscr)
 	if ((vsd.significand & 0x3f) == 0)
 		vsd.significand |= ((u64)vsm.significand * vsd.significand != (u64)vsn.significand << 32);
 
-	return vfp_single_normaliseround(sd, &vsd, fpscr, 0, "fdiv");
+	return vfp_single_normaliseround(state, sd, &vsd, fpscr, 0, "fdiv");
 
  vsn_nan:
 	exceptions = vfp_propagate_nan(&vsd, &vsn, &vsm, fpscr);
  pack:
-	vfp_put_float(vfp_single_pack(&vsd), sd);
+	vfp_put_float(state, vfp_single_pack(&vsd), sd);
 	return exceptions;
 
  vsm_nan:
@@ -1159,7 +1164,7 @@ static u32 vfp_single_fdiv(int sd, int sn, s32 m, u32 fpscr)
 	goto pack;
 
  invalid:
-	vfp_put_float(vfp_single_pack(&vfp_single_default_qnan), sd);
+	vfp_put_float(state, vfp_single_pack(&vfp_single_default_qnan), sd);
 	return FPSCR_IOC;
 }
 
@@ -1178,7 +1183,7 @@ static struct op fops[16] = {
 #define FREG_BANK(x)	((x) & 0x18)
 #define FREG_IDX(x)	((x) & 7)
 
-u32 vfp_single_cpdo(u32 inst, u32 fpscr)
+u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr)
 {
 	u32 op = inst & FOP_MASK;
 	u32 exceptions = 0;
@@ -1187,6 +1192,7 @@ u32 vfp_single_cpdo(u32 inst, u32 fpscr)
 	unsigned int sm = vfp_get_sm(inst);
 	unsigned int vecitr, veclen, vecstride;
 	struct op *fop;
+	pr_debug("In %s\n", __FUNCTION__);
 
 	vecstride = 1 + ((fpscr & FPSCR_STRIDE_MASK) == FPSCR_STRIDE_MASK);
 
@@ -1221,7 +1227,7 @@ u32 vfp_single_cpdo(u32 inst, u32 fpscr)
 	}
 
 	for (vecitr = 0; vecitr <= veclen; vecitr += 1 << FPSCR_LENGTH_BIT) {
-		s32 m = vfp_get_float(sm);
+		s32 m = vfp_get_float(state, sm);
 		u32 except;
 		char type;
 
@@ -1235,7 +1241,7 @@ u32 vfp_single_cpdo(u32 inst, u32 fpscr)
 				 vecitr >> FPSCR_LENGTH_BIT, type, dest, sn,
 				 FOP_TO_IDX(op), sm, m);
 
-		except = fop->fn(dest, sn, m, fpscr);
+		except = fop->fn(state, dest, sn, m, fpscr);
 		pr_debug("VFP: itr%d: exceptions=%08x\n",
 			 vecitr >> FPSCR_LENGTH_BIT, except);
 

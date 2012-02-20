@@ -38,6 +38,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <skyeye_log.h>
+#include "armdefs.h"
 
 #define u16 uint16_t
 #define u32 uint32_t
@@ -281,8 +282,8 @@ struct vfp_single {
 #ifdef __cplusplus
  extern "C" {
 #endif
-extern s32 vfp_get_float(unsigned int reg);
-extern void vfp_put_float(s32 val, unsigned int reg);
+extern s32 vfp_get_float(ARMul_State * state, unsigned int reg);
+extern void vfp_put_float(ARMul_State * state, s32 val, unsigned int reg);
 #ifdef __cplusplus
  }
 #endif
@@ -374,7 +375,7 @@ static inline int vfp_single_type(struct vfp_single *s)
 }
 
 
-u32 vfp_single_normaliseround(int sd, struct vfp_single *vs, u32 fpscr, u32 exceptions, const char *func);
+u32 vfp_single_normaliseround(ARMul_State* state, int sd, struct vfp_single *vs, u32 fpscr, u32 exceptions, const char *func);
 
 /*
  * Double-precision
@@ -398,8 +399,8 @@ struct vfp_double {
 #ifdef __cplusplus
  extern "C" {
 #endif
-extern u64 vfp_get_double(unsigned int reg);
-extern void vfp_put_double(u64 val, unsigned int reg);
+extern u64 vfp_get_double(ARMul_State * state, unsigned int reg);
+extern void vfp_put_double(ARMul_State * state, u64 val, unsigned int reg);
 #ifdef __cplusplus
  }
 #endif
@@ -473,7 +474,7 @@ static inline int vfp_double_type(struct vfp_double *s)
 	return type;
 }
 
-u32 vfp_double_normaliseround(int dd, struct vfp_double *vd, u32 fpscr, u32 exceptions, const char *func);
+u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double *vd, u32 fpscr, u32 exceptions, const char *func);
 
 u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand);
 
@@ -503,7 +504,7 @@ u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand);
 #define OP_SM		(1 << 2)
 
 struct op {
-	u32 (* const fn)(int dd, int dn, int dm, u32 fpscr);
+	u32 (* const fn)(ARMul_State* state, int dd, int dn, int dm, u32 fpscr);
 	u32 flags;
 };
 
