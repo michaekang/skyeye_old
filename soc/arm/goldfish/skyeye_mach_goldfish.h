@@ -22,12 +22,8 @@
 #ifndef __SKYEYE_MACH_GOLDFISH_H__
 #define __SKYEYE_MACH_GOLDFISH_H__
 
-
-
 #include "goldfish_timer.h"
 #include "goldfish_interrupt.h"
-
-
-
+#include "uart_16550.h"
 
 #endif /* __SKYEYE_MACH_GOLDFISH_H___ */

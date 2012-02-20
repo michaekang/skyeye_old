@@ -125,4 +125,4 @@ if GTK_LCD
 DEFS += -DGTK_LCD
 endif
 
-INCLUDES = -I$(top_srcdir)/arch/arm/mach -I$(top_srcdir)/common -I./goldfish/ @COMMON_INCLUDES@
+INCLUDES = -I$(top_srcdir)/arch/arm/mach -I$(top_srcdir)/common -I./goldfish/ -I$(top_srcdir)/device/uart_16550/ @COMMON_INCLUDES@

@@ -199,6 +199,10 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	goldfish_timer->master = goldfish_pic->slave;
 	goldfish_timer->signal_target = goldfish_pic->obj;
 
+	obj = pre_conf_obj("uart_165500","uart_16550");
+	uart_16550_t *uart = (uart_16550_t *)(obj->obj);
+	uart->irq = 0x20;
+
 	addr_space_t* phys_mem = new_addr_space("goldfish_mach_space");
 
 	exception_t ret;
@@ -209,6 +213,11 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	
 	if(ret != No_exp)
 		printf("Warnning, timer can not be mapped\n");
+
+	ret = add_map(phys_mem,0xff0d0000,0x100,0x0,uart->io_memory,1,1);
+	if(ret != No_exp){
+		printf("Waring,uart cannot be mapped\n");
+	}
 	/* @Deprecated */
 	this_mach->mach_io_do_cycle = goldfish_io_do_cycle;
         this_mach->mach_io_reset = goldfish_io_reset;

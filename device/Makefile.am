@@ -116,7 +116,7 @@ endif
 DEFS = -DMODET -g -O2 -D_FILE_OFFSET_BITS=64 -DSTANDALONE -DDEFAULT_INLINE=0  @COMMON_CFLAGS@
 
 skyeye_bin_dir = \"$(prefix)/bin/\"
-INCLUDES = -I./ @COMMON_INCLUDES@ -DSKYEYE_BIN=$(skyeye_bin_dir)
+INCLUDES = -I./ @COMMON_INCLUDES@ -I./uart_16550 -DSKYEYE_BIN=$(skyeye_bin_dir)
 
 INCLUDES += @LCD_CFLAGS@
 if GTK_LCD

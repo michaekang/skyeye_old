@@ -26,53 +26,27 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include <skyeye_types.h>
 #include <bank_defs.h>
 #include <skyeye_sched.h>
 #include <skyeye_options.h>
 #include <skyeye_config.h>
-#include <skyeye_obj.h>
 #include <skyeye_command.h>
 #include <skyeye_uart_ops.h>
+#include <skyeye_class.h>
+#include <skyeye_mm.h>
+
+#include "uart_16550.h"
 
 #define DEBUG
 #include <skyeye_log.h>
 
-typedef struct reg_16550{
-	uint32 rbr;
-	uint32 thr;
-	uint32 ier;
-	uint32 iir;
-	uint32 fcr;
-	uint32 lcr;
-	uint32 lsr;
-	uint32 msr;
-	uint32 scr;
-	uint32 dll;
-	uint32 dlm;
-	uint8 t_fifo[16];
-	uint8 r_fifo[16];
-} reg_16550_t;
-
-typedef struct uart_16550{
-	reg_16550_t* reg;
-	mem_bank_t* bank;
-	uint32 irq;
-	char name[1024];
-}uart_16550_t;
-
 const static char* class_name = "uart_16550";
 
-static exception_t uart_16550_read(short size, int addr, unsigned int *result){
+static exception_t  uart_16550_read(conf_object_t *obj,generic_address_t offset, void* buf, size_t count){
 	uint32 data;
-	mem_bank_t* bank = bank_ptr(addr);
-	assert(bank != NULL);
-	/* get a reference of object by its name */
-	uart_16550_t* uart_16550 = (uart_16550_t*)get_conf_obj(bank->objname);
-
-	reg_16550_t* reg = uart_16550->reg;
-
-	switch ((addr & 0xfff) >> 2) {
+	uart_16550_t *uart = (uart_16550_t *)(obj->obj);
+	reg_16550_t* reg = uart->reg;
+	switch ((offset & 0xfff) >> 2) {
 	case 0x0:		// RbR
 		reg->lsr &= ~0x1;
 		/*
@@ -105,37 +79,33 @@ static exception_t uart_16550_read(short size, int addr, unsigned int *result){
 
 		break;
 	}
-	*result = data;
+	*(uint32 *)buf = data;
 	return No_exp;
 }
 
-static exception_t uart_16550_write(short size, int addr, unsigned int data){
-	mem_bank_t* bank = bank_ptr(addr);
-	assert(bank != NULL);
+static exception_t  uart_16550_write(conf_object_t *obj, generic_address_t offset, void* buf, size_t count){
+	uart_16550_t *uart = (uart_16550_t *)(obj->obj);
+	reg_16550_t* reg = uart->reg;
 	/* get a reference of object by its name */
-	uart_16550_t* uart_16550 = get_conf_obj(bank->objname);
-	assert(uart_16550 != NULL);
-
-	reg_16550_t* reg = uart_16550->reg;
-	switch ((addr & 0xfff) >> 2) {
+	switch ((offset & 0xfff) >> 2) {
 	case 0x0:		// THR
 		{
-			char c = data;
+			char c = *(char *)buf;
 			skyeye_uart_write(-1, &c, 1, NULL);
 			reg->lsr |= 0x20;
 		}
 	case 0x2:		//FCR
-		reg->fcr = data;
+		reg->fcr = *(uint32 *)buf;
 		break;
 	case 0x7:		// SCR
-		reg->scr = data;
+		reg->scr = *(uint32 *)buf;
 		break;
 	default:
 		//DBG_PRINT ("uart_write(%s=0x%08x)\n", "uart_reg", addr);
 		break;
 	}
-
 	return No_exp;
+
 }
 
 static void uart_16550_io_do_cycle(void* uart_16550){
@@ -168,35 +138,49 @@ static void uart_16550_io_do_cycle(void* uart_16550){
 	}
 }
 
-static void create_16550_uart(uint32 base_addr, uint32 len, uint32 irq){
-	uart_16550_t* uart = (uart_16550_t*)malloc(sizeof(uart_16550_t));
+static conf_object_t* create_16550_uart(const char *name){
+	uart_16550_t* uart = (uart_16550_t *)skyeye_mm_zero(sizeof(uart_16550_t));
 	/* register own cycle handler to scheduler. 
 	 * set the cycle to 1 ms, and periodic schedle
 	 * */
-	uart->irq = irq;
+	if(!uart){
+		fprintf(stderr,"MM failed in %s\n",__FUNCTION__);
+		return NULL;
+	}
 	uint32 id;
 	create_timer_scheduler(1, Periodic_sched, uart_16550_io_do_cycle, uart, &id);
-	sprintf(&uart->name[0],"uart_16550_%d",id);
-	reg_16550_t* reg = (reg_16550_t*)malloc(sizeof(reg_16550_t));
+	uart->obj = new_conf_object(name,(void *)uart);
+	reg_16550_t* reg = (reg_16550_t*)skyeye_mm_zero(sizeof(reg_16550_t));
 	uart->reg = reg;
 
-	mem_bank_t *bank = (mem_bank_t *)malloc(sizeof(mem_bank_t));
-	bank->addr = base_addr;
-	bank->len = len;
-	bank->bank_write = uart_16550_write;
-	bank->bank_read = uart_16550_read;
-	bank->type = MEMTYPE_IO;
-	bank->objname = &uart->name[0];
-	bank->filename[0] = '\0';
-	/* register io space to the whole address space */
-	addr_mapping(bank);
+	uart->io_memory = (memory_space_intf *)skyeye_mm_zero(sizeof(*uart->io_memory));
+	uart->io_memory->conf_obj = uart->obj;
+	uart->io_memory->read = uart_16550_read;
+	uart->io_memory->write = uart_16550_write;
 	/* 
 	 * FIXME, we have the same bank data structure both in 
 	 * global_memmap and here. Should free one.
 	 * */
-	uart->bank = bank;
-	put_conf_obj(bank->objname, uart);
+	return uart->obj;
 }
+static void del_16550_uart(const char *name){
+}
+
+void init_16550_uart(void){
+	static skyeye_class_t class_data = {
+		.class_name = "uart_16550",
+		.class_desc = "uart 16550",
+		.new_instance = create_16550_uart,
+		.free_instance = del_16550_uart,
+		.set_attr = NULL,
+		.get_attr = NULL
+	};
+	SKY_register_class(class_data.class_name,&class_data);
+}
+
+/*
+
+
 
 static int do_16550_option(skyeye_option_t* this_option, int num_params,
 		const char *params[])
@@ -222,18 +206,19 @@ static int do_16550_option(skyeye_option_t* this_option, int num_params,
                         SKYEYE_ERR ("Error: Unknown uart_16550 option  \"%s\"\n", params[i]);
 	}
 	create_16550_uart(addr, len, irq);
-
-	return No_exp;
 }
+*/
 
 /*
  * Create a 16550 uart by given base, len ,irq
  */
+/*
 int com_create_16550(char *arg) {
 	return 0;
-}
+}*/
+/*
 void init_uart_16550(){
-	/* register options parser */
 	register_option("uart_16550", do_16550_option, "Uart settings"); 
 	add_command("create_uart_16550", com_create_16550, "Create a new uart of 16550 type.\n");
 }
+*/
