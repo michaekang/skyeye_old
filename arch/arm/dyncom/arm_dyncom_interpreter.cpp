@@ -6439,16 +6439,6 @@ void InterpreterMainLoop(cpu_t *core)
 			addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
 			unsigned int value = cpu->Reg[BITS(inst_cream->inst, 0, 3)];
 			fault = check_address_validity(cpu, addr, &phys_addr, 0);
-			if (fault) {
-				fault = NO_FAULT;
-//				printf("subpage fault in strex\n");
-				cpu->Reg[15] += GET_INST_SIZE(cpu);
-				if (BITS(inst_cream->inst, 12, 15) == 15)
-					goto DISPATCH;
-				INC_PC(sizeof(ldst_inst));
-				FETCH_INST;
-				GOTO_NEXT_INST;
-			}
 			if (fault) goto MMU_EXCEPTION;
 
 			int dest_reg = BITS(inst_cream->inst, 12, 15);
