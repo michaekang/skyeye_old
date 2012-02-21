@@ -4595,6 +4595,10 @@ void InterpreterMainLoop(cpu_t *core)
 	LOAD_NZCVT;
 	DISPATCH:
 	{
+		if (cpu->TFlag) {
+			cpu->Reg[15] &= 0xfffffffe;
+		} else
+			cpu->Reg[15] &= 0xfffffffc;
 		counter --;
 		if (counter == 0) {
 			goto END;
