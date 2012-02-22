@@ -328,7 +328,10 @@ AC_CONFIG_FILES(device/Makefile)
 AC_CONFIG_FILES(common/Makefile)
 AC_CONFIG_FILES(soc/arm/Makefile)
 AC_CONFIG_FILES(utils/Makefile)
-AC_CONFIG_FILES(android/Makefile)
+AC_CONFIG_FILES(android/objs/emulator_common/Makefile)
+AC_CONFIG_FILES(android/objs/emulator_libui/Makefile)
+AC_CONFIG_FILES(android/objs/emulator_libqemu/Makefile)
+AC_CONFIG_FILES(android/objs/android/Makefile)
 
 if test ["${ENABLE_TARGETS}" = "all"] ;then
     AC_CONFIG_FILES(arch/arm/Makefile)

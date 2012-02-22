@@ -1,4 +1,7 @@
-SUBDIRS += android/
+SUBDIRS += android/objs/emulator_common
+SUBDIRS += android/objs/emulator_libui
+SUBDIRS += android/objs/emulator_libqemu
+SUBDIRS += android/objs/android
 
 bin_PROGRAMS += emulator
 emulator_SOURCES = utils/main/skyeye.c
