@@ -225,7 +225,7 @@ static conf_object_t* new_arm11_core(char* obj_name){
 	state->cpu = &arm11_cpu_info;
 	state->bigendSig = LOW;
 
-	ARMul_SelectProcessor (state, ARM_v6_Prop);
+	ARMul_SelectProcessor (state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
 	state->lateabtSig = LOW;
 	mmu_init(state);
 	/* reset the core to initial state */

@@ -1838,7 +1838,7 @@ ARMul_Emulate26 (ARMul_State * state)
 						if (op2 & 0x8000)
 							op2 -= 65536;
 						op1 *= op2;
-
+						//printf("SMLA_INST:BB,op1=0x%x, op2=0x%x. Rn=0x%x\n", op1, op2, Rn);
 						if (AddOverflow
 						    (op1, Rn, op1 + Rn))
 							SETS;
