@@ -35,10 +35,37 @@
 #include <skyeye_log.h>
 
 #include "android.h"
+#include "android_main.h"
+
+/*Read arguments from the file args.conf which storge the arguments from command.*/
+void read_android_options(int argc,char argv[16][256])
+{
+        struct android_arg options;
+
+	FILE *fp = fopen("android_args", "rw");
+	if (fp == NULL) {
+		perror("Open file android_args");
+		exit(1);
+	}
+	fread(&options, sizeof(struct android_arg), 1, fp);
+	
+	argc = options.argc;
+	int i = 0;
+	for (i = 0;i < argc;i++)
+	{
+		strcpy(argv[i],options.argv[i]);
+		printf("in %s,arg[%d] is %s\n",__func__,i,argv[i]);
+	}
+
+	fclose(fp);
+
+}
 
 static conf_object_t* new_android(char* obj_name){
-	printf("init android......\n");
+	android_main();
+	return NULL;
 }
+
 void free_android(conf_object_t* dev){
 	
 }

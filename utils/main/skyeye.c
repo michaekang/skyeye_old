@@ -578,6 +578,31 @@ int init_env(){
 }
 
 
+struct android_arg {
+	int argc;
+	char argv[16][256];
+};
+
+void write_android_options(int argc,char ** argv)
+{
+	int i = 0;
+        struct android_arg options;
+	options.argc = argc;
+	for (i = 0;i < argc;i++)
+	{
+		strcpy(options.argv[i],argv[i]);
+		printf("in %s,argv[%d] is %s\n",__func__,i,argv[i]);
+	}
+
+        FILE *fp = fopen("android_args", "w+");
+        if (fp == NULL) {
+                perror("Open file recfile");
+                exit(1);
+        }
+        fwrite(&options, sizeof(struct android_arg), 1, fp);
+        fclose(fp);
+}
+
 /**
  *  The main function of skyeye
  */
@@ -589,8 +614,24 @@ main (int argc, char **argv)
 
 	sky_pref_t* pref = get_skyeye_pref();
 	assert(pref != NULL);	
+
+	/*run android*/
+	if(strcmp(argv[0],"/opt/skyeye/bin/emulator") == 0)
+	{
+		write_android_options(argc,argv);
+		argc = 3;
+		char * option[] = {"/opt/skyeye/bin/emulator","-e","vmlinux"};
+
+		init_option(argc, option, pref);
+		SIM_init();
+		while(1)
+			sleep(1);
+		;
+	}
+
 	/* initialization of options from command line */
 	ret = init_option(argc, argv, pref);
+
 	/* set the current preference for skyeye */
 	//update_skyeye_pref(pref);
 	/* return non-zero represent not run skyeye */
