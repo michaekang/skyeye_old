@@ -35,6 +35,8 @@ uicmd_set_brightness_change_callback(AndroidHwLightBrightnessCallback callback,
 {
     AndroidHwControlFuncs  funcs;
     funcs.light_brightness = callback;
+#if 0 // xiaoqiao
     android_hw_control_set(opaque, &funcs);
+#endif
     return 0;
 }

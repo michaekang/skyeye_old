@@ -18,8 +18,8 @@
 
 #include "android/android.h"
 #include "android/globals.h"
-#include "telephony/modem_driver.h"
-#include "android-trace.h"
+//#include "telephony/modem_driver.h"
+//#include "android-trace.h"
 #include "android/looper.h"
 #include "android/async-utils.h"
 #include "android/sync-utils.h"
@@ -173,14 +173,17 @@ _coreCmdImpl_handle_command(CoreCmdImpl* corecmd,
 
         case AUICMD_TOGGLE_NETWORK:
             qemu_net_disable = !qemu_net_disable;
+#if 0 //xiaoqiao
             if (android_modem) {
                 amodem_set_data_registration(
                         android_modem,
                 qemu_net_disable ? A_REGISTRATION_UNREGISTERED
                     : A_REGISTRATION_HOME);
             }
+#endif
             break;
 
+#if 0
         case AUICMD_TRACE_CONTROL:
         {
             UICmdTraceControl* cmd = (UICmdTraceControl*)cmd_param;
@@ -191,6 +194,7 @@ _coreCmdImpl_handle_command(CoreCmdImpl* corecmd,
             }
             break;
         }
+#endif
 
         case AUICMD_CHK_NETWORK_DISABLED:
         {

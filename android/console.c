@@ -23,22 +23,22 @@
 
 #include "sockets.h"
 #include "qemu-char.h"
-#include "sysemu.h"
+//#include "sysemu.h"
 #include "android/android.h"
-#include "cpu.h"
-#include "hw/goldfish_device.h"
-#include "hw/power_supply.h"
-#include "shaper.h"
-#include "modem_driver.h"
+//#include "cpu.h"
+//#include "hw/goldfish_device.h"
+//#include "hw/power_supply.h"
+//#include "shaper.h"
+//#include "modem_driver.h"
 #include "android/gps.h"
 #include "android/globals.h"
 #include "android/utils/bufprint.h"
 #include "android/utils/debug.h"
 #include "android/utils/stralloc.h"
 #include "android/config/config.h"
-#include "tcpdump.h"
-#include "net.h"
-#include "monitor.h"
+//#include "tcpdump.h"
+//#include "net.h"
+//#include "monitor.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -60,7 +60,7 @@
 #include "android/protocol/attach-ui-proxy.h"
 
 #if defined(CONFIG_SLIRP)
-#include "libslirp.h"
+//#include "libslirp.h"
 #endif
 
 #define  DEBUG  1
@@ -688,6 +688,7 @@ do_network_status( ControlClient  client, char*  args )
 {
     control_write( client, "Current network status:\r\n" );
 
+#if 0
     control_write( client, "  download speed:   %8d bits/s (%.1f KB/s)\r\n",
                    (long)qemu_net_download_speed, qemu_net_download_speed/8192. );
 
@@ -696,12 +697,14 @@ do_network_status( ControlClient  client, char*  args )
 
     control_write( client, "  minimum latency:  %ld ms\r\n", qemu_net_min_latency );
     control_write( client, "  maximum latency:  %ld ms\r\n", qemu_net_max_latency );
+#endif
     return 0;
 }
 
 static void
 dump_network_speeds( ControlClient  client )
 {
+#if 0
     const NetworkSpeed*  speed = android_netspeeds;
     const char* const  format = "  %-8s %s\r\n";
     for ( ; speed->name; speed++ ) {
@@ -709,6 +712,7 @@ dump_network_speeds( ControlClient  client )
     }
     control_write( client, format, "<num>", "selects both upload and download speed" );
     control_write( client, format, "<up>:<down>", "select individual upload/download speeds" );
+#endif
 }
 
 
@@ -719,6 +723,7 @@ do_network_speed( ControlClient  client, char*  args )
         control_write( client, "KO: missing <speed> argument, see 'help network speed'\r\n" );
         return -1;
     }
+#if 0
     if ( android_parse_network_speed( args ) < 0 ) {
         control_write( client, "KO: invalid <speed> argument, see 'help network speed' for valid values\r\n" );
         return -1;
@@ -731,6 +736,7 @@ do_network_speed( ControlClient  client, char*  args )
         amodem_set_data_network_type( android_modem,
                                     android_parse_network_type( args ) );
     }
+#endif
     return 0;
 }
 
@@ -750,11 +756,13 @@ do_network_delay( ControlClient  client, char*  args )
         control_write( client, "KO: missing <delay> argument, see 'help network delay'\r\n" );
         return -1;
     }
+#if 0
     if ( android_parse_network_latency( args ) < 0 ) {
         control_write( client, "KO: invalid <delay> argument, see 'help network delay' for valid values\r\n" );
         return -1;
     }
     netdelay_set_latency( slirp_delay_in, qemu_net_min_latency, qemu_net_max_latency );
+#endif
     return 0;
 }
 
@@ -774,10 +782,12 @@ do_network_capture_start( ControlClient  client, char*  args )
         control_write( client, "KO: missing <file> argument, see 'help network capture start'\r\n" );
         return -1;
     }
+#if 0
     if ( qemu_tcpdump_start(args) < 0) {
         control_write( client, "KO: could not start capture: %s", strerror(errno) );
         return -1;
     }
+#endif
     return 0;
 }
 
@@ -785,7 +795,9 @@ static int
 do_network_capture_stop( ControlClient  client, char*  args )
 {
     /* no need to return an error here */
+#if 0
     qemu_tcpdump_stop();
+#endif
     return 0;
 }
 
@@ -919,10 +931,12 @@ do_redir_add( ControlClient  client, char*  args )
     if ( !args )
         goto BadFormat;
 
+#if 0
     if (!slirp_is_inited()) {
         control_write( client, "KO: network emulation disabled\r\n");
         return -1;
     }
+#endif
 
     len = redir_parse_proto_port( args, &host_port, &host_proto );
     if (len == 0 || args[len] != ':')
@@ -939,10 +953,12 @@ do_redir_add( ControlClient  client, char*  args )
         return -1;
     }
 
+#if 0
     if (inet_strtoip("10.0.2.15", &guest_ip) < 0) {
         control_write( client, "KO: unexpected internal failure when resolving 10.0.2.15\r\n" );
         return -1;
     }
+#endif
 
     D(("pattern hport=%d gport=%d proto=%d\n", host_port, guest_port, host_proto ));
     if ( control_global_add_redir( client->global, host_port, host_proto,
@@ -952,11 +968,13 @@ do_redir_add( ControlClient  client, char*  args )
         return -1;
     }
 
+#if 0
     if (slirp_redir(host_proto, host_port, guest_ip, guest_port) < 0) {
         control_write( client, "KO: can't setup redirection, port probably used by another program on host\r\n" );
         control_global_del_redir( client->global, host_port, host_proto );
         return -1;
     }
+#endif
 
     return 0;
 
@@ -985,7 +1003,9 @@ do_redir_del( ControlClient  client, char*  args )
         return -1;
     }
 
+#if 0
     slirp_unredir( redir->host_udp, redir->host_port );
+#endif
     control_global_del_redir( client->global, port, proto );\
 
     return 0;
@@ -1021,7 +1041,7 @@ static const CommandDefRec  redir_commands[] =
 };
 
 
-
+#if 0
 /********************************************************************************************/
 /********************************************************************************************/
 /*****                                                                                 ******/
@@ -1102,6 +1122,8 @@ do_cdma_prl_version( ControlClient client, char * args )
     }
     return 0;
 }
+#endif
+#if 0
 /********************************************************************************************/
 /********************************************************************************************/
 /*****                                                                                 ******/
@@ -1563,7 +1585,9 @@ static const CommandDefRec  gsm_commands[] =
 
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
+#endif
 
+#if 0
 /********************************************************************************************/
 /********************************************************************************************/
 /*****                                                                                 ******/
@@ -1832,6 +1856,7 @@ static const CommandDefRec  power_commands[] =
 
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
+#endif
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -1886,7 +1911,7 @@ do_event_send( ControlClient  client, char*  args )
             return -1;
         }
 
-        user_event_generic( type, code, value );
+        qemu_user_event_generic( type, code, value );
         p = q;
     }
     return 0;
@@ -1999,7 +2024,7 @@ do_event_text( ControlClient  client, char*  args )
 
     /* un-secape message text into proper utf-8 (conversion happens in-site) */
     textlen = strlen((char*)p);
-    textlen = sms_utf8_from_message_str( args, textlen, (unsigned char*)p, textlen );
+//    textlen = sms_utf8_from_message_str( args, textlen, (unsigned char*)p, textlen );
     if (textlen < 0) {
         control_write( client, "message must be utf8 and can use the following escapes:\r\n"
                        "    \\n      for a newline\r\n"
@@ -2049,7 +2074,7 @@ static const CommandDefRec  event_commands[] =
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
 
-
+#if 0
 /********************************************************************************************/
 /********************************************************************************************/
 /*****                                                                                 ******/
@@ -2164,9 +2189,9 @@ static const CommandDefRec  snapshot_commands[] =
 
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
+#endif
 
-
-
+#if 0
 /********************************************************************************************/
 /********************************************************************************************/
 /*****                                                                                 ******/
@@ -2235,6 +2260,7 @@ static const CommandDefRec  vm_commands[] =
 
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
+#endif
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -2407,7 +2433,7 @@ static const CommandDefRec  geo_commands[] =
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
 
-
+#if 0
 /********************************************************************************************/
 /********************************************************************************************/
 /*****                                                                                 ******/
@@ -2601,6 +2627,7 @@ static const CommandDefRec sensor_commands[] =
 
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
+#endif
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -2648,7 +2675,7 @@ static const CommandDefRec  window_commands[] =
 
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
-
+#if 0
 /********************************************************************************************/
 /********************************************************************************************/
 /*****                                                                                 ******/
@@ -2905,6 +2932,7 @@ static const CommandDefRec  qemu_commands[] =
 
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
+#endif
 
 
 /********************************************************************************************/
@@ -2934,6 +2962,7 @@ static const CommandDefRec   main_commands[] =
       "allows you to change Geo-related settings, or to send GPS NMEA sentences\r\n", NULL,
       NULL, geo_commands },
 
+#if 0
     { "gsm", "GSM related commands",
       "allows you to change GSM-related settings, or to make a new inbound phone call\r\n", NULL,
       NULL, gsm_commands },
@@ -2941,6 +2970,7 @@ static const CommandDefRec   main_commands[] =
     { "cdma", "CDMA related commands",
       "allows you to change CDMA-related settings\r\n", NULL,
       NULL, cdma_commands },
+#endif
 
     { "kill", "kill the emulator instance", NULL, NULL,
       do_kill, NULL },
@@ -2950,9 +2980,11 @@ static const CommandDefRec   main_commands[] =
       "emulated device.\r\n", NULL,
       NULL, network_commands },
 
+#if 0
     { "power", "power related commands",
       "allows to change battery and AC power status\r\n", NULL,
       NULL, power_commands },
+#endif
 
     { "quit|exit", "quit control session", NULL, NULL,
       do_quit, NULL },
@@ -2963,6 +2995,7 @@ static const CommandDefRec   main_commands[] =
       "to TCP port 6000 of the emulated device\r\n", NULL,
       NULL, redir_commands },
 
+#if 0
     { "sms", "SMS related commands",
       "allows you to simulate an inbound SMS\r\n", NULL,
       NULL, sms_commands },
@@ -2970,11 +3003,13 @@ static const CommandDefRec   main_commands[] =
     { "avd", "control virtual device execution",
     "allows you to control (e.g. start/stop) the execution of the virtual device\r\n", NULL,
     NULL, vm_commands },
+#endif
 
     { "window", "manage emulator window",
     "allows you to modify the emulator window\r\n", NULL,
     NULL, window_commands },
 
+#if 0
     { "qemu", "QEMU-specific commands",
     "allows to connect to the QEMU virtual machine monitor\r\n", NULL,
     NULL, qemu_commands },
@@ -2982,6 +3017,7 @@ static const CommandDefRec   main_commands[] =
     { "sensor", "manage emulator sensors",
       "allows you to request the emulator sensors\r\n", NULL,
       NULL, sensor_commands },
+#endif
 
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };
