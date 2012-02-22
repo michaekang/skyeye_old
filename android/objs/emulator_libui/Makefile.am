@@ -122,8 +122,13 @@ emulator_libui += $(top_srcdir)/android/user-config.c \
 libemulator_libui_la_SOURCES = $(emulator_libui)
 libemulator_libui_la_LDFLAGS = -module -lrt
 
+INCLUDES += -I$(top_srcdir)/common/include/
 INCLUDES += -I$(top_srcdir)/android/skyeye/
 INCLUDES += -I$(top_srcdir)/android/
 INCLUDES += -I$(top_srcdir)/android/utils/
+INCLUDES += -I$(top_srcdir)/third-party/distrib/libpng-1.2.19/
+INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
+INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
+INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/include/
 
 pkglib_LTLIBRARIES = libemulator_libui.la
