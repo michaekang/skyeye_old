@@ -18,16 +18,16 @@
  * QEMU-specific implementation in user-events-qemu.c
  */
 
-void  qemu_user_event_key(unsigned  key, unsigned  down);
-void  qemu_user_event_keycode(int  kcode);
-void  qemu_user_event_keycodes(int *kcodes, int count);
-void  qemu_user_event_mouse(int dx, int dy, int dz, unsigned buttons_state);
-void  qemu_user_event_generic(int type, int code, int value);
+void  user_event_key(unsigned  key, unsigned  down);
+void  user_event_keycode(int  kcode);
+void  user_event_keycodes(int *kcodes, int count);
+void  user_event_mouse(int dx, int dy, int dz, unsigned buttons_state);
+void  user_event_generic(int type, int code, int value);
 
 /* The following is used to register a callback function that will receive
  * user_event_generic() calls. This is used by hw/goldfish_events_device.c
  */
 typedef void QEMUPutGenericEvent(void*  opaque, int  type, int  code, int  value);
-void  qemu_user_event_register_generic(void* opaque, QEMUPutGenericEvent  callback);
+void  user_event_register_generic(void* opaque, QEMUPutGenericEvent  callback);
 
 #endif /* _QEMU_USEREVENTS_H */

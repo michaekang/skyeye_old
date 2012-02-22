@@ -8,7 +8,7 @@
 android_dir = \
 	$(top_srcdir)/android/skyeye/user-events-qemu.c \
 	$(top_srcdir)/android/cmdline-option.c \
-	$(top_srcdir)/android/console-android.c \
+	$(top_srcdir)/android/console.c \
 	$(top_srcdir)/android/display.c \
 	$(top_srcdir)/android/display-core.c \
 	$(top_srcdir)/android/help.c \
