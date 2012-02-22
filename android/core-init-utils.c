@@ -24,7 +24,9 @@
 #include "android/core-init-utils.h"
 #include "android/utils/bufprint.h"
 
-extern char* android_op_ui_port;
+//modified by xiaoqiao
+//extern char* android_op_ui_port;
+char* android_op_ui_port = NULL;
 
 /* Sends core initialization status message back to the UI that started this
  * core process.

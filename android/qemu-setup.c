@@ -10,15 +10,15 @@
 ** GNU General Public License for more details.
 */
 
-#include "libslirp.h"
+//#include "libslirp.h"
 #include "qemu-common.h"
-#include "sysemu.h"
-#include "modem_driver.h"
-#include "proxy_http.h"
+//#include "sysemu.h"
+//#include "modem_driver.h"
+//#include "proxy_http.h"
 
 #include "android/android.h"
 #include "android/globals.h"
-#include "android/hw-sensors.h"
+//#include "android/hw-sensors.h"
 #include "android/utils/debug.h"
 #include "android/utils/path.h"
 #include "android/utils/system.h"
@@ -51,6 +51,7 @@ int    android_base_port;
 
 const char*  get_app_dir(void)
 {
+#if 0 //xiaoqiao
     char  buffer[1024];
     char* p   = buffer;
     char* end = p + sizeof(buffer);
@@ -59,6 +60,8 @@ const char*  get_app_dir(void)
         return NULL;
 
     return strdup(buffer);
+#endif
+    return NULL;
 }
 
 enum {
@@ -69,6 +72,7 @@ enum {
 static int
 get_report_console_options( char*  end, int  *maxtries )
 {
+#if 0
     int    flags = 0;
 
     if (end == NULL || *end == 0)
@@ -100,11 +104,14 @@ get_report_console_options( char*  end, int  *maxtries )
             end += 1;
     }
     return flags;
+#endif
+    return 0;
 }
 
 static void
 report_console( const char*  proto_port, int  console_port )
 {
+#if 0 //xiaoqiao
     int   s = -1, s2;
     int   maxtries = 10;
     int   flags = 0;
@@ -211,6 +218,7 @@ report_console( const char*  proto_port, int  console_port )
     D( "console port number sent to remote. resuming boot" );
 
     restore_sigalrm (&sigstate);
+#endif
 }
 
 /* this function is called from qemu_main() once all arguments have been parsed
@@ -219,6 +227,7 @@ report_console( const char*  proto_port, int  console_port )
  */
 void  android_emulation_setup( void )
 {
+#if 0
     int   tries     = 16;
     int   base_port = 5554;
     int   adb_host_port = 5037; // adb's default
@@ -240,12 +249,10 @@ void  android_emulation_setup( void )
 
     inet_strtoip("10.0.2.15", &guest_ip);
 
-#if 0
     if (opts->adb_port) {
         fprintf( stderr, "option -adb-port is obsolete, use -port instead\n" );
         exit(1);
     }
-#endif
 
     if (android_op_port && android_op_ports) {
         fprintf( stderr, "options -port and -ports cannot be used together.\n");
@@ -362,6 +369,7 @@ void  android_emulation_setup( void )
     if (s >= 0)
         socket_close(s);
 
+#if 0 //xiaoqiao
     /* setup the http proxy, if any */
     if (VERBOSE_CHECK(proxy))
         proxy_set_verbose(1);
@@ -445,6 +453,8 @@ void  android_emulation_setup( void )
             dprint( "Proxy will be ignored !");
         }
     }
+    
+#endif
     while (0);
 
     /* initialize sensors, this must be done here due to timer issues */
@@ -531,6 +541,7 @@ void  android_emulation_setup( void )
 #endif
         }
     }
+#endif
 }
 
 

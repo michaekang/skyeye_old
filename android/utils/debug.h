@@ -44,7 +44,8 @@ typedef enum {
 #undef  _VERBOSE_TAG
 
 /* defined in android_main.c */
-extern unsigned long  android_verbose;
+//modified by xiaoqiao
+unsigned long  android_verbose;
 
 #define  VERBOSE_ENABLE(tag)    \
     android_verbose |= (1 << VERBOSE_##tag)

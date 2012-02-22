@@ -32,8 +32,10 @@ CORE_MISC_SOURCES = \
     $(top_srcdir)/android/hw-kmsg.c \
     $(top_srcdir)/android/hw-lcd.c \
     $(top_srcdir)/android/hw-events.c \
+    $(top_srcdir)/android/qemu-setup.c \
     $(top_srcdir)/android/utils/timezone.c
 
+#$(top_srcdir)/qemu-setup.c 
 #snapshot.c \
 #hw-control.c \
 #hw-sensors.c \

@@ -58,7 +58,6 @@
 #include "android/skyeye/iolooper.h"
 
 AndroidRotation  android_framebuffer_rotation;
-DisplayType display_type = DT_DEFAULT;//xiaoqiao
 
 #define  STRINGIFY(x)   _STRINGIFY(x)
 #define  _STRINGIFY(x)  #x
