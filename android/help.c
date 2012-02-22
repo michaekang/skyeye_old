@@ -7,7 +7,7 @@
 #include "android/skin/keyset.h"
 #include "android/android.h"
 #include <stdint.h>
-#include "audio/audio.h"
+//#include "audio/audio.h"
 #include <string.h>
 #include <stdlib.h>
 #include "android/protocol/core-commands-api.h"
