@@ -5980,7 +5980,12 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
 //				UPDATE_CFLAG(dst, lop, rop);
-				UPDATE_CFLAG_NOT_BORROW_FROM(rop, lop);
+				//UPDATE_CFLAG_NOT_BORROW_FROM(rop, lop);
+				//rop = rop - !cpu->CFlag;
+				if(rop >= !cpu->CFlag)
+					UPDATE_CFLAG_NOT_BORROW_FROM(rop - !cpu->CFlag, SHIFTER_OPERAND);
+				else
+					UPDATE_CFLAG_NOT_BORROW_FROM(rop, !cpu->CFlag);
 //				cpu->CFlag = !((ISNEG(lop) && ISPOS(rop)) || (ISNEG(lop) && ISPOS(dst)) || (ISPOS(rop) && ISPOS(dst)));
 				UPDATE_VFLAG_OVERFLOW_FROM(dst, rop, lop);
 			}
