@@ -4626,6 +4626,7 @@ void InterpreterMainLoop(cpu_t *core)
 		adc_inst *inst_cream = (adc_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			lop = RN;
+			unsigned int sht_op = SHIFTER_OPERAND;
 			rop = SHIFTER_OPERAND + cpu->CFlag;
 			RD = dst = lop + rop;
 			if (inst_cream->S && (inst_cream->Rd == 15)) {
@@ -4638,7 +4639,7 @@ void InterpreterMainLoop(cpu_t *core)
 			} else if (inst_cream->S) {
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
-				UPDATE_CFLAG_CARRY_FROM_ADD(lop, rop, cpu->CFlag);
+				UPDATE_CFLAG_CARRY_FROM_ADD(lop, sht_op, cpu->CFlag);
 				UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
 			}
 			if (inst_cream->Rd == 15) {
