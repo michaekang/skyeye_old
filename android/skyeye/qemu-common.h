@@ -429,5 +429,4 @@ typedef enum DisplayType
     DT_NOGRAPHIC,
 } DisplayType;
 
-extern DisplayType display_type;//xiaoqiao
 #endif

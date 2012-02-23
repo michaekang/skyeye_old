@@ -119,6 +119,8 @@
 #endif /* CONFIG_ANDROID */
 #define TFR(expr) do { if ((expr) != -1) break; } while (errno == EINTR)//xiaoqiao
 
+DisplayType display_type = DT_DEFAULT;//xiaoqiao
+
 /***********************************************************/
 /* character device */
 

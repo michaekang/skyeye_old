@@ -17,6 +17,7 @@ emulator_common = $(ZLIB_SOURCES)
 #
 emulator_common += \
         $(top_srcdir)/android/skyeye/sockets.c \
+	$(top_srcdir)/android/skyeye/user-events-qemu.c \
         $(top_srcdir)/android/skyeye/iolooper-select.c \
         $(top_srcdir)/android/async-console.c \
         $(top_srcdir)/android/async-utils.c \

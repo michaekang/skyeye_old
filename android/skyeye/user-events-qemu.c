@@ -19,7 +19,7 @@ user_event_keycodes(int *kcodes, int count)
 {
     int nn;
     for (nn = 0; nn < count; nn++)
-        qemu_user_event_keycode(kcodes[nn]);
+        user_event_keycode(kcodes[nn]);
 }
 
 void

@@ -62,15 +62,13 @@ SDL_SOURCES =  \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_pixels.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_stretch.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_surface.c \
-	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_video.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_yuv.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_yuv_mmx.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_yuv_sw.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/dummy/SDL_nullevents.c \
         $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/dummy/SDL_nullmouse.c \
-        $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/dummy/SDL_nullvideo.c
+        $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/dummy/SDL_nullvideo.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11dyn.c \
-	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11dga.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11events.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11gamma.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11gl.c \
@@ -79,8 +77,9 @@ SDL_SOURCES =  \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11mouse.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11video.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11wm.c \
-	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11yuv.c
+	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11yuv.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11dga.c \
+	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_video.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/Xext/XME/xme.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/Xext/Xinerama/Xinerama.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/Xext/Xv/Xv.c \
@@ -129,6 +128,5 @@ INCLUDES += -I$(top_srcdir)/android/utils/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/libpng-1.2.19/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
 INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
-INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/include/
 
 pkglib_LTLIBRARIES = libemulator_libui.la
