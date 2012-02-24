@@ -4528,7 +4528,7 @@ void InterpreterMainLoop(cpu_t *core)
 								(ISPOS(rop) && ISPOS(dst))))
 	#define UPDATE_CFLAG(dst, lop, rop)	(cpu->CFlag = ((dst < lop) || (dst < rop)))
 	#define UPDATE_CFLAG_CARRY_FROM_ADD(lop, rop, flag)	(cpu->CFlag = (((uint64_t) lop + (uint64_t) rop + (uint64_t) flag) > 0xffffffff) )
-	#define UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(lop, rop, flag) (cpu->CFlag = ((uint64_t) lop >= (uint64_t) rop + (uint64_t) flag))
+	#define UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(lop, rop, flag) (cpu->CFlag = ((uint64_t) lop >= ((uint64_t) rop + (uint64_t) flag)))
 	#define UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop)	(cpu->CFlag = (lop >= rop))
 	#define UPDATE_CFLAG_WITH_NOT(dst, lop, rop)	(cpu->CFlag = !(dst < lop))
 	#define UPDATE_CFLAG_WITH_SC		cpu->CFlag = cpu->shifter_carry_out
@@ -5946,7 +5946,7 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_ZFLAG(dst);
 //				UPDATE_CFLAG(dst, lop, rop);
 //				UPDATE_CFLAG_NOT_BORROW_FROM(rop, lop);
-				UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(lop, rop, !cpu->CFlag);
+				UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(rop, lop, !cpu->CFlag);
 //				cpu->CFlag = !((ISNEG(lop) && ISPOS(rop)) || (ISNEG(lop) && ISPOS(dst)) || (ISPOS(rop) && ISPOS(dst)));
 				UPDATE_VFLAG_OVERFLOW_FROM((int)dst, (int)rop, (int)lop);
 			}
