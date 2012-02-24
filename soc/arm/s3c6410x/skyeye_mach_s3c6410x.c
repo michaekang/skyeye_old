@@ -1005,11 +1005,14 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 
 	conf_object_t* touchscreen = pre_conf_obj("s3c6410_touchscreen_0", "s3c6410_touchscreen");
 	memory_space_intf* ts_io_memory = (memory_space_intf*)SKY_get_interface(touchscreen, MEMORY_SPACE_INTF_NAME);
+	lcd_touchscreen_t* lcd_ts = (lcd_control_intf*)SKY_get_interface(touchscreen, LCD_TS_INTF_NAME);
 	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, ts_io_memory);
 	ret = add_map(phys_mem, 0x7E00b000, 0x1000, 0x0, ts_io_memory, 1, 1);
 	if(ret != No_exp){
 		skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for touchscreen\n");
 	}
+	/* Register vic_signal for touchscreen */
+	SKY_register_interface(vic_signal, touchscreen->objname, GENERAL_SIGNAL_INTF_NAME);
 
 	conf_object_t* spi = pre_conf_obj("s3c6410_spi_0", "s3c6410_spi");
 	memory_space_intf* spi_io_memory = (memory_space_intf*)SKY_get_interface(spi, MEMORY_SPACE_INTF_NAME);
@@ -1046,6 +1049,8 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 #ifdef GTK_LCD
 		/* set the lcd_ctrl_0 attribute for lcd */
 		conf_object_t* gtk_painter = pre_conf_obj("gtk_lcd_0", "gtk_lcd");
+		/* register touchscreen for lcd_gtk */
+		SKY_register_interface(lcd_ts, gtk_painter->objname, LCD_TS_INTF_NAME);
 
 		lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(gtk_painter, LCD_CTRL_INTF_NAME);
 		attr_value_t* attr = make_new_attr(Val_ptr);

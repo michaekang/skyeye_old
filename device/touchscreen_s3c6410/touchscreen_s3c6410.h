@@ -1,5 +1,10 @@
 #ifndef __TOUCHSCREEN_S3C6410_H__
 #define __TOUCHSCREEN_S3C6410_H__
+
+#include <gtk/gtk.h>
+#include "skyeye_lcd_intf.h"
+#include "skyeye_log.h"
+
 typedef char BOOL;
 
 typedef struct touchscreen_reg{
@@ -18,7 +23,8 @@ typedef struct s3c6410_touchscreen_status{
 	int y;
 	int stylus; 	// down, up 
 	int event; 	// down, up 
-	int adcbit;	// 10 bit, 12 bit
+	int adcbit;	// 0 : 10 bit, 1 : 12 bit
+	int adc_con;	// 0 : not conversion else 1
 }s3c6410_touchscreen_status;
 
 typedef struct s3c6410_touchscreen_device{
@@ -57,4 +63,11 @@ typedef struct s3c6410_touchscreen_device{
 #define TSC_DN		0x1 << 1
 #define TSC_UP		0x1 << 0
 
+#define GET_START(val)		(val >> 17) & 0x1
+#define GET_RESSEL(val)		(val && RESSEL) >> 16
+
+#define DBG_TS	0
+#define DEBUG_TS(fmt, ...)      if(DBG_TS){							\
+					skyeye_log(Debug_log, __func__, fmt, ## __VA_ARGS__);	\
+				}
 #endif

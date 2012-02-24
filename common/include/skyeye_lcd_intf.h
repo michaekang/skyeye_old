@@ -25,6 +25,13 @@
 #ifndef __SKYEYE_LCD_INTF_H__
 #define __SKYEYE_LCD_INTF_H__
 #include <skyeye_lcd_surface.h>
+
+typedef struct lcd_touchscreen{
+	conf_object_t* obj;
+	void (*touchscreen_update_status) (conf_object_t* object, int *Pen_buffer);
+}lcd_touchscreen_t;
+#define LCD_TS_INTF_NAME "lcd_ts_intf"
+
 typedef struct lcd_ctrl{
 	conf_object_t* conf_obj;
 	int (*lcd_open) (conf_object_t *lcd_dev, lcd_surface_t* surface);
@@ -33,7 +40,6 @@ typedef struct lcd_ctrl{
 	int (*lcd_filter_read) (conf_object_t *lcd_dev, uint32 addr, uint32 *data, size_t count);
 	int (*lcd_filter_write) (conf_object_t *lcd_dev, uint32 addr, uint32 data, size_t count);
 	uint32 (*lcd_lookup_color) (conf_object_t *lcd_dev, uint32 color); /* return RGB32 color. */
-
 }lcd_control_intf;
 #define LCD_CTRL_INTF_NAME "lcd_ctrl"
 #endif

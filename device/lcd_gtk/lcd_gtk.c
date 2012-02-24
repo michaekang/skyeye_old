@@ -295,7 +295,7 @@ static gint callback_expose_event(GtkWidget *widget, GdkEventExpose *event, lcd_
 	return TRUE;
 }
 
-
+#if 1
 //********** touch srceen event callback funtion by ywc ************
 static void skPenEvent(int *buffer, int eventType, int stateType, int x, int y)
 {
@@ -311,36 +311,41 @@ static void skPenEvent(int *buffer, int eventType, int stateType, int x, int y)
 }
 
 
-static void callback_button_press(GtkWidget *w, GdkEventButton *event)
+static void callback_button_press(GtkWidget *w, GdkEventButton *event, gpointer object)
 {
 	int *Pen_buffer;
+	lcd_touchscreen_t *obj = object;
+        Pen_buffer = get_pen_buffer();
+	skPenEvent(Pen_buffer, 0, 0, event->x, event->y);
+	obj->touchscreen_update_status(obj->obj, Pen_buffer);
+}
+
+
+static void callback_button_release(GtkWidget *w, GdkEventButton *event, gpointer object)
+{
+	int *Pen_buffer;
+	lcd_touchscreen_t *obj = object;
         Pen_buffer = get_pen_buffer();
 	skPenEvent(Pen_buffer, 0, 1, event->x, event->y);
-//      g_print("button pressed , Skyeye get it !!!\n");
+	obj->touchscreen_update_status(obj->obj, Pen_buffer);
 }
 
 
-static void callback_button_release(GtkWidget *w, GdkEventButton *event)
+static void callback_motion_notify(GtkWidget *w, GdkEventMotion *event, gpointer object)
 {
 	int *Pen_buffer;
-        Pen_buffer = get_pen_buffer();
-	skPenEvent(Pen_buffer, 1, 0, event->x, event->y);
-//      g_print("button released , Skyeye get it !!!\n\n");
-}
-
-
-static void callback_motion_notify(GtkWidget *w, GdkEventMotion *event)
-{
-	int *Pen_buffer;
+	lcd_touchscreen_t *obj = object;
         Pen_buffer = get_pen_buffer();
 	/*
 	 * when mouse is moving, generate an skyeye pen motion event
 	 * should changed to "when mouse is pressed and moving"
 	 */
-	if (Pen_buffer[5] == 1) skPenEvent(Pen_buffer, 2, 1, event->x, event->y);
-//	g_print("and moving , Skyeye get it !!!\n");
+	if (Pen_buffer[5] == 0){
+		skPenEvent(Pen_buffer, 1, 0, event->x, event->y);
+		obj->touchscreen_update_status(obj->obj, Pen_buffer);
+	}
 }
-
+#endif
 
 static gint callback_redraw(GtkWidget *window)
 {
@@ -353,6 +358,7 @@ static gint callback_redraw(GtkWidget *window)
 static int gtk_lcd_open(conf_object_t *lcd_dev, lcd_surface_t* surface)
 {
 	lcd_gtk_device* dev = lcd_dev->obj;
+	lcd_touchscreen_t* lcd_ts = SKY_get_interface(lcd_dev, LCD_TS_INTF_NAME);
 	SkyEyeLCD_GTK *lcd;
 	guint32 *fbmem;
 	char *title;
@@ -419,17 +425,20 @@ static int gtk_lcd_open(conf_object_t *lcd_dev, lcd_surface_t* surface)
 
 	touch_screen = gtk_event_box_new();
 	DBG("In %s, set event\n", __FUNCTION__);
-	gtk_container_add(GTK_CONTAINER(lcd->window), touch_screen);
-	gtk_widget_set_events(touch_screen,
-			      GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
-	gtk_signal_connect(GTK_OBJECT(touch_screen), "button-press-event",
-			   GTK_SIGNAL_FUNC(callback_button_press), NULL);
-	gtk_signal_connect(GTK_OBJECT(touch_screen), "button-release-event",
-			   GTK_SIGNAL_FUNC(callback_button_release), NULL);
-	gtk_signal_connect(GTK_OBJECT(touch_screen), "motion-notify-event",
-			   GTK_SIGNAL_FUNC(callback_motion_notify), NULL);
-	gtk_widget_realize(touch_screen);
-	gdk_window_set_cursor(touch_screen->window, gdk_cursor_new(GDK_HAND2));
+	if(lcd_ts){
+		printf("In %s, Have touch screen register callback\n", __FUNCTION__);
+		gtk_container_add(GTK_CONTAINER(lcd->window), touch_screen);
+		gtk_widget_set_events(touch_screen,
+				GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
+		gtk_signal_connect(GTK_OBJECT(touch_screen), "button-press-event",
+				GTK_SIGNAL_FUNC(callback_button_press), (gpointer)lcd_ts);
+		gtk_signal_connect(GTK_OBJECT(touch_screen), "button-release-event",
+				GTK_SIGNAL_FUNC(callback_button_release), (gpointer)lcd_ts);
+		gtk_signal_connect(GTK_OBJECT(touch_screen), "motion-notify-event",
+				GTK_SIGNAL_FUNC(callback_motion_notify), (gpointer)lcd_ts);
+		gtk_widget_realize(touch_screen);
+		gdk_window_set_cursor(touch_screen->window, gdk_cursor_new(GDK_HAND2));
+	}
 
 	//zy 2004-4-02 Add Drawing area
 	lcd->drawing = gtk_drawing_area_new();
