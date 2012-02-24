@@ -42,6 +42,7 @@
 
 //extern unsigned int Pen_buffer[8];
 
+static void timer_update(conf_object_t *lcd_dev);
 
 static guint32 colors1b[2] = {
 	0x000000, 0xffffff
@@ -471,6 +472,12 @@ static int gtk_lcd_open(conf_object_t *lcd_dev, lcd_surface_t* surface)
 	//lcd->timer = gtk_timeout_add(200, (GtkFunction)callback_redraw, lcd->window);
 
 	dev->gtk_win = (void*)lcd;
+#ifndef MK_LCD
+	int timer_id;
+	create_thread_scheduler(10000, Periodic_sched, timer_update, dev->obj, &timer_id);
+#endif
+
+
 	//gtk_main_iteration_do(FALSE);
 	return 0;
 }

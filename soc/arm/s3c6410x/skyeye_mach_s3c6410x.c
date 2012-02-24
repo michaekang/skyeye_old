@@ -243,11 +243,13 @@ s3c6410x_io_do_cycle (generic_arch_t *state)
 			}
 		}
 	}
+#ifdef MK_LCD
 	static int lcd_prescale = 10000;
 	if(lcd_prescale-- <= 0){
 		lcd_prescale = 10000;
 		mach_lcd_ctrl->lcd_update(mach_lcd_ctrl->conf_obj);
 	}
+#endif
 }
 
 static void
