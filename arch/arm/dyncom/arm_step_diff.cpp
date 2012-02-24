@@ -233,8 +233,8 @@ int diff_single_step(cpu_t *cpu){
 	}
 	cpsr = arm_run->get_regval_by_id(arm11_core_obj, CPSR_REG);
 	if(((core->Cpsr & 0xF0000020) != (cpsr & 0xF0000020)) ||
-		 (core->VFP[VFP_FPSCR] != state->VFP[VFP_FPSCR]) ||
-		(core->VFP[VFP_FPEXC] != state->VFP[VFP_FPEXC])){
+		 (core->VFP[VFP_OFFSET(VFP_FPSCR)] != state->VFP[VFP_OFFSET(VFP_FPSCR)]) ||
+		(core->VFP[VFP_OFFSET(VFP_FPEXC)] != state->VFP[VFP_OFFSET(VFP_FPEXC)])){
 		instr = arm_run->get_regval_by_id(arm11_core_obj, 0xFF);
 		skyeye_printf_in_color(RED, "ICOUNTER=%lld(0x%x), instr=0x%x, last_instr=0x%x, diff Fail, orginal CPSR=0x%x, wrong value 0x%x\n",core->icounter, core->Reg[15], instr, state->last_instr, arm_run->get_regval_by_id(arm11_core_obj, CPSR_REG), core->Cpsr);
 		int j;
@@ -243,7 +243,7 @@ int diff_single_step(cpu_t *cpu){
 			skyeye_printf_in_color(BLUE, "R[%d]=0x%x:0x%x\t", j, regval, core->Reg[j]);
 		}
 		printf("\n");
-		skyeye_printf_in_color(BLUE, "fpsid=0x%x:0x%x\tfpscr=0x%x:0x%x, fpexc=0x%x:0x%x\n", state->VFP[VFP_FPSID], core->VFP[VFP_FPSID], state->VFP[VFP_FPSCR], core->VFP[VFP_FPSCR], state->VFP[VFP_FPEXC], core->VFP[VFP_FPEXC]);
+		skyeye_printf_in_color(BLUE, "fpsid=0x%x:0x%x\tfpscr=0x%x:0x%x, fpexc=0x%x:0x%x\n", state->VFP[VFP_OFFSET(VFP_FPSID)], core->VFP[VFP_OFFSET(VFP_FPSID)], state->VFP[VFP_OFFSET(VFP_FPSCR)], core->VFP[VFP_OFFSET(VFP_FPSCR)], state->VFP[VFP_OFFSET(VFP_FPEXC)], core->VFP[VFP_OFFSET(VFP_FPEXC)]);
 	}
 	/* Comparing the writen data */
 	if((state->CurrWrite != 0) || (state->CurrWrite != 0)){

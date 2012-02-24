@@ -82,9 +82,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -181,9 +181,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -279,9 +279,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -377,9 +377,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -475,9 +475,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -573,9 +573,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -671,9 +671,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -769,9 +769,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -867,9 +867,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1204,9 +1204,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1302,9 +1302,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1400,9 +1400,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1498,9 +1498,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1595,9 +1595,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1692,9 +1692,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1790,9 +1790,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1889,9 +1889,9 @@ VFPLABEL_INST:
 		int ret;
 		
 		if (inst_cream->dp_operation)
-			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_double_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else
-			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
+			ret = vfp_single_cpdo(cpu, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
 		CHECK_VFP_CDP_RET;
 	}
@@ -1939,11 +1939,11 @@ int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr){
 	int dp_operation = BIT(8);
 	int ret;
 	if (dp_operation)
-		ret = vfp_double_cpdo(cpu, instr, cpu->VFP[VFP_FPSCR]);
+		ret = vfp_double_cpdo(cpu, instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 	else
-		ret = vfp_single_cpdo(cpu, instr, cpu->VFP[VFP_FPSCR]);
+		ret = vfp_single_cpdo(cpu, instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
-	vfp_raise_exceptions(cpu, ret, instr, cpu->VFP[VFP_FPSCR]);
+	vfp_raise_exceptions(cpu, ret, instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 	return 0;
 }
 #endif
@@ -2166,12 +2166,12 @@ void VMSR(ARMul_State * state, ARMword reg, ARMword Rt)
 	if (reg == 1)
 	{
 		DBG("VMSR :\tfpscr <= r%d=[%x]\n", Rt, state->Reg[Rt]);
-		state->VFP[VFP_FPSCR] = state->Reg[Rt];
+		state->VFP[VFP_OFFSET(VFP_FPSCR)] = state->Reg[Rt];
 	}
 	else if (reg == 8)
 	{
 		DBG("VMSR :\tfpexc <= r%d=[%x]\n", Rt, state->Reg[Rt]);
-		state->VFP[VFP_FPEXC] = state->Reg[Rt];
+		state->VFP[VFP_OFFSET(VFP_FPEXC)] = state->Reg[Rt];
 	}
 }
 #endif
@@ -2384,16 +2384,16 @@ VFPLABEL_INST:
 		{
 			if (inst_cream->Rt != 15)
 			{	
-				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSCR];
-				DBG("\tr%d <= fpscr[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPSCR]);
+				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_OFFSET(VFP_FPSCR)];
+				DBG("\tr%d <= fpscr[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
 			}
 			else
 			{	
-				cpu->NFlag = (cpu->VFP[VFP_FPSCR] >> 31) & 1;
-				cpu->ZFlag = (cpu->VFP[VFP_FPSCR] >> 30) & 1;
-				cpu->CFlag = (cpu->VFP[VFP_FPSCR] >> 29) & 1;
-				cpu->VFlag = (cpu->VFP[VFP_FPSCR] >> 28) & 1;
-				DBG("\tflags <= fpscr[%1xxxxxxxx]\n", cpu->VFP[VFP_FPSCR]>>28);
+				cpu->NFlag = (cpu->VFP[VFP_OFFSET(VFP_FPSCR)] >> 31) & 1;
+				cpu->ZFlag = (cpu->VFP[VFP_OFFSET(VFP_FPSCR)] >> 30) & 1;
+				cpu->CFlag = (cpu->VFP[VFP_OFFSET(VFP_FPSCR)] >> 29) & 1;
+				cpu->VFlag = (cpu->VFP[VFP_OFFSET(VFP_FPSCR)] >> 28) & 1;
+				DBG("\tflags <= fpscr[%1xxxxxxxx]\n", cpu->VFP[VFP_OFFSET(VFP_FPSCR)]>>28);
 			}
 		} 
 		else
@@ -2401,8 +2401,8 @@ VFPLABEL_INST:
 			switch (inst_cream->reg)
 			{
 			case 0:
-				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSID];
-				DBG("\tr%d <= fpsid[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPSID]);
+				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_OFFSET(VFP_FPSID)];
+				DBG("\tr%d <= fpsid[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_OFFSET(VFP_FPSID)]);
 				break;
 			case 6:
 				/* MVFR1, VFPv3 only ? */
@@ -2413,8 +2413,8 @@ VFPLABEL_INST:
 				DBG("\tr%d <= MVFR0 unimplemented\n", inst_cream->Rt);
 				break;
 			case 8:
-				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPEXC];
-				DBG("\tr%d <= fpexc[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_FPEXC]);
+				cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_OFFSET(VFP_FPEXC)];
+				DBG("\tr%d <= fpexc[%08x]\n", inst_cream->Rt, cpu->VFP[VFP_OFFSET(VFP_FPEXC)]);
 				break;
 			default:
 				DBG("\tSUBARCHITECTURE DEFINED\n");
@@ -2443,13 +2443,13 @@ void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword * value)
 	{
 		if (Rt != 15)
 		{
-			*value = state->VFP[VFP_FPSCR];
-			DBG("\tr%d <= fpscr[%08x]\n", Rt, state->VFP[VFP_FPSCR]);
+			*value = state->VFP[VFP_OFFSET(VFP_FPSCR)];
+			DBG("\tr%d <= fpscr[%08x]\n", Rt, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		}
 		else
 		{
-			*value = state->VFP[VFP_FPSCR] ;
-			DBG("\tflags <= fpscr[%1xxxxxxxx]\n", state->VFP[VFP_FPSCR]>>28);
+			*value = state->VFP[VFP_OFFSET(VFP_FPSCR)] ;
+			DBG("\tflags <= fpscr[%1xxxxxxxx]\n", state->VFP[VFP_OFFSET(VFP_FPSCR)]>>28);
 		}
 	}
 	else
@@ -2457,8 +2457,8 @@ void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword * value)
 		switch (reg)
 		{
 		case 0:
-			*value = state->VFP[VFP_FPSID];
-			DBG("\tr%d <= fpsid[%08x]\n", Rt, state->VFP[VFP_FPSID]);
+			*value = state->VFP[VFP_OFFSET(VFP_FPSID)];
+			DBG("\tr%d <= fpsid[%08x]\n", Rt, state->VFP[VFP_OFFSET(VFP_FPSID)]);
 			break;
 		case 6:
 			/* MVFR1, VFPv3 only ? */
@@ -2469,8 +2469,8 @@ void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword * value)
 			DBG("\tr%d <= MVFR0 unimplemented\n", Rt);
 			break;
 		case 8:
-			*value = state->VFP[VFP_FPEXC];
-			DBG("\tr%d <= fpexc[%08x]\n", Rt, state->VFP[VFP_FPEXC]);
+			*value = state->VFP[VFP_OFFSET(VFP_FPEXC)];
+			DBG("\tr%d <= fpexc[%08x]\n", Rt, state->VFP[VFP_OFFSET(VFP_FPEXC)]);
 			break;
 		default:
 			DBG("\tSUBARCHITECTURE DEFINED\n");
@@ -2487,6 +2487,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	DBG("\t\tin %s .\n", __FUNCTION__);
 	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
@@ -2512,7 +2513,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		{
 			//LET(Rt, R(VFP_FPSCR));
 			update_cond_from_fpscr(cpu, instr, bb, pc);
-			DBG("\tflags <= fpscr\n");
+			DBG("In %s, \tflags <= fpscr\n", __FUNCTION__);
 		}
 	}
 	else
@@ -4134,4 +4135,4 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 
 #define CHECK_VFP_ENABLED	
 	
-#define CHECK_VFP_CDP_RET	vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}
+#define CHECK_VFP_CDP_RET	vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}

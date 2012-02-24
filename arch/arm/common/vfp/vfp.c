@@ -32,10 +32,10 @@
 unsigned
 VFPInit (ARMul_State *state)
 {
-	state->VFP[VFP_FPSID] = VFP_FPSID_IMPLMEN<<24 | VFP_FPSID_SW<<23 | VFP_FPSID_SUBARCH<<16 | 
+	state->VFP[VFP_OFFSET(VFP_FPSID)] = VFP_FPSID_IMPLMEN<<24 | VFP_FPSID_SW<<23 | VFP_FPSID_SUBARCH<<16 | 
 		VFP_FPSID_PARTNUM<<8 | VFP_FPSID_VARIANT<<4 | VFP_FPSID_REVISION;
-	state->VFP[VFP_FPEXC] = 0;
-	state->VFP[VFP_FPSCR] = 0;
+	state->VFP[VFP_OFFSET(VFP_FPEXC)] = 0;
+	state->VFP[VFP_OFFSET(VFP_FPSCR)] = 0;
 	
 	//persistent_state = state;
 	/* Reset only specify VFP_FPEXC_EN = '0' */
@@ -240,14 +240,15 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 		#undef VFP_CDP_TRANS
 		
 		int exceptions = 0;
-
+		printf("In %s, cpsr=0x%x\n", __FUNCTION__, state->Cpsr);
 		if (CoProc == 10)
-			exceptions = vfp_single_cpdo(state, instr, state->VFP[VFP_FPSCR]);
+			exceptions = vfp_single_cpdo(state, instr, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else 
-			exceptions = vfp_double_cpdo(state, instr, state->VFP[VFP_FPSCR]);
+			exceptions = vfp_double_cpdo(state, instr, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
-		vfp_raise_exceptions(state, exceptions, instr, state->VFP[VFP_FPSCR]);
+		vfp_raise_exceptions(state, exceptions, instr, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
+		printf("In %s 1, cpsr=0x%x\n", __FUNCTION__, state->Cpsr);
 		return ARMul_DONE;
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x\n", instr);
@@ -353,5 +354,5 @@ void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpsc
 
 	fpscr |= exceptions;
 
-	state->VFP[VFP_FPSCR] = fpscr;
+	state->VFP[VFP_OFFSET(VFP_FPSCR)] = fpscr;
 }
