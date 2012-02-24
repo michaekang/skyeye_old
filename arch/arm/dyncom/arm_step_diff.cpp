@@ -99,9 +99,9 @@ int diff_single_step(cpu_t *cpu){
 		state->mmu.translation_table_base0 = core->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_0)];
 		state->mmu.translation_table_base1 = core->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_1)];
 		state->mmu.process_id = core->CP15[CP15(CP15_PID)];
-		state->mmu.context_id = core->CP15[(CP15_CONTEXT_ID)];
-		state->mmu.thread_uro_id = core->CP15[(CP15_THREAD_URO)];
-		state->VFP[VFP_FPSCR] = core->VFP[VFP_FPSCR];
+		state->mmu.context_id = core->CP15[CP15(CP15_CONTEXT_ID)];
+		state->mmu.thread_uro_id = core->CP15[CP15(CP15_THREAD_URO)];
+		state->VFP[VFP_OFFSET(VFP_FPSCR)] = core->VFP[VFP_OFFSET(VFP_FPSCR)];
 		/* the core os*/
 		#if 0
 		arm11_core = (arm_core_t*)(arm11_core_obj->obj);
