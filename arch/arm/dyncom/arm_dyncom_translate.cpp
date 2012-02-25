@@ -2005,6 +2005,10 @@ int DYNCOM_TAG(adc)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
+	if ((RN == 15) && ((pc & 0xfff) == 0xffc)) {
+		*tag |= TAG_NEED_PC;
+        }
+
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
