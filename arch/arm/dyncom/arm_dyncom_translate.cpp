@@ -912,7 +912,9 @@ int DYNCOM_TRANS(ldrh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 int DYNCOM_TRANS(ldrsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	//LoadStore(cpu,instr,bb,addr);
+	Value *ret = arch_read_memory(cpu, bb, addr, 0, 8);
+	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x80)), CONST(0)), ret, OR(CONST(0xffffff00), ret)));
 	return 0;
 }
 int DYNCOM_TRANS(ldrsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
