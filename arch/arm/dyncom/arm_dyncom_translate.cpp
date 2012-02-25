@@ -2227,8 +2227,9 @@ int DYNCOM_TAG(ldr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	}
 	*tag |= TAG_MEMORY;
 //	if (instr == 0xe59f0054 && (pc & 0xfff) == 0xffc) {
-	if ((pc & 0xfff) == 0xffc) {
+	if ((pc & 0xfff) == 0xffc && (RD != 15)) {
 		*tag |= TAG_NEED_PC;
+		printf("\n\nIn %s, #####################3pc=0x%x, RN=%d\n", __FUNCTION__, pc, RN);
 	}
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
