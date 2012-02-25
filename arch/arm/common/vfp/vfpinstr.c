@@ -598,15 +598,17 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	printf("\n\n\t\tin %s instruction is executed out.\n\n", __FUNCTION__);
+	
+	//arch_arm_undef(cpu, bb, instr);
 	return No_exp;
 }
 #endif
@@ -794,15 +796,15 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	DBG("\t\tin %s instr=0x%x, instruction is executed out of JIT.\n", __FUNCTION__, instr);
+	//arch_arm_undef(cpu, bb, instr);
 	return No_exp;
 }
 #endif
@@ -1717,15 +1719,14 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	DBG("\t\tin %s instruction is executed out.\n", __FUNCTION__);
+	//arch_arm_undef(cpu, bb, instr);
 	return No_exp;
 }
 #endif
@@ -3036,15 +3037,33 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
+	*tag |= TAG_MEMORY;
+	if(instr >> 28 != 0xe)
+		*tag |= TAG_CONDITIONAL;
+
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	int single = BIT(8) == 0;
+	int add	   = BIT(23);
+	int imm32  = BITS(0,7) << 2;
+	int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4);
+	int n	   = BITS(16, 19);
+
+	Value* base = (n == 15) ? ADD(AND(R(n), CONST(0xFFFFFFFC)), CONST(8)): R(n);
+	Value* Addr = add ? ADD(base, CONST(imm32)) : SUB(base, CONST(imm32));
+	DBG("VSTR :\n");
+	if(single){
+		arch_write_memory(cpu, bb, Addr, RSPR(d), 32);
+	}
+	else{
+		arch_write_memory(cpu, bb, Addr, RSPR(d * 2), 32);
+		arch_write_memory(cpu, bb, ADD(Addr, CONST(4)), RSPR(d * 2 + 1), 32);
+	}
 	return No_exp;
 }
 #endif
@@ -3677,16 +3696,51 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	/* Should check if PC is destination register */
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
+	*tag |= TAG_MEMORY;
+	if(instr >> 28 != 0xe)
+		*tag |= TAG_CONDITIONAL;
+
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	DBG("\t\tin %s instruction .\n", __FUNCTION__);
+	//arch_arm_undef(cpu, bb, instr);
+	int single  = BIT(8) == 0;
+	int d       = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4);
+	int imm32   = BITS(0, 7)<<2;
+	int regs    = (single ? BITS(0, 7) : BITS(1, 7));
 
+	int i;
+	unsigned int value1, value2;
+
+	DBG("VPOP :\n");
+		
+	Value* Addr = R(13);
+		
+	for (i = 0; i < regs; i++)
+	{
+		if (single)
+		{
+			LETS(d + i, arch_read_memory(cpu, bb, Addr, 0, 32));
+			Addr = ADD(Addr, CONST(4));
+		}
+		else
+		{
+			/* Careful of endianness, little by default */
+			LETS((d + i) * 2, arch_read_memory(cpu, bb, Addr, 0, 32));
+			LETS((d + i) * 2 + 1, arch_read_memory(cpu, bb, ADD(Addr, CONST(4)), 0, 32));
+
+			Addr = ADD(Addr, CONST(8));
+		}
+	}
+	LET(13, ADD(R(13), CONST(imm32)));
 	return No_exp;
 }
 #endif

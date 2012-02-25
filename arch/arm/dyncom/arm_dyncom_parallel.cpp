@@ -749,10 +749,17 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		bus_read(32, core->phys_pc, &instr);
 		if((instr & 0x0FB80e50)== 0x0eb80a40){ /* some instruction need to implemented here */
 			/* VCVTBFI */
-			printf("VCVTBFI executed:\n");
+			printf("\n\nVCVTBFI executed:\n");
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}
+		if((instr & 0x0FBa0e50)== 0x0eba0a40){ /* some instruction need to implemented here */
+			/* VCVTBDS */
+			printf("\n\nVCVTBDS executed:\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}
+
 		else if((instr & 0x0fb00e50) == 0x0e300a00){ /* some instruction need to implemented here */
 			/* VADD */
 			printf("VADD executed:\n");
@@ -771,6 +778,27 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}	
+		else if((instr & 0xFF800F10)== 0xF3000800){ /* some instruction need to implemented here */
+			/* VSUB */
+			printf("\n\nVSUB executed:\n\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+		else if((instr & 0x0FB00E50)== 0x0E300a40){ /* some instruction need to implemented here */
+			/* VSUB */
+			printf("\n\nVSUB(floating-point) executed:\n\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+
+		else if((instr & 0x0Fb00e50)== 0x0E200a00){ /* some instruction need to implemented here */
+			/* VFMUL */
+			printf("\n\nVMUL executed:\n\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+
+
 		else{
 			//printf("Unknown instruction 0x%x\n", instr);
 		}

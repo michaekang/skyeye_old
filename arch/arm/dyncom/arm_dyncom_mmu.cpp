@@ -1256,16 +1256,37 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 		if(n == 15){
 			base = base & 0xFFFFFFFC + 8;
 		}
-		addr_t addr = add ? (base + imm32) : (base - imm32);
+		addr = add ? (base + imm32) : (base - imm32);
 		if(single){
 			end_addr = addr + 4;
 		}
 		else
 			end_addr = addr + 8;
-
-
+	} else if(BITS(24, 27) == 0xd && BITS(8, 11) == 0xa && BITS(20, 21) == 0x0){
+		/* VSTR */
+		int single = BIT(8) == 0;
+		int add    = BIT(23);
+		int wback  = BIT(21);
+		int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4);
+		int n      = BITS(16, 19);
+		int imm32  = BITS(0, 7)<<2;
+		int regs   = (single ? BITS(0, 7) : BITS(1, 7));
+		addr_t base = core->Reg[n];
+		if(n == 15){
+			base = base & 0xFFFFFFFC + 8;
+		}
+		addr = add ? (base + imm32) : (base - imm32);
+		if(single){
+			end_addr = addr + 4;
+		}
+		else
+			end_addr = addr + 8;
+		//printf("In %s:VSTR, addr=0x%x, end_addr=0x%x\n", __FUNCTION__, addr, end_addr);
+		//printf("VSTR: pc is %x check_addr is %x instr is %x\n", core->Reg[15], addr, instr);
 	} else
+
 		addr = GetAddr(cpu, instr, &end_addr);
+	
 	LOG("In %s, pc is %x phys_pc is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);
 	while(addr != end_addr){
 		fault = get_phys_addr(cpu, addr, &phys_addr, 32, rw);

@@ -161,10 +161,36 @@ extern const INSTRACT arm_instruction_action[];
 extern const ISEITEM arm_instruction[];
 
 void update_cond_from_fpscr(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	new StoreInst(TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(31)), CONST(0x1))), ptr_N, bb);
-	new StoreInst(TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(30)), CONST(0x1))), ptr_Z, bb);
-	new StoreInst(TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(29)), CONST(0x1))), ptr_C, bb);
-	new StoreInst(TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(28)), CONST(0x1))), ptr_V, bb);
+#if 0
+        Value *n = TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(31)), CONST(1)));
+        Value *z = TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(30)), CONST(1)));
+        Value *c = TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(29)), CONST(1)));
+        Value *v = TRUNC1(AND(LSHR(R(VFP_FPSCR), CONST(28)), CONST(1)));
+	new StoreInst(n, ptr_N, false, bb);
+	new StoreInst(z, ptr_Z, false, bb);
+	new StoreInst(c, ptr_C, false, bb);
+	new StoreInst(v, ptr_V, false, bb);
+#endif
+	//Value *nzcv = LSHR(AND(LOAD(cpu->ptr_gpr[16]), CONST(0xf0000000)), CONST(28));
+	//Value *nzcv = LSHR(AND(R(VFP_FPSCR), CONST(0xf0000000)), CONST(28));
+	//Value *nzcv = LSHR(AND(CONST(0x50000000), CONST(0xf0000000)), CONST(28));
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//core->VFP[VFP_FPSID - VFP_BASE] = 0x40000000;
+	//core->VFP[VFP_FPSCR - VFP_BASE] = 0x50000000;
+	//core->VFP[VFP_FPEXC - VFP_BASE] = 0x60000000;
+	Value *nzcv = LSHR(AND(LOAD(cpu->ptr_xr[VFP_FPSCR - 19]), CONST(0xf0000000)), CONST(28));
+	Value *n = TRUNC1(AND(LSHR(nzcv, CONST(3)), CONST(1)));
+	Value *z = TRUNC1(AND(LSHR(nzcv, CONST(2)), CONST(1)));
+	Value *c = TRUNC1(AND(LSHR(nzcv, CONST(1)), CONST(1)));
+	Value *v = TRUNC1(AND(LSHR(nzcv, CONST(0)), CONST(1)));
+	//Value *t = TRUNC1(LSHR(AND(LOAD(cpu->ptr_gpr[16]), CONST(1 << THUMB_BIT)), CONST(THUMB_BIT)));
+	new StoreInst(n, ptr_N, false, bb);
+	new StoreInst(z, ptr_Z, false, bb);
+	new StoreInst(c, ptr_C, false, bb);
+	new StoreInst(v, ptr_V, false, bb);
+	//new StoreInst(t, ptr_T, false, bb);
+
+	printf("In %s\n", __FUNCTION__);
 	return;
 }
 
