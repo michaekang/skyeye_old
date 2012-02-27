@@ -591,7 +591,6 @@ void write_android_options(int argc,char ** argv)
 	for (i = 0;i < argc;i++)
 	{
 		strcpy(options.argv[i],argv[i]);
-		printf("in %s,argv[%d] is %s\n",__func__,i,argv[i]);
 	}
 
         FILE *fp = fopen("android_args", "w+");

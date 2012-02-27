@@ -178,7 +178,6 @@ static void read_android_options(int * argc,char argv[16][256])
 	for (i = 0;i < *argc;i++)
 	{
 		strcpy(argv[i],options.argv[i]);
-		printf("in %s,argc is %d,arg[%d] is %s\n",__func__,i,*argc,argv[i]);
 	}
 
 	fclose(fp);
@@ -242,7 +241,6 @@ int android_main()
     while (argc-- > 1) {
         opt = (++argv)[0];
 
-	printf("opt is %s\n",opt);
         if(!strcmp(opt, "-qemu")) {
             argc--;
             argv++;
