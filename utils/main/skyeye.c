@@ -623,6 +623,8 @@ main (int argc, char **argv)
 		char * option[] = {"/opt/skyeye/bin/emulator","-e","vmlinux"};
 
 		init_option(argc, option, pref);
+		pref->interactive_mode = False;
+		pref->autoboot = True;
 		SIM_init();
 		while(1)
 			sleep(1);
