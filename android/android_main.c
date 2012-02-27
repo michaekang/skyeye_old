@@ -162,7 +162,7 @@ struct android_arg {
 
 
 /*Read arguments from the file args.conf which storge the arguments from command.*/
-static void read_android_options(int argc,char argv[16][256])
+static void read_android_options(int * argc,char argv[16][256])
 {
         struct android_arg options;
 
@@ -173,12 +173,12 @@ static void read_android_options(int argc,char argv[16][256])
 	}
 	fread(&options, sizeof(struct android_arg), 1, fp);
 	
-	argc = options.argc;
+	*argc = options.argc;
 	int i = 0;
-	for (i = 0;i < argc;i++)
+	for (i = 0;i < *argc;i++)
 	{
 		strcpy(argv[i],options.argv[i]);
-		printf("in %s,arg[%d] is %s\n",__func__,i,argv[i]);
+		printf("in %s,argc is %d,arg[%d] is %s\n",__func__,i,*argc,argv[i]);
 	}
 
 	fclose(fp);
@@ -209,14 +209,17 @@ int android_main()
     int               inAndroidBuild;
     uint64_t          defaultPartitionSize = convertMBToBytes(66);
 
-#if 1
-    int argc = 1;
-    char argv1[16][256];
-    char ** argv = argv1;
-    read_android_options(argc,argv1);
-#endif
-    char ** argv2 = (char **)malloc(argc * 256); 
-    memcpy((void *)argv2,(void *)argv1,argc * 256);
+    int argc_read = 1;
+    int i = 0;
+    char argv_read[16][256];
+    read_android_options(&argc_read,argv_read);
+    char ** argv = (char **)malloc(argc_read * sizeof(char *)); 
+    for (i = 0;i < argc_read;i++)
+    {
+	    argv[i] = (char *)malloc(256 * sizeof(char));
+	    strcpy(argv[i],argv_read[i]);
+    }
+    int argc = argc_read;
 
     AndroidOptions  opts[1];
     /* net.shared_net_ip boot property value. */
@@ -225,11 +228,10 @@ int android_main()
 
     args[0] = argv[0];
 
-    if ( android_parse_options( &argc, &argv2, opts ) < 0 ) {
-	free(argv2);
+    if ( android_parse_options( &argc, &argv, opts ) < 0 ) {
+	free(argv);
         exit(1);
     }
-    free(argv2);
 
 #ifdef _WIN32
     socket_init();
@@ -240,6 +242,7 @@ int android_main()
     while (argc-- > 1) {
         opt = (++argv)[0];
 
+	printf("opt is %s\n",opt);
         if(!strcmp(opt, "-qemu")) {
             argc--;
             argv++;
@@ -1209,6 +1212,7 @@ int android_main()
         exit(1);
     }
 
+    free(argv);
 #if 0 //xiaoqiao
     return qemu_main(n, args);
 #endif
