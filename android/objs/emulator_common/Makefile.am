@@ -52,17 +52,17 @@ emulator_common += \
 #$(top_srcdir)/android/libemulator_common.a: 
 #noinst_LIBRARIES = libemulator_common.a 
 #libemulator_common_a_SOURCES = $(emulator_common)
-#emulator_common_a_LDFLAGS = -module
 
 ######dyn
 #
 #$(top_srcdir)/android/libemulator_common.so:
 libemulator_common_la_SOURCES = $(emulator_common)
 libemulator_common_la_LDFLAGS = -module -lrt 
+pkglib_LTLIBRARIES = libemulator_common.la
+
 INCLUDES = -I$(top_srcdir)/android/config/linux-x86/
 INCLUDES += -I$(top_srcdir)/android/skyeye/
 INCLUDES += -I$(top_srcdir)/android/
 INCLUDES += -I$(top_srcdir)/android/utils/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
 
-pkglib_LTLIBRARIES = libemulator_common.la

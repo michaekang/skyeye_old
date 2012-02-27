@@ -113,11 +113,4 @@ extern int   android_parse_network_latency(const char*  delay);
 
 extern void  android_emulation_setup( void );
 extern void  android_emulation_teardown( void );
-
-struct android_arg {
-	int argc;
-	char argv[16][256];
-};
-
-void read_android_options(int argc,char argv[16][256]);
 #endif

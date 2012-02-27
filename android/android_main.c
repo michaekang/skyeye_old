@@ -155,6 +155,36 @@ _adjustPartitionSize( const char*  description,
     return convertMBToBytes(imageMB);
 }
 
+struct android_arg {
+	int argc;
+	char argv[16][256];
+};
+
+
+/*Read arguments from the file args.conf which storge the arguments from command.*/
+static void read_android_options(int argc,char argv[16][256])
+{
+        struct android_arg options;
+
+	FILE *fp = fopen("android_args", "rw");
+	if (fp == NULL) {
+		perror("Open file android_args");
+		exit(1);
+	}
+	fread(&options, sizeof(struct android_arg), 1, fp);
+	
+	argc = options.argc;
+	int i = 0;
+	for (i = 0;i < argc;i++)
+	{
+		strcpy(argv[i],options.argv[i]);
+		printf("in %s,arg[%d] is %s\n",__func__,i,argv[i]);
+	}
+
+	fclose(fp);
+
+}
+
 //int main(int argc, char **argv)
 int android_main()
 {

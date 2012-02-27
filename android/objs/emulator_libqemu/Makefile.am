@@ -64,15 +64,16 @@ emulator_libqemu = $(CORE_MISC_SOURCES) \
 #
 #
 #$(top_srcdir)/android/libemulator_libqemu.a:
-#noinst_LIBRARIES += libemulator_libqemu.a 
+#noinst_LIBRARIES = libemulator_libqemu.a 
 #libemulator_libqemu_a_SOURCES = $(emulator_libqemu)
-#emulator_libqemu_a_LDFLAGS = 
+#libemulator_libqemu_a_LIBADD = $(top_srcdir)/android/objs/emulator_common/libemulator_common.a 
 
 ##dyn
 #
 #$(top_srcdir)/android/libemulator_libqemu.so:
 libemulator_libqemu_la_SOURCES = $(emulator_libqemu)
-libemulator_libqemu_la_LDFLAGS = -module -lrt
+libemulator_libqemu_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -lrt
+pkglib_LTLIBRARIES = libemulator_libqemu.la
 
 INCLUDES = -I$(top_srcdir)/common/include/
 INCLUDES += -I$(top_srcdir)/android/skyeye/
@@ -83,4 +84,3 @@ INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
 INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/include/
 
-pkglib_LTLIBRARIES = libemulator_libqemu.la

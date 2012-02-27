@@ -85,9 +85,9 @@ SDL_SOURCES =  \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/Xext/Xv/Xv.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/main/dummy/SDL_dummy_main.c
 
-#$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/loadso/dlopen/SDL_sysloadso.c \
-#SDL_LDLIBS = -ldl
+SDL_LDLIBS = -ldl
 INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/include/
+
 
 # the skin support sources
 #
@@ -109,17 +109,35 @@ emulator_libui += $(top_srcdir)/android/user-config.c \
 	$(top_srcdir)/android/resource.c \
 	$(top_srcdir)/android/qemulator.c \
 	$(top_srcdir)/android/keycode.c
-###static
-#
-#noinst_LIBRARIES += libemulator_libui.a 
-#libemulator_libui_a_SOURCES = $(emulator_libui)
-#libemulator_libui_a_LIBADD = $(SDL_LDLIBS)
+
+main_dir = \
+	$(top_srcdir)/android/cmdline-option.c \
+	$(top_srcdir)/android/console.c \
+	$(top_srcdir)/android/display.c \
+	$(top_srcdir)/android/display-core.c \
+	$(top_srcdir)/android/help.c \
+	$(top_srcdir)/android/main-common.c \
+	$(top_srcdir)/android/android_main.c \
+	$(top_srcdir)/android/protocol/core-commands-qemu.c \
+	$(top_srcdir)/android/protocol/ui-commands-qemu.c 
+	
 
 ##dyn
 #
 #$(top_srcdir)/android/libemulator_libui.so: 
-libemulator_libui_la_SOURCES = $(emulator_libui)
-libemulator_libui_la_LDFLAGS = -module -lrt
+libemulator_libui_la_SOURCES = $(emulator_libui) $(main_dir)
+libemulator_libui_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -L$(top_srcdir)/android/objs/emulator_libqemu/ -lemulator_libqemu -L/usr/local/lib -liconv 
+
+#libemulator_libui_la_LDFLAGS = -module $(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/bin/sdl-config --libs -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -L$(top_srcdir)/android/objs/emulator_libqemu/ -lemulator_libqemu  
+
+pkglib_LTLIBRARIES = libemulator_libui.la
+
+###static
+#
+#noinst_LIBRARIES = libemulator_libui.a 
+#libemulator_libui_a_SOURCES = $(emulator_libui) $(main_dir)
+#libemulator_libui_a_LIBADD = $(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/bin/sdl-config --libs $(top_srcdir)/android/objs/emulator_common/libemulator_common.a $(top_srcdir)/android/objs/emulator_libqemu/emulator_libqemu.a -L$(top_srcdir)/common -lcommon 
+#libemulator_libui_a_LIBADD = $(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/lib/libSDLmain.a $(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/lib/libSDL.a  $(top_srcdir)/android/objs/emulator_common/libemulator_common.a $(top_srcdir)/android/objs/emulator_libqemu/libemulator_libqemu.a  
 
 INCLUDES += -I$(top_srcdir)/common/include/
 INCLUDES += -I$(top_srcdir)/android/skyeye/
@@ -128,5 +146,5 @@ INCLUDES += -I$(top_srcdir)/android/utils/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/libpng-1.2.19/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
 INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
-
-pkglib_LTLIBRARIES = libemulator_libui.la
+INCLUDES += -I/usr/local/include/
+#INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT

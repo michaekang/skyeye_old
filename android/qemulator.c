@@ -26,7 +26,8 @@ static QEmulator   qemulator[1];
 
 static void handle_key_command( void*  opaque, SkinKeyCommand  command, int  param );
 static void qemulator_refresh(QEmulator* emulator);
-extern void qemu_system_shutdown_request(void);
+//modified by xiaoqiao
+//extern void qemu_system_shutdown_request(void);
 
 static void
 qemulator_light_brightness( void* opaque, const char*  light, int  value )
@@ -247,9 +248,11 @@ qemulator_set_title(QEmulator* emulator)
         }
     }
 
+#if 0 //modified by xiaoqiao
     p = bufprint(p, end, "%d:%s",
                  android_base_port,
                  avdInfo_getName( android_avdInfo ));
+#endif
 
     skin_window_set_title( emulator->window, temp );
 }
@@ -576,7 +579,8 @@ static void qemulator_refresh(QEmulator* emulator)
 #endif
             /* only save emulator config through clean exit */
             qemulator_done(qemulator_get());
-            qemu_system_shutdown_request();
+	    //modified by xiaoqiao
+            //qemu_system_shutdown_request();
             return;
         }
     }

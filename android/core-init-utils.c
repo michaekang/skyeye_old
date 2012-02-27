@@ -66,7 +66,8 @@ void
 android_core_init_completed(void)
 {
     char msg[32];
-    snprintf(msg, sizeof(msg), "ok:port=%d", android_base_port);
+    //modified by xiaoqiao
+    //snprintf(msg, sizeof(msg), "ok:port=%d", android_base_port);
     android_core_send_init_response(msg);
 }
 
