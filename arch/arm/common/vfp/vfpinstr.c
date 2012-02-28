@@ -3385,8 +3385,6 @@ VFPLABEL_INST: /* encoding 1 */
 	}
 	cpu->Reg[15] += 4;
 	INC_PC(sizeof(vstm_inst));
-cpu->Reg[15] += GET_INST_SIZE(cpu);
-	INC_PC(sizeof(vfpinstr_inst));
 
 	FETCH_INST;
 	GOTO_NEXT_INST;
