@@ -240,7 +240,6 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 		#undef VFP_CDP_TRANS
 		
 		int exceptions = 0;
-		printf("In %s, cpsr=0x%x\n", __FUNCTION__, state->Cpsr);
 		if (CoProc == 10)
 			exceptions = vfp_single_cpdo(state, instr, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
 		else 
@@ -248,7 +247,6 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 
 		vfp_raise_exceptions(state, exceptions, instr, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
 
-		printf("In %s 1, cpsr=0x%x\n", __FUNCTION__, state->Cpsr);
 		return ARMul_DONE;
 	}
 	skyeye_log(Debug_log, __FUNCTION__, "Can't identify %x\n", instr);

@@ -820,7 +820,6 @@ ARMul_CDP (ARMul_State * state, ARMword instr)
 		ARMul_UndefInstr (state, instr);
 		return;
 	}
-	printf("In %s, cpnum=0x%x, pc=0x%x, instr=0x%x\n", __FUNCTION__, CPNum, state->Reg[15], instr);
 	cpab = (state->CDP[CPNum]) (state, ARMul_FIRST, instr);
 	while (cpab == ARMul_BUSY) {
 		ARMul_Icycles (state, 1, 0);
