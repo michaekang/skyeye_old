@@ -57,10 +57,11 @@ emulator_common += \
 #
 #$(top_srcdir)/android/libemulator_common.so:
 libemulator_common_la_SOURCES = $(emulator_common)
-libemulator_common_la_LDFLAGS = -module -lrt 
+libemulator_common_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -lrt 
 pkglib_LTLIBRARIES = libemulator_common.la
 
 INCLUDES = -I$(top_srcdir)/android/config/linux-x86/
+INCLUDES += -I$(top_srcdir)/common/include/
 INCLUDES += -I$(top_srcdir)/android/skyeye/
 INCLUDES += -I$(top_srcdir)/android/
 INCLUDES += -I$(top_srcdir)/android/utils/

@@ -4,6 +4,7 @@
 #include "qemu-char.h"
 #include "qdict.h"
 #include "notify.h"
+#include <skyeye_sched.h>
 
 /* keyboard/mouse support */
 
@@ -213,6 +214,7 @@ struct DisplayState {
     struct DisplaySurface *surface;
     void *opaque;
 //    struct QEMUTimer *gui_timer;
+    struct SkyeyeTimer *gui_timer;
 
     struct DisplayAllocator* allocator;
     struct DisplayChangeListener* listeners;

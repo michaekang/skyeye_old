@@ -3,6 +3,7 @@
 #define QEMU_COMMON_H
 
 #include "config-host.h"
+#include <skyeye_sched.h>
 
 #define QEMU_NORETURN __attribute__ ((__noreturn__))
 #ifdef CONFIG_GCC_ATTRIBUTE_WARN_UNUSED_RESULT
@@ -13,6 +14,7 @@
 
 #define QEMU_BUILD_BUG_ON(x) typedef char __build_bug_on__##__LINE__[(x)?-1:1];
 
+typedef struct event SkyeyeTimer;
 //typedef struct QEMUTimer QEMUTimer;
 //typedef struct QEMUFile QEMUFile;
 typedef struct QEMUBH QEMUBH;
@@ -39,20 +41,6 @@ typedef struct QEMUBH QEMUBH;
 #include <sys/time.h>
 //#include <assert.h>
 
-
-#if 0
-#include <skyeye_types.h>
-#include <skyeye_sched.h>
-#include <skyeye_signal.h>
-#include <skyeye_class.h>
-#include <skyeye_interface.h>
-#include <skyeye_obj.h>
-#include <skyeye_mm.h>
-#include <memory_space.h>
-#include <skyeye_device.h>
-#define DEBUG
-#include <skyeye_log.h>
-#endif
 
 #ifdef _WIN32
 #include "qemu-os-win32.h"

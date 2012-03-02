@@ -307,6 +307,7 @@ void sdl_display_init(DisplayState *ds, int full_screen, int  no_frame)
     int           width, height;
     char          buf[128];
 
+printf("in %s\n",__func__);
     if (disp->rotation & 1) {
         width  = disp->rect.size.h;
         height = disp->rect.size.w;
@@ -528,7 +529,10 @@ init_sdl_ui(AConfig*         skinConfig,
 
     flags = SDL_INIT_NOPARACHUTE;
     if (!opts->no_window)
+    {
+	    printf("opts->no_windows is 0\n");
         flags |= SDL_INIT_VIDEO;
+    }
 
     if(SDL_Init(flags)){
         fprintf(stderr, "SDL init failure, reason is: %s\n", SDL_GetError() );

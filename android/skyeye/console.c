@@ -24,6 +24,7 @@
 #include "qemu-common.h"
 #include "console.h"
 //#include "qemu-timer.h"
+#include <skyeye_sched.h>
 
 //#define DEBUG_CONSOLE
 #define DEFAULT_BACKSCROLL 512
@@ -186,6 +187,7 @@ struct TextConsole {
     QEMUFIFO out_fifo;
     uint8_t out_fifo_buf[16];
 //    QEMUTimer *kbd_timer;
+    struct SkyeyeTimer *kbd_timer;
 };
 
 static DisplayState *display_state;
@@ -1459,6 +1461,7 @@ DisplayState *graphic_console_init(vga_hw_update_ptr update,
     s->hw = opaque;
 
     register_displaystate(ds);
+    printf("in %s\n",__func__);
     return ds;
 }
 

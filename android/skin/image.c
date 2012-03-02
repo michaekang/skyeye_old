@@ -11,7 +11,7 @@
 */
 #include "android/skin/image.h"
 #include "android/resource.h"
-#include <assert.h>
+//#include <assert.h>
 #include <limits.h>
 
 #define  DEBUG  0
@@ -376,7 +376,7 @@ skin_image_cache_remove( SkinImageCache*  cache,
 
     for (;;) {
         node = *pnode;
-        assert(node != NULL);
+        //assert(node != NULL);
         if (node == NULL)  /* should not happen */
             break;
         if (node == image) {

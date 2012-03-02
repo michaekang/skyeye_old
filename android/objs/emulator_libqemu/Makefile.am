@@ -72,7 +72,7 @@ emulator_libqemu = $(CORE_MISC_SOURCES) \
 #
 #$(top_srcdir)/android/libemulator_libqemu.so:
 libemulator_libqemu_la_SOURCES = $(emulator_libqemu)
-libemulator_libqemu_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -lrt
+libemulator_libqemu_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -lrt
 pkglib_LTLIBRARIES = libemulator_libqemu.la
 
 INCLUDES = -I$(top_srcdir)/common/include/

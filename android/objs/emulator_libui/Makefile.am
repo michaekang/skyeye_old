@@ -103,7 +103,6 @@ SKIN_SOURCES  = $(top_srcdir)/android/skin/rect.c \
 	$(top_srcdir)/android/skin/composer.c \
 	$(top_srcdir)/android/skin/surface.c
 
-#$(top_srcdir)/android/libemulator_libui.so:
 emulator_libui = $(LIBPNG_SOURCES) $(SDL_SOURCES) $(SKIN_SOURCES)
 emulator_libui += $(top_srcdir)/android/user-config.c \
 	$(top_srcdir)/android/resource.c \
@@ -118,26 +117,18 @@ main_dir = \
 	$(top_srcdir)/android/help.c \
 	$(top_srcdir)/android/main-common.c \
 	$(top_srcdir)/android/android_main.c \
+	$(top_srcdir)/android/skyeye/vl-android.c \
 	$(top_srcdir)/android/protocol/core-commands-qemu.c \
 	$(top_srcdir)/android/protocol/ui-commands-qemu.c 
 	
 
 ##dyn
 #
-#$(top_srcdir)/android/libemulator_libui.so: 
 libemulator_libui_la_SOURCES = $(emulator_libui) $(main_dir)
-libemulator_libui_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -L$(top_srcdir)/android/objs/emulator_libqemu/ -lemulator_libqemu -L/usr/local/lib -liconv 
+libemulator_libui_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -L$(top_srcdir)/android/objs/emulator_libqemu/ -lemulator_libqemu -L/usr/local/lib -liconv 
 
-#libemulator_libui_la_LDFLAGS = -module $(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/bin/sdl-config --libs -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -L$(top_srcdir)/android/objs/emulator_libqemu/ -lemulator_libqemu  
 
 pkglib_LTLIBRARIES = libemulator_libui.la
-
-###static
-#
-#noinst_LIBRARIES = libemulator_libui.a 
-#libemulator_libui_a_SOURCES = $(emulator_libui) $(main_dir)
-#libemulator_libui_a_LIBADD = $(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/bin/sdl-config --libs $(top_srcdir)/android/objs/emulator_common/libemulator_common.a $(top_srcdir)/android/objs/emulator_libqemu/emulator_libqemu.a -L$(top_srcdir)/common -lcommon 
-#libemulator_libui_a_LIBADD = $(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/lib/libSDLmain.a $(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/lib/libSDL.a  $(top_srcdir)/android/objs/emulator_common/libemulator_common.a $(top_srcdir)/android/objs/emulator_libqemu/libemulator_libqemu.a  
 
 INCLUDES += -I$(top_srcdir)/common/include/
 INCLUDES += -I$(top_srcdir)/android/skyeye/
@@ -146,5 +137,5 @@ INCLUDES += -I$(top_srcdir)/android/utils/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/libpng-1.2.19/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
 INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
+INCLUDES += -I$(top_srcdir)/soc/arm/goldfish/
 INCLUDES += -I/usr/local/include/
-#INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/objs/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT
