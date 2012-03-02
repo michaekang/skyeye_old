@@ -421,9 +421,11 @@ int init_option(int argc, char** argv, sky_pref_t* pref){
 			break;
 		case 'l':
 		{
+			char optargs[32];
+			strcpy(optargs,optarg);
 			char * tok = ",";
-			char * str1 = strtok(optarg, tok);
-			char * str2 = (char *)(optarg + strlen(str1) + 1);
+			char * str1 = strtok(optargs, tok);
+			char * str2 = (char *)(optargs + strlen(str1) + 1);
 			elf_load_base = strtoul(str1, NULL, 16);
 			elf_load_mask = strtoul(str2, NULL, 16);
 		}
@@ -467,6 +469,7 @@ int init_option(int argc, char** argv, sky_pref_t* pref){
 		default:
 			fprintf(stderr, "Default option .....\n");
 			break;
+
 	}
 
 loop_exit:
@@ -618,8 +621,9 @@ main (int argc, char **argv)
 	if(strcmp(argv[0],"/opt/skyeye/bin/emulator") == 0)
 	{
 		write_android_options(argc,argv);
-		argc = 3;
-		char * option[] = {"/opt/skyeye/bin/emulator","-e","vmlinux"};
+		argc = 5;
+		//char * option[] = {"/opt/skyeye/bin/emulator","-l","0x0_0xffffff","-e","vmlinux"};
+		char *option[] = {"/opt/skyeye/bin/emulator","-l","0x0,0xFFFFFF","-e","vmlinux"};
 
 		init_option(argc, option, pref);
 		pref->interactive_mode = False;
