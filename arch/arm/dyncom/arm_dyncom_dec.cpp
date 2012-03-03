@@ -110,7 +110,18 @@ void StoreDWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 void LoadWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
 	Value *ret = arch_read_memory(cpu, bb, addr, 0, 32);
-	LET(RD,ret);
+	if(RD == 15){
+		STORE(TRUNC1(AND(ret, CONST(1))), ptr_T);
+		LET(RD,AND(ret, CONST(0xFFFFFFFE)));
+		/* SET_NEW_PAGE here */
+		if (!cpu->is_user_mode) {
+			Value *new_page_effec = AND(R(15), CONST(0xfffff000));
+			new StoreInst(new_page_effec, cpu->ptr_CURRENT_PAGE_EFFEC, bb);	
+		};
+		LET(PHYS_PC, R(15));
+	}
+	else
+		LET(RD, ret);
 }
 
 /* load a half word from memory */
@@ -339,14 +350,7 @@ void LoadStore(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 	}
 }
 
-#define CHECK_REG15() \
-	do{ \
-		if(RN == 15) \
-			Addr = ADD(Addr, CONST(INSTR_SIZE * 2)); \
-	}while(0)
-
-
-#define CHECK_READ_REG15(RN) ((RN == 15)? (ADD(AND(R(RN), CONST(~0x3)), CONST(INSTR_SIZE * 2))):R(RN))
+#define CHECK_READ_REG15_WA(RN) ((RN == 15)? (ADD(AND(R(RN), CONST(~0x3)), CONST(INSTR_SIZE * 2))):R(RN))
 
 // FIXME set_condition added by yukewei
 // if S = 1 set CPSR zncv bit
@@ -374,9 +378,9 @@ Value *WOrUBGetAddrImmOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	Value *Addr;
 	if(LSUBIT)
-		Addr =  ADD(CHECK_READ_REG15(RN), CONST(OFFSET12));
+		Addr =  ADD(CHECK_READ_REG15_WA(RN), CONST(OFFSET12));
 	else
-		Addr =  SUB(CHECK_READ_REG15(RN), CONST(OFFSET12));
+		Addr =  SUB(CHECK_READ_REG15_WA(RN), CONST(OFFSET12));
 
 	//CHECK_REG15();
 	return Addr;
@@ -387,11 +391,10 @@ Value *WOrUBGetAddrRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
 	Value *Addr;
 	if(LSUBIT)
-		Addr =  ADD(R(RN), R(RM));
+		Addr =  ADD(CHECK_READ_REG15_WA(RN), R(RM));
 	else
-		Addr =  SUB(R(RN), R(RM));
+		Addr =  SUB(CHECK_READ_REG15_WA(RN), R(RM));
 
-	CHECK_REG15();
 	return Addr;
 }
 
@@ -426,11 +429,10 @@ Value *WOrUBGetAddrScaledRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	}
 
 	if(LSUBIT)
-		Addr = ADD(CHECK_READ_REG15(RN), index);
+		Addr = ADD(CHECK_READ_REG15_WA(RN), index);
 	else
-		Addr = SUB(CHECK_READ_REG15(RN), index);
+		Addr = SUB(CHECK_READ_REG15_WA(RN), index);
 
-	//CHECK_REG15();
 	return Addr;
 }
 
@@ -560,11 +562,10 @@ Value *MisGetAddrImmOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 
 	Offset_8 = CONST(IMMH << 4 | IMML);
 	if(LSUBIT)
-		Addr =  ADD(R(RN), Offset_8);
+		Addr =  ADD(CHECK_READ_REG15_WA(RN), Offset_8);
 	else
-		Addr =  SUB(R(RN), Offset_8);
+		Addr =  SUB(CHECK_READ_REG15_WA(RN), Offset_8);
 
-	CHECK_REG15();
 	return Addr;
 }
 
@@ -574,11 +575,10 @@ Value *MisGetAddrRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	Value *Addr;
 
 	if(LSUBIT)
-		Addr =  ADD(R(RN), R(RM));
+		Addr =  ADD(CHECK_READ_REG15_WA(RN), R(RM));
 	else
-		Addr =  SUB(R(RN), R(RM));
+		Addr =  SUB(CHECK_READ_REG15_WA(RN), R(RM));
 
-	CHECK_REG15();
 	return Addr;
 }
 
@@ -603,7 +603,7 @@ Value *MisGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 /* Getting Miscellaneous Address immdiate post-indexed operand.in arm doc */
 Value *MisGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
-	Value *Addr = R(RN);
+	Value *Addr = CHECK_READ_REG15_WA(RN);
 	LET(RN, MisGetAddrImmOffset(cpu, instr, bb));
 
 	return Addr;
@@ -612,7 +612,7 @@ Value *MisGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 /* Getting Miscellaneous Address register post-indexed operand.in arm doc */
 Value *MisGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 {
-	Value *Addr = R(RN);
+	Value *Addr = CHECK_READ_REG15_WA(RN);
 	LET(RN, MisGetAddrRegOffset(cpu, instr, bb));
 
 	return Addr;
@@ -685,12 +685,11 @@ Value *LSMGetAddrIA(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		i = i >> 1;
 	}
 
-	Addr = R(RN);
+	Addr = CHECK_READ_REG15_WA(RN);
 
 	if(LSWBIT)
-		LET(RN, ADD(R(RN), CONST(count * 4)));
+		LET(RN, ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
 
-	CHECK_REG15();
 	return  Addr;
 }
 
@@ -706,11 +705,10 @@ Value *LSMGetAddrIB(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		i = i >> 1;
 	}
 
-	Addr = ADD(R(RN), CONST(4));
+	Addr = ADD(CHECK_READ_REG15_WA(RN), CONST(4));
 	if(LSWBIT)
-		LET(RN, ADD(R(RN), CONST(count * 4)));
+		LET(RN, ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
 
-	CHECK_REG15();
 	return  Addr;
 }
 
@@ -726,11 +724,10 @@ Value *LSMGetAddrDA(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		i = i >> 1;
 	}
 
-	Addr = ADD(SUB(R(RN), CONST(count * 4)), CONST(4));
+	Addr = ADD(SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)), CONST(4));
 	if(LSWBIT)
-		LET(RN, SUB(R(RN), CONST(count * 4)));
+		LET(RN, SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
 
-	CHECK_REG15();
 	return  Addr;
 }
 
@@ -746,11 +743,10 @@ Value *LSMGetAddrDB(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 		i = i >> 1;
 	}
 
-	Addr = SUB(R(RN), CONST(count * 4));
+	Addr = SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4));
 	if(LSWBIT)
-		LET(RN, SUB(R(RN), CONST(count * 4)));
+		LET(RN, SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
 
-	CHECK_REG15();
 	return  Addr;
 }
 

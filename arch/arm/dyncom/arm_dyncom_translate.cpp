@@ -849,6 +849,7 @@ int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 //	sleep(2);
 	Value *addr = GetAddr(cpu, instr, bb);
 	LoadStore(cpu,instr,bb,addr);
+	#if 0
 	if (RD == 15) {
 		/* set the bit[0] to thumb bit */
 		/* FIXME, Only for armv5 or above */
@@ -856,6 +857,7 @@ int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		LET(RD, AND(R(RD), CONST(0xFFFFFFFE)));
 		SET_NEW_PAGE;
 	}
+	#endif
 	return 0;
 }
 int DYNCOM_TRANS(ldrb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)

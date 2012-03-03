@@ -71,7 +71,8 @@
 #define SCO_OPERAND(sco) operand(cpu,instr,bb,sco)
 #define BOPERAND boperand(instr)
 
-#define CHECK_RN_PC  (RN==15? ADD(R(RN), CONST(INSTR_SIZE * 2)):R(RN))
+#define CHECK_RN_PC  (RN==15? ADD(AND(R(RN), CONST(~0x1)), CONST(INSTR_SIZE * 2)):R(RN))
+#define CHECK_RN_PC_WA  (RN==15? ADD(AND(R(RN), CONST(~0x3)), CONST(INSTR_SIZE * 2)):R(RN))
 
 Value *operand(cpu_t *cpu,  uint32_t instr, BasicBlock *bb, Value *sco);
 uint32_t boperand(uint32_t instr);
