@@ -2005,8 +2005,10 @@ int DYNCOM_TRANS(bl_1_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t 
 int DYNCOM_TRANS(bl_2_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	uint32 tinstr = get_thumb_instr(instr, pc);
 	uint32 imm = (tinstr & 0x07FF) << 1;
+	Value* Temp;
+	Temp = R(15);
 	LET(15, ADD(R(14), CONST(imm)));
-	LET(14, CONST((pc + 2) | 1));
+	LET(14, OR(ADD(Temp, CONST(2)), CONST(1)));
 	SET_NEW_PAGE;
 
 	return Byte_2;
@@ -2014,8 +2016,10 @@ int DYNCOM_TRANS(bl_2_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t 
 int DYNCOM_TRANS(blx_1_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	uint32 tinstr = get_thumb_instr(instr, pc);
 	uint32 imm = (tinstr & 0x07FF) << 1;
+	Value* Temp;
+	Temp = R(15);
 	LET(15, AND(ADD(R(14), CONST(imm)), CONST(~0x3)));
-	LET(14, CONST((pc + 2) | 1));
+	LET(14, OR(ADD(Temp, CONST(2)), CONST(1)));
 	/* Clear thumb bit */
 	STORE(CONST1(0), ptr_T);
 	SET_NEW_PAGE;
