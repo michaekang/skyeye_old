@@ -523,8 +523,9 @@ int arm_tag_branch(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *ne
 			Value *n = SHL(ZEXT32(LOAD(ptr_N)), CONST(31));			\
 			Value *c = SHL(ZEXT32(LOAD(ptr_C)), CONST(29));			\
 			Value *v = SHL(ZEXT32(LOAD(ptr_V)), CONST(28));			\
-			Value *nzcv = OR(OR(OR(z, n), c), v);				\
-			Value *cpsr = OR(AND(R(CPSR_REG), CONST(0xfffffff)), nzcv);	\
+			Value *t = SHL(ZEXT32(LOAD(ptr_T)), CONST(THUMB_BIT));     \
+			Value *nzcvt = OR(OR(OR(OR(z, n), c), v), t);				\
+			Value *cpsr = OR(AND(R(CPSR_REG), CONST(0x0fffffdf)), nzcvt);	\
 			LET(CPSR_REG, cpsr);						\
 		}
 		
@@ -1069,7 +1070,8 @@ int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	if(SBIT){
 		if (RD == 15) {
 			LET(CPSR_REG, R(SPSR_REG));
-
+			cpu->f.emit_decode_reg(cpu, bb); 
+			#if 0
 			Value *nzcv = LSHR(AND(R(CPSR_REG), CONST(0xf0000000)), CONST(28));
 			Value *n = TRUNC1(AND(LSHR(nzcv, CONST(3)), CONST(1)));
 			Value *z = TRUNC1(AND(LSHR(nzcv, CONST(2)), CONST(1)));
@@ -1079,6 +1081,9 @@ int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			new StoreInst(z, ptr_Z, false, bb);
 			new StoreInst(c, ptr_C, false, bb);
 			new StoreInst(v, ptr_V, false, bb);
+			Value *t = TRUNC1(LSHR(AND(R(CPSR_REG), CONST(1 << THUMB_BIT)), CONST(THUMB_BIT)));
+			new StoreInst(v, ptr_T, false, bb);
+			#endif
 		} else {
 			GETSIGN(op2,ptr_N);
 			EQZERO(op2,ptr_Z);
@@ -1227,6 +1232,8 @@ int DYNCOM_TRANS(msr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		new StoreInst(z, ptr_Z, false, bb);
 		new StoreInst(c, ptr_C, false, bb);
 		new StoreInst(v, ptr_V, false, bb);
+		Value *t = TRUNC1(LSHR(AND(R(CPSR_REG), CONST(1 << THUMB_BIT)), CONST(THUMB_BIT)));
+		new StoreInst(v, ptr_T, false, bb);
 	} else {
 		mask = byte_mask & (UserMask | PrivMask | StateMask);
 		LET(SPSR_REG, OR(AND(R(SPSR_REG), COM(CONST(mask))), AND(operand, CONST(mask))));
