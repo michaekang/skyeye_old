@@ -1,10 +1,13 @@
 #include "arm_dyncom_mmu.h"
+#include "arm_dyncom_thumb.h"
+#include "arm_dyncom_translate.h"
 #include "skyeye_dyncom.h"
 #include <skyeye_log.h>
 #include "skyeye_obj.h"
 #include "arm_dyncom_dec.h"
 #include "dyncom/tag.h"
 #include "skyeye_ram.h"
+#include <execinfo.h>
 
 static bool_t is_inside_page(cpu_t *cpu, addr_t a)
 {
@@ -1193,10 +1196,24 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	addr_t addr;
 	fault_t fault = NO_FAULT;
+
 	addr_t phys_addr;
 	addr_t end_addr;
 	uint32_t rw = BIT(20) ? 1 : 0;
-	if (BITS(20, 27) == 0x19 && BITS(4, 7) == 9) {
+	if((core->Cpsr & (1 << THUMB_BIT)) || core->TFlag){
+		uint32_t instr_size, arm_instr;
+		tdstate current_state = t_undefined;
+		core->translate_pc = core->Reg[15];
+		current_state = thumb_translate(core, instr, &arm_instr, &instr_size);
+		rw = (arm_instr >> 20) & 0x1;
+		if(current_state == t_branch){
+			/* Something wrong */
+			printf("Wrong thumb decode\n");
+		}
+		//printf("In %s, convert instr=0x%x to arm instruction 0x%x, pc=0x%x\n", __FUNCTION__, instr, arm_instr, core->Reg[15]);
+		addr = GetAddr(cpu, arm_instr, &end_addr);
+	}
+	else if (BITS(20, 27) == 0x19 && BITS(4, 7) == 9) {
 		/* ldrex */
 		addr = core->Reg[RN];
 		end_addr = addr + 4;
@@ -1283,11 +1300,13 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 			end_addr = addr + 8;
 		//printf("In %s:VSTR, addr=0x%x, end_addr=0x%x\n", __FUNCTION__, addr, end_addr);
 		//printf("VSTR: pc is %x check_addr is %x instr is %x\n", core->Reg[15], addr, instr);
-	} else
-
+	} else{
 		addr = GetAddr(cpu, instr, &end_addr);
-	
-	LOG("In %s, pc is %x phys_pc is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);
+	}
+	#if 0	
+	if(core->icounter > core->debug_icounter)
+		LOG("In %s, pc is %x phys_pc is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);
+	#endif
 	while(addr != end_addr){
 		fault = get_phys_addr(cpu, addr, &phys_addr, 32, rw);
 		if(fault)
