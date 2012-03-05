@@ -103,8 +103,13 @@ static exception_t timer_write(conf_object_t *opaque, generic_address_t offset, 
 			now_us   = get_clock_us();
 			DBG("In %s, now_us = 0x%llx, alarm_us=0x%x, value_us=0x%x\n", __FUNCTION__, now_us, alarm_us, value_us);
 			if (alarm_us <= now_us) {
-				assert(dev->signal_target != NULL);
-				assert(dev->master != NULL);
+				//assert(dev->signal_target != NULL);
+				//assert(dev->master != NULL);
+				if (dev->signal_target == NULL || dev->master == NULL)
+				{
+					printf("in %s,dev->signal_target or dev->master is null\n",__func__);
+					exit(0);
+				}
 				dev->master->raise_signal(dev->signal_target, dev->line_no);
         	        //goldfish_device_set_irq(&s->dev, 0, 1);
 			} else {
