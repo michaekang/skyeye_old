@@ -57,10 +57,12 @@ typedef struct conf_object_s{
 	char* class_name;
 }conf_object_t;
 
+#ifndef False
 typedef enum {
         False = 0,
         True
 }bool_t;
+#endif
 #else
 #include <be/support/SupportDefs.h>
 #endif
