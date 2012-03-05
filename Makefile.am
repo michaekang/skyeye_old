@@ -2,6 +2,7 @@
 #SUBDIRS =  arch/arm/ arch/bfin arch/coldfire arch/mips arch/ppc/ arch/x86/ device/ utils/ arch/sparc/ libltdl common/ soc/arm/
 SUBDIRS =  common/ device/ utils/
 
+include Makefile.android
 if BUILD_ARM
 SUBDIRS += arch/arm
 SUBDIRS += soc/arm
@@ -75,7 +76,7 @@ DEFS = -DMODET -g -O2 -D_FILE_OFFSET_BITS=64 -DSTANDALONE -DDEFAULT_INLINE=0 @CO
 AM_CFLAGS = -W -Wall -Wstrict-prototypes -Wmissing-prototypes 
 ACLOCAL_AMFLAGS=-I m4
 
-bin_PROGRAMS = skyeye
+bin_PROGRAMS += skyeye
 skyeye_SOURCES = utils/main/skyeye.c
 if WIN32
 uart_instance_SOURCES =
@@ -94,7 +95,6 @@ if LINUX
 all:third-party/libiberty/libiberty.a third-party/bfd/.libs/libbfd.so third-party/opcodes/.libs/libopcodes.so
 endif
 
-include Makefile.android
 skyeye_gui:
 	cd gui/qt4_src && rm -f skyeye_gui && $(MAKE)
 	cp -f gui/qt4_src/skyeye-gui $(prefix)/bin/
