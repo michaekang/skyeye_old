@@ -42,4 +42,11 @@ typedef struct lcd_ctrl{
 	uint32 (*lcd_lookup_color) (conf_object_t *lcd_dev, uint32 color); /* return RGB32 color. */
 }lcd_control_intf;
 #define LCD_CTRL_INTF_NAME "lcd_ctrl"
+
+typedef struct goldfish_fb_ctrl{
+	conf_object_t* conf_obj;
+	void (* fb_ctrl)(void);
+}goldfish_fb_control_intf;
+#define FB_CTRL_INTF_NAME "goldfish_fb_ctrl"
+ 
 #endif
