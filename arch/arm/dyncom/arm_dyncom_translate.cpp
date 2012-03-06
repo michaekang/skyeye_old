@@ -1687,6 +1687,9 @@ int DYNCOM_TRANS(swpb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	return No_exp;
 }
 int DYNCOM_TRANS(sxtab)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	Value *tmp1 = ROTL(R(RM), CONST(8 * BITS(10, 11)));
+	Value *tmp2 = AND(tmp1, CONST(0xff));
+	LET(RD, ADD(R(RN), SEXT32(TRUNC8(tmp2))));
 	return No_exp;
 }
 int DYNCOM_TRANS(sxtab16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
@@ -2766,7 +2769,14 @@ int DYNCOM_TAG(swpb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
 }
-int DYNCOM_TAG(sxtab)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
+int DYNCOM_TAG(sxtab)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){
+	int instr_size = INSTR_SIZE;
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	if(instr >> 28 != 0xe)
+		*tag |= TAG_CONDITIONAL;
+
+	return instr_size;
+}
 int DYNCOM_TAG(sxtab16)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
 int DYNCOM_TAG(sxtah)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
 int DYNCOM_TAG(sxtb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
