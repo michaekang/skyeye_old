@@ -4054,44 +4054,52 @@ void InterpreterMainLoop(cpu_t *core)
 				/* LDM (2) user */
 				for (i = 0; i < 13; i++) {
 					if(BIT(inst, i)){
+						#if 0
 						fault = check_address_validity(cpu, addr, &phys_addr, 1);
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
+						#endif
 						fault = interpreter_read_memory(core, addr, phys_addr, ret, 32);
-						if (fault) {
-							goto MMU_EXCEPTION;
-						}
+						//if (fault) goto MMU_EXCEPTION;
 						cpu->Reg[i] = ret;
 						addr += 4;
-						phys_addr += 4;
+						if ((addr & 0xfff) == 0) {
+							fault = check_address_validity(cpu, addr, &phys_addr, 0);
+						} else {
+							phys_addr += 4;
+						}
 					}
 				}
 				if (BIT(inst, 13)) {
+					#if 0
 					fault = check_address_validity(cpu, addr, &phys_addr, 1);
 					if (fault) {
 						goto MMU_EXCEPTION;
 					}
+					#endif
 					fault = interpreter_read_memory(core, addr, phys_addr, ret, 32);
-					if (fault) {
-						goto MMU_EXCEPTION;
-					}
+					//if (fault) goto MMU_EXCEPTION;
 					if (cpu->Mode == USER32MODE) 
 						cpu->Reg[13] = ret;
 					else
 						cpu->Reg_usr[0] = ret;
 					addr += 4;
-					phys_addr += 4;
+					if ((addr & 0xfff) == 0) {
+						fault = check_address_validity(cpu, addr, &phys_addr, 0);
+					} else {
+						phys_addr += 4;
+					}
 				}
 				if (BIT(inst, 14)) {
+					#if 0
 					fault = check_address_validity(cpu, addr, &phys_addr, 1);
 					if (fault) {
 						goto MMU_EXCEPTION;
 					}
+					#endif
 					fault = interpreter_read_memory(core, addr, phys_addr, ret, 32);
-					if (fault) {
-						goto MMU_EXCEPTION;
-					}
+					//if (fault) goto MMU_EXCEPTION;
 					if (cpu->Mode == USER32MODE) 
 						cpu->Reg[14] = ret;
 					else
@@ -4102,14 +4110,14 @@ void InterpreterMainLoop(cpu_t *core)
 				for( i = 0; i < 16; i ++ ){
 					if(BIT(inst, i)){
 						//bus_read(32, addr, &ret);
+						#if 0
 						fault = check_address_validity(cpu, addr, &phys_addr, 1);
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
+						#endif
 						fault = interpreter_read_memory(core, addr, phys_addr, ret, 32);
-						if (fault) {
-							goto MMU_EXCEPTION;
-						}
+						if (fault) goto MMU_EXCEPTION;
 						/* For armv5t, should enter thumb when bits[0] is non-zero. */
 						if(i == 15){
 							cpu->TFlag = ret & 0x1;
@@ -4119,23 +4127,31 @@ void InterpreterMainLoop(cpu_t *core)
 
 						cpu->Reg[i] = ret;
 						addr += 4;
-						phys_addr += 4;
+						if ((addr & 0xfff) == 0) {
+							fault = check_address_validity(cpu, addr, &phys_addr, 0);
+						} else {
+							phys_addr += 4;
+						}
 					}
 				}
 			} else if (BIT(inst, 22) && BIT(inst, 15)) {
 				for( i = 0; i < 15; i ++ ){
 					if(BIT(inst, i)){
+						#if 0
 						fault = check_address_validity(cpu, addr, &phys_addr, 1);
 						if (fault) {
 							goto MMU_EXCEPTION;
 						}
+						#endif
 						fault = interpreter_read_memory(core, addr, phys_addr, ret, 32);
-						if (fault) {
-							goto MMU_EXCEPTION;
-						}
+						//if (fault) goto MMU_EXCEPTION;
 						cpu->Reg[i] = ret;
 						addr += 4;
-						phys_addr += 4;
+						if ((addr & 0xfff) == 0) {
+							fault = check_address_validity(cpu, addr, &phys_addr, 0);
+						} else {
+							phys_addr += 4;
+						}
  					}
  				}
 				
@@ -4144,18 +4160,21 @@ void InterpreterMainLoop(cpu_t *core)
 					switch_mode(cpu, cpu->Cpsr & 0x1f);
 					LOAD_NZCVT;
 				}
-				
+				#if 0
 				fault = check_address_validity(cpu, addr, &phys_addr, 1);
 				if (fault) {
 					goto MMU_EXCEPTION;
 				}
+				#endif
 				fault = interpreter_read_memory(core, addr, phys_addr, ret, 32);
 				if (fault) {
 					goto MMU_EXCEPTION;
 				}
 				cpu->Reg[15] = ret;
+				#if 0
 				addr += 4;
 				phys_addr += 4;
+				#endif
  			}
 			if (BIT(inst, 15)) {
 				goto DISPATCH;
