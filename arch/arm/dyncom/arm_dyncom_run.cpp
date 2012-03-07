@@ -593,10 +593,22 @@ static void arch_arm_spill_reg_state(cpu_t *cpu, BasicBlock *bb)
 	new StoreInst(cpsr, cpu->ptr_gpr[16], false, bb);
 }
 
+/**
+* @brief Return the instruction length
+*
+* @param cpu
+*
+* @return 
+*/
+static uint32 arch_arm_get_instr_length(cpu_t *cpu){
+	return INSTR_SIZE;
+}
+
 static arch_func_t arm_arch_func = {
 	arch_arm_init,
 	arch_arm_done,
 	arch_arm_get_pc,
+	arch_arm_get_instr_length,
 	arch_arm_emit_decode_reg,
 	arch_arm_spill_reg_state,
 	arch_arm_tag_instr,
@@ -607,7 +619,7 @@ static arch_func_t arm_arch_func = {
 	// idbg support
 	arch_arm_get_psr,
 	arch_arm_get_reg,
-	NULL
+	NULL /* get_fp_reg */
 };
 
 static uint32_t arm_debug_func(cpu_t* cpu){

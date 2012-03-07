@@ -66,6 +66,7 @@ typedef void        (*fp_done)(struct cpu *cpu);
 // @@@BEGIN_DEPRECATION
 typedef StructType *(*fp_get_struct_reg)(struct cpu *cpu);
 typedef addr_t      (*fp_get_pc)(struct cpu *cpu, void *regs);
+typedef uint32      (*fp_get_instr_length)(struct cpu *cpu);
 // @@@END_DEPRECATION
 typedef void        (*fp_emit_decode_reg)(struct cpu *cpu, BasicBlock *bb);
 typedef void        (*fp_spill_reg_state)(struct cpu *cpu, BasicBlock *bb);
@@ -86,6 +87,7 @@ typedef struct {
 	fp_done done;
 // @@@BEGIN_DEPRECATION
 	fp_get_pc get_pc;
+	fp_get_instr_length get_instr_length;
 // @@@END_DEPRECATION
 	fp_emit_decode_reg emit_decode_reg;
 	fp_spill_reg_state spill_reg_state;

@@ -1,3 +1,28 @@
+/* Copyright (C) 
+* 2012 - Michael.Kang blackfin.kang@gmail.com
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+* 
+*/
+/**
+* @file ppc_dyncom_run.cpp
+* @brief The interface of dynamic compiled mode for ppc simulation
+* @author Michael.Kang blackfin.kang@gmail.com
+* @version 7849
+* @date 2012-03-07
+*/
+
 /*
  * The interface of dynamic compiled mode for ppc simulation
  *
@@ -180,6 +205,9 @@ static int arch_powerpc_disasm_instr(cpu_t *cpu, addr_t pc, char* line, unsigned
 static int arch_powerpc_translate_loop_helper(cpu_t *cpu, addr_t pc, BasicBlock *bb_ret, BasicBlock *bb_next, BasicBlock *bb, BasicBlock *bb_zol_cond){
 	return 0;
 }
+static uint32 arch_powerpc_get_instr_length(cpu_t* cpu){
+	return 4;
+}
 static int arch_powerpc_effective_to_physical(struct cpu *cpu, uint32_t addr, uint32_t *result){
 	e500_core_t* core = (e500_core_t*)get_cast_conf_obj(cpu->cpu_data, "e500_core_t");
 	if(is_user_mode(cpu)) {
@@ -198,8 +226,9 @@ static arch_func_t powerpc_arch_func = {
 	arch_powerpc_init,
 	arch_powerpc_done,
 	arch_powerpc_get_pc,
-	NULL,
-	NULL,
+	arch_powerpc_get_instr_length, 
+	NULL, /* emit_decode_reg */
+	NULL, /* spill_reg_state */
 	arch_powerpc_tag_instr,
 	arch_powerpc_disasm_instr,
 	arch_powerpc_translate_cond,
@@ -208,7 +237,7 @@ static arch_func_t powerpc_arch_func = {
 	// idbg support
 	arch_powerpc_get_psr,
 	arch_powerpc_get_reg,
-	NULL,
+	NULL, /* get_fp_reg  */
 };
 
 /* Check address load/store instruction access.*/
