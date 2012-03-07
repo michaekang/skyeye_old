@@ -1389,8 +1389,6 @@ const ISEITEM arm_exclusion_code[] = {
         {"invalid",      0,      INVALID, 0}         
 };
 
-
-
 int decode_arm_instr(uint32_t instr, int32_t *idx)
 {
 	int n = 0;

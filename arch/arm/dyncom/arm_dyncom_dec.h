@@ -91,7 +91,7 @@ struct instruction_set_encoding_item {
         const char *name;
         int attribute_value;
         int version;
-        int content[15];
+        int content[18];
 };
 
 typedef struct instruction_set_encoding_item ISEITEM;

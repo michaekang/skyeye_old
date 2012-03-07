@@ -737,6 +737,8 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		if (core->abortSig) {
 			return 1;
 		}
+		if(core->Reg[15] == 0xc002df8c )
+			printf("@@@@@@@@@@@@@@@@@@@@@ cpsr=0x%x, mode=0x%x\n", core->Cpsr, core->Mode);
 			
 		/* if regular trap */
 		uint32_t mode = core->Cpsr & 0x1f;
@@ -753,7 +755,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}
-		if((instr & 0x0FBa0e50)== 0x0eba0a40){ /* some instruction need to implemented here */
+		if((instr & 0x0FBF0ed0)== 0x0eb70ac0){ /* some instruction need to implemented here */
 			/* VCVTBDS */
 			printf("\n\nVCVTBDS executed:\n");
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
@@ -786,7 +788,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		}	
 		else if((instr & 0x0FB00E50)== 0x0E300a40){ /* some instruction need to implemented here */
 			/* VSUB */
-			printf("\n\nVSUB(floating-point) executed:\n\n");
+			printf("\n\nVSUB(floating-point) executed at 0x%x:\n\n", core->Reg[15]);
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}	
@@ -797,8 +799,36 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
 			vcvtbfi_instr_impl(core, instr);
 		}	
-
-
+		else if((instr & 0x0Fb00e50)== 0x0E800a00){ /* some instruction need to implemented here */
+			/* VFMUL */
+			printf("\n\nVDIV executed:\n\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+		else if((instr & 0x0Fb00e10)== 0x0E000a00){ /* some instruction need to implemented here */
+			/* VMLA */
+			printf("\n\nVMLA executed:\n\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}
+		else if((instr & 0x0FbF0ed0)== 0x0Eb00ac0){ /* some instruction need to implemented here */
+			/* VABS */
+			printf("\n\nVABS executed:\n\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+		else if((instr & 0x0Fb00e10)== 0x0E100a00){ /* some instruction need to implemented here */
+			/* VNMLA */
+			printf("\n\nVNMLA executed:\n\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
+		else if((instr & 0x0Fb00e50)== 0x0E200a40){ /* some instruction need to implemented here */
+			/* VMLS */
+			printf("\n\nVNMLA executed:\n\n");
+			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+			vcvtbfi_instr_impl(core, instr);
+		}	
 		else{
 			//printf("Unknown instruction 0x%x\n", instr);
 		}
