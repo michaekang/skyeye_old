@@ -6429,7 +6429,7 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 			value = cpu->Reg[BITS(inst_cream->inst, 12, 15) + 1];
 			//bus_write(32, addr, value);
-			fault = interpreter_write_memory(core, addr + 4, phys_addr + 4, value, 32);
+			fault = interpreter_write_memory(core, addr + 4, rear_phys_addr, value, 32);
 			if (fault) goto MMU_EXCEPTION;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
