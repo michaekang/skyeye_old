@@ -5300,7 +5300,7 @@ void InterpreterMainLoop(cpu_t *core)
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
 			if (fault) goto MMU_EXCEPTION;
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-			fault = interpreter_read_memory(core, addr + 4, phys_addr + 4, value, 32);
+			fault = interpreter_read_memory(core, addr + 4, rear_phys_addr, value, 32);
 			if (fault) goto MMU_EXCEPTION;
 			cpu->Reg[BITS(inst_cream->inst, 12, 15) + 1] = value;
 			/* No dispatch since this operation should not modify R15 */
