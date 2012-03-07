@@ -65,6 +65,7 @@ void skyeye_log(log_level_t log_level, const char* func_name, char* format,...);
 char* get_front_message();
 
 char* get_exp_str(exception_t exp);
+void skyeye_info(char* format, ...);
 
 int
 do_log_option (skyeye_option_t * this_option, int num_params,

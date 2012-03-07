@@ -68,7 +68,7 @@ void init_symbol_table(char* filename, char* arch_name)
   bfd *abfd;
 
 	if(!filename){
-		fprintf(stderr, "Can not get correct kernel filename!Maybe your skyeye.conf have something wrong!\n");
+		skyeye_info("Can not get correct kernel filename!Maybe your skyeye.conf have something wrong!\n");
 		return;
 	}
 	abfd = bfd_openr (filename, get_bfd_target(arch_name));

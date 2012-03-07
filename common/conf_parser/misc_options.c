@@ -101,7 +101,6 @@ do_load_addr_option (skyeye_option_t * this_option, int num_params,
 	pref->exec_load_base = load_base;
 	pref->exec_load_mask = load_mask;
 	/* FIXME, we should update load_base and load_mask to preference of SkyEye */
-	fprintf(stderr, "%s not finished.\n", __FUNCTION__);
 	//printf("Your elf file will be load to: base address=0x%x,mask=0x%x\n", load_base, load_mask);
 	return 0;
 }
