@@ -33,7 +33,7 @@
 #endif
 #include <skyeye_log.h>
 
-#define SKYEYE_DEBUG 0
+#define SKYEYE_DEBUG 1
 #if SKYEYE_DEBUG
 #define SKYEYE_DBG(msg...) fprintf(stderr, ##msg)
 #else
@@ -43,6 +43,7 @@
 #define SKYEYE_INFO(msg...)		skyeye_log(Info_log, __FUNCTION__, ##msg);
 #define SKYEYE_ERR(msg...)		skyeye_log(Error_log, __FUNCTION__, ##msg);
 #define SKYEYE_WARNING(msg...)		skyeye_log(Warning_log, __FUNCTION__, ##msg);
+#define SKYEYE_LOG_IN_CLR  skyeye_printf_in_color
 #if 0
 #ifndef i8
 #define i8	char
