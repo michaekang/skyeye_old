@@ -482,11 +482,14 @@ ARMul_ThumbDecode (state, pc, tinstr, ainstr)
 			+ (((tinstr & 0x07FF) << 12)
 			   | ((tinstr & (1 << 10)) ? 0xFF800000 : 0));
 		valid = t_branch;	/* in-case we don't have the 2nd half */
-		tinstr = next_instr;	/* move the instruction down */
-		if (((tinstr & 0xF800) >> 11) != 31)
-			break;	/* exit, since not correct instruction */
+		//tinstr = next_instr;	/* move the instruction down */
+		//if (((tinstr & 0xF800) >> 11) != 31)
+		//	break;	/* exit, since not correct instruction */
 		/* else we fall through to process the second half of the BL */
-		pc += 2;	/* point the pc at the 2nd half */
+		//pc += 2;	/* point the pc at the 2nd half */
+		state->Reg[15] = pc + 2;
+		FLUSHPIPE;
+		break;
 	case 31:		/* BL instruction 2 */
 		/* Format 19 */
 		/* There is no single ARM instruction equivalent for this

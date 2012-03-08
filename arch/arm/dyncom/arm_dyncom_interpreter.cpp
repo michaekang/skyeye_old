@@ -6769,7 +6769,7 @@ void InterpreterMainLoop(cpu_t *core)
 	}
 	BL_2_THUMB:
 	{
-		//INC_ICOUNTER;
+		INC_ICOUNTER;
 		bl_2_thumb *inst_cream = (bl_2_thumb *)inst_base->component;
 		int tmp = ((cpu->Reg[15] + 2) | 1);
 		cpu->Reg[15] =
