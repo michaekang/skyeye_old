@@ -249,6 +249,8 @@ cortex_a9_mmu_init (ARMul_State *state)
 	state->mmu.process_id = 0;
 	state->mmu.context_id = 0;
 	state->mmu.thread_uro_id = 0;
+
+	return No_exp;
 }
 
 void
@@ -929,6 +931,8 @@ cortex_a9_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 			break;
 		}
 	}
+
+	return No_exp;
 }
 
 static int

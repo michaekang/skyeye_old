@@ -75,7 +75,8 @@ mmu_init (ARMul_State * state)
 		state->mmu.ops = arm1176jzf_s_mmu_ops;
 		break;
 
-	case 0xc09:
+	case 0xc090:
+		SKYEYE_INFO ("SKYEYE: use cortex_a9 mmu ops\n");
 		state->mmu.ops = cortex_a9_mmu_ops;
 		break;
 	default:

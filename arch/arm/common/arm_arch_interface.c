@@ -262,6 +262,9 @@ static void register_arm_core_chp(ARMul_State* core, int num)
 	case 0x0007b000:
 		//arm1176jzf;
 		break;
+	/* cortex_a9 0xc090 */
+	case 0xc090:
+		break;
 
 	default:
 		skyeye_exit (-1);
@@ -444,7 +447,8 @@ cpu_config_t arm_cpus[] = {
 	{"armv5", "arm926ejs", 0x41069260, 0xff0ffff0, INSTCACHE},
 	{"xscale", "pxa25x", PXA250, 0xfffffff0, INSTCACHE},
 	{"xscale", "pxa27x", PXA270, 0xfffffff0, INSTCACHE},
-	{"armv6",  "arm11", 0x0007b000, 0x0007f000, NONCACHE}
+	{"armv6",  "arm11", 0x0007b000, 0x0007f000, NONCACHE},
+	{"armv7",  "cortex_a9", 0x413Fc090, 0x0000fff0, NONCACHE}
 };
 
 
