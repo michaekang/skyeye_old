@@ -24,8 +24,10 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <config.h>
+#include <execinfo.h>
 #include "skyeye_options.h"
 #include "skyeye_config.h"
 #include "skyeye_log.h"
@@ -144,8 +146,29 @@ void skyeye_log(log_level_t log_level,const char* func_name, char* format, ...){
 	va_start(args, format);
 	vsprintf(buf, format, args);
 	va_end(args);
-	if(log_level >= Error_log)
+	if(log_level >= Error_log){
+		fprintf(stderr, "\n[SkyEye Crashed]. Please report the following output to %s.\n", PACKAGE_BUGREPORT);
 		fprintf(stderr, "In %s, %s\n", func_name, buf);
+		int j, nptrs;
+		#define SIZE 100
+      	   	void *buffer[100];
+		char **strings;
+
+		nptrs = backtrace(buffer, SIZE);
+
+           /* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
+              would produce similar output to the following: */
+
+		strings = backtrace_symbols(buffer, nptrs);
+		if (strings == NULL) {
+			perror("backtrace_symbols");
+			exit(EXIT_FAILURE);
+		}
+
+		for (j = 0; j < nptrs; j++)
+			fprintf(stderr, "%s\n", strings[j]);
+		free(strings);
+	}
 	else{
 		if(current_log_level == Quiet_log){
 			/* output nothing */
