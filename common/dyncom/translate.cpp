@@ -48,7 +48,8 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 	BasicBlock *bb_zol = NULL;
 	BasicBlock *bb_zol_cond = NULL;
 	BasicBlock *bb_instr = NULL;
-
+	/* Get the current instruction length */
+	uint32 instr_length = cpu->f.get_instr_length(cpu);
 	/* create internal basic blocks if needed */
 	if (tag & TAG_CONDITIONAL)
 		bb_cond = create_basicblock(cpu, pc, cpu->dyncom_engine->cur_func, BB_TYPE_COND);
@@ -113,7 +114,7 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 	if ((tag & TAG_NEED_PC) && !is_user_mode(cpu)) {
 		BasicBlock *bb = cur_bb;
 		Value *vpc = new LoadInst(cpu->ptr_PC, "", false, bb);
-		new StoreInst(ADD(vpc, CONST(4)), cpu->ptr_PC, bb);
+		new StoreInst(ADD(vpc, CONST(instr_length)), cpu->ptr_PC, bb);
 	}
 	if (tag & TAG_POSTCOND) {
 		Value *c = cpu->f.translate_cond(cpu, pc, cur_bb);
@@ -137,12 +138,12 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 			printf("In %s, pc=0x%x\n", __FUNCTION__, pc);
 		}
 		else{
-			emit_store_pc_return(cpu, cur_bb, pc + 4, bb_trap);
+			emit_store_pc_return(cpu, cur_bb, pc + instr_length, bb_trap);
 			cur_bb = NULL;
 		}
 	}
 	if (tag & TAG_SYSCALL) {//bb_instr needs a terminator inst.
-		emit_store_pc_return(cpu, cur_bb, pc + 4, bb_ret);
+		emit_store_pc_return(cpu, cur_bb, pc + instr_length, bb_ret);
 		cur_bb = NULL;
 	}
 #endif

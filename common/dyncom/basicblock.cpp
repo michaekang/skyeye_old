@@ -131,6 +131,7 @@ emit_store_pc_end_page(cpu_t *cpu, tag_t tag, BasicBlock *bb, addr_t new_pc)
 	/* if branch instruction at the end of a page, current pc is used to
 	 * count the new pc in the translation of the instruction.
 	 */
+	uint32 instr_length = cpu->f.get_instr_length(cpu);
 	if(!(tag & TAG_BRANCH)){
 #if 0
 		Value *v_phys_pc = ConstantInt::get(getIntegerType(cpu->info.address_size), new_pc);
@@ -155,9 +156,9 @@ emit_store_pc_end_page(cpu_t *cpu, tag_t tag, BasicBlock *bb, addr_t new_pc)
 		else{
 			Value *pc = new LoadInst(cpu->ptr_PC, "", false, bb);
 			if (!(tag & TAG_NEED_PC)) {
-				new StoreInst(ADD(pc, CONST(4)), cpu->ptr_PC, bb);
+				new StoreInst(ADD(pc, CONST(instr_length)), cpu->ptr_PC, bb);
 			}
-			Value *new_page_effec = AND(ADD(pc, CONST(4)), CONST(0xfffff000));
+			Value *new_page_effec = AND(ADD(pc, CONST(instr_length)), CONST(0xfffff000));
 			new StoreInst(new_page_effec, cpu->ptr_CURRENT_PAGE_EFFEC, bb);
 			//new StoreInst(CONST(new_pc), cpu->ptr_PHYS_PC, bb);
 		}
