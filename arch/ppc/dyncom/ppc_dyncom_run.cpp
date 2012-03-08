@@ -88,11 +88,11 @@ static bool_t is_inside_page(cpu_t *cpu, addr_t a)
 {
 	return ((a & 0xfffff000) == cpu->current_page_phys) ? True : False;
 }
-static bool_t is_page_start(addr_t a)
+static bool_t is_page_start(cpu_t* cpu, addr_t a)
 {
 	return ((a & 0x00000fff) == 0x0) ? True : False;
 }
-static bool_t is_page_end(addr_t a)
+static bool_t is_page_end(cpu_t* cpu, addr_t a)
 {
 	return ((a & 0x00000fff) == 0xffc) ? True : False;
 }

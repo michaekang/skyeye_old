@@ -1,3 +1,28 @@
+/* Copyright (C) 
+* 2012 - Michael.Kang blackfin.kang@gmail.com
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+* 
+*/
+/**
+* @file arm_dyncom_mmu.cpp
+* @brief The memory stuff for arm dyncom
+* @author Michael.Kang blackfin.kang@gmail.com
+* @version 7849
+* @date 2012-03-08
+*/
+
 #include "arm_dyncom_mmu.h"
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_translate.h"
@@ -14,12 +39,12 @@ static bool_t is_inside_page(cpu_t *cpu, addr_t a)
 //	return ((a & 0xfffff000) == cpu->current_page_phys) ? True : False;
 	return True;
 }
-static bool_t is_page_start(addr_t a)
+static bool_t is_page_start(cpu_t* cpu, addr_t a)
 {
 	return ((a & 0x00000fff) == 0x0) ? True : False;
 }
 
-static bool_t is_page_end(addr_t a)
+static bool_t is_page_end(cpu_t* cpu, addr_t a)
 {
 	return ((a & 0x00000fff) == 0xffc) ? True : False;
 }
@@ -1375,4 +1400,3 @@ arch_mem_ops_t arm_dyncom_mem_ops = {
 	arch_arm_check_mm,
 	arch_arm_effective_to_physical
 };
-

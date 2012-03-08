@@ -520,9 +520,9 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 			or_tag(cpu, pc, tag | TAG_STOP | TAG_LAST_INST);
 			//return;
 		}
-		if(cpu->mem_ops.is_page_start(pc) && !is_user_mode(cpu))
+		if(cpu->mem_ops.is_page_start(cpu, pc) && !is_user_mode(cpu))
 			or_tag(cpu, pc, tag | TAG_START_PAGE);
-		if(cpu->mem_ops.is_page_end(pc) && !is_user_mode(cpu)){
+		if(cpu->mem_ops.is_page_end(cpu, pc) && !is_user_mode(cpu)){
 			or_tag(cpu, pc, tag | TAG_STOP | TAG_END_PAGE);
 			xor_tag(cpu, pc, TAG_CONTINUE);
 			break;
