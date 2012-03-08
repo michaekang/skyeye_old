@@ -1712,6 +1712,9 @@ int DYNCOM_TRANS(sub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *op2 = OPERAND;
 	Value *ret = SUB(op1, op2);
 	LET(RD, ret);
+	if(RD == 15){
+		SET_NEW_PAGE;
+	}
 
 	if(SBIT) {
 		if (RD == 15) {
@@ -2805,7 +2808,10 @@ int DYNCOM_TAG(sub)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	int instr_size = INSTR_SIZE;
 	if (RD == 15) {
 		arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
+		*next_pc = pc + instr_size;
 		*new_pc = NEW_PC_NONE;
+		*tag = TAG_STOP;
+		*tag |= TAG_BRANCH;
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
