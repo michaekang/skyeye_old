@@ -448,10 +448,9 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 		tag = get_tag(cpu, pc);
 
 		bytes = cpu->f.tag_instr(cpu, pc, &tag, &new_pc, &next_pc);
-
 		/* temporary fix: in case the previous instr at pc had changed,
 		   we remove instr dependant tags. They will be set again anyway */
-		selective_clear_tag(cpu, pc, TAG_BRANCH | TAG_CONDITIONAL | TAG_RET | TAG_STOP | TAG_CONTINUE | TAG_TRAP | TAG_MEMORY);
+		selective_clear_tag(cpu, pc, TAG_BRANCH | TAG_CONDITIONAL | TAG_RET | TAG_STOP | TAG_CONTINUE | TAG_TRAP | TAG_MEMORY | TAG_END_PAGE);
 		or_tag(cpu, pc, tag | TAG_CODE);
 #ifdef OPT_LOCAL_REGISTERS
 #if 0
