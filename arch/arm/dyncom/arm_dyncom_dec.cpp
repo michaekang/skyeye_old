@@ -241,7 +241,7 @@ void MisLoadStore(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 }
 
 /* Load multiple operation, following arm doc */
-void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
+void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 {
 	int i;
 	Value *ret;
@@ -285,10 +285,11 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 /* temp define the using the pc reg need implement a flow */
 #define STOREM_CHECK_PC ADD(R(15), CONST(8))
 /* store multiple operation, following arm doc */
-void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
+void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 {
 	int i;
 	Value *Addr = addr;
+	/* Check if base register is in register list */
 	if (BITS(25, 27) == 4 && BITS(20, 22) == 4) {
 		for (i = 0; i < 13; i++) {
 			if(BIT(i)){
@@ -297,7 +298,10 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 			}
 		}
 		if (BIT(13)) {
-			arch_write_memory(cpu, bb, Addr, R(R13_USR), 32);
+			if(RN == 13)
+				arch_write_memory(cpu, bb, Addr, Rn, 32);
+			else
+				arch_write_memory(cpu, bb, Addr, R(R13_USR), 32);
 			Addr = ADD(Addr, CONST(4));
 		}
 		if (BIT(14)) {
@@ -311,7 +315,10 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 	}
 	for( i = 0; i < 15; i ++ ){
 		if(BIT(i)){
-			arch_write_memory(cpu, bb, Addr, R(i), 32);
+			if(i == RN)
+				arch_write_memory(cpu, bb, Addr, Rn, 32);
+			else
+				arch_write_memory(cpu, bb, Addr, R(i), 32);
 			Addr = ADD(Addr, CONST(4));
 		}
 	}
@@ -323,16 +330,16 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 }
 
 /* load store multiple operations collection, following arm doc */
-void LoadStoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
+void LoadStoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 {
 	if(LSLBIT)
-		LoadM(cpu,instr,bb,addr);
+		LoadM(cpu,instr,bb,addr, Rn);
 	else
-		StoreM(cpu,instr,bb,addr);
+		StoreM(cpu,instr,bb,addr, Rn);
 }
 
 /* load store operations collection */
-void LoadStore(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
+void LoadStore(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 {
 	if (BITS(20, 27) == 0x19 && BITS(0, 11) == 0xf9f) {
 		/* LDREX */
@@ -344,7 +351,7 @@ void LoadStore(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 	}else if(BITS(24,27) == 0x0 || BITS(24,27) == 0x1){
 		MisLoadStore(cpu, instr, bb, addr);
 	}else if(BITS(24,27) == 0x8 || BITS(24,27) == 0x9){
-		LoadStoreM(cpu, instr, bb, addr);
+		LoadStoreM(cpu, instr, bb, addr, Rn);
 	}else{
 		printf("Not a Load Store operation \n");
 	}

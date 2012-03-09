@@ -78,7 +78,7 @@ Value *operand(cpu_t *cpu,  uint32_t instr, BasicBlock *bb, Value *sco);
 uint32_t boperand(uint32_t instr);
 int set_condition(cpu_t *cpu, Value *ret, BasicBlock *bb, Value *op1, Value *op2);
 Value *GetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb);
-void LoadStore(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr);
+void LoadStore(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn);
 
 int decode_arm_instr(uint32_t instr, int32_t *idx);
 

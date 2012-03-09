@@ -846,8 +846,9 @@ int DYNCOM_TRANS(ldc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 }
 int DYNCOM_TRANS(ldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
+	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if (BIT(15)) {
 		SET_NEW_PAGE;
 		if (BITS(25, 27) == 4 && BIT(22) == 1 && BIT(20) == 1) {
@@ -861,8 +862,9 @@ int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 //	printf("in %s %x\n", __FUNCTION__, cpu->f.get_pc(cpu, cpu->rf.grf));
 //	sleep(2);
+	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	#if 0
 	if (RD == 15) {
 		/* set the bit[0] to thumb bit */
@@ -878,7 +880,7 @@ int DYNCOM_TRANS(ldrb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/*LDRB, No WriteBack, Pre Inc, Regist - Immed */
 	/*I = 0, P = 1, U = 0, W = 0, B = 1 */
-
+	Value* Rn;
 	/* LDRB, No WriteBack, Pre Inc, Regist + Immed || Regist */
 	/* I = 0, P = 1, U = 1, B = 1, W = 0 */
 
@@ -886,48 +888,53 @@ int DYNCOM_TRANS(ldrb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* I = 0, P = 1, U = 1, B = 1, W = 1 */
 	
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 
 	return 0;
 }
 int DYNCOM_TRANS(ldrbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
+	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return 0;
 }
 int DYNCOM_TRANS(ldrd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
-
+	Value* Rn;
 	/* LDRD P = 0, U = 0, I = 0, W = 0 */
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return 0;
 }
 int DYNCOM_TRANS(ldrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
+	Value* Rn;
 //	Value *addr = GetAddr(cpu, instr, bb);
 	Value *addr = R(RN);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return No_exp;
 }
 int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	//Value *addr = GetAddr(cpu, instr, bb);
+	Value* Rn;
 	Value *addr = R(RN);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return No_exp;
 }
 int DYNCOM_TRANS(ldrh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* LDRH immediate offset, no write-back, up, pre indexed.  */
+	Value* Rn;
 	/* P = 1, U = 1, I = 1, W = 0 */
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return 0;
 }
 int DYNCOM_TRANS(ldrsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
+	/* should check if RN == RD for writeback case */
 	Value *addr = GetAddr(cpu, instr, bb);
 	//LoadStore(cpu,instr,bb,addr);
 	Value *ret = arch_read_memory(cpu, bb, addr, 0, 8);
@@ -937,6 +944,7 @@ int DYNCOM_TRANS(ldrsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 int DYNCOM_TRANS(ldrsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* LDRSH P=1 U=1 W=0 */
+	/* should check if RN == RD for writeback case */
 	Value *addr = GetAddr(cpu, instr, bb);
 	//LoadStore(cpu,instr,bb,addr);
 	Value *ret = arch_read_memory(cpu, bb, addr, 0, 16);
@@ -946,8 +954,9 @@ int DYNCOM_TRANS(ldrsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 }
 int DYNCOM_TRANS(ldrt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
+	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return 0;
 }
 int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1615,18 +1624,20 @@ int DYNCOM_TRANS(stc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 int DYNCOM_TRANS(stm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* Store, WriteBack, PreDec */
+	Value* Rn = R(RN);
 	/* STM(1) P = 1, U = 0, W = 1 */
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return No_exp;
 }
 int DYNCOM_TRANS(str)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/*STR, No WriteBack, Pre Inc, Regist + Immed || Regist */
+	Value* Rn;
 	/* I = 0, P = 1, U = 1, W = 0, B = 0 */
 	Value *addr = GetAddr(cpu, instr, bb);
 	//StoreWord(cpu, instr, bb, addr);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return No_exp;
 
 }
@@ -1634,24 +1645,26 @@ int DYNCOM_TRANS(strb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/*STRB , No WriteBack, Pre Inc, Regist - Immed */
 	/*I = 0, P = 1, U = 0, W = 0, B = 1 */
-
+	Value* Rn;
 	/* STRB, No WriteBack, Pre Inc, Regist + Immed || Regist */
 	/*  I = 0, P = 1, U = 1, B = 1, W = 0 */
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return No_exp;
 }
 int DYNCOM_TRANS(strbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
+	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return 0;
 }
 int DYNCOM_TRANS(strd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* STRD P = 0, U = 0, I = 0, W = 0 */
+	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return 0;
 }
 int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1676,14 +1689,16 @@ int DYNCOM_TRANS(strh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* STRH register offset, no write-back, down, post indexed.  */
 	/* P = 0, U = 0, I = 0, W = 0 */
+	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return 0;
 }
 int DYNCOM_TRANS(strt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
+	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb);
-	LoadStore(cpu,instr,bb,addr);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	return 0;
 }
 int DYNCOM_TRANS(sub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
