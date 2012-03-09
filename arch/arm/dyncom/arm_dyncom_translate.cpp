@@ -2097,7 +2097,7 @@ int DYNCOM_TAG(adc)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
-	if ((RN == 15) && ((pc & 0xfff) == 0xffc)) {
+	if ((RN == 15) && (cpu->mem_ops.is_page_end(cpu, pc))) {
 		*tag |= TAG_NEED_PC;
         }
 
@@ -2115,7 +2115,7 @@ int DYNCOM_TAG(add)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
-	if ((pc & 0xfff) == 0xffc && (RN == 15)) {
+	if ((cpu->mem_ops.is_page_end(cpu, pc)) && (RN == 15)) {
 		printf("In %s, RN=0x%x\n", __FUNCTION__, RN);
 		*tag |= TAG_NEED_PC;
 	}
@@ -2321,8 +2321,7 @@ int DYNCOM_TAG(ldr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
 	*tag |= TAG_MEMORY;
-//	if (instr == 0xe59f0054 && (pc & 0xfff) == 0xffc) {
-	if ((pc & 0xfff) == 0xffc && (RD != 15)) {
+	if ((cpu->mem_ops.is_page_end(cpu, pc)) && (RD != 15)) {
 		*tag |= TAG_NEED_PC;
 	}
 	if(instr >> 28 != 0xe)

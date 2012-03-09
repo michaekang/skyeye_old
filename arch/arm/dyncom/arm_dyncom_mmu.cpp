@@ -46,7 +46,8 @@ static bool_t is_page_start(cpu_t* cpu, addr_t a)
 
 static bool_t is_page_end(cpu_t* cpu, addr_t a)
 {
-	return ((a & 0x00000fff) == 0xffc) ? True : False;
+	uint32 page_end_addr = 0x1000 - cpu->f.get_instr_length(cpu);
+	return ((a & 0x00000fff) == page_end_addr) ? True : False;
 }
 static inline int exclusive_detect(arm_core_t* state, ARMword addr){
 	int i;

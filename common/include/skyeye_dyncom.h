@@ -105,8 +105,8 @@ typedef struct {
 } arch_func_t;
 
 typedef bool_t			(*fp_is_inside_page)(cpu_t *cpu, addr_t addr);
-typedef bool_t			(*fp_is_page_start)(addr_t addr);
-typedef bool_t			(*fp_is_page_end)(addr_t addr);
+typedef bool_t			(*fp_is_page_start)(cpu_t* cpu, addr_t addr);
+typedef bool_t			(*fp_is_page_end)(cpu_t* cpu, addr_t addr);
 typedef uint32_t 		(*fp_read_memory_t)(cpu_t *cpu, addr_t addr, uint32_t size);
 typedef void 			(*fp_write_memory_t)(cpu_t *cpu, addr_t addr, uint32_t value, uint32_t size);
 typedef uint32_t		(*fp_check_mm_t)(cpu_t *cpu, uint32_t instr);
