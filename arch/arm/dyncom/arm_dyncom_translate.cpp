@@ -1985,17 +1985,19 @@ int DYNCOM_TRANS(b_2_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t p
 	DBG("In %s, pc=0x%x, imm=0x%x, instr=0x%x, tinstr=0x%x\n", __FUNCTION__, pc, imm, instr, tinstr);
 	//LET(14, ADD(ADD(R(15), CONST(4)), CONST(imm)));
 	LET(15, ADD(R(15), CONST(4 + imm)));
+	SET_NEW_PAGE;
 	/* return the instruction size */
 	return Byte_2;
 }
 
 int DYNCOM_TRANS(b_cond_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	uint32 tinstr = get_thumb_instr(instr, pc);
-	sint32 imm = (((tinstr & 0x7F) << 1) | ((tinstr & (1 << 7)) ?	0xFFFFFF00 : 0));
+	uint32 imm = (((tinstr & 0x7F) << 1) | ((tinstr & (1 << 7)) ?	0xFFFFFF00 : 0));
 
 	DBG("In %s, pc=0x%x, imm=0x%x, instr=0x%x, tinstr=0x%x\n", __FUNCTION__, pc, imm, instr, tinstr);
 	//LET(14, ADD(ADD(R(15), CONST(4)), CONST(imm)));
 	LET(15, ADD(R(15), CONST(4 + imm)));
+	SET_NEW_PAGE;
 	/* return the instruction size */
 	return Byte_2;
 }
@@ -2913,13 +2915,12 @@ int DYNCOM_TAG(b_2_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, add
 {
 	int instr_size = 2;
 	uint32 tinstr = get_thumb_instr(instr, pc);
-	*tag = TAG_CONTINUE;
-	*tag |= TAG_BRANCH;
+	*tag = TAG_BRANCH;
 	sint32 imm =((tinstr & 0x3FF) << 1) | ((tinstr & (1 << 10)) ? 0xFFFFF800 : 0);
 	DBG("In %s, tinstr=0x%x, imm=0x%x\n", __FUNCTION__, tinstr, imm);
 	/* FIXME, should optimize a definite address */
-        //*new_pc = NEW_PC_NONE;
-	*new_pc = pc + imm +4;
+        *new_pc = NEW_PC_NONE;
+	//*new_pc = pc + imm +4;
 	*next_pc = pc + INSTR_SIZE;
 	DBG("pc is %x in %s instruction, new_pc=0x%x.\n", pc, __FUNCTION__, *new_pc);
 	return instr_size;
@@ -2929,14 +2930,12 @@ int DYNCOM_TAG(b_cond_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, 
 {
 	int instr_size = 2;
 	uint32 tinstr = get_thumb_instr(instr, pc);
-	*tag = TAG_CONTINUE;
-	*tag |= TAG_BRANCH;
+	*tag = TAG_BRANCH;
 	*tag |= TAG_CONDITIONAL;
 	sint32 imm = (((tinstr & 0x7F) << 1) | ((tinstr & (1 << 7))?0xFFFFFF00 : 0));
 	DBG("In %s, tinstr=0x%x, imm=0x%x\n", __FUNCTION__, tinstr, imm);
 	/* FIXME, should optimize a definite address */
-        //*new_pc = NEW_PC_NONE;
-	*new_pc = pc + imm +4;
+        *new_pc = NEW_PC_NONE;
 	*next_pc = pc + INSTR_SIZE;
 	return instr_size;
 }
