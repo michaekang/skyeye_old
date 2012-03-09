@@ -1465,6 +1465,32 @@ int DYNCOM_TRANS(smla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	return No_exp;
 }
 int DYNCOM_TRANS(smlad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	int RA = BITS(12, 15);
+	int m	 = BIT(4);
+	Value *Rn = R(RN);
+	Value *Rm = R(RM);
+	Value *Ra = R(MUL_RN);
+	Value* Operand2 = m ? OR(LSHR(Rm, CONST(16)), SHL(Rm, CONST(16))):Rm;
+
+	/* Do 16 bit sign extend */
+	Value* Half_rn = AND(Rn, CONST(0xFFFF));
+	Half_rn = SELECT(ICMP_EQ(AND(Half_rn, CONST(0x8000)), CONST(0)), OR(Half_rn, CONST(0xFFFF0000)), Half_rn);
+
+	Value* Half_operand2 = AND(Operand2, CONST(0xFFFF));
+	Half_operand2 = SELECT(ICMP_EQ(AND(Half_operand2, CONST(0x8000)), CONST(0)), OR(Half_operand2, CONST(0xFFFF0000)), Half_operand2);
+	Value* Product1 = MUL(Half_rn, Half_operand2);
+
+	Half_rn = LSHR(AND(Rn, CONST(0xFFFF0000)), CONST(16));
+	Half_rn = SELECT(ICMP_EQ(AND(Half_rn, CONST(0x8000)), CONST(0)), OR(CONST(0xFFFF0000), Half_rn), Half_rn);
+
+	Half_operand2 = LSHR(AND(Operand2, CONST(0xFFFF0000)), CONST(16));
+	Half_operand2 = SELECT(ICMP_EQ(AND(Half_operand2, CONST(0x8000)), CONST(0)),  OR(CONST(0xFFFF0000), Half_operand2) , Half_operand2);
+
+	Value* Product2 = MUL(Half_rn, Half_operand2);
+	Value* signed_ra = SELECT(ICMP_EQ(AND(Ra, CONST(0x80000000)), CONST(0)), OR(Ra, CONST(0xFFFFFFFF00000000)), Ra);
+	Value* result = ADD(ADD(Product1, Product2), signed_ra);
+	/* FIXME , should check Signed overflow */
+	LET(MUL_RD, AND(result, CONST(0xFFFFFFFF)));
 	return No_exp;
 }
 int DYNCOM_TRANS(smlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -2608,7 +2634,11 @@ int DYNCOM_TAG(shsub16)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_
 int DYNCOM_TAG(shsub8)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
 int DYNCOM_TAG(shsubaddx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
 int DYNCOM_TAG(smla)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
-int DYNCOM_TAG(smlad)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
+int DYNCOM_TAG(smlad)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){
+	int instr_size = INSTR_SIZE;
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	return instr_size;
+}
 int DYNCOM_TAG(smlal)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
