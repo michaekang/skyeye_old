@@ -686,8 +686,22 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 
 		SET_NEW_PAGE;
 	} else {
-		printf("in %s\n", __FUNCTION__);
-		exit(-1);
+		if (cpu->is_user_mode)
+			LET(14, CONST(pc + INSTR_SIZE));
+		else
+			LET(14, ADD(R(15),CONST(INSTR_SIZE)));
+		/* if thumb state, we need to Ored with one */
+		arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+		if(core->Cpsr & (1 << THUMB_BIT)){
+			LET(14, OR(R(14), CONST(0x1)));
+		}
+		int signed_immed_24 = BITS(0, 23);
+		int signed_int = signed_immed_24;
+		signed_int = (signed_int) & 0x800000 ? (0x3F000000 | signed_int) : signed_int;
+		signed_int = signed_int << 2;
+		LET(15, CONST(8 + signed_int + (BIT(24) << 1)));
+		STORE(TRUNC1(AND(R(RM), CONST(0x1))), ptr_T);	
+		SET_NEW_PAGE;
 	}
 	return No_exp;
 }
