@@ -467,6 +467,7 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 		}
 #endif
 #endif
+		LOG("In %s, pc=0x%x, tag=0x%x\n", __FUNCTION__, pc, tag);
 		if ((tag & TAG_MEMORY) && !is_user_mode(cpu)) {
 			or_tag(cpu, next_pc, TAG_AFTER_COND);
 		}
@@ -522,8 +523,15 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 		if(cpu->mem_ops.is_page_start(cpu, pc) && !is_user_mode(cpu))
 			or_tag(cpu, pc, tag | TAG_START_PAGE);
 		if(cpu->mem_ops.is_page_end(cpu, pc) && !is_user_mode(cpu)){
+			LOG("In %s. TAG_END_PAGE for pc=0x%x\n", __FUNCTION__, pc);
 			or_tag(cpu, pc, tag | TAG_STOP | TAG_END_PAGE);
 			xor_tag(cpu, pc, TAG_CONTINUE);
+			/* if the memory related insn is located at the end of page,
+				check_mm needs PC to parse the instruction */
+			if(tag & TAG_MEMORY){
+				LOG("In %s. TAG_NEED_PC for pc=0x%x\n", __FUNCTION__, pc);
+				or_tag(cpu, pc, tag | TAG_NEED_PC);
+			}
 			break;
 		}
 		if ((tag & TAG_EXCEPTION) && !is_user_mode(cpu)) {
