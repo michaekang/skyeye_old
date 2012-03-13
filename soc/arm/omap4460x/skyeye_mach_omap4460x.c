@@ -32,7 +32,8 @@ static void omap4460x_io_do_cycle(generic_arch_t* state) {
 	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_do_cycle not realize\n", __func__, __LINE__);
 }
 
-static void omap4460x_io_reset(generic_arch_t* state) {
+static void omap4460x_io_reset(generic_arch_t* arch_instance) {
+	arch_instance->set_regval_by_id(1, 2160);
 	// TODO: function body
 	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_reset not realize\n",  __func__, __LINE__);
 }
