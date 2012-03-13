@@ -260,6 +260,9 @@ below line sould be in skyeye_mach_XXX.c 's XXX_mach_init function
 	//chy 2005-09-19
 	state->is_pxa27x = (properties & ARM_PXA27X_Prop) ? HIGH : LOW;
 
+	/* shenoubang 2012-3-11 */
+	state->is_v7 = (properties & ARM_v7_Prop) ? HIGH : LOW;
+
 	/* Only initialse the coprocessor support once we
 	   know what kind of chip we are dealing with.  */
 	ARMul_CoProInit (state);
@@ -426,8 +429,9 @@ ARMul_DoProg (ARMul_State * state)
 #endif
 		}
 
-		else
+		else {
 			pc = ARMul_Emulate26 (state);
+		}
 		//chy 2006-02-22, should test debugmode first
 		//chy 2006-04-14, put below codes in ARMul_Emulate
 #if 0

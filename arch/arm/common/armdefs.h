@@ -369,6 +369,7 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 	unsigned is_v5;		/* Are we emulating a v5 architecture ?  */
 	unsigned is_v5e;	/* Are we emulating a v5e architecture ?  */
 	unsigned is_v6;		/* Are we emulating a v6 architecture ?  */
+	unsigned is_v7;		/* Are we emulating a v7 architecture ?  */
 	unsigned is_XScale;	/* Are we emulating an XScale architecture ?  */
 	unsigned is_iWMMXt;	/* Are we emulating an iWMMXt co-processor ?  */
 	unsigned is_ep9312;	/* Are we emulating a Cirrus Maverick co-processor ?  */

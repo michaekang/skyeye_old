@@ -394,6 +394,12 @@ arm_core_init (ARMul_State *state, int i)
 	if (!strcmp(p_arm_cpu->cpu_name, "arm11"))
 		state->lateabtSig = LOW;
 
+	if (!strcmp(p_arm_cpu->cpu_name, "cortex_a9")) {
+		ARMul_SelectProcessor (state,
+				ARM_v4_Prop | ARM_v5_Prop | ARM_v5e_Prop | ARM_v6_Prop| ARM_v7_Prop);
+		state->lateabtSig = LOW;
+	}
+
 	mmu_init(state);
 }
 
