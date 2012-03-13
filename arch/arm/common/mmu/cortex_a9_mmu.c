@@ -241,7 +241,7 @@ fault_t cortex_a9_mmu_read (ARMul_State *state, ARMword va,
 int
 cortex_a9_mmu_init (ARMul_State *state)
 {
-	state->mmu.control = 0x50078;
+	state->mmu.control = 0xc50078;
 	state->mmu.translation_table_base = 0xDEADC0DE;
 	state->mmu.domain_access_control = 0xDEADC0DE;
 	state->mmu.fault_status = 0;
@@ -365,8 +365,8 @@ cortex_a9_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 	real_va = va;
 	/* if MMU disabled, memory_read */
 	if (MMU_Disabled) {
-//            printf("MMU disabled cpu_id:%x addr:%x.\n", state->mmu.process_id, va);
-//            sleep(1);
+     //       printf("MMU disabled cpu_id:%x addr:%x.\n", state->mmu.process_id, va);
+     //       sleep(1);
 
 		/* *data = mem_read_word(state, va); */
 		if (datatype == ARM_BYTE_TYPE)
@@ -394,8 +394,8 @@ cortex_a9_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 
 		return 0;
 	}
-//    printf("MMU enabled.\n");
-//    sleep(1);
+    //printf("MMU enabled.\n");
+    //sleep(1);
 
 	/* align check */
 	if (((va & 3) && (datatype == ARM_WORD_TYPE) && MMU_Aligned) ||
@@ -726,7 +726,7 @@ cortex_a9_mmu_mrc (ARMul_State *state, ARMword instr, ARMword *value)
 		 * 10           read as 0
 		 * 18,16	read as 1
 		 * */
-		data = (state->mmu.control | 0x50078) & 0xFFFFFBFF;
+		data = (state->mmu.control | 0xc50078) & 0xFFFFFBFF;
 		break;
 	case MMU_TRANSLATION_TABLE_BASE:
 #if 0
@@ -794,7 +794,7 @@ cortex_a9_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 	mmu_regnum_t CRm = BITS (0, 3) & 0xf;
 	int OPC_1 = BITS (21, 23) & 0x7;
 	int OPC_2 = BITS (5, 7) & 0x7;
-	if (!strncmp (state->cpu->cpu_arch_name, "armv6", 5)) {
+	if (!strncmp (state->cpu->cpu_arch_name, "armv7", 5)) {
 		switch (creg) {
 		case MMU_CONTROL:
 		/*
@@ -803,7 +803,7 @@ cortex_a9_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 		 * 18,16	read as 1
 		 * */
 			if(OPC_2 == 0)
-				state->mmu.control = (value | 0x50078) & 0xFFFFFBFF;
+				state->mmu.control = (value | 0xc50078) & 0xFFFFFBFF;
 			else if(OPC_2 == 1)
 				state->mmu.auxiliary_control = value;
 			else if(OPC_2 == 2)
