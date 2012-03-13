@@ -38,6 +38,7 @@ typedef struct SkyEyeLCD_GTK {
 
 	guchar *rgbbuf;
 	guint32 *fbmem;
+	guint32 *fbmem_cp;
 	GdkRgbCmap *colormap;
 	guint timer;
 

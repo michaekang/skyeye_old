@@ -143,7 +143,8 @@ static gint callback_expose_event(GtkWidget *widget, GdkEventExpose *event, lcd_
 {
 	int i, j, x, y, pix, bit;
 	int wordnum;		//for lcd_depth==16 , 1 word contain 2 pixel
-	guint32 fbdata;		// |R1,G1,B1,R0,G0,B0|
+	guint64 fbdata;		// |R1,G1,B1,R0,G0,B0|
+	guint64 fbdata_cp;
 
 	int tribytenum;		//for lcd_depth==12, 3 byte contain 2 pixel
 	guchar fbdata8_0;	// |G0,R0|
@@ -157,7 +158,6 @@ static gint callback_expose_event(GtkWidget *widget, GdkEventExpose *event, lcd_
 
 	if (lcd->update_all == FALSE) {
 		if (lcd->update_rect.width < 0 || lcd->update_rect.height < 0) return TRUE;
-
 		rect = lcd->update_rect;
 		rect.width += 1;
 		rect.height += 1;
@@ -246,29 +246,50 @@ static gint callback_expose_event(GtkWidget *widget, GdkEventExpose *event, lcd_
 					   lcd->virtual_width * 3);
 			break;
 
-		case 16:
-			for (i = lcd->virtual_width * rect.y / 2; i < wordnum; i++) {
-				fbdata = *((guint32*)lcd->fbmem + i);
-
-				*(lcd->rgbbuf + i * 6 + 0) =
-					(guchar)((fbdata & 0x0000f800) >> 8);
-				*(lcd->rgbbuf + i * 6 + 1) =
-					(guchar)((fbdata & 0x000007e0) >> 3);
-				*(lcd->rgbbuf + i * 6 + 2) =
-					(guchar)((fbdata & 0x0000001f) << 3);
-				*(lcd->rgbbuf + i * 6 + 3) =
-					(guchar)((fbdata & 0xf8000000) >> 24);
-				*(lcd->rgbbuf + i * 6 + 4) =
-					(guchar)((fbdata & 0x07e00000) >> 19);
-				*(lcd->rgbbuf + i * 6 + 5) =
-					(guchar)((fbdata & 0x001f0000) >> 13);
-			}
-			gdk_draw_rgb_image(widget->window,
-					   widget->style->fg_gc[GTK_STATE_NORMAL],
-					   0, rect.y, lcd->width, rect.height,
-					   GDK_RGB_DITHER_MAX,
-					   (guchar*)lcd->rgbbuf + rect.y * lcd->virtual_width * 3,
-					   lcd->virtual_width * 3);
+	       case 16:
+		       {
+					int refresh = 0;
+					for (i = lcd->virtual_width * rect.y / 2; i < wordnum / 2; i++) {
+						fbdata = *((guint64*)lcd->fbmem + i);
+						fbdata_cp = *((guint64*)lcd->fbmem_cp + i);
+						if (fbdata != fbdata_cp) {
+							refresh = 1;
+							fbdata_cp = fbdata;
+							*(lcd->rgbbuf + i * 12 + 0) =
+								(guchar)((fbdata_cp & 0x0000f800) >> 8);
+							*(lcd->rgbbuf + i * 12 + 1) =
+								(guchar)((fbdata_cp & 0x000007e0) >> 3);
+							*(lcd->rgbbuf + i * 12 + 2) =
+								(guchar)((fbdata_cp & 0x0000001f) << 3);
+							*(lcd->rgbbuf + i * 12 + 3) =
+								(guchar)((fbdata_cp & 0xf8000000) >> 24);
+							*(lcd->rgbbuf + i * 12 + 4) =
+								(guchar)((fbdata_cp & 0x07e00000) >> 19);
+							*(lcd->rgbbuf + i * 12 + 5) =
+								(guchar)((fbdata_cp & 0x001f0000) >> 13);
+							*(lcd->rgbbuf + i * 12 + 6) =
+								(guchar)(((fbdata_cp >> 32) & 0x0000f800) >> 8);
+							*(lcd->rgbbuf + i * 12 + 7) =
+								(guchar)(((fbdata_cp >> 32) & 0x000007e0) >> 3);
+							*(lcd->rgbbuf + i * 12 + 8) =
+								(guchar)(((fbdata_cp >> 32) & 0x0000001f) << 3);
+							*(lcd->rgbbuf + i * 12 + 9) =
+								(guchar)(((fbdata_cp >> 32) & 0xf8000000) >> 24);
+							*(lcd->rgbbuf + i * 12 + 10) =
+								(guchar)(((fbdata_cp >> 32) & 0x07e00000) >> 19);
+							*(lcd->rgbbuf + i * 12 + 11) =
+								(guchar)(((fbdata_cp >> 32) & 0x001f0000) >> 13);
+						}
+					}
+		       if (refresh) {
+			       gdk_draw_rgb_image(widget->window,
+						  widget->style->fg_gc[GTK_STATE_NORMAL],
+						  0, rect.y, lcd->width, rect.height,
+						  GDK_RGB_DITHER_MAX,
+						  (guchar*)lcd->rgbbuf + rect.y * lcd->virtual_width * 3,
+						  lcd->virtual_width * 3);
+		       }
+		       }
 			break;
 
 		case 24:
@@ -385,6 +406,8 @@ static int gtk_lcd_open(conf_object_t *lcd_dev, lcd_surface_t* surface)
 	lcd->update_rect.height = -1;
 	lcd->update_all = TRUE;
 	lcd->fbmem = fbmem;
+	/* allocate a ping-pong buffer to reduce unnecessary lcd fresh */
+	lcd->fbmem_cp = (void *)malloc(surface->lcd_addr_end - surface->lcd_addr_begin);
 
 	if(dev->lcd_lookup_color != NULL) {
 		lcd->rgbbuf = (guchar*)malloc(lcd->width * lcd->height * 4);
