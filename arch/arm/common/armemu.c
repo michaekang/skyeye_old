@@ -25,6 +25,7 @@
 #include "skyeye_bus.h"
 #include "sim_control.h"
 #include "skyeye_pref.h"
+#include "skyeye.h"
 //#include "skyeye2gdb.h"
 //#include "code_cov.h"
 
@@ -376,6 +377,8 @@ ARMul_Emulate26 (ARMul_State * state)
 	ARMword loaded_addr=0;
 	ARMword have_bp=0;
 
+	/* shenoubang */
+	static instr_sum = 0;
 	int reg_index = 0;
 #if DIFF_STATE
 //initialize all mirror register for follow mode
@@ -946,9 +949,10 @@ ARMul_Emulate26 (ARMul_State * state)
 #endif
 
 		/* Check the condition codes.  */
-		if ((temp = TOPBITS (28)) == AL)
+		if ((temp = TOPBITS (28)) == AL) {
 			/* Vile deed in the need for speed. */
 			goto mainswitch;
+		}
 
 		/* Check the condition code. */
 		switch ((int) TOPBITS (28)) {
@@ -957,6 +961,21 @@ ARMul_Emulate26 (ARMul_State * state)
 			break;
 		case NV:
 
+			/* shenoubang add for armv7 instr dmb 2012-3-11 */
+			if (state->is_v7) {
+				if ((instr & 0x0fffff00) == 0x057ff000) {
+					switch((instr >> 4) & 0xf) {
+						case 4: /* dsb */
+						case 5: /* dmb */
+						case 6: /* isb */
+							// TODO: do no implemented thes instr
+							goto donext;
+						default:
+							SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, unknown instr!!", __func__, __LINE__);
+							ARMul_UndefInstr (state, instr);
+					}
+				}
+			}
 			/* dyf add for armv6 instruct CPS 2010.9.17 */
 			if (state->is_v6) {
 				/* clrex do nothing here temporary */
@@ -1025,17 +1044,20 @@ ARMul_Emulate26 (ARMul_State * state)
 					WriteR15Branch (state, dest);
 					goto donext;
 				}
-				else if ((instr & 0xFC70F000) == 0xF450F000)
+				else if ((instr & 0xFC70F000) == 0xF450F000) {
 					/* The PLD instruction.  Ignored.  */
 					goto donext;
+				}
 				else if (((instr & 0xfe500f00) == 0xfc100100)
 					 || ((instr & 0xfe500f00) ==
-					     0xfc000100))
+					     0xfc000100)) {
 					/* wldrw and wstrw are unconditional.  */
 					goto mainswitch;
-				else
+				}
+				else {
 					/* UNDEFINED in v5, UNPREDICTABLE in v3, v4, non executed in v1, v2.  */
 					ARMul_UndefInstr (state, instr);
+				}
 			}
 			temp = FALSE;
 			break;
@@ -3738,7 +3760,31 @@ ARMul_Emulate26 (ARMul_State * state)
 				break;
 
 			case 0x7e:	/* Store Byte, WriteBack, Pre Inc, Reg.  */
-				if (BIT (4)) {
+				/* shenoubang 2010-3-12 instr of UBFX*/
+				if (state->is_v6) {
+					unsigned int m, width, Rd, Rn, data;
+					m = width = data = 0;
+					if (((int) BITS (4,6)) == 0x5) {
+						m = (unsigned)BITS(7, 11);
+						width = (unsigned)BITS(16, 20) + 1;
+						Rd = (unsigned)BITS(12, 15);
+						Rn = (unsigned)BITS(0, 3);
+						if ((m + width) <= 31) {
+							data = state->Reg[Rn];
+							state->Reg[Rd] ^= state->Reg[Rd];
+							state->Reg[Rd] =
+								((ARMword)(data << (31 -(m + width - 1))) >> ((31 - (m + width - 1)) + (m)));
+							SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, Reg_src[%d] = 0x%x, Reg_d[%d] = 0x%x, m = %d, width = %d, Rd = %d, Rn = %d\n",
+									__FUNCTION__, __LINE__, Rn, data, Rd, state->Reg[Rd], m, width, Rd, Rn);
+							break;
+						}
+						else {
+							ARMul_UndefInstr (state, instr);
+							break;
+						}
+					}
+				} // UBFX instr
+				else if (BIT (4)) {
 					ARMul_UndefInstr (state, instr);
 					break;
 				}
@@ -4444,6 +4490,32 @@ ARMul_Emulate26 (ARMul_State * state)
 	      donext:
 #endif
 		      state->pc = pc;
+#if 1
+			/* shenoubang */
+			instr_sum++;
+			int i, j;
+			i = j = 0;
+			if (pc >= 0xc000895c) {
+				// start_kernel : 0xc000895c
+				printf("--------------------------------------------------\n");
+				for (i = 0; i < 16; i++) {
+					printf("[R%02d]:[0x%08x]\t", i, state->Reg[i]);
+					if ((i % 3) == 2) {
+						printf("\n");
+					}
+				}
+				printf("[cpr]:[0x%08x]\t[spr0]:[0x%08x]\n", state->Cpsr, state->Spsr[0]);
+				for (j = 1; j < 7; j++) {
+					printf("[spr%d]:[0x%08x]\t", j, state->Spsr[j]);
+					if ((j % 4) == 3) {
+						printf("\n");
+					}
+				}
+				printf("\n[PC]:[0x%08x]\t[INST]:[0x%08x]\t[COUNT]:[%d]\n", pc, instr, instr_sum);
+				printf("--------------------------------------------------\n");
+			}
+#endif
+
 #if 0
 		  fprintf(state->state_log, "PC:0x%x\n", pc);
 		  for (reg_index = 0; reg_index < 16; reg_index ++) {

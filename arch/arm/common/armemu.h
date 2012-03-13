@@ -19,6 +19,8 @@
 
 
 #include "armdefs.h"
+#include "skyeye.h"
+
 extern ARMword isize;
 
 /* Condition code values.  */
@@ -278,6 +280,13 @@ extern ARMword isize;
 #define PRIMEPIPE     4
 #define RESUME        8
 
+/************************************/
+/* shenoubang 2012-3-11 */
+/* for armv7 DBG DMB DSB instr*/
+/************************************/
+#define MBReqTypes_Writes	0
+#define MBReqTypes_All		1
+
 #define NORMALCYCLE state->NextInstr = 0
 #define BUSUSEDN    state->NextInstr |= 1	/* The next fetch will be an N cycle.  */
 #define BUSUSEDINCPCS						\
@@ -494,7 +503,7 @@ tdstate;
  * out-of-updated with the newer ISA.
  * -- Michael.Kang
  ********************************************************************************/
-#define UNDEF_WARNING skyeye_log(Warning_log, __FUNCTION__, "[%d line]undefined or unpredicted behavior for arm instruction.\n", __LINE__);
+#define UNDEF_WARNING SKYEYE_LOG_IN_CLR(RED, "IN %s, [%d line]undefined or unpredicted behavior for arm instruction.\n", __func__, __LINE__);
 
 /* Macros to scrutinize instructions.  */
 #define UNDEF_Test UNDEF_WARNING
