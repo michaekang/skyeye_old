@@ -2083,7 +2083,7 @@ int DYNCOM_TRANS(blx_1_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t
 	uint32 imm = (tinstr & 0x07FF) << 1;
 	Value* Temp;
 	Temp = R(15);
-	LET(15, AND(ADD(R(14), CONST(imm)), CONST(~0x3)));
+	LET(15, AND(ADD(R(14), CONST(imm)), CONST(0xFFFFFFFC)));
 	LET(14, OR(ADD(Temp, CONST(2)), CONST(1)));
 	/* Clear thumb bit */
 	STORE(CONST1(0), ptr_T);
@@ -3009,6 +3009,8 @@ int DYNCOM_TAG(bl_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, ad
 	int instr_size = 2;
 	//arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	*tag = TAG_CONTINUE;
+	/* some times bl_1 will be located at the end of page */
+	*tag |= TAG_NEED_PC;
 	*next_pc = pc + INSTR_SIZE;
 	return instr_size;
 }
