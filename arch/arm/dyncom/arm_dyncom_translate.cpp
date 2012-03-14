@@ -1573,9 +1573,9 @@ int DYNCOM_TRANS(smul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
         if (y == 0)
                 operand2 = SEXT32(TRUNC16(R(RS)));
         else
-                operand2 = SEXT32(TRUNC16(LSHR(R(RM), CONST(16))));
+                operand2 = SEXT32(TRUNC16(LSHR(R(RS), CONST(16))));
 	#endif
-        LET(RD, MUL(SEXT32(TRUNC16(R(RM))), SEXT32(TRUNC16(R(RS)))));;
+        LET(MUL_RD, MUL(operand1, operand2));;
 
         return No_exp;
 }
