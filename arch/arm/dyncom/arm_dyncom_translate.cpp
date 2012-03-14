@@ -1449,7 +1449,12 @@ int DYNCOM_TRANS(sbc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		} else {
 			GETSIGN(ret,ptr_N);
 			EQZERO(ret,ptr_Z);
-			NOTBORROWFROMSUB(op1,op2,ptr_C);
+
+			/* To avoid overflow, we should calculate in two parts */
+			Value* front_carry = ICMP_UGE(op1, carry);
+			Value* carry_result = SELECT(front_carry, ICMP_UGE(SUB(op1, carry), OPERAND), front_carry);
+			new StoreInst(carry_result, ptr_C, false, bb);
+			//NOTBORROWFROMSUB(op1,op2,ptr_C);
 			OVERFLOWFROMSUB(op1,op2,ret,ptr_V);
 			#if 0
 			Value *tmp1 = AND(ISNEG(op1), ISPOS(op2));
