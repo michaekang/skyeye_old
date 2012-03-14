@@ -1090,7 +1090,10 @@ int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		}
 	}
 #endif
-	LET(RD, op2);
+	if(RD == 15)
+		LET(RD, AND(op2, CONST(0xFFFFFFFE)));
+	else
+		LET(RD, op2);
 #if 1
 	if(SBIT){
 		if (RD == 15) {
