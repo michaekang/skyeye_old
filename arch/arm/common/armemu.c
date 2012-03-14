@@ -971,7 +971,7 @@ ARMul_Emulate26 (ARMul_State * state)
 							// TODO: do no implemented thes instr
 							goto donext;
 						default:
-							SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, unknown instr!!", __func__, __LINE__);
+							SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, instr = 0x%x, pc = 0x%x, unknown instr!!", __func__, __LINE__, instr, pc);
 							ARMul_UndefInstr (state, instr);
 					}
 				}
@@ -2808,8 +2808,20 @@ ARMul_Emulate26 (ARMul_State * state)
 				break;
 
 			case 0x30:	/* TST immed */
-				UNDEF_Test;
-				break;
+				/* shenoubang 2012-3-14*/
+				if (state->is_v6) { /* movw, ARMV6, ARMv7 */
+					dest ^= dest;
+					dest = BITS(16, 19);
+					dest = ((dest<<12) | BITS(0, 11));
+					WRITEDEST(dest);
+					SKYEYE_DBG("In %s, line = %d, pc = 0x%x, instr = 0x%x, R[0:11]: 0x%x, R[16:19]: 0x%x, R[%d]:0x%x\n",
+							__func__, __LINE__, pc, instr, BITS(0, 11), BITS(16, 19), DESTReg, state->Reg[DESTReg]);
+					break;
+				}
+				else {
+					UNDEF_Test;
+					break;
+				}
 
 			case 0x31:	/* TSTP immed */
 				if (DESTReg == 15) {
@@ -3774,8 +3786,8 @@ ARMul_Emulate26 (ARMul_State * state)
 							state->Reg[Rd] ^= state->Reg[Rd];
 							state->Reg[Rd] =
 								((ARMword)(data << (31 -(m + width - 1))) >> ((31 - (m + width - 1)) + (m)));
-							SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, Reg_src[%d] = 0x%x, Reg_d[%d] = 0x%x, m = %d, width = %d, Rd = %d, Rn = %d\n",
-									__FUNCTION__, __LINE__, Rn, data, Rd, state->Reg[Rd], m, width, Rd, Rn);
+							//SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, Reg_src[%d] = 0x%x, Reg_d[%d] = 0x%x, m = %d, width = %d, Rd = %d, Rn = %d\n",
+							//		__FUNCTION__, __LINE__, Rn, data, Rd, state->Reg[Rd], m, width, Rd, Rn);
 							break;
 						}
 						else {
@@ -4495,7 +4507,7 @@ ARMul_Emulate26 (ARMul_State * state)
 			instr_sum++;
 			int i, j;
 			i = j = 0;
-			if (pc >= 0xc000895c) {
+			if (instr_sum > 9480000) {
 				// start_kernel : 0xc000895c
 				printf("--------------------------------------------------\n");
 				for (i = 0; i < 16; i++) {
