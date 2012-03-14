@@ -1338,7 +1338,11 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 		if(core->Reg[15] == 0x406c44f8){
 			//printf("In %s, VLDM pc is %x addr is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);
 		}
-	} else{
+	} else if((BITS(23, 27) == 0x2) && (BITS(20, 21) == 0) && (BITS(4, 11) == 0x9)){
+		/* SWP , should check if R15 is operated */
+		addr = core->Reg[RN];
+		end_addr = addr + 4;
+	}else{
 		addr = GetAddr(cpu, instr, &end_addr);
 	}
 	#if 0	

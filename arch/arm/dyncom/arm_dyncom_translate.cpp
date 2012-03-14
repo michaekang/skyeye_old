@@ -1739,6 +1739,10 @@ int DYNCOM_TRANS(swi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	return No_exp;
 }
 int DYNCOM_TRANS(swp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	Value* Addr = R(RN);
+	Value *Val = arch_read_memory(cpu, bb, Addr, 0, 32);
+	arch_write_memory(cpu, bb, Addr, Val, 32);
+	LET(RD, Val);
 	return No_exp;
 }
 int DYNCOM_TRANS(swpb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
@@ -2829,6 +2833,8 @@ int DYNCOM_TAG(swi)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 int DYNCOM_TAG(swp)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	*tag = TAG_MEMORY;
+	*tag |= TAG_CONTINUE;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
