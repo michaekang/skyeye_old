@@ -13,5 +13,29 @@ static inline uint32 GET_INST_SIZE(arm_core_t* core){
 	return core->TFlag? 2 : 4;
 }
 
+/**
+* @brief Read R15 and forced R15 to wold align, used address calculation
+*
+* @param core
+* @param Rn
+*
+* @return 
+*/
+static inline addr_t CHECK_READ_REG15_WA(arm_core_t* core, int Rn){
+	return (Rn == 15)? ((core->Reg[15] & ~0x3) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
+}
+
+/**
+* @brief Read R15, used to data processing with pc
+*
+* @param core
+* @param Rn
+*
+* @return 
+*/
+static inline uint32 CHECK_READ_REG15(arm_core_t* core, int Rn){
+	return (Rn == 15)? ((core->Reg[15] & ~0x1) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
+}
+
 #endif
 

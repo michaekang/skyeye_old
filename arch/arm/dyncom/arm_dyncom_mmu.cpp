@@ -29,6 +29,7 @@
 #include "skyeye_dyncom.h"
 #include <skyeye_log.h>
 #include "skyeye_obj.h"
+#include "arm_dyncom_run.h"
 #include "arm_dyncom_dec.h"
 #include "dyncom/tag.h"
 #include "skyeye_ram.h"
@@ -709,12 +710,6 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	//bus_write(size, virt_addr, value);
 }
 
-#define CHECK_REG15() \
-	do{ \
-		if(RN == 15) \
-			Addr = Addr + 8; \
-	}while(0)
-
 /*	Getting Address from a LoadStore instruction
 *			GetAddr
 *		|	   |		|
@@ -732,13 +727,12 @@ static addr_t WOrUBGetAddrImmOffset(cpu_t *cpu, uint32_t instr)
 	addr_t Addr;
 	if(LSUBIT)
 //		Addr =  ADD(R(RN), CONST(OFFSET12));
-		Addr = core->Reg[RN] + OFFSET12;
+		Addr = CHECK_READ_REG15_WA(core, RN) + OFFSET12;
 	else
 //		Addr =  SUB(R(RN), CONST(OFFSET12));
-		Addr = core->Reg[RN] - OFFSET12;
+		Addr = CHECK_READ_REG15_WA(core, RN) - OFFSET12;
 
 //	printf("R%d : %08x\n", RN, core->Reg[RN]);
-	CHECK_REG15();
 	return Addr;
 }
 
@@ -749,12 +743,11 @@ static addr_t WOrUBGetAddrRegOffset(cpu_t *cpu, uint32_t instr)
 	addr_t Addr;
 	if(LSUBIT)
 //		Addr =  ADD(R(RN), R(RM));
-		Addr = core->Reg[RN] + core->Reg[RM];
+		Addr = CHECK_READ_REG15_WA(core, RN) + core->Reg[RM];
 	else
 //		Addr =  SUB(R(RN), R(RM));
-		Addr = core->Reg[RN] - core->Reg[RM];
+		Addr = CHECK_READ_REG15_WA(core, RN) - core->Reg[RM];
 
-	CHECK_REG15();
 	return Addr;
 }
 
@@ -798,12 +791,11 @@ static addr_t WOrUBGetAddrScaledRegOffset(cpu_t *cpu, uint32_t instr)
 
 	if(LSUBIT)
 //		Addr = ADD(R(RN), index);
-		Addr = core->Reg[RN] + index;
+		Addr = CHECK_READ_REG15_WA(core, RN) + index;
 	else
 //		Addr = SUB(R(RN), index);
-		Addr = core->Reg[RN] - index;
+		Addr = CHECK_READ_REG15_WA(core, RN) - index;
 
-	CHECK_REG15();
 	return Addr;
 }
 
@@ -842,7 +834,7 @@ static addr_t WOrUBGetAddrImmPost(cpu_t *cpu, uint32_t instr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 //	Value *Addr = R(RN);
-	addr_t Addr = core->Reg[RN];
+	addr_t Addr = CHECK_READ_REG15_WA(core, RN);
 //	LET(RN,WOrUBGetAddrImmOffset(cpu, instr, bb));
 //	core->Reg[RN] = WOrUBGetAddrImmOffset(cpu, instr);
 	return Addr;
@@ -853,7 +845,7 @@ static addr_t WOrUBGetAddrRegPost(cpu_t *cpu, uint32_t instr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 //	Value *Addr = R(RN);
-	addr_t Addr = core->Reg[RN];
+	addr_t Addr = CHECK_READ_REG15_WA(core, RN);
 //	LET(RN,WOrUBGetAddrRegOffset(cpu, instr, bb));
 //	core->Reg[RN] = WOrUBGetAddrScaledRegOffset(cpu, instr);
 	return Addr;
@@ -864,7 +856,7 @@ static addr_t WOrUBGetAddrScaledRegPost(cpu_t *cpu, uint32_t instr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 //	Value *Addr = R(RN);
-	addr_t Addr= core->Reg[RN];
+	addr_t Addr= CHECK_READ_REG15_WA(core, RN);
 //	LET(RN,WOrUBGetAddrScaledRegOffset(cpu, instr, bb));
 //	core->Reg[RN] = WOrUBGetAddrScaledRegOffset(cpu, instr);
 	return Addr;
@@ -950,12 +942,11 @@ static addr_t MisGetAddrImmOffset(cpu_t *cpu, uint32_t instr)
 	Offset_8 = IMMH << 4 | IMML;
 	if(LSUBIT)
 //		Addr =  ADD(R(RN), Offset_8);
-		Addr = core->Reg[RN] + Offset_8;
+		Addr = CHECK_READ_REG15_WA(core, RN) + Offset_8;
 	else
 //		Addr =  SUB(R(RN), Offset_8);
-		Addr = core->Reg[RN] - Offset_8;
+		Addr = CHECK_READ_REG15_WA(core, RN) - Offset_8;
 
-	CHECK_REG15();
 	return Addr;
 }
 
@@ -966,12 +957,11 @@ static addr_t MisGetAddrRegOffset(cpu_t *cpu, uint32_t instr)
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	if(LSUBIT)
 	//	Addr =  ADD(R(RN), R(RM));
-		Addr = core->Reg[RN] + core->Reg[RM];
+		Addr = CHECK_READ_REG15_WA(core, RN) + core->Reg[RM];
 	else
 //		Addr =  SUB(R(RN), R(RM));
-		Addr = core->Reg[RN] - core->Reg[RM];
+		Addr = CHECK_READ_REG15_WA(core, RN) - core->Reg[RM];
 
-	CHECK_REG15();
 	return Addr;
 }
 
@@ -1001,7 +991,7 @@ static addr_t MisGetAddrImmPost(cpu_t *cpu, uint32_t instr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 //	Value *Addr = R(RN);
-	addr_t Addr = core->Reg[RN];
+	addr_t Addr = CHECK_READ_REG15_WA(core, RN);
 //	LET(RN, MisGetAddrImmOffset(cpu, instr, bb));
 //	core->Reg[RN] = MisGetAddrImmOffset(cpu, instr);
 	return Addr;
@@ -1012,7 +1002,7 @@ static addr_t MisGetAddrRegPost(cpu_t *cpu, uint32_t instr)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 //	Value *Addr = R(RN);
-	addr_t Addr = core->Reg[RN];
+	addr_t Addr = CHECK_READ_REG15_WA(core, RN);
 //	LET(RN, MisGetAddrRegOffset(cpu, instr, bb));
 //	core->Reg[RN] = MisGetAddrRegOffset(cpu, instr);
 
@@ -1087,14 +1077,13 @@ static addr_t LSMGetAddrIA(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 	}
 
 //	Addr = R(RN);
-	Addr = core->Reg[RN];
+	Addr = CHECK_READ_REG15_WA(core, RN);
 	*end_addr = Addr + count * 4;
 #if 0
 	if(LSWBIT)
 		core->Reg[RN] = core->Reg[RN] + count * 4;
 //		LET(RN, ADD(R(RN), CONST(count * 4)));
 #endif
-	CHECK_REG15();
 	return  Addr;
 }
 
@@ -1110,7 +1099,7 @@ static addr_t LSMGetAddrIB(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 			count ++;
 		i = i >> 1;
 	}
-	Addr = core->Reg[RN] + 4;
+	Addr = CHECK_READ_REG15_WA(core, RN) + 4;
 	*end_addr = Addr + count * 4;
 //	Addr = ADD(R(RN), CONST(4));
 #if 0
@@ -1118,7 +1107,6 @@ static addr_t LSMGetAddrIB(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 //		LET(RN, ADD(R(RN), CONST(count * 4)));
 		core->Reg[RN] = core->Reg[RN] + count * 4;
 #endif
-	CHECK_REG15();
 	return  Addr;
 }
 
@@ -1136,13 +1124,12 @@ static addr_t LSMGetAddrDA(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 	}
 
 //	Addr = ADD(SUB(R(RN), CONST(count * 4)), CONST(4));
-	Addr = core->Reg[RN] - count * 4 + 4;
-	*end_addr = core->Reg[RN] + 4;
+	Addr = CHECK_READ_REG15_WA(core, RN) - count * 4 + 4;
+	*end_addr = CHECK_READ_REG15_WA(core, RN) + 4;
 //	if(LSWBIT)
 //		LET(RN, SUB(R(RN), CONST(count * 4)));
 //		core->Reg[RN] = core->Reg[RN] - count * 4;
 
-	CHECK_REG15();
 	return  Addr;
 }
 
@@ -1159,13 +1146,12 @@ static addr_t LSMGetAddrDB(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 		i = i >> 1;
 	}
 
-	Addr = core->Reg[RN] - count * 4;
-	*end_addr = core->Reg[RN];
+	Addr = CHECK_READ_REG15_WA(core, RN) - count * 4;
+	*end_addr = CHECK_READ_REG15_WA(core, RN);
 //	if(LSWBIT)
 //		LET(RN, SUB(R(RN), CONST(count * 4)));
 //		core->Reg[RN] = Addr;
 
-	CHECK_REG15();
 	return  Addr;
 }
 
@@ -1209,9 +1195,7 @@ static addr_t GetAddr(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 	}else if(BITS(24,27) == 0x8 || BITS(24,27) == 0x9){
 		return LSMGetAddr(cpu,instr, end_addr);
 	}
-
-	printf("Not a Load Store Addr operation %x\n", instr);
-	exit(-1);
+	skyeye_log(Error_log, __FUNCTION__, "Not a Load Store Addr operation %x\n", instr);
 //	return CONST(0);
 	return 0;
 }
