@@ -543,7 +543,7 @@ int arm_tag_branch(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *ne
 int DYNCOM_TRANS(adc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* for 0x0a 0x0b 0x1a 0x1b */
-	Value *op1 = R(RN);
+	Value *op1 = CHECK_RN_PC;
 	Value *op2 = OPERAND;
 	Value *ret = SELECT(LOAD(ptr_C), ADD(ADD(op1, op2), CONST(1)), ADD(op1, op2));
 
@@ -587,7 +587,7 @@ int DYNCOM_TRANS(add)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 int DYNCOM_TRANS(and)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* for 0x00, 0x01, 0x20, 0x21 */
-	Value *op1 = R(RN);
+	Value *op1 = CHECK_RN_PC;
 	Value *op2 = SCO_OPERAND(SBIT ? ptr_C : NULL);
 	Value *ret = AND(op1,op2);
 	LET(RD, ret);
