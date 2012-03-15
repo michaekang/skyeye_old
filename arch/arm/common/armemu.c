@@ -970,9 +970,6 @@ ARMul_Emulate26 (ARMul_State * state)
 						case 6: /* isb */
 							// TODO: do no implemented thes instr
 							goto donext;
-						default:
-							SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, instr = 0x%x, pc = 0x%x, unknown instr!!", __func__, __LINE__, instr, pc);
-							ARMul_UndefInstr (state, instr);
 					}
 				}
 			}
@@ -981,10 +978,16 @@ ARMul_Emulate26 (ARMul_State * state)
 				/* clrex do nothing here temporary */
 				if (instr == 0xf57ff01f) {
 					//printf("clrex \n");
+					SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, instr = 0x%x, pc = 0x%x, clrex instr!!\n",
+							__func__, __LINE__, instr, pc);
+#if 0
 					int i;
 					for(i = 0; i < 128; i++){
 						state->exclusive_tag_array[i] = 0xffffffff;
 					}
+#endif
+					/* shenoubang 2012-3-14 refer the dyncom_interpreter */
+					state->exclusive_tag_array[0] = 0xFFFFFFFF;
 					state->exclusive_access_state = 0;
 					goto donext;
 				}
@@ -4502,12 +4505,12 @@ ARMul_Emulate26 (ARMul_State * state)
 	      donext:
 #endif
 		      state->pc = pc;
-#if 1
+#if 0
 			/* shenoubang */
 			instr_sum++;
 			int i, j;
 			i = j = 0;
-			if (instr_sum > 9480000) {
+			if (instr_sum > 40000000) {
 				// start_kernel : 0xc000895c
 				printf("--------------------------------------------------\n");
 				for (i = 0; i < 16; i++) {
