@@ -908,7 +908,7 @@ Value *Data_ope_AriRReg(cpu_t *cpu,  uint32_t instr, BasicBlock *bb, uint32_t sh
 	}
 	return SELECT(ICMP_EQ(shamt, CONST(0)), R(RM),
 			SELECT(ICMP_ULT(shamt, CONST(32)), ASHR(R(RM), shamt),
-				SELECT(ICMP_EQ(LSHR(R(RM), CONST(31)), CONST(0x80000000)), CONST(0xffffffff), CONST(0))));
+				SELECT(ICMP_EQ(LSHR(R(RM), CONST(31)), CONST(0)), CONST(0), CONST(0xffffffff))));
 }
 
 /* index:6 */
