@@ -118,7 +118,7 @@ static void set_kernel_args(generic_arch_t* arch_instance)
 	size_t ram_size = 0x10000000;
 	generic_address_t loader_start = 0;
 	size_t initrd_size = 0x200000;
-	const char* kernel_cmdline = "qemu=1 console=ttyS0 android.qemud=ttyS1 android.checkjni=1 ndns=3";
+	const char* kernel_cmdline = "qemu=1 console=ttyS0 android.qemud=ttyS1 android.checkjni=1 ndns=3 lpj=1000 noinitrd root=/dev/mtdblock0";
 	p = base + KERNEL_ARGS_ADDR;
 	/* ATAG_CORE */
 	WRITE_WORD(p, 5);
@@ -199,6 +199,10 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	goldfish_timer->master = goldfish_pic->slave;
 	goldfish_timer->signal_target = goldfish_pic->obj;
 
+	nand_dev_controller_t* nand_ctrl;
+	obj = pre_conf_obj("goldfish_nand0","goldfish_nand");
+	nand_ctrl = obj->obj;
+
 	obj = pre_conf_obj("uart_165500","uart_16550");
 	uart_16550_t *uart = (uart_16550_t *)(obj->obj);
 	uart->irq = 0x20;
@@ -213,6 +217,9 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	
 	if(ret != No_exp)
 		printf("Warnning, timer can not be mapped\n");
+	ret = add_map(phys_mem, 0xff004000, 0x1000, 0x0, nand_ctrl->io_memory, 1, 1);
+	if(ret != No_exp)
+		printf("Warnning, nand device can not be mapped\n");
 
 	ret = add_map(phys_mem,0xff0d0000,0x100,0x0,uart->io_memory,1,1);
 	if(ret != No_exp){
