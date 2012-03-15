@@ -1326,6 +1326,15 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 		/* SWP , should check if R15 is operated */
 		addr = core->Reg[RN];
 		end_addr = addr + 4;
+	} else if((BITS(25, 27) == 0x0) && (BITS(4, 7) == 0xf) && (BIT(20) == 0)){
+               /* STRD */
+		addr = GetAddr(cpu, instr, &end_addr);
+		end_addr = addr + 8;
+	} else if((BITS(25, 27) == 0x0) && (BITS(4, 7) == 0xd) && (BIT(20) == 0)){
+		/* LDRD */
+		addr = GetAddr(cpu, instr, &end_addr);
+		end_addr = addr + 8;
+		rw = 1;
 	}else{
 		addr = GetAddr(cpu, instr, &end_addr);
 	}
