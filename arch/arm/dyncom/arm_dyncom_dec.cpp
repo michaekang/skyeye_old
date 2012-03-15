@@ -972,8 +972,12 @@ Value *operand(cpu_t *cpu,  uint32_t instr, BasicBlock *bb, Value *sco)
 		return CONST(immediate);
 	} else if (BITS(4, 11) == 0x6 && BITS(25, 27) == 0) {
 		/*  Rotate right with extend  */
+		Value* carry_out = TRUNC1(LSHR(R(RM), CONST(31)));
 		Value *rm = LSHR(R(RM), CONST(1));
 		Value *tmp = SELECT(ICMP_EQ(LOAD(ptr_C), CONST1(0)), CONST(0), CONST(0x80000000));
+		if(sco != NULL)
+			new StoreInst(carry_out,sco, bb);
+
 		return OR(rm, tmp);
 	} else {
 		/* operand with BIT 4 ~ 6 */
