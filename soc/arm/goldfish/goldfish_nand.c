@@ -377,7 +377,7 @@ static void nand_finalize_instance(conf_object_t *obj){
 		}while(read_size == dev->erase_size);
 		close(initfd);
 	}
-	dev->fd  = initfd;
+	dev->fd  = rwfd;
 
 }
 
