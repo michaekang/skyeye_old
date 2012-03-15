@@ -1529,8 +1529,9 @@ int DYNCOM_TRANS(smlad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 }
 int DYNCOM_TRANS(smlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
-	Value *tmp1 = ZEXT64(R(RS));
-	Value *tmp2 = ZEXT64(R(RM));
+	Value *tmp1 = SEXT64(R(RS));
+	Value *tmp2 = SEXT64(R(RM));
+
 	Value *result = MUL(tmp1, tmp2);
 	Value *result_lo = TRUNC32(AND(result, CONST64(0xffffffff)));
 	Value *result_hi = TRUNC32(LSHR(result, CONST64(32)));
