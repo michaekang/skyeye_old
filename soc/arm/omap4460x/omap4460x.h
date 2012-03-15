@@ -24,6 +24,21 @@
 #ifndef __OMAP4460X_H__
 #define __OMAP4460X_H__  1
 
+/******************************************/
+/***** SYSCTRL_GENERAL_CORE Register  *****/
+/******************************************/
+#define SYSCTRL_CORE_BASE (0x4A002000)
+#define CONTROL_ID_CODE  (SYSCTRL_CORE_BASE + 0x0204)	/* ID_CODE Key Register */
+
+
+/******************************************/
+/********* SCU register     ***************/
+/******************************************/
+#define SCU_BASE (0x48240000)
+#define SCU_CTRL (0x48240000)			/* SCU Control Register */
+#define SCU_CONFIG (SCU_BASE + 0x04)	/* SCU Configuration Register */
+
+
 typedef struct omap4460x_io {
 
 }omap4460x_io_t;

@@ -22,14 +22,23 @@
  */
 #include <stdlib.h>
 
+#include <skyeye.h>
 #include <skyeye_config.h>
 #include <skyeye_mach.h>
 #include <skyeye_arch.h>
-#include <skyeye.h>
+#include <skyeye_types.h>
+#include <skyeye_obj.h>
+#include <skyeye_internal.h>
+#include <skyeye_addr_space.h>
+
+#include "omap4460x.h"
+
+omap4460x_io_t omap4460x_io;
+#define io omap4460x_io
 
 static void omap4460x_io_do_cycle(generic_arch_t* state) {
 	// TODO: function body
-	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_do_cycle not realize\n", __func__, __LINE__);
+	//SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_do_cycle not realize\n", __func__, __LINE__);
 }
 
 static void omap4460x_io_reset(generic_arch_t* arch_instance) {
@@ -40,8 +49,29 @@ static void omap4460x_io_reset(generic_arch_t* arch_instance) {
 
 static uint32 omap4460x_io_read_word(void* arch_instance, uint32 addr) {
 	uint32 data = 0;
+
 	// TODO: read word, how to do?
-	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_read_word not realize\n",  __func__, __LINE__);
+	conf_object_t* conf_obj = get_conf_obj("omap4460_mach_space");
+    addr_space_t* phys_mem = (addr_space_t*)conf_obj->obj;
+    exception_t ret = phys_mem->memory_space->read(conf_obj, addr, &data, 4);
+    /* Read the data successfully */
+    if(ret == No_exp){
+        return data;
+    }
+
+	switch (addr) {
+		case CONTROL_ID_CODE:
+			data = 0x0B94E02F;
+			break;
+		case SCU_CONFIG:
+			/* 2 cpus, SMP adn 32KB cache*/
+			data = 0x0531;
+			break;
+		default:
+			SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_read_word not realize, addr = 0x%x\n",
+			__func__, __LINE__, addr);
+			break;
+	}
 
 	return data;
 }
@@ -101,5 +131,9 @@ void omap4460x_mach_init(void *arch_instance, machine_config_t *this_mach) {
 	this_mach->mach_pending_intr = omap4460x_pending_ext_intr;
 	this_mach->mach_update_intr = omap4460x_update_intr;
 	this_mach->state = (void*)arch_instance;
+
+	add_chp_data(&omap4460x_io, sizeof(omap4460x_io_t), "omap4460io");
+	/* The whole address space */
+	addr_space_t* phys_mem = new_addr_space("omap4460_mach_space");
 	SKYEYE_DBG("In %s, line = %d, omap4460x_mach_init ok!!!!\n", __func__, __LINE__);
 }
