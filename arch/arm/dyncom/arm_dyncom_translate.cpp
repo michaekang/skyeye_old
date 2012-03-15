@@ -556,7 +556,10 @@ int DYNCOM_TRANS(adc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		} else {
 			GETSIGN(ret,ptr_N);
 			EQZERO(ret, ptr_Z);
-			CARRYFROMADD(op1,ret,ptr_C);
+			/* consider the op2 is 0xFFFF_FFFF, */
+			Value* Carry_bit = SELECT(LOAD(ptr_C), ICMP_ULE(ret, op1), ICMP_ULT(ret, op1));
+			new StoreInst(Carry_bit, ptr_C, false, bb);
+
 			OVERFLOWFROMADD(op1,op2,ret,ptr_V);
 		}
 	}
