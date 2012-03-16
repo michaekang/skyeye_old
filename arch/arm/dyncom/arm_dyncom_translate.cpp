@@ -2204,7 +2204,7 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	/* Thumb mode should be enter */
 	*new_pc = NEW_PC_NONE;
 
-	if(instr >> 28 != 0xe)
+	if(instr >> 28 != 0xe && ((instr >> 28) != 0xF))
 		*tag |= TAG_CONDITIONAL;
 // for kernel
 //	exit(-1);
