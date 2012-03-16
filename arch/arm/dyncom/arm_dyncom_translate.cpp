@@ -702,7 +702,7 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		int signed_int = signed_immed_24;
 		signed_int = (signed_int) & 0x800000 ? (0x3F000000 | signed_int) : signed_int;
 		signed_int = signed_int << 2;
-		LET(15, CONST(8 + signed_int + (BIT(24) << 1)));
+		LET(15, ADD(R(15), CONST(8 + signed_int + (BIT(24) << 1))));
 		STORE(TRUNC1(CONST(0x1)), ptr_T);
 		SET_NEW_PAGE;
 	}
