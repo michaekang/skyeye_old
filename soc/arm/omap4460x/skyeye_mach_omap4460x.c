@@ -42,7 +42,48 @@ static void omap4460x_io_do_cycle(generic_arch_t* state) {
 }
 
 static void omap4460x_io_reset(generic_arch_t* arch_instance) {
+	int i = 0;
 	arch_instance->set_regval_by_id(1, 2160);
+	io.ckgen_prm.cm_abe_pll_ref_clksel = 0x01;
+	io.ckgen_prm.cm_sys_clksel =  0x01;
+	io.ckgen_cm1.cm_clkmode_dpll_core = 0x4;
+	io.ckgen_cm1.cm_clksel_dpll_core = 0x0;
+	io.ckgen_cm1.cm_clkmode_dpll_mpu = 0x4;
+	io.ckgen_cm1.cm_clkmode_dpll_iva = 0x4;
+	io.ckgen_cm1.cm_clkmode_dpll_abe = 0x4;
+	io.ckgen_cm1.cm_div_m2_dpll_abe = 0x1;
+	io.ckgen_cm1.cm_div_m3_dpll_abe = 0x1;
+	io.ckgen_cm2.cm_clksel_mpu_m3_iss_root = 0x0;
+	io.ckgen_cm2.cm_clkmode_dpll_per = 0x4;
+	io.ckgen_cm2.cm_clksel_dpll_per = 0x0;
+	io.ckgen_cm2.cm_clkmode_dpll_usb = 0x4;
+	io.ckgen_cm2.cm_scale_fclk = 0x0;
+	io.ckgen_cm2.cm_clksel_usb_60mhz = 0x1;
+	io.ckgen_cm2.cm_div_m2_dpll_usb = 0x1;
+	io.ckgen_cm2.cm_div_m7_dpll_per = 0x4;
+	io.ckgen_cm2.cm_div_m6_dpll_per = 0x4;
+	io.ckgen_cm2.cm_div_m5_dpll_per = 0x4;
+	io.ckgen_cm2.cm_div_m4_dpll_per = 0x4;
+	io.ckgen_cm2.cm_div_m3_dpll_per = 0x1;
+	io.ckgen_cm2.cm_div_m2_dpll_per = 0x1;
+	io.abe_cm1.cm1_abe_dmic_clkctrl = 0x30000;
+	io.abe_cm1.cm1_abe_gptimer5_clkctrl = 0x30000;
+	io.abe_cm1.cm1_abe_gptimer6_clkctrl = 0x30000;
+	io.abe_cm1.cm1_abe_gptimer7_clkctrl = 0x30000;
+	io.abe_cm1.cm1_abe_gptimer8_clkctrl = 0x30000;
+	io.abe_cm1.cm1_abe_mcasp_clkctrl = 0x30000;
+	io.abe_cm1.cm1_abe_mcbsp1_clkctrl = 0x3000;
+	io.abe_cm1.cm1_abe_mcbsp1_clkctrl = 0x3000;
+	io.abe_cm1.cm1_abe_mcbsp1_clkctrl = 0x3000;
+	io.l3int_cm2.cm_l3init_hsmmc1_clkctrl = 0x70000;
+	io.l3int_cm2.cm_l3init_hsmmc2_clkctrl = 0x70000;
+	io.l3int_cm2.cm_l3init_hsusbhost_clkctrl = 0x70000;
+	io.l3int_cm2.cm_l3init_hsusbotg_clkctrl = 0x70000;
+	io.l3int_cm2.cm_l3init_hsi_clkctrl = 0x70000;
+	io.gpmc.gpmc_sysconfig = 0x0;
+	for (i = 0; i < 8; i++) {
+		io.gpmc.gpmc_config7[i] = 0xF00;
+	}
 	// TODO: function body
 	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_reset not realize\n",  __func__, __LINE__);
 }
@@ -59,6 +100,11 @@ static uint32 omap4460x_io_read_word(void* arch_instance, uint32 addr) {
         return data;
     }
 
+	if ((addr >= 0x4A0081C0) && (addr <= 0x4A0081EC)) {
+		data = 0;
+		return data;
+	}
+
 	switch (addr) {
 		case CONTROL_ID_CODE:
 			data = 0x0B94E02F;
@@ -67,9 +113,182 @@ static uint32 omap4460x_io_read_word(void* arch_instance, uint32 addr) {
 			/* 2 cpus, SMP adn 32KB cache*/
 			data = 0x0531;
 			break;
+		case GPMC_REVISION: /* GPMC_REVISION */
+			data = 0; /* FIXME: please modify it */
+			break;
+		case INTER_CONTR_TYPE:
+			/* 128 interrupts 2 cpus */
+			data = 0xec23;
+			break;
+		case GPMC_SYSCONFIG:
+			data = io.gpmc.gpmc_sysconfig;
+			break;
+		case CM_ABE_PLL_REF_CLKSEL:
+			data = io.ckgen_prm.cm_abe_pll_ref_clksel;
+			break;
+		case CM_SYS_CLKSEL:
+			data = io.ckgen_prm.cm_sys_clksel;
+			break;
+		case CM_CLKMODE_DPLL_CORE:
+			data = io.ckgen_cm1.cm_clkmode_dpll_core;
+			break;
+		case CM_CLKSEL_DPLL_CORE:
+			data = io.ckgen_cm1.cm_clksel_dpll_core;
+			break;
+		case CM_CLKMODE_DPLL_MPU:
+			data = io.ckgen_cm1.cm_clkmode_dpll_mpu;
+			break;
+		case CM_CLKMODE_DPLL_IVA:
+			data = io.ckgen_cm1.cm_clkmode_dpll_iva;
+			break;
+		case CM_CLKMODE_DPLL_ABE:
+			data = io.ckgen_cm1.cm_clkmode_dpll_abe;
+			break;
+		case CM_DIV_M2_DPLL_ABE:
+			data = io.ckgen_cm1.cm_div_m2_dpll_abe;
+			break;
+		case CM_DIV_M3_DPLL_ABE:
+			data = io.ckgen_cm1.cm_div_m3_dpll_abe;
+			break;
+		case CM_CLKSEL_MPU_M3_ISS_ROOT:
+			data = io.ckgen_cm2.cm_clksel_mpu_m3_iss_root;
+			break;
+		case CM_CLKMODE_DPLL_PER:
+			data = io.ckgen_cm2.cm_clkmode_dpll_per;
+			break;
+		case CM_CLKSEL_DPLL_PER:
+			data = io.ckgen_cm2.cm_clksel_dpll_per;
+			break;
+		case CM_CLKMODE_DPLL_USB:
+			data = io.ckgen_cm2.cm_clkmode_dpll_usb;
+			break;
+		case CM_SCALE_FCLK:
+			data = io.ckgen_cm2.cm_scale_fclk;
+			break;
+		case CM_CLKSEL_USB_60MHZ:
+			data = io.ckgen_cm2.cm_clksel_usb_60mhz;
+			break;
+		case CM_DIV_M2_DPLL_USB:
+			data = io.ckgen_cm2.cm_div_m2_dpll_usb;
+			break;
+		case CM_DIV_M7_DPLL_PER:
+			data = io.ckgen_cm2.cm_div_m7_dpll_per;
+			break;
+		case CM_DIV_M6_DPLL_PER:
+			data = io.ckgen_cm2.cm_div_m6_dpll_per;
+			break;
+		case CM_DIV_M5_DPLL_PER:
+			data = io.ckgen_cm2.cm_div_m5_dpll_per;
+			break;
+		case CM_DIV_M4_DPLL_PER:
+			data = io.ckgen_cm2.cm_div_m4_dpll_per;
+			break;
+		case CM_DIV_M3_DPLL_PER:
+			data = io.ckgen_cm2.cm_div_m3_dpll_per;
+			break;
+		case CM_DIV_M2_DPLL_PER:
+			data = io.ckgen_cm2.cm_div_m2_dpll_per;
+			break;
+		case CM1_ABE_DMIC_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_dmic_clkctrl;
+			break;
+		case  CM1_ABE_GPTIMER5_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_gptimer5_clkctrl;
+			break;
+		case  CM1_ABE_GPTIMER6_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_gptimer6_clkctrl;
+			break;
+		case  CM1_ABE_GPTIMER7_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_gptimer7_clkctrl;
+			break;
+		case  CM1_ABE_GPTIMER8_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_gptimer8_clkctrl;
+			break;
+		case CM1_ABE_MCASP_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_mcasp_clkctrl;
+			break;
+		case CM1_ABE_MCBSP1_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_mcbsp1_clkctrl;
+			break;
+		case CM1_ABE_MCBSP2_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_mcbsp2_clkctrl;
+			break;
+		case CM1_ABE_MCBSP3_CLKCTRL:
+			data = io.abe_cm1.cm1_abe_mcbsp3_clkctrl;
+			break;
+		case CM_L3INIT_HSMMC1_CLKCTRL:
+			data = io.l3int_cm2.cm_l3init_hsmmc1_clkctrl;
+			break;
+		case CM_L3INIT_HSMMC2_CLKCTRL:
+			data = io.l3int_cm2.cm_l3init_hsmmc2_clkctrl;
+			break;
+		case CM_L3INIT_HSUSBHOST_CLKCTRL:
+			data = io.l3int_cm2.cm_l3init_hsusbhost_clkctrl;
+			break;
+		case CM_L3INIT_HSUSBOTG_CLKCTRL:
+			data = io.l3int_cm2.cm_l3init_hsusbotg_clkctrl;
+			break;
+		case CM_L3INIT_HSI_CLKCTRL:
+			data = io.l3int_cm2.cm_l3init_hsi_clkctrl;
+			break;
+		case 0x4a009428:
+		case 0x4a009430:
+		case 0x4a009438:
+		case 0x4a009440:
+		case 0x4a009448:
+		case 0x4a009450:
+		case 0x4a0094e0:
+		case 0x4a307840:
+			data = 0x30000;
+			break;
+		case 0x4a008b38:
+		case 0x4a008b30:
+			data = 0x30001;
+			break;
+		case 0x4a306100:
+		case 0x4a306104:
+		case 0x4a306108:
+		case 0x4a004108:
+		case 0x4a0041b8:
+		case 0x4a00419c:
+		case 0x4a0041dc:
+		case 0x4a004100:
+		case 0x4a307858:
+			data = 0;
+			break;
+		case 0x4a009220:
+		case 0x4a004528:
+		case 0x4a009028:
+			data = 0x70000;
+			break;
+		case 0x4a307a20:
+			data = 0x9000000;
+			break;
+		case 0x4a004144:
+		case 0x4a004138:
+		case 0x4a00413c:
+		case 0x4a0041bc:
+			data = 0x4;
+			break;
+		case 0x4a004170:
+		case 0x4a004130:
+		case 0x4a004134:
+			data = 0x1;
+			break;
+		case 0x4a004140:
+			data = 0x8;
+			break;
 		default:
-			SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_read_word not realize, addr = 0x%x\n",
-			__func__, __LINE__, addr);
+#if 1
+			if (((addr - GPMC_CONFIG7_BASE) >= 0) &&
+				((addr - GPMC_CONFIG7_BASE) <= 0x150)) {
+				data = io.gpmc.gpmc_config7[((addr - GPMC_CONFIG7_BASE) / 0x30)];
+			} // CS address
+			else {
+				SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_read_word not realize, addr = 0x%x\n",
+					__func__, __LINE__, addr);
+			}
+#endif
 			break;
 	}
 
@@ -86,7 +305,7 @@ static uint32 omap4460x_io_read_halfword(void* arch_instance, uint32 addr) {
 
 static void omap4460x_io_write_word(generic_arch_t* state, uint32 addr, uint32 data) {
 	// TODO: write word how to do?
-	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_write_word not realize\n", __func__, __LINE__);
+	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, addr = 0x%x, write_word function not realize\n", __func__, __LINE__, addr);
 }
 
 static void omap4460x_io_write_byte(generic_arch_t* state, uint32 addr, uint32 data) {
