@@ -545,14 +545,15 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 	/* ldrex or ldrexb */
 	uint32 instr;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	bus_read(32, core->phys_pc, &instr);
+	if(!((core->Cpsr & (1 << THUMB_BIT)) | core->TFlag)){
+		bus_read(32, core->phys_pc, &instr);
 
-	if(((instr & 0x0FF000F0) == 0x01900090) ||
-		((instr & 0x0FF000F0) == 0x01d00090)){
-		add_exclusive_addr(core, phys_addr | (virt_addr & 3));
-		core->exclusive_access_state = 1;
+		if(((instr & 0x0FF000F0) == 0x01900090) ||
+			((instr & 0x0FF000F0) == 0x01d00090)){
+			add_exclusive_addr(core, phys_addr | (virt_addr & 3));
+			core->exclusive_access_state = 1;
+		}
 	}
-
 #if 0
 	if (cpu->icounter > 170960)
 	{
@@ -631,20 +632,22 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	/* strex, strexb*/
 	uint32 instr;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	bus_read(32, core->phys_pc, &instr);
-	if(((instr & 0x0FF000F0) == 0x01800090) ||
-		((instr & 0x0FF000F0) == 0x01c00090)){
-		/* failed , the address is monitord now. */
-		int dest_reg = (instr & 0xF000) >> 12;
-		if(((exclusive_detect(core, phys_addr | (virt_addr & 3))) == 0) && (core->exclusive_access_state == 1)){
-			remove_exclusive(core, phys_addr | (virt_addr & 3));
-			core->Reg[dest_reg] = 0;
-			core->exclusive_access_state = 0;
-		}
-		else{
-			core->Reg[dest_reg] = 1;
-			//printf("In %s, try to strex a monitored address 0x%x\n", __FUNCTION__, pa);
-			return;
+	if(!((core->Cpsr & (1 << THUMB_BIT)) || core->TFlag)){
+		bus_read(32, core->phys_pc, &instr);
+		if(((instr & 0x0FF000F0) == 0x01800090) ||
+			((instr & 0x0FF000F0) == 0x01c00090)){
+			/* failed , the address is monitord now. */
+			int dest_reg = (instr & 0xF000) >> 12;
+			if(((exclusive_detect(core, phys_addr | (virt_addr & 3))) == 0) && (core->exclusive_access_state == 1)){
+				remove_exclusive(core, phys_addr | (virt_addr & 3));
+				core->Reg[dest_reg] = 0;
+				core->exclusive_access_state = 0;
+			}
+			else{
+				core->Reg[dest_reg] = 1;
+				//printf("In %s, try to strex a monitored address 0x%x\n", __FUNCTION__, pa);
+				return;
+			}
 		}
 	}
 #if DIFF_WRITE
