@@ -18,6 +18,7 @@
 #include "armdefs.h"
 #include "armemu.h"
 #include "ansidecl.h"
+#include "skyeye.h"
 unsigned xscale_cp15_cp_access_allowed (ARMul_State * state, unsigned reg,
                                         unsigned cpnum);
 //extern int skyeye_instr_debug;
@@ -842,6 +843,8 @@ ARMul_CDP (ARMul_State * state, ARMword instr)
 void
 ARMul_UndefInstr (ARMul_State * state, ARMword instr ATTRIBUTE_UNUSED)
 {
+	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, undef instr: 0x%x\n",
+			__func__, __LINE__, instr);
 	ARMul_Abort (state, ARMul_UndefinedInstrV);
 }
 

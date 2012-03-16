@@ -1302,6 +1302,49 @@ ARMul_Emulate26 (ARMul_State * state)
 				//if (ARMul_HandleIwmmxt (state, instr))
 				//        goto donext;
 			}
+
+			/* shenoubang sbfx and ubfx instr 2012-3-16 */
+			if (state->is_v6) {
+				unsigned int m, lsb, width, Rd, Rn, data;
+				Rd = Rn = lsb = width = data = m = 0;
+
+				if ((((int) BITS (21, 27)) == 0x3f) && (((int) BITS (4, 6)) == 0x5)) {
+					m = (unsigned)BITS(7, 11);
+					width = (unsigned)BITS(16, 20);
+					Rd = (unsigned)BITS(12, 15);
+					Rn = (unsigned)BITS(0, 3);
+					if ((Rd == 15) || (Rn == 15)) {
+						ARMul_UndefInstr (state, instr);
+					}
+					else if ((m + width) < 32) {
+						data = state->Reg[Rn];
+						state->Reg[Rd] ^= state->Reg[Rd];
+						state->Reg[Rd] =
+							((ARMword)(data << (31 -(m + width))) >> ((31 - (m + width)) + (m)));
+						//SKYEYE_LOG_IN_CLR(RED, "UBFX: In %s, line = %d, Reg_src[%d] = 0x%x, Reg_d[%d] = 0x%x, m = %d, width = %d, Rd = %d, Rn = %d\n",
+						//		__FUNCTION__, __LINE__, Rn, data, Rd, state->Reg[Rd], m, width + 1, Rd, Rn);
+						goto donext;
+					}
+				} // ubfx instr
+				if ((((int) BITS (21, 27)) == 0x3d) && (((int) BITS (4, 6)) == 0x5)) {
+					int tmp = 0;
+					Rd = BITS(12, 15); Rn = BITS(0, 3);
+					lsb = BITS(7, 11); width = BITS(16, 20);
+					if ((Rd == 15) || (Rn == 15)) {
+						ARMul_UndefInstr (state, instr);
+					}
+					else if ((lsb + width) < 32) {
+						state->Reg[Rd] ^= state->Reg[Rd];
+						data = state->Reg[Rn];
+						tmp = (data << (32 - (lsb + width + 1)));
+						state->Reg[Rd] = (tmp >> (32 - (lsb + width + 1)));
+						//SKYEYE_LOG_IN_CLR(RED, "sbfx: In %s, line = %d, pc = 0x%x, instr = 0x%x,Rd = 0x%x, \
+								Rn = 0x%x, lsb = %d, width = %d, Rs[%d] = 0x%x, Rd[%d] = 0x%x\n",
+						//		__func__, __LINE__, pc, instr, Rd, Rn, lsb, width + 1, Rn, state->Reg[Rn], Rd, state->Reg[Rd]);
+						goto donext;
+					}
+				} // sbfx instr
+			}
 			
 			switch ((int) BITS (20, 27)) {
 				/* Data Processing Register RHS Instructions.  */
@@ -2817,8 +2860,8 @@ ARMul_Emulate26 (ARMul_State * state)
 					dest = BITS(16, 19);
 					dest = ((dest<<12) | BITS(0, 11));
 					WRITEDEST(dest);
-					SKYEYE_DBG("In %s, line = %d, pc = 0x%x, instr = 0x%x, R[0:11]: 0x%x, R[16:19]: 0x%x, R[%d]:0x%x\n",
-							__func__, __LINE__, pc, instr, BITS(0, 11), BITS(16, 19), DESTReg, state->Reg[DESTReg]);
+					//SKYEYE_DBG("In %s, line = %d, pc = 0x%x, instr = 0x%x, R[0:11]: 0x%x, R[16:19]: 0x%x, R[%d]:0x%x\n",
+					//		__func__, __LINE__, pc, instr, BITS(0, 11), BITS(16, 19), DESTReg, state->Reg[DESTReg]);
 					break;
 				}
 				else {
@@ -3775,31 +3818,7 @@ ARMul_Emulate26 (ARMul_State * state)
 				break;
 
 			case 0x7e:	/* Store Byte, WriteBack, Pre Inc, Reg.  */
-				/* shenoubang 2010-3-12 instr of UBFX*/
-				if (state->is_v6) {
-					unsigned int m, width, Rd, Rn, data;
-					m = width = data = 0;
-					if (((int) BITS (4,6)) == 0x5) {
-						m = (unsigned)BITS(7, 11);
-						width = (unsigned)BITS(16, 20) + 1;
-						Rd = (unsigned)BITS(12, 15);
-						Rn = (unsigned)BITS(0, 3);
-						if ((m + width) <= 31) {
-							data = state->Reg[Rn];
-							state->Reg[Rd] ^= state->Reg[Rd];
-							state->Reg[Rd] =
-								((ARMword)(data << (31 -(m + width - 1))) >> ((31 - (m + width - 1)) + (m)));
-							//SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, Reg_src[%d] = 0x%x, Reg_d[%d] = 0x%x, m = %d, width = %d, Rd = %d, Rn = %d\n",
-							//		__FUNCTION__, __LINE__, Rn, data, Rd, state->Reg[Rd], m, width, Rd, Rn);
-							break;
-						}
-						else {
-							ARMul_UndefInstr (state, instr);
-							break;
-						}
-					}
-				} // UBFX instr
-				else if (BIT (4)) {
+				if (BIT (4)) {
 					ARMul_UndefInstr (state, instr);
 					break;
 				}
@@ -4510,7 +4529,9 @@ ARMul_Emulate26 (ARMul_State * state)
 			instr_sum++;
 			int i, j;
 			i = j = 0;
-			if (instr_sum > 40000000) {
+			if (instr_sum >= 7388648) {
+			//if (pc == 0xc0008ab4) {
+			//	printf("instr_sum: %d\n", instr_sum);
 				// start_kernel : 0xc000895c
 				printf("--------------------------------------------------\n");
 				for (i = 0; i < 16; i++) {
