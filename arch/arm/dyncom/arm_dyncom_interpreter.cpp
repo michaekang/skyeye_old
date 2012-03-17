@@ -1,3 +1,28 @@
+/* Copyright (C) 
+* 2012 - Michael.Kang blackfin.kang@gmail.com
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+* 
+*/
+/**
+* @file arm_dyncom_interpreter.cpp
+* @brief The fast interpreter for arm
+* @author Michael.Kang blackfin.kang@gmail.com
+* @version 7849
+* @date 2012-03-15
+*/
+
 #include <algorithm>
 #include "arm_dyncom_mmu.h"
 #include <map>
@@ -85,29 +110,6 @@ static void remove_exclusive(ARMul_State* state, ARMword addr){
 	state->exclusive_tag_array[0] = 0xFFFFFFFF;
 }
 
-/**
-* @brief Read R15 and forced R15 to wold align
-*
-* @param core
-* @param Rn
-*
-* @return 
-*/
-static inline uint32 CHECK_READ_REG15_WA(arm_core_t* core, int Rn){
-	return (Rn == 15)? ((core->Reg[15] & ~0x3) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
-}
-
-/**
-* @brief Read R15
-*
-* @param core
-* @param Rn
-*
-* @return 
-*/
-static inline uint32 CHECK_READ_REG15(arm_core_t* core, int Rn){
-	return (Rn == 15)? ((core->Reg[15] & ~0x1) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
-}
 
 unsigned int DPO(Immediate)(arm_processor *cpu, unsigned int sht_oper)
 {
