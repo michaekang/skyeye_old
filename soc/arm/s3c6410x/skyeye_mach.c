@@ -314,7 +314,7 @@ static exception_t mach_read(conf_object_t *opaque, generic_address_t addr, void
 		else
 		if (addr - VIC1VECPRIORITY0 >= 0 && addr - VIC1VECPRIORITY0 <= 0x7c &&  (addr - VIC1VECPRIORITY0) & 0x3 == 0)
 			data = io->vic1vecpriority[(addr - VIC1VECTADDR0)>>2];
- 		fprintf(stderr, "ERROR: %s(0x%08x) = 0x%08x\n", __FUNCTION__, addr ,data); 
+ 		//fprintf(stderr, "ERROR: %s(0x%08x) = 0x%08x\n", __FUNCTION__, addr ,data); 
 		break;
 	}
 	*(uint32_t*)buf = data;
@@ -455,6 +455,7 @@ static exception_t mach_write(conf_object_t *opaque, generic_address_t addr, uin
 	if(ret == No_exp){
 		return No_exp;
 	}
+	return No_exp;
 
 	s3c6410x_io_t* io = mach->io;
 	if ((addr >= UART_CTL_BASE0)
@@ -567,7 +568,7 @@ static exception_t mach_write(conf_object_t *opaque, generic_address_t addr, uin
 			io->vic1vecpriority[(addr - VIC1VECTADDR0)>>2] = data;
 
 /* 		SKYEYE_DBG ("io_write_word(0x%08x) = 0x%08x\n", addr, data); */
- 		fprintf(stderr, "ERROR: %s(0x%08x) = 0x%08x\n", __FUNCTION__, addr ,data); 
+ 		//fprintf(stderr, "ERROR: %s(0x%08x) = 0x%08x\n", __FUNCTION__, addr ,data); 
 		break;
 	}
 	return ret;
@@ -661,7 +662,7 @@ static conf_object_t* new_s3c6410_mach(char* obj_name){
 		memory_space_intf* lcd_io_memory = (memory_space_intf*)SKY_get_interface(lcd, MEMORY_SPACE_INTF_NAME);
 		DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, lcd_io_memory);
 		exception_t ret;
-        	ret = add_map(mach->space, 0x77100000, 0x100000, 0x0, lcd_io_memory, 1, 1);
+		//ret = add_map(mach->space, 0x77100000, 0x100000, 0x0, lcd_io_memory, 1, 1);
 #ifdef GTK_LCD
 		/* set the lcd_ctrl_0 attribute for lcd */
 		conf_object_t* gtk_painter = pre_conf_obj("gtk_lcd_1", "gtk_lcd");
