@@ -789,7 +789,7 @@ int DYNCOM_TRANS(cps)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		aif = ~aif;
 
 		Value *cpsr_old = R(CPSR_REG);
-		Value *user_mode = ICMP_EQ(AND(cpsr_old, CONST(0xffffffe0)), CONST(0));
+		Value *user_mode = ICMP_EQ(AND(cpsr_old, CONST(~0xf)), CONST(0));
 		LET(CPSR_REG, SELECT(user_mode,
 				      cpsr_old,
 				      OR(AND(cpsr_old, CONST(aif)), CONST(cpsr_val))
