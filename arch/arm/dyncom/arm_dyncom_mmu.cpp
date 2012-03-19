@@ -726,7 +726,8 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 /* Getting Word or Unsigned Byte Address Immediate offset operand.in arm doc */
 static addr_t WOrUBGetAddrImmOffset(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr;
 	if(LSUBIT)
 //		Addr =  ADD(R(RN), CONST(OFFSET12));
@@ -742,7 +743,8 @@ static addr_t WOrUBGetAddrImmOffset(cpu_t *cpu, uint32_t instr)
 /* Getting Word or Unsigned Byte Address register offset operand.in arm doc */
 static addr_t WOrUBGetAddrRegOffset(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr;
 	if(LSUBIT)
 //		Addr =  ADD(R(RN), R(RM));
@@ -757,7 +759,8 @@ static addr_t WOrUBGetAddrRegOffset(cpu_t *cpu, uint32_t instr)
 /* Getting Word or Unsigned Byte Address scaled register offset operand.in arm doc */
 static addr_t WOrUBGetAddrScaledRegOffset(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr;
 	int shift = SHIFT;
 	uint32_t index;
@@ -805,7 +808,8 @@ static addr_t WOrUBGetAddrScaledRegOffset(cpu_t *cpu, uint32_t instr)
 /* Getting Word or Unsigned Byte Address Immediate Preload operand.in arm doc */
 static addr_t WOrUBGetAddrImmPre(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr = WOrUBGetAddrImmOffset(cpu, instr);
 //	LET(RN, Addr);
 //	core->Reg[RN] = Addr;
@@ -815,7 +819,8 @@ static addr_t WOrUBGetAddrImmPre(cpu_t *cpu, uint32_t instr)
 /* Getting Word or Unsigned Byte Address Register Preload operand.in arm doc */
 static addr_t WOrUBGetAddrRegPre(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr = WOrUBGetAddrRegOffset(cpu, instr);
 //	LET(RN, Addr);
 //	core->Reg[RN] = Addr;
@@ -825,7 +830,8 @@ static addr_t WOrUBGetAddrRegPre(cpu_t *cpu, uint32_t instr)
 /* Getting Word or Unsigned Byte Address scaled Register Pre-indexed operand.in arm doc */
 static addr_t WOrUBGetAddrScaledRegPre(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr = WOrUBGetAddrScaledRegOffset(cpu, instr);
 //	LET(RN, Addr);
 //	core->Reg[RN] = Addr;
@@ -835,7 +841,8 @@ static addr_t WOrUBGetAddrScaledRegPre(cpu_t *cpu, uint32_t instr)
 /* Getting Word or Unsigned Byte Immediate Post-indexed operand.in arm doc */
 static addr_t WOrUBGetAddrImmPost(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 //	Value *Addr = R(RN);
 	addr_t Addr = CHECK_READ_REG15_WA(core, RN);
 //	LET(RN,WOrUBGetAddrImmOffset(cpu, instr, bb));
@@ -846,7 +853,8 @@ static addr_t WOrUBGetAddrImmPost(cpu_t *cpu, uint32_t instr)
 /* Getting Word or Unsigned Byte Address register Post-indexed operand.in arm doc */
 static addr_t WOrUBGetAddrRegPost(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 //	Value *Addr = R(RN);
 	addr_t Addr = CHECK_READ_REG15_WA(core, RN);
 //	LET(RN,WOrUBGetAddrRegOffset(cpu, instr, bb));
@@ -857,7 +865,8 @@ static addr_t WOrUBGetAddrRegPost(cpu_t *cpu, uint32_t instr)
 /* Getting Word or Unsigned Byte Address scaled register Post-indexed operand.in arm doc */
 static addr_t WOrUBGetAddrScaledRegPost(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 //	Value *Addr = R(RN);
 	addr_t Addr= CHECK_READ_REG15_WA(core, RN);
 //	LET(RN,WOrUBGetAddrScaledRegOffset(cpu, instr, bb));
@@ -938,7 +947,8 @@ static addr_t WOrUBGetAddr(cpu_t *cpu, uint32_t instr)
 /* Getting Miscellaneous Address Immidiate offset operand.in arm doc */
 static addr_t MisGetAddrImmOffset(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr;
 	addr_t Offset_8;
 
@@ -957,7 +967,8 @@ static addr_t MisGetAddrImmOffset(cpu_t *cpu, uint32_t instr)
 static addr_t MisGetAddrRegOffset(cpu_t *cpu, uint32_t instr)
 {
 	addr_t Addr;
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	if(LSUBIT)
 	//	Addr =  ADD(R(RN), R(RM));
 		Addr = CHECK_READ_REG15_WA(core, RN) + core->Reg[RM];
@@ -971,7 +982,8 @@ static addr_t MisGetAddrRegOffset(cpu_t *cpu, uint32_t instr)
 /* Getting Miscellaneous Address immdiate pre-indexed operand.in arm doc */
 static addr_t MisGetAddrImmPre(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr = MisGetAddrImmOffset(cpu, instr);
 	//LET(RN, Addr);
 //	core->Reg[RN] = Addr;
@@ -981,7 +993,8 @@ static addr_t MisGetAddrImmPre(cpu_t *cpu, uint32_t instr)
 /* Getting Miscellaneous Address registers pre-indexed operand.in arm doc */
 static addr_t MisGetAddrRegPre(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t Addr = MisGetAddrRegOffset(cpu, instr);
 //	LET(RN, Addr);
 //	core->Reg[RN] = Addr;
@@ -992,7 +1005,8 @@ static addr_t MisGetAddrRegPre(cpu_t *cpu, uint32_t instr)
 /* Getting Miscellaneous Address immdiate post-indexed operand.in arm doc */
 static addr_t MisGetAddrImmPost(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 //	Value *Addr = R(RN);
 	addr_t Addr = CHECK_READ_REG15_WA(core, RN);
 //	LET(RN, MisGetAddrImmOffset(cpu, instr, bb));
@@ -1003,7 +1017,8 @@ static addr_t MisGetAddrImmPost(cpu_t *cpu, uint32_t instr)
 /* Getting Miscellaneous Address register post-indexed operand.in arm doc */
 static addr_t MisGetAddrRegPost(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 //	Value *Addr = R(RN);
 	addr_t Addr = CHECK_READ_REG15_WA(core, RN);
 //	LET(RN, MisGetAddrRegOffset(cpu, instr, bb));
@@ -1069,7 +1084,8 @@ static addr_t MisGetAddr(cpu_t *cpu, uint32_t instr)
 /* Getting Load Store Multiple Address and Increment After operand */
 static addr_t LSMGetAddrIA(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	int i =  BITS(0,15);
 	int count = 0;
 	addr_t Addr;
@@ -1093,7 +1109,8 @@ static addr_t LSMGetAddrIA(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 /* Getting Load Store Multiple Address and Increment Before operand */
 static addr_t LSMGetAddrIB(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	int i =  BITS(0,15);
 	int count = 0;
 	addr_t Addr;
@@ -1116,7 +1133,8 @@ static addr_t LSMGetAddrIB(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 /* Getting Load Store Multiple Address and Decrement After operand. */
 static addr_t LSMGetAddrDA(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	int i =  BITS(0,15);
 	int count = 0;
 	addr_t Addr;
@@ -1139,7 +1157,8 @@ static addr_t LSMGetAddrDA(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 /* Getting Load Store Multiple Address and Decrement Before operand. */
 static addr_t LSMGetAddrDB(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	int i =  BITS(0,15);
 	int count = 0;
 	addr_t Addr;
@@ -1206,7 +1225,8 @@ static addr_t GetAddr(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 /* Check address load/store instruction access.*/
 static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t addr;
 	fault_t fault = NO_FAULT;
 
@@ -1368,7 +1388,8 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 }
 
 static int arch_arm_effective_to_physical(cpu_t *cpu, uint32_t addr, uint32_t *result){
-        arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+        //arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	fault_t fault = NO_FAULT;
 	addr_t phys_addr;
 	if(is_user_mode(cpu)) {
