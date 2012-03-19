@@ -231,9 +231,6 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 		}
 		/* no tlb, only check permission */
 		if (!dyncom_check_perms(core, ap, rw)) {
-			if (virt_addr == 0xbe8f9f10) {
-				printf("ap is %d, sop is %d\n", ap, sop);
-			}
 			if (sop == 0) {
 				return SECTION_PERMISSION_FAULT;
 			} else {
@@ -353,80 +350,6 @@ fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, 
 		}
 	}
 
-#if 0
-	if (cpu->icounter == 4149571 || cpu->icounter == 5705376 || cpu->icounter == 5781965 || cpu->icounter == 7598893
-	    || cpu->icounter == 7844811 || cpu->icounter == 8012434 || cpu->icounter == 12160365 || cpu->icounter == 19370686 || cpu->icounter == 19511535
-	    || cpu->icounter == 56078607 || cpu->icounter == 56572308 || cpu->icounter == 59931102 || cpu->icounter == 61497190 || cpu->icounter == 61766672
-	    || cpu->icounter == 191073541 || cpu->icounter == 191384481 || cpu->icounter == 196265895 || cpu->icounter == 202478273 || cpu->icounter == 202878010
-	    || cpu->icounter == 203029447 || cpu->icounter == 206010172 || cpu->icounter == 206140964 || cpu->icounter == 236624036 || cpu->icounter == 236755045
-	    || cpu->icounter == 236883917 || cpu->icounter == 237014284 || cpu->icounter == 237143288 || cpu->icounter == 237274828 || cpu->icounter == 237408580
-	    || cpu->icounter == 248090679 || cpu->icounter == 248081379) {
-		if (phys_addr == 0x71200000) {
-			value = 0;
-		}
-	}
-	if (cpu->icounter == 20406671) {
-		if (phys_addr == 0x71200008) {
-			value = 0;
-		}
-	}
-	if ((cpu->icounter == 20363304 && phys_addr == 0x7f006040) ||
-	    (cpu->icounter == 20363311 && phys_addr == 0x7f006040)) {
-		value = 0x2b3;
-	}
-	if ((cpu->icounter == 20384989 && phys_addr == 0x7f006040)) {
-		value = 0x1de;
-	}
-	if ((cpu->icounter == 20406670 && phys_addr == 0x7f006040)) {
-		value = 0x10a;
-	}
-	if (cpu->icounter == 5705371 || cpu->icounter == 5832564) {
-		if (phys_addr == 0x71200000) {
-			value = 0x10000000;
-		}
-	}
-#endif
-#if 0
-	if ((cpu->icounter == 20363310) ||
-	    (cpu->icounter == 20363317)) {
-		value = 0x2b3;
-	}
-#endif
-#if 0
-//	if (core->Reg[15] == 0xc000be6c) {
-//	if (virt_addr == 0xffff0200) {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
-	if (core->icounter >= (202871000 - 1)) {
-		printf("[MEMORY READ]\n");
-		printf("phys_addr is %x\n", phys_addr);
-		printf("value     is %x\n", value);
-		printf("size      is %d\n", size);
-		printf("pc        is %x\n", core->Reg[15]);
-		exit(-1);
-	}
-#endif
-	#if 0
-	if (core->Reg[15] == 0xc01225d8 && ((core->icounter == 179227) || (core->icounter == 179589))) {
-		value = 0xffff;
-	}
-	#endif
-	#if 0
-	if (core->Reg[15] == 0x500083b0 && core->icounter == 44) {
-		value = 0;
-	}
-	#endif
-	#if 0
-//	if (core->Reg[15] == 0xc01225d8) {
-	if (core->Reg[15] == 0x500083b0) {
-		printf("------------------------------------\n");
-		printf("icounter   is %lld\n", core->icounter);
-		printf("phys_addr  is %x\n", phys_addr);
-		printf("value      is %x\n", value);
-		printf("size       is %d\n", size);
-		printf("pc         is %x\n", core->Reg[15]);
-//		exit(-1);
-	}
-	#endif
 	return fault;
 }
 
@@ -555,53 +478,7 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 			core->exclusive_access_state = 1;
 		}
 	}
-#if 0
-	if (cpu->icounter > 170960)
-	{
-		printf("pc is %x virt_addr is %x bus read at %x value is %x size is %d\n", ((arm_core_t *)cpu->cpu_data)->Reg[15], virt_addr, phys_addr, value, size);
-	}
-#endif
-#if SYNC_WITH_INTERPRET
-	if (cpu->icounter == 4149571 || cpu->icounter == 5683966 || cpu->icounter == 5781965 || cpu->icounter == 7598893
-	    || cpu->icounter == 7844811 || cpu->icounter == 8012434 || cpu->icounter == 12160365 || cpu->icounter == 19370686 || cpu->icounter == 19511535
-	    || cpu->icounter == 56078607 || cpu->icounter == 56572308 || cpu->icounter == 59931102 || cpu->icounter == 61497190 || cpu->icounter == 61766672
-	    || cpu->icounter == 191073541 || cpu->icounter == 191384481 || cpu->icounter == 196265895 || cpu->icounter == 202478273 || cpu->icounter == 202878010
-	    || cpu->icounter == 203029447 || cpu->icounter == 206010172 || cpu->icounter == 206140964 || cpu->icounter == 236624036 || cpu->icounter == 236755045
-	    || cpu->icounter == 236883917 || cpu->icounter == 237014284 || cpu->icounter == 237143288 || cpu->icounter == 237274828 || cpu->icounter == 237408580
-	    || cpu->icounter == 248090679 || cpu->icounter == 248081379) {
-		if (phys_addr == 0x71200000) {
-			return 0;
-		}
-	}
-	if (cpu->icounter == 20406671) {
-		if (phys_addr == 0x71200008) {
-			return 0;
-		}
-	}
-	if ((cpu->icounter == 20363304 && phys_addr == 0x7f006040) ||
-	    (cpu->icounter == 20363311 && phys_addr == 0x7f006040)) {
-		return 0x2b3;
-	}
-	if ((cpu->icounter == 20384989 && phys_addr == 0x7f006040)) {
-		return 0x1de;
-	}
-	if ((cpu->icounter == 20406670 && phys_addr == 0x7f006040)) {
-		return 0x10a;
-	}
-	if (cpu->icounter == 5705371 || cpu->icounter == 5832564) {
-		if (phys_addr == 0x71200000) {
-			return 0x10000000;
-		}
-	}
-#endif
-	uint32_t dummy;
 
-#if 0
-	if (cpu->icounter > 248306790) {
-		printf("pc is %x virt_addr is %x bus read at %x value is %x size is %d\n", ((arm_core_t *)cpu->cpu_data)->Reg[15], virt_addr, phys_addr, value, size);
-	}
-#endif
-	//bus_read(size, virt_addr, &value);
 	return value;
 }
 #define LOG_IN_CLR	skyeye_printf_in_color
@@ -1343,9 +1220,6 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 		}
 		else
 			end_addr = regs * 8 + addr;
-		if(core->Reg[15] == 0x406c44f8){
-			//printf("In %s, VLDM pc is %x addr is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);
-		}
 	} else if((BITS(23, 27) == 0x2) && (BITS(20, 21) == 0) && (BITS(4, 11) == 0x9)){
 		/* SWP , should check if R15 is operated */
 		addr = core->Reg[RN];

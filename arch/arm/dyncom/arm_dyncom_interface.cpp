@@ -153,10 +153,10 @@ arm_dyncom_abort(arm_core_t * state, ARMword vector)
 		if (state->vector_remap_flag)
 			vector += state->vector_remap_addr; /* support some remap function in LPC processor */
 		//ARMul_SetR15 (state, vector);
-        state->Reg[15] = vector;
+		state->Reg[15] = vector;
 	}
 	else
-            ;
+		printf("In %s, something wrong\n", __FUNCTION__);
 }
 #endif
 static void per_cpu_step(conf_object_t * running_core){
@@ -199,14 +199,6 @@ static void per_cpu_step(conf_object_t * running_core){
 		core->syscallSig = 0;
 		arm_dyncom_abort(core, ARMul_SWIV);
 	}
-	#if SYNC_WITH_INTERPRET
-	if (cpu_dyncom->icounter > 1951000 && is_int_in_interpret(cpu_dyncom))
-	{
-		while(core->NirqSig) {
-			mach->mach_io_do_cycle(cpu);
-		}
-	}
-	#endif
 	if (core->abortSig) {
 		//printf("In %s, abortSig occured at pc %x with signal %x\n", __FUNCTION__, core->Reg[15], core->Aborted);
 		arm_dyncom_abort(core, core->Aborted);
@@ -221,11 +213,6 @@ static void per_cpu_step(conf_object_t * running_core){
 				return;
 	#endif
 	
-	#if SYNC_WITH_INTERPRET
-			if (cpu_dyncom->icounter > 1951000 && !is_int_in_interpret(cpu_dyncom)) {
-				return;
-			}
-	#endif
 			arm_dyncom_abort(core, ARMul_IRQV);
 		}
 	}
@@ -284,9 +271,9 @@ static bool arm_cpu_init()
         //exec->priv_data = get_conf_obj_by_cast(core, "ARMul_State");
 		//exec->priv_data = (conf_object_t*)core;
 		//exec->run =  (void (*)(conf_object_t*))per_cpu_step;
-        exec->run =  per_cpu_step;
+        	exec->run =  per_cpu_step;
 		//exec->stop = (void (*)(conf_object_t*))per_cpu_stop;
-        exec->stop = per_cpu_stop;
+		exec->stop = per_cpu_stop;
 		add_to_default_cell(exec);
 	}
 
@@ -394,7 +381,7 @@ static exception_t arm_signal(interrupt_signal_t *signal){
 	arm_signal_t *arm_signal = &signal->arm_signal;
 	if (arm_signal->irq != Prev_level) {
 		state->NirqSig = arm_signal->irq;
-    }
+	}
 	if (arm_signal->firq != Prev_level)
 		state->NfiqSig = arm_signal->firq;
 

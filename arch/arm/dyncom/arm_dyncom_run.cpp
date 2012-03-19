@@ -1230,6 +1230,7 @@ void switch_mode(arm_core_t *core, uint32_t mode)
 		return;
 	}
 	//printf("%d --->>> %d\n", core->Mode, mode);
+	//printf("In %s, Cpsr=0x%x, R15=0x%x, last_pc=0x%x, cpsr=0x%x, spsr_copy=0x%x, icounter=%lld\n", __FUNCTION__, core->Cpsr, core->Reg[15], core->last_pc, core->Cpsr, core->Spsr_copy, core->icounter);
 	if (mode != USERBANK) {
 		switch (core->Mode) {
 		case USER32MODE:
@@ -1303,6 +1304,8 @@ void switch_mode(arm_core_t *core, uint32_t mode)
 
 		}
 		core->Mode = mode;
+		//printf("In %si end, Cpsr=0x%x, R15=0x%x, last_pc=0x%x, cpsr=0x%x, spsr_copy=0x%x, icounter=%lld\n", __FUNCTION__, core->Cpsr, core->Reg[15], core->last_pc, core->Cpsr, core->Spsr_copy, core->icounter);
+		//printf("\n--------------------------------------\n");
 	} else {
 		printf("user mode\n");
 		exit(-2);
@@ -1430,4 +1433,5 @@ void arm_dyncom_stop(){
 }
 
 void arm_dyncom_fini(){
+	//cpu_free(cpu);
 }
