@@ -156,7 +156,7 @@ void init_compiled_queue(cpu_t* cpu){
 	cpu->dyncom_engine->cur_tagging_pos = 0;
 }
 
-static void interpret_cpu_step(conf_object_t * running_core){
+void interpret_cpu_step(conf_object_t * running_core){
 	arm_core_t *state = (arm_core_t *)running_core->obj;
 
 #if 0

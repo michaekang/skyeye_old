@@ -167,31 +167,32 @@ static void per_cpu_step(conf_object_t * running_core){
         //cpu_t *cpu_dyncom = (cpu_t*)get_cast_conf_obj(core->dyncom_cpu, "cpu_t");
 	cpu_t *cpu_dyncom = (cpu_t*)(core->dyncom_cpu->obj);
 	
-	if (running_mode != PURE_DYNCOM)
-	{
-		uint32_t ret = 0;
-		if(running_mode == FAST_INTERPRET){
+	switch(running_mode){
+		case PURE_INTERPRET:
+			extern void interpret_cpu_step(conf_object_t * running_core);
+			interpret_cpu_step(running_core);
+			return;
+		case FAST_INTERPRET:
 			extern void InterpreterMainLoop(cpu_t *core);
 			InterpreterMainLoop((cpu_t*)(core->dyncom_cpu->obj));
-			ret = 1;
-		}
-		else{
-			ret = launch_compiled_queue((cpu_t*)(core->dyncom_cpu->obj), core->Reg[15]);
-		}
-		/* in any case, user mode traps and exception are all handled within launc compiled queue */
-		if(is_user_mode(cpu_dyncom))
-			return;
-		/* if next instruction will be interpreted, ret value is 0. Exceptions are handled inside
-		   the interpreter, so we return immediatly */
-		else if ((ret == 0) || (running_mode == PURE_INTERPRET))
-			return;
-	} 
-	else 
-	{	
-		uint32_t ret = 0;
-		ret = launch_compiled_queue_dyncom((cpu_t*)(core->dyncom_cpu->obj), core->Reg[15]);
-		//arm_dyncom_run((cpu_t*)get_cast_conf_obj(core->dyncom_cpu, "cpu_t"));
+			break;
+		case HYBRID:
+			/* if next instruction will be interpreted, ret value is 0. Exceptions are handled inside
+		   		the interpreter, so we return immediatly */
+			if(launch_compiled_queue((cpu_t*)(core->dyncom_cpu->obj), core->Reg[15]) == 0)
+				return;
+			break;
+		case PURE_DYNCOM:
+			launch_compiled_queue_dyncom((cpu_t*)(core->dyncom_cpu->obj), core->Reg[15]);
+			break;
+		default: /* wrong mode */
+			skyeye_error("Wrong running mode is set.\n");
+			break;
 	}
+
+	/* in any case, user mode traps and exception are all handled within launc compiled queue */
+	if(is_user_mode(cpu_dyncom))
+		return;
 
 	/* the next part concerns only dyncom */
 	if (core->syscallSig) {
