@@ -38,10 +38,10 @@ const char* elf32_bigarm = "elf32-bigarm";
 * @return 
 */
 char* get_bfd_target(const char* arch_name){
-	if(strncmp("powerpc", arch_name, sizeof("powerpc")) == 0){
+	if(strncmp("powerpc", arch_name, strlen("powerpc")) == 0){
 		return elf32_powerpc;
 	}
-	else if(strncmp("arm", arch_name, sizeof("arm")) == 0 ){
+	else if(strncmp("arm", arch_name, strlen("arm")) == 0 ){
 		return elf32_littlearm;
 	}
 	else
