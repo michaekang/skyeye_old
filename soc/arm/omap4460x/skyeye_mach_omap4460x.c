@@ -88,6 +88,57 @@ static void omap4460x_io_reset(generic_arch_t* arch_instance) {
 	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_reset not realize\n",  __func__, __LINE__);
 }
 
+static void gpio_read(omap4460x_io_t* io, uint32 addr, uint32* data) {
+	int i = 0;
+
+	if (((addr - GPIO1_BASE) >= 0) &&
+		((addr - GPIO1_BASE) <= 0x194)) {
+		i = 0;
+	} // GPIO_1
+	else {
+		i = ((addr - GPIO2_BASE) / 0x2000) + 1;
+	}
+	//printf("IN %s, line = %d, i = %d, addr = 0x%x\n", __func__, __LINE__, i, addr);
+
+	switch ((addr & 0xfff)) {
+		case 0x00:						/* IP revision identifier FIXME: modify it*/
+			*data = 0;
+			break;
+		default:
+			SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, addr = 0x%x\n",
+					__func__, __LINE__, addr);
+			break;
+	}
+
+	return;
+}
+
+static void gp_timer_read(omap4460x_io_t* io, uint32 addr, uint32* data) {
+	int i = 0;
+
+	if (((addr -GPTIMER1_L4_BASE) >= 0) && (addr -GPTIMER1_L4_BASE) <=	0x58) {
+		i = 0;
+	}
+
+	switch (addr & 0xff) {
+		case 0x10:
+			*data = io->gp_timer[i].gpt1ms_tiocp_cfg;
+			break;
+		case 0x24:
+			*data = io->gp_timer[i].gpt_tclr;
+			break;
+		case 0x34:
+			*data = 0x0;
+			break;
+		default:
+			SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, addr = 0x%x, data = 0x%x\n",
+					__func__, __LINE__, addr, *data);
+			break;
+	}
+
+	return;
+}
+
 static uint32 omap4460x_io_read_word(void* arch_instance, uint32 addr) {
 	uint32 data = 0;
 
@@ -104,6 +155,19 @@ static uint32 omap4460x_io_read_word(void* arch_instance, uint32 addr) {
 		data = 0;
 		return data;
 	}
+	else if ((((addr - GPIO1_BASE) >= 0) && ((addr - GPIO1_BASE) <= 0x194)) ||		/* GPIO_1 */
+			(((addr - GPIO2_BASE) >= 0) && ((addr - GPIO2_BASE) <= 0x194)) ||		/* GPIO_2 */
+			(((addr - GPIO3_BASE) >= 0) && ((addr - GPIO3_BASE) <= 0x194)) ||		/* GPIO_3 */
+			(((addr - GPIO4_BASE) >= 0) && ((addr - GPIO4_BASE) <= 0x194)) ||		/* GPIO_4 */
+			(((addr - GPIO5_BASE) >= 0) && ((addr - GPIO5_BASE) <= 0x194)) ||		/* GPIO_5 */
+			(((addr - GPIO6_BASE) >= 0) && ((addr - GPIO6_BASE) <= 0x194))){		/* GPIO_6 */
+				gpio_read(&io, addr, &data);
+				return data;
+		} // GPIO
+	else if (((addr -GPTIMER1_L4_BASE) >= 0) && (addr -GPTIMER1_L4_BASE) <=	0x58) {
+		gp_timer_read(&io, addr, &data);
+		return data;
+	} // GP Timer
 
 	switch (addr) {
 		case CONTROL_ID_CODE:
@@ -239,6 +303,9 @@ static uint32 omap4460x_io_read_word(void* arch_instance, uint32 addr) {
 		case 0x4a009450:
 		case 0x4a0094e0:
 		case 0x4a307840:
+		case 0x4a009470:
+		case 0x4a009478:
+		case 0x4a009480:
 			data = 0x30000;
 			break;
 		case 0x4a008b38:
@@ -279,16 +346,18 @@ static uint32 omap4460x_io_read_word(void* arch_instance, uint32 addr) {
 			data = 0x8;
 			break;
 		default:
-#if 1
 			if (((addr - GPMC_CONFIG7_BASE) >= 0) &&
 				((addr - GPMC_CONFIG7_BASE) <= 0x150)) {
 				data = io.gpmc.gpmc_config7[((addr - GPMC_CONFIG7_BASE) / 0x30)];
 			} // CS address
+			else if (((addr - SPI_TARGET_BASE) >= 0) &&
+					(addr - SPI_TARGET_BASE) <= 0xFC) {
+				data = io.interrupt.SPI_target[((addr - SPI_TARGET_BASE) >> 2)];
+			} // SPI Target
 			else {
 				SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, omap4460x_io_read_word not realize, addr = 0x%x\n",
 					__func__, __LINE__, addr);
 			}
-#endif
 			break;
 	}
 
@@ -303,9 +372,156 @@ static uint32 omap4460x_io_read_halfword(void* arch_instance, uint32 addr) {
 	return omap4460x_io_read_word(arch_instance, addr);
 }
 
+static void gpio_write(omap4460x_io_t* io, uint32 addr, uint32 data) {
+	int i = 0;
+
+	if (((addr - GPIO1_BASE) >= 0) &&
+		((addr - GPIO1_BASE) <= 0x194)) {
+		i = 0;
+	} // GPIO_1
+	else {
+		i = ((addr - GPIO2_BASE) / 0x2000) + 1;
+	}
+
+	switch ((addr & 0xfff)) {
+		case 0x10:										/* System configuration register */
+			io->gpio[i].gpio_sysconfig = data;
+			break;
+		case 0x3c:										/* Per-event interrupt enable clear vector */
+			io->gpio[i].gpio_irqstatus_clr_0 = data;
+			break;
+		case 0x130:										 /* GPIO control register */
+			io->gpio[i].gpio_ctrl = data;
+			break;
+		case 0x150:										 /* Debouncing enable register */
+			io->gpio[i].gpio_debouncenable = data;
+			break;
+		default:
+			SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, GPIO function not implemented!!!\n", __func__, __LINE__);
+			break;
+	}
+
+	return;
+}
+
+static void gp_timer_write(omap4460x_io_t* io, uint32 addr, uint32 data) {
+	int i = 0;
+
+	if (((addr - GPTIMER1_L4_BASE) >= 0) && (addr - GPTIMER1_L4_BASE) <=	0x58) {
+		i = 0;
+	}
+
+	switch (addr & 0xff) {
+		case 0x10:
+			io->gp_timer[i].gpt1ms_tiocp_cfg = data;
+			break;
+		case 0x1c:
+			io->gp_timer[i].gpt_tier = data;
+			break;
+		case 0x18:
+			io->gp_timer[i].gpt_tisr = data;
+			break;
+		case 0x20:
+			io->gp_timer[i].gpt_twer = data;
+			break;
+		case 0x24:
+			io->gp_timer[i].gpt_tclr = data;
+			break;
+		case 0x28:
+			io->gp_timer[i].gpt_irqstatus = data;
+			break;
+		case 0x2c:
+			io->gp_timer[i].gpt_tldr = data;
+			break;
+		case 0x40:
+			io->gp_timer[i].gpt_tsicr = data;
+			break;
+		default:
+			SKYEYE_LOG_IN_CLR(RED, "IN %s, line = %d, addr = 0x%x, data = 0x%x\n",
+					__func__, __LINE__, addr, data);
+			break;
+	}
+
+	return;
+}
+
 static void omap4460x_io_write_word(generic_arch_t* state, uint32 addr, uint32 data) {
 	// TODO: write word how to do?
-	SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, addr = 0x%x, write_word function not realize\n", __func__, __LINE__, addr);
+	conf_object_t* conf_obj = get_conf_obj("omap4460_mach_space");
+    addr_space_t* phys_mem = (addr_space_t*)conf_obj->obj;
+    exception_t ret = phys_mem->memory_space->write(conf_obj, addr, &data, 4);
+    /* Read the data successfully */
+    if(ret == No_exp){
+        return;
+    }
+
+	if ((((addr - GPIO1_BASE) >= 0) && ((addr - GPIO1_BASE) <= 0x194)) ||		/* GPIO_1 */
+			(((addr - GPIO2_BASE) >= 0) && ((addr - GPIO2_BASE) <= 0x194)) ||	/* GPIO_2 */
+			(((addr - GPIO3_BASE) >= 0) && ((addr - GPIO3_BASE) <= 0x194)) ||	/* GPIO_3 */
+			(((addr - GPIO4_BASE) >= 0) && ((addr - GPIO4_BASE) <= 0x194)) ||	/* GPIO_4 */
+			(((addr - GPIO5_BASE) >= 0) && ((addr - GPIO5_BASE) <= 0x194)) ||	/* GPIO_5 */
+			(((addr - GPIO6_BASE) >= 0) && ((addr - GPIO6_BASE) <= 0x194))){	/* GPIO_6 */
+				gpio_write(&io, addr, data);
+				return;
+	} // GPIO
+	else if (((addr -GPTIMER1_L4_BASE) >= 0) && (addr -GPTIMER1_L4_BASE) <=	0x58) {
+		gp_timer_write(&io, addr, data);
+		return;
+	} // GP Timer
+
+	switch (addr) {
+		case GPMC_SYSCONFIG:
+			io.gpmc.gpmc_sysconfig = data;
+			break;
+		case DISTRIBUTOR_CONTR:
+			io.interrupt.distributor_contr = data;
+			break;
+		case CPU_INTERF_CONTR:
+			io.interrupt.cpu_interf_contr = data;
+			break;
+		case INTER_PRIORIRY_MASK:
+			io.interrupt.inter_prioriry_mask = data;
+			break;
+		case ICDSGIR:
+			io.interrupt.icdsgir = data;
+			break;
+		case 0x4a008b30:		 /* manages the EMIF_1 clocks */
+		case 0x4a008b38:		 /* manages the EMIF_2 clocks. */
+		case 0x4a009450:		 /* manages the DMTIMER9 clock */
+		case 0x4a009470:		 /* manages the GPIO4 clocks */
+		case 0x4a009478:		 /* manages the GPIO5 clocks */
+		case 0x4a009480:		 /* manages the GPIO6 clocks */
+			break;
+		default:
+			if (((addr - INTER_ENABLE_SET_BASE) >= 0) &&
+					(addr - INTER_ENABLE_SET_BASE) <= 0x1C) {
+				io.interrupt.enable_set[((addr - INTER_ENABLE_SET_BASE) >> 2)] = data;
+			} // interrupt Set-Enable
+			else if (((addr - ENABLE_CLEAR_BASE) >= 0) &&
+					(addr - ENABLE_CLEAR_BASE) <= 0x1C) {
+				io.interrupt.priority_level[((addr - ENABLE_CLEAR_BASE) >> 2)] = data;
+			} // Priority level
+			else if (((addr - PRIORITY_LEVEL_BASE) >= 0) &&
+					(addr - PRIORITY_LEVEL_BASE) <= 0xFC) {
+				io.interrupt. priority_level[((addr - PRIORITY_LEVEL_BASE) >> 2)] = data;
+			} // Priority level
+			else if (((addr - SPI_TARGET_BASE) >= 0) &&
+					(addr - SPI_TARGET_BASE) <= 0xFC) {
+				io.interrupt.SPI_target[((addr - SPI_TARGET_BASE) >> 2)] = data;
+			} // SPI Target
+			else if (((addr - INTER_CONFIG_BASE) >= 0) &&
+					(addr - INTER_CONFIG_BASE) <= 0x3c) {
+				io.interrupt.inter_config[((addr - INTER_CONFIG_BASE) >> 2)] = data;
+				//printf("i = %d, data = 0x%x, addr = 0x%x, offset = 0x%x\n",
+				//		(addr - INTER_CONFIG_BASE) >> 2, data, addr, addr - INTER_CONFIG_BASE);
+			} // Interrupt configuration
+			else {
+				SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, addr = 0x%x, write_word function not realize\n", __func__, __LINE__, addr);
+			}
+			break;
+	}
+
+	return;
 }
 
 static void omap4460x_io_write_byte(generic_arch_t* state, uint32 addr, uint32 data) {

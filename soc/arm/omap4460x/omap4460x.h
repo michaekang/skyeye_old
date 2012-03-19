@@ -34,14 +34,6 @@
 #define SYSCTRL_CORE_BASE (0x4A002000)
 #define CONTROL_ID_CODE  (SYSCTRL_CORE_BASE + 0x0204)	/* ID_CODE Key Register */
 
-
-/******************************************/
-/********* SCU Registers     **************/
-/******************************************/
-#define SCU_BASE (0x48240000)
-#define SCU_CTRL (0x48240000 + 0x00)			/* SCU Control Register */
-#define SCU_CONFIG (SCU_BASE + 0x04)			/* SCU Configuration Register */
-
 /******************************************/
 /*********  CKGEN_PRM Register     ********/
 /******************************************/
@@ -115,13 +107,99 @@
 #define GPMC_SYSCONFIG (GPMC_BASE + 0x10)	/* control the various parameters of the Interconnect */
 #define GPMC_CONFIG7_BASE	(GPMC_BASE + 0X78)	/* CS address mapping configuration */
 
+/******************************************/
+/********* SCU Registers     **************/
+/******************************************/
+#define SCU_BASE (0x48240000)
+#define SCU_CTRL (0x48240000 + 0x00)			/* SCU Control Register */
+#define SCU_CONFIG (SCU_BASE + 0x04)			/* SCU Configuration Register */
+
+/******************************************/
+/***** Interrupt Interface Registers  *****/
+/******************************************/
+#define PROC_INTERFACE_BASE (0x48240100)
+#define CPU_INTERF_CONTR	(PROC_INTERFACE_BASE + 0x0) /* CPU Interface Control Register */
+#define INTER_PRIORIRY_MASK (PROC_INTERFACE_BASE + 0x04) /* Interrupt Priority Mask Register */
 
 /******************************************/
 /*****      Interrupt Registers		  *****/
 /******************************************/
 #define INTER_DISTRIBUTOR_BASE (0x48241000)
-#define INTER_CONTR_TYPE  (INTER_DISTRIBUTOR_BASE + 0x4)
+#define DISTRIBUTOR_CONTR		(INTER_DISTRIBUTOR_BASE + 0x0)	/* distributed control register */
+#define INTER_CONTR_TYPE	(INTER_DISTRIBUTOR_BASE + 0x4)		/* interrupt control type register */
+#define INTER_ENABLE_SET_BASE (INTER_DISTRIBUTOR_BASE  + 0x100) /* interrupt Set-Enable Registers */
+#define INTER_CONFIG_BASE (INTER_DISTRIBUTOR_BASE + 0xc00)		/* Interrupt configuration Registers */
+#define SPI_TARGET_BASE (INTER_DISTRIBUTOR_BASE + 0x800)		/* SPI Target Registers */
+#define PRIORITY_LEVEL_BASE	(INTER_DISTRIBUTOR_BASE + 0x400)	/* Priority Level Registers */
+#define ENABLE_CLEAR_BASE (INTER_DISTRIBUTOR_BASE + 0x180)		/* Enable clear Registers */
+#define ICDSGIR (INTER_DISTRIBUTOR_BASE + 0xF00)				/* Software Generated Interrupt Register */
 
+
+/******************************************/
+/*****      GPIO Registers			  *****/
+/******************************************/
+#define GPIO1_BASE (0x4A310000)
+#define GPIO2_BASE (0x48055000)
+#define GPIO3_BASE (0x48057000)
+#define GPIO4_BASE (0x48059000)
+#define GPIO5_BASE (0x4805B000)
+#define GPIO6_BASE (0x4805D000)
+
+/******************************************/
+/*****      GP Timer Registers		 ******/
+/******************************************/
+#define GPTIMER1_L4_BASE			(0x4A318000)
+#define GPTIMER2_L4_BASE			(0x48032000)
+#define GPTIMER3_L4_BASE			(0x48034000)
+#define GPTIMER4_L4_BASE			(0x48036000)
+#define GPTIMER9_L4_BASE			(0x4803E000)
+#define GPTIMER10_L4_BASE			(0x48086000)
+#define GPTIMER11_L4_BASE			(0x48088000)
+#define GPTIMER5_L3_BASE			(0x49038000)
+#define GPTIMER5_CORTEX_A9_BASE		(0x40138000)
+#define GPTIMER5_DSP				(0x01D38000)
+#define GPTIMER6_L3					(0x4903A000)
+#define GPTIMER6_CORTEX_A9_BASE		(0x4013A000)
+#define GPTIMER6_DSP				(0x01D3A000)
+#define GPTIMER7_L3					(0x4903C000)
+#define GPTIMER7_CORTEX_A9_BASE		(0x4013C000)
+#define GPTIMER7_DSP				(0x01D3C000)
+#define GPTIMER8_L3					(0x4903E000)
+#define GPTIMER8_CORTEX_A9_BASE		(0x4013E000)
+#define GPTIMER8_DSP				(0x01D3E000)
+
+typedef struct gp_timer {
+	u32 gpt_tidr;				/* contains the revision number of the module */
+	u32 gpt1ms_tiocp_cfg;		/* controls the various parameters of the OCP interface */
+	u32 gpt_tsicr;				/* Timer synchronous interface control register */
+	u32 gpt_twps;				/* contains the write posting bits for all writable functional registers */
+	u32 gpt_tier;				/* controls (enable/disable) the interrupt events */
+	u32 gpt_twer;				/* controls (enable/disable) the wake-up feature on specific interrupt events */
+	u32 gpt_tclr;				/* controls optional features specific to the timer functionality */
+	u32 gpt_tisr;				/* determine which of the timer events requested an interrupt */
+	u32 gpt_tldr;				/* holds the timer load value */
+	u32 gpt_irqstatus;			/* Component interrupt-request status */
+}gp_timer_t;
+
+typedef struct gpio_t {
+	u32 gpio_revision;			/* IP revision identifier */
+	u32 gpio_sysconfig;         /* System configuration register */
+	u32 gpio_irqstatus_clr_0;	/* Per-event interrupt enable clear vector */
+	u32 gpio_ctrl;              /* GPIO control register */
+	u32 gpio_debouncenable;     /* Debouncing enable register */
+}gpio_t;
+
+typedef struct interrupt {
+	u32 distributor_contr;		/* distributed control register */
+	u32 inter_config[16];		/* Interrupt configuration Registers */
+	u32 SPI_target[64];			/*  SPI Target Registers */
+	u32 priority_level[64];		/* Priority Level Registers */
+	u32 enable_set[8];			/* Interrupt Set-Enable registers */
+	u32 enable_clear[8];		/* Enable clear Registers */
+	u32 cpu_interf_contr;		/* CPU Interface Control Register */
+	u32 inter_prioriry_mask;	/* Interrupt Priority Mask Register */
+	u32 icdsgir;				/* Software Generated Interrupt Register */
+}interrupt_t;
 
 typedef struct gpmc {
 	u32 gpmc_sysconfig;	/* control the various parameters of the Interconnect */
@@ -195,6 +273,12 @@ typedef struct omap4460x_io {
 	l3int_cm2_t l3int_cm2;
 	/* GMPC Registers */
 	gpmc_t gpmc;
+	/* INTERRUPT Registers*/
+	interrupt_t interrupt;
+	/* GPIO Registers */
+	gpio_t gpio[6];
+	/* GP Timer Registers */
+	gp_timer_t gp_timer[19];
 }omap4460x_io_t;
 
 void omap4460x_mach_init(void *arch_instance, machine_config_t *this_mach);
