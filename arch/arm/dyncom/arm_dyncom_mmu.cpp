@@ -205,7 +205,8 @@ dyncom_mmu_translate (arm_core_t *core, ARMword virt_addr, ARMword *phys_addr, i
 fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t size, uint32_t rw)
 {
 	ARMword pa, real_va, temp, offset;
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	ARMword perm;		/* physical addr access permissions */
 	fault_t fault = NO_FAULT;
 	int ap, sop;

@@ -124,7 +124,8 @@ arm_dyncom_abort(arm_core_t * state, ARMword vector)
 		//chy 2003-09-02 the if sentence seems no use
 		{
 			state->Reg_irq[1] = state->Reg[15] + 4;
-			//printf("in %s R15 is %x at %x\n", __FUNCTION__, state->Reg[15], state->NumInstrs);
+			//printf("\nin %s,-----------------------------\n", __FUNCTION__);
+			//printf("in %s R15 is %x , last_pc=0x%x, Cpsr=0x%x, spsr_copy=0x%x, icounter=%d\n", __FUNCTION__, state->Reg[15], state->last_pc, state->Cpsr, state->Spsr_copy, state->icounter);
 			state->Spsr[IRQBANK] = state->Cpsr;
 			state->Cpsr = state->Cpsr & 0xfffffc40;
 			state->Cpsr |= 0x92;
@@ -134,6 +135,7 @@ arm_dyncom_abort(arm_core_t * state, ARMword vector)
 			//state->NirqSig = HIGH;
 			state->Aborted = 0;
 			ASSIGNINT(state->Cpsr & INTBITS);
+			//printf("in %s,end-----------------------------\n\n", __FUNCTION__);
 			//printf("Cpsr is %x Flags %x IRQ Spsr is %x \n", state->Cpsr, state->IFFlags, state->Spsr[IRQBANK]);
 		}
 	break;
@@ -162,7 +164,8 @@ static void per_cpu_step(conf_object_t * running_core){
         arm_core_t *core = (arm_core_t *)running_core->obj;
         machine_config_t* mach = get_current_mach();
         ARM_CPU_State* cpu = get_current_cpu();
-        cpu_t *cpu_dyncom = (cpu_t*)get_cast_conf_obj(core->dyncom_cpu, "cpu_t");
+        //cpu_t *cpu_dyncom = (cpu_t*)get_cast_conf_obj(core->dyncom_cpu, "cpu_t");
+	cpu_t *cpu_dyncom = (cpu_t*)(core->dyncom_cpu->obj);
 	
 	if (running_mode != PURE_DYNCOM)
 	{
