@@ -131,6 +131,22 @@ void skyeye_info(char* format, ...){
 	return;
 }
 
+void skyeye_debug(char* format, ...){
+	va_list args;
+	va_start(args, format);
+	skyeye_log(Debug_log, NULL, format, args);
+	va_end(args);
+	return;
+}
+
+void skyeye_error(char* format, ...){
+	va_list args;
+	va_start(args, format);
+	skyeye_log(Error_log, NULL, format, args);
+	va_end(args);
+	return;
+}
+
 /**
 * @brief log function of skyeye
 *

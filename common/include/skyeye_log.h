@@ -66,6 +66,8 @@ char* get_front_message();
 
 char* get_exp_str(exception_t exp);
 void skyeye_info(char* format, ...);
+void skyeye_debug(char* format, ...);
+void skyeye_error(char* format, ...);
 
 int
 do_log_option (skyeye_option_t * this_option, int num_params,
