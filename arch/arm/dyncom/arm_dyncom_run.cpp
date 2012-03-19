@@ -36,6 +36,7 @@
 #include <skyeye_dyncom.h>
 #include <skyeye_types.h>
 #include <skyeye_obj.h>
+#include <skyeye_sched.h>
 #include <skyeye.h>
 #include <bank_defs.h>
 #include <skyeye_pref.h>
@@ -475,6 +476,15 @@ arch_arm_undef_init(cpu_t *cpu){
 	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_UNDEF] = (void*)arm_undef_instr;
 }
 
+/**
+* @brief Scan the bb usage and recycle some bb to free memory
+*
+* @param cpu
+*/
+static void recycle_bb(void* priv_data){
+	cpu_t* cpu = (cpu_t*)priv_data;
+	printf("\ncurrent funcions is %d\n", cpu->dyncom_engine->functions);
+}
 void arm_dyncom_init(arm_core_t* core){
 	cpu_t* cpu = cpu_new(0, 0, arm_arch_func);
 
@@ -560,6 +570,10 @@ void arm_dyncom_init(arm_core_t* core){
 	arch_arm_undef_init(cpu);
 	
 	init_compiled_queue(cpu);
+	if(running_mode == HYBRID || running_mode == PURE_DYNCOM){
+		int timer_id;
+		create_thread_scheduler(1000000, Periodic_sched, recycle_bb, (void *)cpu, &timer_id);
+	}
 	return;
 }
 
