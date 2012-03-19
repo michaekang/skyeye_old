@@ -643,10 +643,6 @@ int launch_compiled_queue(cpu_t* cpu, uint32_t pc){
 				if (core->syscallSig) {
 					return 1;
 				}
-				if (cpu->check_int_flag == 1) {
-					cpu->check_int_flag = 0;
-					return 1;
-				}
 				if (core->abortSig) {
 					return 1;
 				}
@@ -728,10 +724,6 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		}
 		
 		if (core->syscallSig) {
-			return 1;
-		}
-		if (cpu->check_int_flag == 1) {
-			cpu->check_int_flag = 0;
 			return 1;
 		}
 		if (core->abortSig) {
