@@ -1308,6 +1308,7 @@ ARMul_Emulate26 (ARMul_State * state)
 				unsigned int m, lsb, width, Rd, Rn, data;
 				Rd = Rn = lsb = width = data = m = 0;
 
+				//printf("helloworld\n");
 				if ((((int) BITS (21, 27)) == 0x3f) && (((int) BITS (4, 6)) == 0x5)) {
 					m = (unsigned)BITS(7, 11);
 					width = (unsigned)BITS(16, 20);
@@ -1326,7 +1327,7 @@ ARMul_Emulate26 (ARMul_State * state)
 						goto donext;
 					}
 				} // ubfx instr
-				if ((((int) BITS (21, 27)) == 0x3d) && (((int) BITS (4, 6)) == 0x5)) {
+				else if ((((int) BITS (21, 27)) == 0x3d) && (((int) BITS (4, 6)) == 0x5)) {
 					int tmp = 0;
 					Rd = BITS(12, 15); Rn = BITS(0, 3);
 					lsb = BITS(7, 11); width = BITS(16, 20);
@@ -1344,15 +1345,24 @@ ARMul_Emulate26 (ARMul_State * state)
 						goto donext;
 					}
 				} // sbfx instr
-				if ((((int)BITS(21, 27)) == 0x3e) && ((int)BITS(4, 6) == 0x1)) {
+				else if ((((int)BITS(21, 27)) == 0x3e) && ((int)BITS(4, 6) == 0x1)) {
 					//(ARMword)(instr<<(31-(n))) >> ((31-(n))+(m))
 					unsigned msb ,tmp_rn, tmp_rd, dst;
 					msb = tmp_rd = tmp_rn = dst = 0;
 					Rd = BITS(12, 15); Rn = BITS(0, 3);
 					lsb = BITS(7, 11); msb = BITS(16, 20);
-					if (((Rd == 15) || (Rn == 15))) {
+					if ((Rd == 15)) {
 						ARMul_UndefInstr (state, instr);
 					}
+					else if ((Rn == 15)) {
+						data = state->Reg[Rd];
+						tmp_rd = ((ARMword)(data << (31 - lsb)) >> (31 - lsb));
+						dst = ((data >> msb) << (msb - lsb));
+						dst = (dst << lsb) | tmp_rd;
+						SKYEYE_DBG("BFC instr: msb = %d, lsb = %d, Rd[%d] : 0x%x, dst = 0x%x\n",
+							msb, lsb, Rd, state->Reg[Rd], dst);
+						goto donext;
+					} // bfc instr
 					else if (((msb >= lsb) && (msb < 32))) {
 						data = state->Reg[Rn];
 						tmp_rn = ((ARMword)(data << (31 - (msb - lsb))) >> (31 - (msb - lsb)));
@@ -1360,11 +1370,11 @@ ARMul_Emulate26 (ARMul_State * state)
 						tmp_rd = ((ARMword)(data << (31 - lsb)) >> (31 - lsb));
 						dst = ((data >> msb) << (msb - lsb)) | tmp_rn;
 						dst = (dst << lsb) | tmp_rd;
-						SKYEYE_DBG("BFI instr:\n\tmsb = %d, lsb = %d, Rd[%d] : 0x%x, Rn[%d]: 0x%x, dst = 0x%x\n",
+						SKYEYE_DBG("BFI instr:msb = %d, lsb = %d, Rd[%d] : 0x%x, Rn[%d]: 0x%x, dst = 0x%x\n",
 							msb, lsb, Rd, state->Reg[Rd], Rn, state->Reg[Rn], dst);
 						goto donext;
-					}
-				} // bfi instr
+					} // bfi instr
+				}
 			}
 			
 			switch ((int) BITS (20, 27)) {
