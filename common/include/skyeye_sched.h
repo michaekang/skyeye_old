@@ -47,6 +47,9 @@ typedef struct skyeye_event{
 #endif
 }skyeye_event_intf;
  
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
 /* 
  * create a  thread scheduler. 
@@ -110,5 +113,8 @@ int fini_timer_scheduler(void);
 void list_timer_scheduler(void);
 
 uint64_t get_clock_us();
+#ifdef __cplusplus
+}
+#endif
 
 #endif
