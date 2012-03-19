@@ -26,5 +26,6 @@
 #include "goldfish_interrupt.h"
 #include "goldfish_nand.h"
 #include "goldfish_tty.h"
+#include "goldfish_fb.h"
 
 #endif /* __SKYEYE_MACH_GOLDFISH_H___ */

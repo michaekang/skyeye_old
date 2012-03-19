@@ -22,6 +22,7 @@ goldfish_interrupt = goldfish/goldfish_interrupt.c goldfish/goldfish_interrupt_m
 goldfish_timer = goldfish/goldfish_timer.c goldfish/goldfish_timer_module.c
 goldfish_nand = goldfish/goldfish_nand.c goldfish/goldfish_nand_module.c
 goldfish_tty = goldfish/goldfish_tty.c goldfish/goldfish_tty_module.c
+goldfish_fb = goldfish/goldfish_fb.c goldfish/goldfish_fb_module.c
 goldfish = goldfish/goldfish_module.c goldfish/skyeye_mach_goldfish.c
 
 libs3c2410_la_SOURCES = $(s3c2410)
@@ -99,6 +100,8 @@ libgoldfish_nand_la_LDFLAGS = -module
 libgoldfish_tty_la_SOURCES = $(goldfish_tty)
 libgoldfish_tty_la_LDFLAGS = -module
 
+libgoldfish_fb_la_SOURCES = $(goldfish_fb)
+libgoldfish_fb_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_libui -lemulator_libui
 if WIN32
 WIN32_LD_COMMON = -no-undefined -shared -Xlinker -L../../common/.libs/ -L/mingw/lib -Xlinker -lcommon -Xlinker --export-all-symbol
 libs3c2410_la_LDFLAGS += $(WIN32_LD_COMMON)
@@ -127,7 +130,7 @@ pkglib_LTLIBRARIES = libs3c6410.la libs3c2410.la libat91rm92.la libat91.la libcs
 libep9312.la libep7312.la libs3c2440.la libsa1100.la libpxa270.la libpxa250.la libs3c3410x.la \
 libns9750.la libsharp.la  libomap5912.la liblpc2210.la liblh79520.la libps7500.la libimx9238.la \
 libs3c4510b.la libgoldfish.la libgoldfish_interrupt.la libgoldfish_timer.la libgoldfish_nand.la \
-libgoldfish_tty.la 
+libgoldfish_tty.la libgoldfish_fb.la
 
 DEFS = -g -O2 -D_FILE_OFFSET_BITS=64 -DSTANDALONE -DDEFAULT_INLINE=0 @COMMON_CFLAGS@
 if GTK_LCD
@@ -135,3 +138,5 @@ DEFS += -DGTK_LCD
 endif
 
 INCLUDES = -I$(top_srcdir)/arch/arm/mach -I$(top_srcdir)/common -I./goldfish/ -I$(top_srcdir)/device/uart_16550/ @COMMON_INCLUDES@
+INCLUDES += -I$(top_srcdir)/android/
+INCLUDES += -I$(top_srcdir)/android/skyeye/

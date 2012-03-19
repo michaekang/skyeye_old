@@ -214,6 +214,22 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	addr_space_t* phys_mem = new_addr_space("goldfish_mach_space");
 
 	exception_t ret;
+
+	if (getenv("ANDROID") != NULL)
+	{
+		goldfish_fb_device* goldfish_fb;
+		obj = pre_conf_obj("goldfish_fb0","goldfish_fb");
+		goldfish_fb = (goldfish_fb_device *)obj->obj;
+		goldfish_fb->line_no = FB0_IRQ;
+		goldfish_fb->master = goldfish_pic->slave;
+		goldfish_fb->signal_target = goldfish_pic->obj;
+		ret = add_map(phys_mem, 0xff005000, 0x1000, 0x0, goldfish_fb->io_memory, 1, 1);
+		if(ret != No_exp)
+			printf("Warnning, fb can not be mapped\n");
+
+		conf_object_t* android = pre_conf_obj("android0", "android");
+	}
+
 	ret = add_map(phys_mem, 0xff000000, 0x1000, 0x0, goldfish_pic->io_memory, 1, 1);
 	if(ret != No_exp)
 		printf("Warnning, pic can not be mapped\n");
@@ -228,6 +244,7 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	ret = add_map(phys_mem, 0xff002000, 0x1000, 0x0, goldfish_tty->io_memory, 1, 1);
 	if(ret != No_exp)
 		printf("Warnning, tty can not be mapped\n");
+
 
 	/* @Deprecated */
 	this_mach->mach_io_do_cycle = goldfish_io_do_cycle;
