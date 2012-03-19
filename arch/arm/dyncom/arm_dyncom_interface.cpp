@@ -204,15 +204,7 @@ static void per_cpu_step(conf_object_t * running_core){
 		arm_dyncom_abort(core, core->Aborted);
 	}
 	if (!core->NirqSig) {
-		//printf("Trying abort \n");
 		if (!(core->Cpsr & 0x80)) {
-			//printf("In %s, irqSig %x\n", __FUNCTION__, core->Reg[15]);
-			//printf("Cpsr not NirqSig %x\n", core->Reg[15]);
-	#if SYNC_HYBRID
-			if (!is_int_in_interpret(cpu_dyncom))
-				return;
-	#endif
-	
 			arm_dyncom_abort(core, ARMul_IRQV);
 		}
 	}
