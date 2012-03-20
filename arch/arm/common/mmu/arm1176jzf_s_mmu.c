@@ -62,6 +62,7 @@ static void* mem_ptr = NULL;
 //static void mem_read_raw(uint32_t offset, uint32_t &value, int size)
 static void mem_read_raw(int size, uint32_t offset, uint32_t *value)
 {
+#if 0
 	if(mem_ptr == NULL)
 		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
 	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
@@ -71,11 +72,14 @@ static void mem_read_raw(int size, uint32_t offset, uint32_t *value)
 	else{
 		bus_read(size, offset, value);
 	}
+#endif
+	bus_read(size, offset, value);
 }
 
 //static void mem_write_raw(uint32_t offset, uint32_t value, int size)
 static void mem_write_raw(int size, uint32_t offset, uint32_t value)
 {
+#if 0
 	if(mem_ptr == NULL)
 		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
 	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
@@ -85,6 +89,8 @@ static void mem_write_raw(int size, uint32_t offset, uint32_t value)
 	else{
 		bus_write(size, offset, value);
 	}
+#endif
+	bus_write(size, offset, value);
 }
 
 static int exclusive_detect(ARMul_State* state, ARMword addr){
