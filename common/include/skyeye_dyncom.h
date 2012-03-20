@@ -501,11 +501,6 @@ typedef struct cpu {
 	syscall_function_t syscall_func;
 	switch_mode_function_t switch_mode;
 
-	/* This flag used in debug mode. Sync with interpreter mode. */
-	uint32_t check_int_flag;
-
-	FILE *fm_log;
-	FILE *src_log;
 } cpu_t;
 
 enum {
