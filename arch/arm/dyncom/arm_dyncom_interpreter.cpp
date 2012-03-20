@@ -3625,14 +3625,19 @@ void InterpreterMainLoop(cpu_t *core)
 			goto END;
 		}
 		/* check next instruction address is valid. */
-		fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1);
-		if (fault) {
-			cpu->abortSig = true;
-			cpu->Aborted = ARMul_PrefetchAbortV;
-			cpu->AbortAddr = cpu->Reg[15];
-			cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
-			cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = cpu->Reg[15];
-			goto END;
+		if(core->is_user_mode){
+			phys_addr = cpu->Reg[15];
+		}
+		else{
+			fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1);
+			if (fault) {
+				cpu->abortSig = true;
+				cpu->Aborted = ARMul_PrefetchAbortV;
+				cpu->AbortAddr = cpu->Reg[15];
+				cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
+				cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = cpu->Reg[15];
+				goto END;
+			}
 		}
 		if (find_bb(phys_addr, ptr) == -1) {
 			if (InterpreterTranslate(core, ptr, phys_addr) == FETCH_EXCEPTION)
