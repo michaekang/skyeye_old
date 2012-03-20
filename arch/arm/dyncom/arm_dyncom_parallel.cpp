@@ -33,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "bank_defs.h"
 
 #include <stack>
+#include <hash_map>
 using namespace std;
 #ifndef __ARMEMU_H__
 #define __ARMEMU_H__
@@ -55,7 +56,7 @@ extern ARMword ARMul_Emulate32 (ARMul_State *);
 #define INTBITS (0xc0L)
 #endif
 
-#define QUEUE_LENGTH 0x6000
+#define QUEUE_LENGTH 1024
 /* Monothread: threshold compilation only
    Multithread: threshold compilation or Polling compilation (cpu intensive) */
 #define MULTI_THREAD 1
@@ -133,7 +134,6 @@ do_mode_option (skyeye_option_t * this_option, int num_params,
 	}
 	return 0;
 }
-
 void init_compiled_queue(cpu_t* cpu){
 	memset(&compiled_queue[0], 0xff, sizeof(uint32_t) * QUEUE_LENGTH);
 	if (get_skyeye_pref()->interpret_mode) {
@@ -148,10 +148,8 @@ void init_compiled_queue(cpu_t* cpu){
 			fprintf(stderr, "can not initilize the rwlock\n");
 		}
 		/* Create a thread to compile IR to native code */
-#if MULTI_THREAD
 		pthread_t id;
 		create_thread(compiled_worker, (void*)cpu, &id);
-#endif
 	}
 	cpu->dyncom_engine->cur_tagging_pos = 0;
 }
@@ -159,14 +157,6 @@ void init_compiled_queue(cpu_t* cpu){
 void interpret_cpu_step(conf_object_t * running_core){
 	arm_core_t *state = (arm_core_t *)running_core->obj;
 
-#if 0
-	static uint32_t flag = 0;
-	if (flag)
-	{
-		state->NextInstr = PRIMEPIPE;
-		flag = 0;
-	}
-#endif	
 	/* Initialize interpreter step */
 	state->step++;
 	state->cycle++;
@@ -218,34 +208,13 @@ inline int clear_cache(cpu_t *cpu, fast_map hash_map)
 	return No_exp;
 }
 
-/* For HYBRID or PURE_INTERPRETER.
+/* Only for HYBRID .
    In HYBRID mode, when encountering a new (untagged) pc, we recursive-tag it so all newly tagged
    instructions belongs to this basic block. A translated address, if it is an entry point,
    will be dyncom-executed. Else, it will be interpreted. */
 int launch_compiled_queue(cpu_t* cpu, uint32_t pc){
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	void * pfunc = NULL;
-	
-	//printf("\t\t### Launching %p Type %d\n", pc, core->NextInstr);
-	
-	if (running_mode == PURE_INTERPRET)
-	{
-		interpret_cpu_step(cpu->cpu_data);
-		return 0;
-	}
-	
-	/* pc correction due to the pipeline  */
-	if (core->NextInstr == PRIMEPIPE) {
-		/* If PRIMEPIPE, then the executed pc is the value in the pc register */
-		/* In Pure Dyncom mode, NextInstr is always PRIMEPIPE */
-	} else if (core->NextInstr == PCINCEDSEQ) {
-		/* If PCINCEDSEQ, the executed pc is -8 */
-		pc = pc - 8 ;
-	} else {
-		/* Else, the executed pc is pc register - 4 */
-		pc = pc - 4 ;
-	}
-	
 	
 	/* Attempt to retrieve physical address if mmu, only in kernel mode */
 	if (is_user_mode(cpu))
@@ -254,416 +223,52 @@ int launch_compiled_queue(cpu_t* cpu, uint32_t pc){
 	}
 	else 
 	{
-		uint32_t dummy, ret = 0;
-		//ret = core->mmu.ops.load_instr(core,pc,&core->phys_pc); // for interpreter only
-		
-		/* effective_to_physical function uses dyncom registers.
-		   Therefore, they need to be imported from interpreter registers.
-		   Hopefully, the new interpreter will use unified registers. */
-		CP15REG(CP15_TRANSLATION_BASE_CONTROL) = core->mmu.translation_table_ctrl;
-		CP15REG(CP15_TRANSLATION_BASE_TABLE_0) = core->mmu.translation_table_base0;
-		CP15REG(CP15_TRANSLATION_BASE_TABLE_1) = core->mmu.translation_table_base1;
-		CP15REG(CP15_DOMAIN_ACCESS_CONTROL) = core->mmu.domain_access_control;
-		CP15REG(CP15_CONTROL) = core->mmu.control;
-		
+		uint32_t ret = 0;
 		ret = cpu->mem_ops.effective_to_physical(cpu, pc, &core->phys_pc);
-		
 		/* targeted instruction is not in memory, let the interpreter prefetch abort do the job */
 		if (ret != 0)
 		{
-			//printf("#### Issues in mmu %d at pc %x, phys_pc? %x\n", ret, pc, core->phys_pc);
-			interpret_cpu_step(cpu->cpu_data);
+			/* prefetch abort happened */
 			return 0;
 		}
 	}
 	
-	/* Check if the executed pc already got tagged */
-	uint32_t counter = 0, entry = 0;
-	uint32_t tag = check_tag_execution(cpu, core->phys_pc, &counter, &entry);
-	if ((tag & TAG_CODE) == 0)
-	{
-		push_compiled_work(cpu, core->phys_pc);
-	}
 	
 	/* Check if the wanted instruction is in the dyncom engine */
 	fast_map hash_map = cpu->dyncom_engine->fmap;
 	PFUNC(core->phys_pc);
 
-	/* If not, compile it if it has reached execution threshold
-	   Note: in pure dyncom, push_compiled_work should have translated the block,
-	   so this code will not be executed in pure dyncom. It is ok since
-	   we don't care much about the compiled queue in pure dyncom. */
-#if !MULTI_THREAD
-	if ((!pfunc) && (tag & TAG_ENTRY) && (counter > 0x1000))
-	{
-		uint32_t index;
-		if (translated_block > 0x200)
-		{
-			clear_cache(cpu, hash_map);
-			printf(" (Monothread) Cleaning translated blocks ----- \n");
-			return 0;
-		}
-
-		for (index = 0; index < cpu->dyncom_engine->cur_tagging_pos; index++)
-		{
-			if(compiled_queue[index] == core->phys_pc) {
-				//printf("### Compiling %x for %x idx %x\n", entry, core->phys_pc, index);
-				cpu->dyncom_engine->functions = index;
-				//printf("Planning to translate block n*%x at pc %x phys %x\n", cpu->dyncom_engine->functions, pc, core->phys_pc);
-				cpu_translate(cpu, compiled_queue[index]);
-				//PFUNC(core->phys_pc);
-				translated_block += 1;
-				break;
-			}
-		}
-	}
-#else
-#if !LIFO
-	if ((!pfunc) && (tag & TAG_ENTRY) && (counter > 0x1000))
-	{
-		uint32_t index;
-		if (translated_block > 0x200)
-		{
-			pthread_rwlock_wrlock(&translation_rwlock);
-			clear_cache(cpu, hash_map);
-			printf(" (Multithread) Cleaning translated blocks ----- \n");
-			while (!compile_stack.empty())
-			{
-				compile_stack.pop();
-			}
-			pthread_rwlock_unlock(&translation_rwlock);
-			return 0;
-		}
-
-		for (index = 0; index < cpu->dyncom_engine->cur_tagging_pos; index++)
-		{
-			if(compiled_queue[index] == core->phys_pc) {
-				pthread_rwlock_wrlock(&compile_stack_rwlock);
-				//if (compile_stack.empty() || compile_stack.top() != index)
-				{
-				//	printf("### Pushing to compile %x for %x idx %x\n", entry, core->phys_pc, index);
-					compile_stack.push(core->phys_pc);
-					compile_stack.push(index);
-				}
-				pthread_rwlock_unlock(&compile_stack_rwlock);
-				compiled_queue[index] = -1;
-				//printf("Planning to translate block n*%x at pc %x phys %x\n", cpu->dyncom_engine->functions, pc, core->phys_pc);
-				break;
-			}
-		}
-	}
-#else
-	if ((!pfunc) && (tag & TAG_ENTRY) && (counter > 0x5))
-	{
-		uint32_t index;
-		if (translated_block > 0x400)
-		{
-			pthread_rwlock_wrlock(&translation_rwlock);
-			clear_cache(cpu, hash_map);
-			printf(" (LIFO) Cleaning translated blocks ----- \n");
-			while (!compile_stack.empty())
-			{
-				compile_stack.pop();
-			}
-			pthread_rwlock_unlock(&translation_rwlock);
-			return 0;
-		}
-
-		for (index = 0; index < cpu->dyncom_engine->cur_tagging_pos; index++)
-		{
-			if(compiled_queue[index] == core->phys_pc) {
-				pthread_rwlock_wrlock(&compile_stack_rwlock);
-				if (compile_stack.empty() || compile_stack.top() != index)
-				{
-					//printf("### Pushing to compile %x for %x idx %x\n", entry, core->phys_pc, index);
-					compile_stack.push(core->phys_pc);
-					compile_stack.push(index);
-				}
-				pthread_rwlock_unlock(&compile_stack_rwlock);
-				//compiled_queue[index] = -1;
-				//printf("Planning to translate block n*%x at pc %x phys %x\n", cpu->dyncom_engine->functions, pc, core->phys_pc);
-				break;
-			}
-		}
-	}
-#endif
-#endif
-
-	//printf("#### counter is %x for pc %x\n", counter, pc);
-	
-	/* The instruction is not is the engine, we interpret it */
 	if (!pfunc)
-	{
+	{	
+		/* The instruction is not is the engine, we interpret it */
 		//printf("Interpreting %p-%p with MMU %x\n", core->phys_pc, pc, (core->mmu.control));
-		interpret_cpu_step(cpu->cpu_data);
+		//compiled_queue[(++cur_compile_pos )% QUEUE_LENGTH] = core->phys_pc;
+		//bb_prof
+		//pthread_rwlock_wrlock(&compile_stack_rwlock);
+		//if(cur_compile_pos == QUEUE_LENGTH){
+		int ret;
+		if((ret = pthread_rwlock_trywrlock(&compile_stack_rwlock)) == 0){ 
+			compile_stack.push(core->phys_pc);
+			pthread_rwlock_unlock(&compile_stack_rwlock);
+		}
+		else{
+			printf("Warning ,can not get the wrlock ,error is %d, %s\n", ret, strerror(ret));
+		}
+		//}
+		extern void InterpreterMainLoop(cpu_t *core);
+		InterpreterMainLoop(cpu);
+
 		return 0;
 	}
 	else
 	{
-		//if (get_skyeye_pref()->start_logging)
-			//printf("Ready! In %p %p Type %d \n", pc, core->phys_pc, core->NextInstr);
-
-		/* synchronize flags between dyncom and interpreter */
-		//UPDATE_TIMING(cpu, TIMER_SWITCH, true);
-		//printf("In Cpsr %x N %x Z %x C %x V %x -> ", core->Cpsr, core->NFlag, core->ZFlag, core->CFlag, core->VFlag);
-		core->Cpsr = core->Cpsr & 0xfffffff;
-		core->Cpsr |= core->NFlag << 31;
-		core->Cpsr |= core->ZFlag << 30;
-		core->Cpsr |= core->CFlag << 29;
-		core->Cpsr |= core->VFlag << 28;
-		//core->Cpsr |= IFFlags = (((core->Cpsr & INTBITS) >> 6) & 3);
-		//printf("-> Cpsr %x\n", core->Cpsr);
-
-		if (!is_user_mode(cpu)) {
-			CP15REG(CP15_TRANSLATION_BASE_CONTROL) = core->mmu.translation_table_ctrl;
-			CP15REG(CP15_TRANSLATION_BASE_TABLE_0) = core->mmu.translation_table_base0;
-			CP15REG(CP15_TRANSLATION_BASE_TABLE_1) = core->mmu.translation_table_base1;
-			CP15REG(CP15_DOMAIN_ACCESS_CONTROL) = core->mmu.domain_access_control;
-			//CP15REG(CP15_CONTROL) &= ~CONTROL_MMU;
-			//CP15REG(CP15_CONTROL) &= ~CONTROL_VECTOR;
-			//CP15REG(CP15_CONTROL) |= core->mmu.control & CONTROL_MMU;
-			//CP15REG(CP15_CONTROL) |= core->mmu.control & CONTROL_VECTOR;
-			CP15REG(CP15_CONTROL) = core->mmu.control;
-			CP15REG(CP15_INSTR_FAULT_STATUS) = core->mmu.fault_statusi;
-			CP15REG(CP15_FAULT_STATUS) = core->mmu.fault_status;
-			CP15REG(CP15_FAULT_ADDRESS) = core->mmu.fault_address;
-			
-			switch (core->Mode)
-			{
-			case USER32MODE:
-				core->Spsr_copy = core->Spsr[USERBANK];
-				core->RegBank[USERBANK][13] = core->Reg[13];
-				core->RegBank[USERBANK][14] = core->Reg[14];
-				break;
-			case IRQ32MODE:
-				core->Spsr_copy = core->Spsr[IRQBANK];
-				core->RegBank[IRQBANK][13] = core->Reg[13];
-				core->RegBank[IRQBANK][14] = core->Reg[14];
-				break;
-			case SVC32MODE:
-				core->Spsr_copy = core->Spsr[SVCBANK];
-				core->RegBank[SVCBANK][13] = core->Reg[13];
-				core->RegBank[SVCBANK][14] = core->Reg[14];
-				break;
-			case ABORT32MODE:
-				core->Spsr_copy = core->Spsr[ABORTBANK];
-				core->RegBank[ABORTBANK][13] = core->Reg[13];
-				core->RegBank[ABORTBANK][14] = core->Reg[14];
-				break;
-			case UNDEF32MODE:
-				core->Spsr_copy = core->Spsr[UNDEFBANK];
-				core->RegBank[UNDEFBANK][13] = core->Reg[13];
-				core->RegBank[UNDEFBANK][14] = core->Reg[14];
-				break;
-			case FIQ32MODE:
-				core->Spsr_copy = core->Spsr[FIQBANK];
-				core->RegBank[FIQBANK][13] = core->Reg[13];
-				core->RegBank[FIQBANK][14] = core->Reg[14];
-				break;
-			}
-	
-			#if 0 // performance ?
-			core->Spsr_copy = core->Spsr[core->Bank];
-			core->RegBank[core->Bank][13] = core->Reg[13];
-			core->RegBank[core->Bank][14] = core->Reg[14];
-			#endif
-			
-			core->Reg_usr[0] = core->RegBank[USERBANK][13];
-			core->Reg_usr[1] = core->RegBank[USERBANK][14];
-			core->Reg_irq[0] = core->RegBank[IRQBANK][13];
-			core->Reg_irq[1] = core->RegBank[IRQBANK][14];
-			core->Reg_svc[0] = core->RegBank[SVCBANK][13];
-			core->Reg_svc[1] = core->RegBank[SVCBANK][14];
-			core->Reg_abort[0] = core->RegBank[ABORTBANK][13];
-			core->Reg_abort[1] = core->RegBank[ABORTBANK][14];
-			core->Reg_undef[0] = core->RegBank[UNDEFBANK][13];
-			core->Reg_undef[1] = core->RegBank[UNDEFBANK][14];
-			core->Reg_firq[0] = core->RegBank[FIQBANK][13];
-			core->Reg_firq[1] = core->RegBank[FIQBANK][14];
-		}
-		
-		if (core->NextInstr == PRIMEPIPE)
-		{
-			
-		} else if (core->NextInstr == SEQ){
-			core->Reg[15] -= 4;
-		} else if (core->NextInstr == NONSEQ){
-			core->Reg[15] -= 4;
-		}
-		//UPDATE_TIMING(cpu, TIMER_SWITCH, false);
-		int rc = JIT_RETURN_NOERR;
-		if (is_user_mode(cpu))
-			rc = um_cpu_run(cpu);
-		else
-			rc = cpu_run(cpu);
-		
-		//UPDATE_TIMING(cpu, TIMER_SWITCH, true);
-		core->NFlag = ((core->Cpsr & 0x80000000) != 0);
-		core->ZFlag = ((core->Cpsr & 0x40000000) != 0);
-		core->CFlag = ((core->Cpsr & 0x20000000) != 0);
-		core->VFlag = ((core->Cpsr & 0x10000000) != 0);
-		core->IFFlags = (((core->Cpsr & INTBITS) >> 6) & 3);
-		//printf("Out Cpsr %x N %x Z %x C %x V %x\n", core->Cpsr, core->NFlag, core->ZFlag, core->CFlag, core->VFlag);
-
-		if (!is_user_mode(cpu)) {
-			core->mmu.translation_table_ctrl = CP15REG(CP15_TRANSLATION_BASE_CONTROL);
-			core->mmu.translation_table_base0 = CP15REG(CP15_TRANSLATION_BASE_TABLE_0);
-			core->mmu.translation_table_base1 = CP15REG(CP15_TRANSLATION_BASE_TABLE_1);
-			core->mmu.domain_access_control = CP15REG(CP15_DOMAIN_ACCESS_CONTROL);
-			core->mmu.control = CP15REG(CP15_CONTROL);
-			core->mmu.fault_statusi = CP15REG(CP15_INSTR_FAULT_STATUS);
-			core->mmu.fault_status = CP15REG(CP15_FAULT_STATUS);
-			core->mmu.fault_address = CP15REG(CP15_FAULT_ADDRESS);
-			
-			switch (core->Mode)
-			{
-			case USER32MODE:
-				core->Bank = USERBANK;
-				core->Spsr[USERBANK] = core->Spsr_copy;
-				core->Reg_usr[0] = core->Reg[13];
-				core->Reg_usr[1] = core->Reg[14];
-				break;
-			case IRQ32MODE:
-				core->Bank = IRQBANK;
-				core->Spsr[IRQBANK] = core->Spsr_copy;
-				core->Reg_irq[0] = core->Reg[13];
-				core->Reg_irq[1] = core->Reg[14];
-				break;
-			case SVC32MODE:
-				core->Bank = SVCBANK;
-				core->Spsr[SVCBANK] = core->Spsr_copy;
-				core->Reg_svc[0] = core->Reg[13];
-				core->Reg_svc[1] = core->Reg[14];
-				break;
-			case ABORT32MODE:
-				core->Bank = ABORTBANK;
-				core->Spsr[ABORTBANK] = core->Spsr_copy;
-				core->Reg_abort[0] = core->Reg[13];
-				core->Reg_abort[1] = core->Reg[14];
-				break;
-			case UNDEF32MODE:
-				core->Bank = UNDEFBANK;
-				core->Spsr[UNDEFBANK] = core->Spsr_copy;
-				core->Reg_undef[0] = core->Reg[13];
-				core->Reg_undef[1] = core->Reg[14];
-				break;
-			case FIQ32MODE:
-				core->Bank = FIQBANK;
-				core->Spsr[FIQBANK] = core->Spsr_copy;
-				core->Reg_firq[0] = core->Reg[13];
-				core->Reg_firq[1] = core->Reg[14];
-				break;
-			}
-
-			core->RegBank[USERBANK][13] = core->Reg_usr[0];
-			core->RegBank[USERBANK][14] = core->Reg_usr[1];
-			core->RegBank[IRQBANK][13] = core->Reg_irq[0];
-			core->RegBank[IRQBANK][14] = core->Reg_irq[1];
-			core->RegBank[SVCBANK][13] = core->Reg_svc[0];
-			core->RegBank[SVCBANK][14] = core->Reg_svc[1];
-			core->RegBank[ABORTBANK][13] = core->Reg_abort[0];
-			core->RegBank[ABORTBANK][14] = core->Reg_abort[1];
-			core->RegBank[UNDEFBANK][13] = core->Reg_undef[0];
-			core->RegBank[UNDEFBANK][14] = core->Reg_undef[1];
-			core->RegBank[FIQBANK][13] = core->Reg_firq[0];
-			core->RegBank[FIQBANK][14] = core->Reg_firq[1];
-		}
-
-		//UPDATE_TIMING(cpu, TIMER_SWITCH, false);
-		
-		if (is_user_mode(cpu)) {
-			core->phys_pc = core->Reg[15];
-		} else {
-			uint32_t ret;
-			ret = cpu->mem_ops.effective_to_physical(cpu, core->Reg[15], &core->phys_pc);
-		}
-		
-		//if (get_skyeye_pref()->start_logging)
-		//	printf("### Out of jit return %d - %p %p\n", rc, core->Reg[15], core->phys_pc);
-
-		/* In all cases, the next instruction should be considered first in pipeline */
-		core->NextInstr = PRIMEPIPE;
-		
-		/* General rule: return 1 if next block should be handled by Dyncom */
-		switch (rc) {
-		case JIT_RETURN_NOERR: /* JIT code wants us to end execution */
-		case JIT_RETURN_TIMEOUT:
-			PFUNC(core->phys_pc);
-			if (pfunc) {
-				//printf("Timeout - Next handling by DYNCOM %x\n", core->Reg[15]);
-				return 1;
-			} else {
-				//printf("Timeout - Next handling by INTERP %x\n", core->Reg[15]);
-				return 0;
-			}
-		case JIT_RETURN_SINGLESTEP:
-			/* TODO */
-		case JIT_RETURN_FUNCNOTFOUND:
-			//printf("pc %x is not found, phys_pc is %p\n", core->Reg[15], core->phys_pc);
-			if (!is_user_mode(cpu))
-			{
-				switch_mode(core, core->Cpsr & 0x1f);
-				if (flush_current_page(cpu)) {
-					return 0;
-				}
-			}
-			//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
-			push_compiled_work(cpu, core->phys_pc);
-			return 0;
-		case JIT_RETURN_TRAP:
-			{
-				/* user mode handling */
-				if (is_user_mode(cpu))
-				{
-				#ifdef OPT_LOCAL_REGISTERS
-					uint32_t instr;
-					bus_read(32, core->Reg[15], &instr);
-					ARMul_OSHandleSWI(core, BITS(0,19));
-				#endif
-					core->Reg[15] += 4;
-					core->phys_pc = core->Reg[15];
-					//if (get_skyeye_pref()->start_logging)
-					//	printf("Trap - Handled %x\n", core->phys_pc);
-					return 0;
-				}
-				
-				/* kernel mode handling */
-				PFUNC(core->phys_pc);
-				if (pfunc) {
-					//if (get_skyeye_pref()->start_logging)
-					//	printf("Trap - Next handling by DYNCOM %x %x\n", core->Reg[15], core->phys_pc);
-				} else {
-					core->Reg[15] += 4;
-					//if (get_skyeye_pref()->start_logging)
-					//	printf("Trap - Next handling by INTERP %x %x\n", core->Reg[15], core->phys_pc);
-					return 0;
-				}
-				
-				//printf("###### Trap %x\n", core->Reg[15]);
-				if (core->syscallSig) {
-					return 1;
-				}
-				if (core->abortSig) {
-					return 1;
-				}
-				
-				/* if regular trap */
-				uint32_t mode = core->Cpsr & 0x1f;
-				if ( (mode != core->Mode) && (!is_user_mode(cpu)) ) {
-					switch_mode(core, mode);
-				}
-				
-				core->Reg[15] += 4;
-			}
-			return 1;
-		default:
-			fprintf(stderr, "unknown return code: %d\n", rc);
-			skyeye_exit(-1);
-		}
+		/* pure dyncom */
+		launch_compiled_queue_dyncom(cpu, pc);
+		return 0;
 	}
-	return 0;
 }
 
+static int handle_fp_insn(arm_core_t* core);
 /* For PURE_DYNCON mode. This one
    is a direct copy of the old one,
    and is far less complicated */
@@ -672,17 +277,16 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 	void * pfunc = NULL;
 	
 	/* set correct pc */
-	if (is_user_mode(cpu))
-	{
+	if (is_user_mode(cpu)){
 		core->phys_pc = pc;
 	}
 	
 	/* if cpu_run doesn't find the address of the block, it will return asap */
 	int rc = JIT_RETURN_NOERR;
 	if (is_user_mode(cpu))
-			rc = um_cpu_run(cpu);
-		else
-			rc = cpu_run(cpu);
+		rc = um_cpu_run(cpu);
+	else
+		rc = cpu_run(cpu);
 	
 	/* General rule: return 1 if next block should be handled by Dyncom */
 	switch (rc) {
@@ -704,20 +308,23 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		/* keep the tflag same with the bit in CPSR */
 		core->TFlag = core->Cpsr & (1 << THUMB_BIT);
 		//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
-		push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
+		if(running_mode != HYBRID)
+			push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
 		return 0;
 	case JIT_RETURN_TRAP:
 	{
 		/* user mode handling */
 		if (is_user_mode(cpu))
 		{
+			core->phys_pc = core->Reg[15];
+			if(handle_fp_insn(core) == 0){
 		#ifdef OPT_LOCAL_REGISTERS
 			uint32_t instr;
 			bus_read(32, core->Reg[15], &instr);
 			ARMul_OSHandleSWI(core, BITS(0,19));
 		#endif
+			}
 			core->Reg[15] += 4;
-			core->phys_pc = core->Reg[15];
 			//if (get_skyeye_pref()->start_logging)
 			//	printf("Trap - Handled %x\n", core->phys_pc);
 			return 0;
@@ -729,103 +336,16 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		if (core->abortSig) {
 			return 1;
 		}
-		if(core->Reg[15] == 0xc002df8c )
-			printf("@@@@@@@@@@@@@@@@@@@@@ cpsr=0x%x, mode=0x%x\n", core->Cpsr, core->Mode);
 			
 		/* if regular trap */
+		core->Reg[15] += 4;
 		uint32_t mode = core->Cpsr & 0x1f;
-		if ( (mode != core->Mode) && (!is_user_mode(cpu)) ) {
+		if ((mode != core->Mode) && (!is_user_mode(cpu))) {
 			switch_mode(core, mode);
-			core->Reg[15] += 4;
 			return 1;
 		}
-		uint32 instr = 0xdeadc0de;
-		bus_read(32, core->phys_pc, &instr);
-		if((instr & 0x0FB80e50)== 0x0eb80a40){ /* some instruction need to implemented here */
-			/* VCVTBFI */
-			printf("\n\nVCVTBFI executed:\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}
-		if((instr & 0x0FBF0ed0)== 0x0eb70ac0){ /* some instruction need to implemented here */
-			/* VCVTBDS */
-			printf("\n\nVCVTBDS executed:\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}
-
-		else if((instr & 0x0fb00e50) == 0x0e300a00){ /* some instruction need to implemented here */
-			/* VADD */
-			printf("VADD executed:\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else if((instr & 0x0FBF0E50)== 0x0eb40a40){ /* some instruction need to implemented here */
-			/* VCMP */
-			printf("VCMP executed:\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else if((instr & 0x0FBF0E50)== 0x0eb50a40){ /* some instruction need to implemented here */
-			/* VCMP2 */
-			printf("VCMP2 executed:\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else if((instr & 0xFF800F10)== 0xF3000800){ /* some instruction need to implemented here */
-			/* VSUB */
-			printf("\n\nVSUB executed:\n\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else if((instr & 0x0FB00E50)== 0x0E300a40){ /* some instruction need to implemented here */
-			/* VSUB */
-			printf("\n\nVSUB(floating-point) executed at 0x%x:\n\n", core->Reg[15]);
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-
-		else if((instr & 0x0Fb00e50)== 0x0E200a00){ /* some instruction need to implemented here */
-			/* VFMUL */
-			printf("\n\nVMUL executed:\n\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else if((instr & 0x0Fb00e50)== 0x0E800a00){ /* some instruction need to implemented here */
-			/* VFMUL */
-			printf("\n\nVDIV executed:\n\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else if((instr & 0x0Fb00e10)== 0x0E000a00){ /* some instruction need to implemented here */
-			/* VMLA */
-			printf("\n\nVMLA executed:\n\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}
-		else if((instr & 0x0FbF0ed0)== 0x0Eb00ac0){ /* some instruction need to implemented here */
-			/* VABS */
-			printf("\n\nVABS executed:\n\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else if((instr & 0x0Fb00e10)== 0x0E100a00){ /* some instruction need to implemented here */
-			/* VNMLA */
-			printf("\n\nVNMLA executed:\n\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else if((instr & 0x0Fb00e50)== 0x0E200a40){ /* some instruction need to implemented here */
-			/* VMLS */
-			printf("\n\nVNMLA executed:\n\n");
-			extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
-			vcvtbfi_instr_impl(core, instr);
-		}	
-		else{
-			//printf("Unknown instruction 0x%x\n", instr);
-		}
-
-		core->Reg[15] += 4;
+		/* handle float point instruction */
+		handle_fp_insn(core);
 		return 1;
 	}
 	default: 
@@ -833,138 +353,131 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		fprintf(stderr, "unknown return code: %d\n", rc);
 		skyeye_exit(-1);
 	}
+	}//switch
+	return 1;
+}
+
+static int handle_fp_insn(arm_core_t* core){
+	uint32 instr = 0xdeadc0de;
+	bus_read(32, core->phys_pc, &instr);
+	if((instr & 0x0FB80e50)== 0x0eb80a40){ /* some instruction need to implemented here */
+		/* VCVTBFI */
+		printf("\n\nVCVTBFI executed:\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}
+	if((instr & 0x0FBF0ed0)== 0x0eb70ac0){ /* some instruction need to implemented here */
+		/* VCVTBDS */
+		printf("\n\nVCVTBDS executed:\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}
+	else if((instr & 0x0fb00e50) == 0x0e300a00){ /* some instruction need to implemented here */
+		/* VADD */
+		printf("VADD executed:\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0x0FBF0E50)== 0x0eb40a40){ /* some instruction need to implemented here */
+		/* VCMP */
+		printf("VCMP executed:\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0x0FBF0E50)== 0x0eb50a40){ /* some instruction need to implemented here */
+		/* VCMP2 */
+		printf("VCMP2 executed:\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0xFF800F10)== 0xF3000800){ /* some instruction need to implemented here */
+		/* VSUB */
+		printf("\n\nVSUB executed:\n\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0x0FB00E50)== 0x0E300a40){ /* some instruction need to implemented here */
+		/* VSUB */
+		printf("\n\nVSUB(floating-point) executed at 0x%x:\n\n", core->Reg[15]);
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0x0Fb00e50)== 0x0E200a00){ /* some instruction need to implemented here */
+		/* VFMUL */
+		printf("\n\nVMUL executed:\n\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0x0Fb00e50)== 0x0E800a00){ /* some instruction need to implemented here */
+		/* VFMUL */
+		printf("\n\nVDIV executed:\n\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0x0Fb00e10)== 0x0E000a00){ /* some instruction need to implemented here */
+		/* VMLA */
+		printf("\n\nVMLA executed:\n\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}
+	else if((instr & 0x0FbF0ed0)== 0x0Eb00ac0){ /* some instruction need to implemented here */
+		/* VABS */
+		printf("\n\nVABS executed:\n\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0x0Fb00e10)== 0x0E100a00){ /* some instruction need to implemented here */
+		/* VNMLA */
+		printf("\n\nVNMLA executed:\n\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else if((instr & 0x0Fb00e50)== 0x0E200a40){ /* some instruction need to implemented here */
+		/* VMLS */
+		printf("\n\nVNMLA executed:\n\n");
+		extern int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr);
+		vcvtbfi_instr_impl(core, instr);
+	}	
+	else{
+		//printf("Unknown instruction 0x%x\n", instr);
+		return 0;
 	}
 	return 1;
 }
 
 /* This function handles tagging */
-static void push_compiled_work(cpu_t* cpu, uint32_t pc){
-	int i = 0;
-	int cur_pos = 0;
-	
-	#if 1
-	if (running_mode == HYBRID) {
-		cur_pos = cpu->dyncom_engine->cur_tagging_pos;
-		/* check if the pc already exist in the queue */
-		for(i = 0; i < cur_pos; i++) {
-			if(compiled_queue[i] == pc) {
-				//printf("pc 0x%x is also exist at %d\n", pc, cur_pos);
-				return;
-			}
-		}
-
-		if(cur_pos >= 0 && cur_pos < QUEUE_LENGTH)
-		{
-			//printf("\t##### Tagging %p\n", pc);
-			cpu_tag(cpu, pc);
-			/* Locked data includes compiled_queue, stack, and function pointer */
-			//pthread_rwlock_wrlock(&compiled_queue_rwlock);
-			//printf("In %s, place the pc=0x%x to the pos %d\n",__FUNCTION__, pc, cur_pos);
-			compiled_queue[cur_pos] = pc;
-			//pthread_rwlock_unlock(&compiled_queue_rwlock);
-			//printf("##### Waiting to compile %p, %d\n", pc, cur_pos);
-			cpu->dyncom_engine->cur_tagging_pos ++;
-		}
-		else
-			printf("In %s, compiled queue overflowed\n", __FUNCTION__);
-	}
-	else if (running_mode == PURE_DYNCOM) {
-		if (translated_block > 0x1800)
-		{
-			//printf("\t(Dyncom) Cleaning %x translated blocks ----- \n", cpu->dyncom_engine->cur_tagging_pos);
-			//clear_cache(cpu, cpu->dyncom_engine->fmap);
-		}
-		cpu_tag(cpu, pc);
-		cpu->dyncom_engine->cur_tagging_pos ++;
-		cpu_translate(cpu, pc);
-		translated_block += 1;
-		#if 0
-		void* pfunc = NULL;
-		fast_map hash_map = cpu->dyncom_engine->fmap;
-		PFUNC(pc);
-		//printf("######### (Dyncom) Translated %x %p rank\n", pc, pfunc, cpu->dyncom_engine->cur_tagging_pos);
-		#endif
-	}
-	else
-		printf("In %s, this function should not be called in interpreter mode\n", __FUNCTION__);
-	
-	
-	#else
-	if (running_mode == HYBRID)
-		cur_pos = cpu->dyncom_engine->cur_tagging_pos;
-	
-	/* check if the pc already exist in the queue */
-	for(i = 0; i < cur_pos; i++)
-		if(compiled_queue[i] == pc) {
-			printf("pc 0x%x is also exist at %d\n", pc, cur_pos);
-			return;
-		}
-
-	if(cur_pos >= 0 && cur_pos < QUEUE_LENGTH){
-		//printf("\t##### Tagging %p\n", pc);
-		
-		if( running_mode == PURE_DYNCOM ){
-			cpu_tag(cpu, pc);
-			cpu_translate(cpu, pc);
-			translated_block += 1;
-			#if 0
-			void* pfunc = NULL;
-			fast_map hash_map = cpu->dyncom_engine->fmap;
-			PFUNC(pc);
-			//printf("######### (Dyncom) Translated %x %p rank\n", pc, pfunc, cpu->dyncom_engine->cur_tagging_pos);
-			#endif
-		}
-		else{
-			cpu_tag(cpu, pc);
-			/* Locked data includes compiled_queue, stack, and function pointer */
-			//pthread_rwlock_wrlock(&compiled_queue_rwlock);
-			//printf("In %s, place the pc=0x%x to the pos %d\n",__FUNCTION__, pc, cur_pos);
-			compiled_queue[cur_pos] = pc;
-			//pthread_rwlock_unlock(&compiled_queue_rwlock);
-			//printf("##### Waiting to compile %p, %d\n", pc, cur_pos);
-		}
-		cpu->dyncom_engine->cur_tagging_pos ++;
-	}
-	else{
-		printf("In %s, compiled queue overflowed\n", __FUNCTION__);
-	}
-	#endif
+static inline void push_compiled_work(cpu_t* cpu, uint32_t pc){
+	cpu_tag(cpu, pc);
+	cpu->dyncom_engine->cur_tagging_pos ++;
+	cpu_translate(cpu, pc);
+	return;
 }
-/* Compiled the target to the host address */
+/* Compiled the target to the host address , and try to free some unused translation block */
 static void* compiled_worker(void* argp){
 	cpu_t* cpu = (cpu_t*) argp;
-	uint32_t pos_to_translate;
+	//uint32_t pos_to_translate;
 	for(;;){
-try_compile:
 		while(1){
-			pthread_rwlock_wrlock(&translation_rwlock);
 			uint32_t compiled_addr = 0xFFFFFFFF;
 			pthread_rwlock_rdlock(&compile_stack_rwlock);
 			if (!compile_stack.empty()) {
-				pos_to_translate = compile_stack.top();
-				compile_stack.pop();
 				compiled_addr = compile_stack.top();
 				compile_stack.pop();
 			}
-			pthread_rwlock_unlock(&compile_stack_rwlock);
-			if(compiled_addr == 0xFFFFFFFF) {
-				pthread_rwlock_unlock(&translation_rwlock);
+			else{
+				/* All the code is translated, we need to out for a rest */
+				pthread_rwlock_unlock(&compile_stack_rwlock);
 				break;
 			}
-			//printf("In %s, pc=0x%x\n", __FUNCTION__, compiled_queue[compiling_pos]);
-			/* Just for get basicblock */
-			//cpu_tag(cpu, compiled_queue[cur_pos]);
-			/* functions will increasement in translate procedure */
-			//printf("#### %x GET \n", compiled_addr);
+			pthread_rwlock_unlock(&compile_stack_rwlock);
+			/* begin translation */
+			pthread_rwlock_wrlock(&translation_rwlock);
 			fast_map hash_map = cpu->dyncom_engine->fmap;
 			void* pfunc;
 
 			PFUNC(compiled_addr);
 			if(pfunc == NULL){
-				cpu->dyncom_engine->functions = pos_to_translate;
-				cpu_translate(cpu, compiled_addr);
-				translated_block += 1;
-				//printf("##### (Hybrid) Translated %p %x\n", compiled_addr, pos_to_translate);
+				push_compiled_work(cpu, compiled_addr);
 			}
 			pthread_rwlock_unlock(&translation_rwlock);
 		}

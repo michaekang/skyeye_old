@@ -179,8 +179,7 @@ static void per_cpu_step(conf_object_t * running_core){
 		case HYBRID:
 			/* if next instruction will be interpreted, ret value is 0. Exceptions are handled inside
 		   		the interpreter, so we return immediatly */
-			if(launch_compiled_queue((cpu_t*)(core->dyncom_cpu->obj), core->Reg[15]) == 0)
-				return;
+			launch_compiled_queue((cpu_t*)(core->dyncom_cpu->obj), core->Reg[15]);
 			break;
 		case PURE_DYNCOM:
 			launch_compiled_queue_dyncom((cpu_t*)(core->dyncom_cpu->obj), core->Reg[15]);
@@ -210,6 +209,7 @@ static void per_cpu_step(conf_object_t * running_core){
 		}
 	}
 	mach->mach_io_do_cycle(cpu);
+	return;
 }
 
 static void per_cpu_stop(conf_object_t * core){
