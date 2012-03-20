@@ -42,6 +42,7 @@ fun, and definign VAILDATE will define SWI 1 to enter SVC mode, and SWI
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "skyeye_internal.h"
+#include "skyeye_sched.h"
 
 #ifndef O_RDONLY
 #define O_RDONLY 0
@@ -319,10 +320,16 @@ ARMul_OSHandleSWI (ARMul_State * state, ARMword number)
 
 	case SWI_ExitGroup:
 	case SWI_Exit:
+		{
+		struct timeval tv;
+		//gettimeofday(&tv,NULL);
+		//printf("In %s, %d  sec, %d usec\n", __FUNCTION__, tv.tv_sec, tv.tv_usec);
+		printf("passed %d sec, %lld usec\n", get_clock_sec(), get_clock_us());
+
 		/* quit here */
 		run_command("quit");
 		return TRUE;
-
+		}
 	case SWI_Times:{
 		uint32_t dest = state->Reg[0];
 		struct tms now;
