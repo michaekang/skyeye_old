@@ -137,8 +137,14 @@ SWIWrite0 (ARMul_State * state, ARMword addr)
 {
 	ARMword temp;
 
-	while ((temp = ARMul_ReadByte (state, addr++)) != 0)
-		(void) fputc ((char) temp, stdout);
+	//while ((temp = ARMul_ReadByte (state, addr++)) != 0)
+	while(1){
+		mem_read(8, addr++, &temp);
+		if(temp != 0)
+			(void) fputc ((char) temp, stdout);
+		else
+			break;
+	}
 }
 
 static void
@@ -150,7 +156,8 @@ WriteCommandLineTo (ARMul_State * state, ARMword addr)
 		cptr = "\0";
 	do {
 		temp = (ARMword) * cptr++;
-		ARMul_WriteByte (state, addr++, temp);
+		//ARMul_WriteByte (state, addr++, temp);
+		mem_write(8, addr++, temp);
 	}
 	while (temp != 0);
 }
@@ -197,7 +204,8 @@ SWIread (ARMul_State * state, ARMword f, ARMword ptr, ARMword len)
 	res = read (f, local, len);
 	if (res > 0)
 		for (i = 0; i < res; i++)
-			ARMul_WriteByte (state, ptr + i, local[i]);
+			//ARMul_WriteByte (state, ptr + i, local[i]);
+			mem_write(8, ptr + i, local[i]);
 	free (local);
 	//state->Reg[0] = res == -1 ? -1 : len - res;
 	state->Reg[0] = res;
@@ -217,8 +225,12 @@ SWIwrite (ARMul_State * state, ARMword f, ARMword ptr, ARMword len)
 		return;
 	}
 
-	for (i = 0; i < len; i++)
-		local[i] = ARMul_ReadByte (state, ptr + i);
+	for (i = 0; i < len; i++){
+		//local[i] = ARMul_ReadByte (state, ptr + i);
+		ARMword data;
+		mem_read(8, ptr + i, &data);
+		local[i] = data & 0xFF;
+	}
 
 	res = write (f, local, len);
 	//state->Reg[0] = res == -1 ? -1 : len - res;
