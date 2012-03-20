@@ -22,7 +22,7 @@
 * @version 7849
 * @date 2012-03-08
 */
-
+#include "lru_tlb.h"
 #include "arm_dyncom_mmu.h"
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_translate.h"
@@ -201,6 +201,22 @@ dyncom_mmu_translate (arm_core_t *core, ARMword virt_addr, ARMword *phys_addr, i
 	return NO_FAULT;
 }
 
+static tlb_table tlb[TLB_TOTAL];
+
+void remove_tlb_by_asid(uint32_t asid, tlb_type_t type)
+{
+	tlb[type].erase_by_asid(asid);
+}
+
+void remove_tlb(tlb_type_t type)
+{
+	tlb[type].clear();
+}
+
+void remove_tlb_by_mva(uint32_t mva, tlb_type_t type)
+{
+	tlb[type].erase(mva);
+}
 
 fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t size, uint32_t rw)
 {
@@ -249,15 +265,23 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 	return fault;
 }
 
-fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw)
+fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw, tlb_type_t access_type = DATA_TLB)
 {
 	fault_t fault = NO_FAULT;
 	int ap, sop;
+	uint32_t p;
 	if ((CP15REG(CP15_CONTROL) & 1) == 0) {
 		/* MMU or MPU disabled. */
 		*phys_addr = virt_addr;
 //		return NO_FAULT;
 	} else {
+		if (!tlb[access_type].get_phys_addr((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p)) {
+			if (dyncom_check_perms(core, p & 3, rw)) {
+				*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
+				return fault;
+			}
+		}
+
 		fault = dyncom_mmu_translate(core, virt_addr, phys_addr, &ap, &sop);
 		if (fault) {
 		#if MMU_DEBUG
@@ -275,6 +299,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 				return SUBPAGE_PERMISSION_FAULT;
 			}
 		}
+		tlb[access_type].insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap );
 	}
 	return fault;
 }
@@ -284,11 +309,9 @@ fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
 #if 1
-	if (cpu->is_user_mode) {
-		phys_addr = virt_addr;
-	} else {
-		fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 1);
-	}
+	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+
+	fault = check_address_validity(core, virt_addr, &phys_addr, 1, INSN_TLB);
 
 	if (fault) {
 		printf("fetch inst exception.\n");

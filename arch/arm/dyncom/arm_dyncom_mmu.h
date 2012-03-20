@@ -21,6 +21,14 @@
 #define MMU_ENABLED	core->CP15[CP15(CP15_CONTROL)]
 
 #define MMU_DEBUG	0
+typedef enum _tlb_type {
+	DATA_TLB = 0,
+	INSN_TLB,
+	TLB_TOTAL
+} tlb_type_t;
+void remove_tlb_by_asid(uint32_t asid, tlb_type_t type);
+void remove_tlb(tlb_type_t type);
+void remove_tlb_by_mva(uint32_t mva, tlb_type_t type);
 
 extern arch_mem_ops_t arm_dyncom_mem_ops;
 /* FIXME, the physical address for s3c6410, should get 

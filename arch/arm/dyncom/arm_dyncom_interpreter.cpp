@@ -360,7 +360,7 @@ typedef struct _LSWordorUnsignedByte {
 fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t &value, uint32_t size);
 fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t value, uint32_t size);
 fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_t size);
-fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw);
+fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw, tlb_type_t access_type = DATA_TLB);
 
 typedef fault_t (*get_addr_fp_t)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw);
 
@@ -3629,7 +3629,7 @@ void InterpreterMainLoop(cpu_t *core)
 			phys_addr = cpu->Reg[15];
 		}
 		else{
-			fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1);
+			fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
 			if (fault) {
 				cpu->abortSig = true;
 				cpu->Aborted = ARMul_PrefetchAbortV;
@@ -4568,9 +4568,73 @@ void InterpreterMainLoop(cpu_t *core)
 					} else if(CRn == MMU_CACHE_OPS){
 						//SKYEYE_WARNING("cache operation have not implemented.\n");
 					} else if(CRn == MMU_TLB_OPS){
-						//SKYEYE_WARNING("tlb operation have not implemented.\n");
-			//		} else if (CRn == 7 && CRm == 14 && OPCODE_2 == 0) {
-			//			LET(R(RD));
+						switch (CRm) {
+						case 5: /* ITLB */
+							switch(OPCODE_2){
+							case 0: /* invalidate all */
+								//invalidate_all_tlb(state);
+								printf("{TLB} [INSN] invalidate all\n");
+								remove_tlb(INSN_TLB);
+								break;
+							case 1: /* invalidate by MVA */
+								//invalidate_by_mva(state, value);
+								//printf("{TLB} [INSN] invalidate by mva\n");
+								remove_tlb_by_mva(RD, INSN_TLB);
+								break;
+							case 2: /* invalidate by asid */
+								//invalidate_by_asid(state, value);
+								//printf("{TLB} [INSN] invalidate by asid\n");
+								remove_tlb_by_asid(RD, INSN_TLB);
+								break;
+							default:
+								break;
+							}
+
+							break;
+						case 6: /* DTLB */
+							switch(OPCODE_2){
+							case 0: /* invalidate all */
+								//invalidate_all_tlb(state);
+								remove_tlb(DATA_TLB);
+								printf("{TLB} [DATA] invalidate all\n");
+								break;
+							case 1: /* invalidate by MVA */
+								//invalidate_by_mva(state, value);
+								remove_tlb_by_mva(RD, DATA_TLB);
+								//printf("{TLB} [DATA] invalidate by mva\n");
+								break;
+							case 2: /* invalidate by asid */
+								//invalidate_by_asid(state, value);
+								remove_tlb_by_asid(RD, DATA_TLB);
+								//printf("{TLB} [DATA] invalidate by asid\n");
+								break;
+							default:
+								break;
+							}
+							break;
+						case 7: /* UNIFILED TLB */
+							switch(OPCODE_2){
+							case 0: /* invalidate all */
+								//invalidate_all_tlb(state);
+								remove_tlb(DATA_TLB);
+								remove_tlb(INSN_TLB);
+								//printf("{TLB} [UNIFILED] invalidate all\n");
+								break;
+							case 1: /* invalidate by MVA */
+								//invalidate_by_mva(state, value);
+								printf("{TLB} [UNIFILED] invalidate by mva\n");
+								break;
+							case 2: /* invalidate by asid */
+								//invalidate_by_asid(state, value);
+								printf("{TLB} [UNIFILED] invalidate by asid\n");
+								break;
+							default:
+								break;
+							}
+							break;
+						default:
+							break;
+						}
 					} else if(CRn == MMU_PID){
 						if(OPCODE_2 == 0)
 							CP15_REG(CP15_PID) = RD;
