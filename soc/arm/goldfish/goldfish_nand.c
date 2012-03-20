@@ -21,13 +21,54 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "skyeye_class.h"
 #include "goldfish_nand.h"
 #include "goldfish_nand_reg.h"
+#include "android/utils/tempfile.h"
+#include "android/utils/debug.h"
+#include "android/android.h"
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include "skyeye_arch.h"
+#include <skyeye_interface.h>
+#include <skyeye_nand_intf.h>
 #include "stdlib.h"
 
+static nand_dev_t *nand_devs = NULL;
+static uint32_t nand_dev_count = 0;
+
+#define  DEBUG  1
+#if DEBUG
+#  define  D(...)    VERBOSE_PRINT(init,__VA_ARGS__)
+#  define  D_ACTIVE  VERBOSE_CHECK(init)
+#  define  T(...)    VERBOSE_PRINT(nand_limits,__VA_ARGS__)
+#  define  T_ACTIVE  VERBOSE_CHECK(nand_limits)
+#else
+#  define  D(...)    ((void)0)
+#  define  D_ACTIVE  0
+#  define  T(...)    ((void)0)
+#  define  T_ACTIVE  0
+#endif
+
+/* lseek uses 64-bit offsets on Darwin. */
+/* prefer lseek64 on Linux              */
+#ifdef __APPLE__
+#  define  llseek  lseek
+#elif defined(__linux__)
+#  define  llseek  lseek64
+#endif
+
+#define  XLOG  xlog
+
+static void
+xlog( const char*  format, ... )
+{
+    va_list  args;
+    va_start(args, format);
+    fprintf(stderr, "NAND: ");
+    vfprintf(stderr, format, args);
+    va_end(args);
+}
 static int  do_read(int  fd, void*  buf, size_t  size)
 {
     int  ret;
@@ -292,8 +333,219 @@ static exception_t nand_write(conf_object_t *obj,generic_address_t addr,void* bu
 	return exp;
 }
 
-#define DEV_COUNT 1
-static void nand_finalize_instance(conf_object_t *obj);
+static int arg_match(const char *a, const char *b, size_t b_len)
+{
+    while(*a && b_len--) {
+        if(*a++ != *b++)
+            return 0;
+    }
+    return b_len == 0;
+}
+
+void nand_add_dev(const char *arg)
+{
+    uint64_t dev_size = 0;
+    const char *next_arg;
+    const char *value;
+    size_t arg_len, value_len;
+    nand_dev_t *new_devs, *dev;
+    char *devname = NULL;
+    size_t devname_len = 0;
+    char *initfilename = NULL;
+    char *rwfilename = NULL;
+    int initfd = -1;
+    int rwfd = -1;
+    int read_only = 0;
+    int pad;
+    ssize_t read_size;
+    //uint32_t page_size = 2048;
+    uint32_t page_size = 512;
+    uint32_t extra_size = 16;
+    uint32_t erase_pages = 16;
+
+    VERBOSE_PRINT(init, "%s: %s", __FUNCTION__, arg);
+
+    while(arg) {
+        next_arg = strchr(arg, ',');
+        value = strchr(arg, '=');
+        if(next_arg != NULL) {
+            arg_len = next_arg - arg;
+            next_arg++;
+            if(value >= next_arg)
+                value = NULL;
+        }
+        else
+            arg_len = strlen(arg);
+        if(value != NULL) {
+            size_t new_arg_len = value - arg;
+            value_len = arg_len - new_arg_len - 1;
+            arg_len = new_arg_len;
+            value++;
+        }
+        else
+            value_len = 0;
+
+        if(devname == NULL) {
+            if(value != NULL)
+                goto bad_arg_and_value;
+            devname_len = arg_len;
+            devname = malloc(arg_len+1);
+            if(devname == NULL)
+                goto out_of_memory;
+            memcpy(devname, arg, arg_len);
+            devname[arg_len] = 0;
+        }
+        else if(value == NULL) {
+            if(arg_match("readonly", arg, arg_len)) {
+                read_only = 1;
+            }
+            else {
+                XLOG("bad arg: %.*s\n", arg_len, arg);
+                exit(1);
+            }
+        }
+        else {
+            if(arg_match("size", arg, arg_len)) {
+                char *ep;
+                dev_size = strtoull(value, &ep, 0);
+                if(ep != value + value_len)
+                    goto bad_arg_and_value;
+            }
+            else if(arg_match("pagesize", arg, arg_len)) {
+                char *ep;
+                page_size = strtoul(value, &ep, 0);
+                if(ep != value + value_len)
+                    goto bad_arg_and_value;
+            }
+            else if(arg_match("extrasize", arg, arg_len)) {
+                char *ep;
+                extra_size = strtoul(value, &ep, 0);
+                if(ep != value + value_len)
+                    goto bad_arg_and_value;
+            }
+            else if(arg_match("erasepages", arg, arg_len)) {
+                char *ep;
+                erase_pages = strtoul(value, &ep, 0);
+                if(ep != value + value_len)
+                    goto bad_arg_and_value;
+            }
+            else if(arg_match("initfile", arg, arg_len)) {
+                initfilename = malloc(value_len + 1);
+                if(initfilename == NULL)
+                    goto out_of_memory;
+                memcpy(initfilename, value, value_len);
+                initfilename[value_len] = '\0';
+            }
+            else if(arg_match("file", arg, arg_len)) {
+                rwfilename = malloc(value_len + 1);
+                if(rwfilename == NULL)
+                    goto out_of_memory;
+                memcpy(rwfilename, value, value_len);
+                rwfilename[value_len] = '\0';
+            }
+            else {
+                goto bad_arg_and_value;
+            }
+        }
+
+        arg = next_arg;
+    }
+
+    if (rwfilename == NULL) {
+        /* we create a temporary file to store everything */
+        TempFile*    tmp = tempfile_create();
+
+        if (tmp == NULL) {
+            XLOG("could not create temp file for %.*s NAND disk image: %s\n",
+                  devname_len, devname, strerror(errno));
+            exit(1);
+        }
+        rwfilename = (char*) tempfile_path(tmp);
+        if (VERBOSE_CHECK(init))
+            dprint( "mapping '%.*s' NAND image to %s", devname_len, devname, rwfilename);
+    }
+
+#ifndef O_BINARY
+#define O_BINARY 0
+    if(rwfilename) {
+        rwfd = open(rwfilename, O_BINARY | (read_only ? O_RDONLY : O_RDWR));
+        if(rwfd < 0) {
+            XLOG("could not open file %s, %s\n", rwfilename, strerror(errno));
+            exit(1);
+        }
+        /* this could be a writable temporary file. use atexit_close_fd to ensure
+         * that it is properly cleaned up at exit on Win32
+         */
+        if (!read_only)
+            atexit_close_fd(rwfd);
+    }
+
+    if(initfilename) {
+        initfd = open(initfilename, O_BINARY | O_RDONLY);
+        if(initfd < 0) {
+            XLOG("could not open file %s, %s\n", initfilename, strerror(errno));
+            exit(1);
+        }
+        if(dev_size == 0) {
+            dev_size = do_lseek(initfd, 0, SEEK_END);
+            do_lseek(initfd, 0, SEEK_SET);
+        }
+    }
+#undef O_BINARY
+#endif
+
+    new_devs = realloc(nand_devs, sizeof(nand_devs[0]) * (nand_dev_count + 1));
+    if(new_devs == NULL)
+        goto out_of_memory;
+    nand_devs = new_devs;
+    dev = &new_devs[nand_dev_count];
+
+    dev->page_size = page_size;
+    dev->extra_size = extra_size;
+    dev->erase_size = erase_pages * (page_size + extra_size);
+    pad = dev_size % dev->erase_size;
+    if (pad != 0) {
+        dev_size += (dev->erase_size - pad);
+        D("rounding devsize up to a full eraseunit, now %llx\n", dev_size);
+    }
+    dev->devname = devname;
+    dev->devname_len = devname_len;
+    dev->initfile = initfilename; 
+    dev->rwfile = rwfilename; 
+    dev->max_size = dev_size;
+    dev->data = malloc(dev->erase_size);
+    if(dev->data == NULL)
+        goto out_of_memory;
+    dev->flags = read_only ? NAND_DEV_FLAG_READ_ONLY : 0;
+
+    if (initfd >= 0) {
+        do {
+            read_size = do_read(initfd, dev->data, dev->erase_size);
+            if(read_size < 0) {
+                XLOG("could not read file %s, %s\n", initfilename, strerror(errno));
+                exit(1);
+            }
+            if(do_write(rwfd, dev->data, read_size) != read_size) {
+                XLOG("could not write file %s, %s\n", rwfilename, strerror(errno));
+                exit(1);
+            }
+        } while(read_size == dev->erase_size);
+        close(initfd);
+    }
+    dev->fd = rwfd;
+
+    nand_dev_count++;
+
+    return;
+
+out_of_memory:
+    XLOG("out of memory\n");
+    exit(1);
+
+bad_arg_and_value:
+    XLOG("bad arg: %.*s=%.*s\n", arg_len, arg, value_len, value);
+    exit(1);
+}
 
 static conf_object_t* new_nand_device(char *name){
 	nand_dev_controller_t* s = skyeye_mm_zero(sizeof(*s));
@@ -302,6 +554,13 @@ static conf_object_t* new_nand_device(char *name){
 	s->io_memory->conf_obj  = s->obj;
 	s->io_memory->read = nand_read;
 	s->io_memory->write = nand_write;
+
+	goldfish_nand_control_intf * nand_control = skyeye_mm_zero(sizeof(goldfish_nand_control_intf));
+	nand_control->conf_obj = s->obj;
+	nand_control->nand_ctrl = nand_add_dev;
+	SKY_register_interface(nand_control, name, NAND_CTRL_INTF_NAME);
+
+#if 0
 	s->nand_dev = skyeye_mm_zero(sizeof(nand_dev_t) * DEV_COUNT);
 	s->dev_count  = DEV_COUNT;	
 	s->nand_dev[DEV_COUNT - 1].devname = strdup(name);
@@ -309,6 +568,7 @@ static conf_object_t* new_nand_device(char *name){
 	s->nand_dev[DEV_COUNT- 1].initfile = "initrd.img";
 	s->nand_dev[DEV_COUNT - 1].rwfile = "nand.bak";
 	nand_finalize_instance(s->obj);
+#endif
 	return s->obj;
 }
 

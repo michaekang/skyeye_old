@@ -3656,8 +3656,7 @@ int main(int argc, char **argv, char **envp)
         } else {
             PANIC("Missing initial system image path!");
         }
-	//modified by xiaoqiao
-//        nand_add_dev(tmp);
+        nand_add_dev(tmp);
     }
 
     /* Initialize data partition image */
@@ -3693,8 +3692,7 @@ int main(int argc, char **argv, char **envp)
             pstrcat(tmp, sizeof(tmp), ",initfile=");
             pstrcat(tmp, sizeof(tmp), initImage);
         }
-	//modified by xiaoqiao
-        //nand_add_dev(tmp);
+        nand_add_dev(tmp);
     }
 
 #if 0 //modified by xiaoqiao
@@ -3899,8 +3897,7 @@ int main(int argc, char **argv, char **envp)
                 pstrcat(tmp, sizeof(tmp), partPath);
             }
         }
-	//modified by xiaoqiao
-        //nand_add_dev(tmp);
+        nand_add_dev(tmp);
     }
 
 #if 0 //modified by xiaoqiao
