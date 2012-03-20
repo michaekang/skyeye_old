@@ -69,10 +69,13 @@ static pthread_t pid;
 /**
 * @brief The wall clock
 */
-static uint64_t now_us = 0;
+static uint64_t now_us = 0, now_sec = 0;
 
 uint64_t get_clock_us(){
 	return now_us;
+}
+uint64_t get_clock_sec(){
+	return now_sec;
 }
 
 /**
@@ -90,9 +93,12 @@ static void thread_scheduler(void){
 		usleep(100);
 	}
 	struct timeval tv;
-	unsigned long long start_utime, current_utime, last_utime, passed_utime;
+	unsigned long long start_usec, start_sec, current_utime, last_utime, passed_utime;
 	gettimeofday(&tv,NULL);
-	start_utime = tv.tv_sec * 1000000 + tv.tv_usec;
+	start_usec = tv.tv_usec;
+	start_sec = tv.tv_sec;
+	current_utime = start_sec * 1000000 + start_usec;
+	//printf("In %s, %d  sec, %d usec\n", __FUNCTION__, tv.tv_sec, tv.tv_usec);
 	while(1)
 	{
 		usleep(100);
@@ -100,7 +106,8 @@ static void thread_scheduler(void){
 		last_utime = current_utime;
 		current_utime = tv.tv_sec * 1000000 + tv.tv_usec;
 		/* Update the clock on the wall */
-		now_us = current_utime - start_utime;
+		now_us = tv.tv_usec - start_usec;
+		now_sec = tv.tv_sec - start_sec;
 
 		/* Calculate how much microseconds passed comparing to last time */
 		passed_utime = current_utime - last_utime;

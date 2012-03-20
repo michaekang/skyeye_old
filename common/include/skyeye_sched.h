@@ -113,6 +113,7 @@ int fini_timer_scheduler(void);
 void list_timer_scheduler(void);
 
 uint64_t get_clock_us();
+uint64_t get_clock_sec();
 #ifdef __cplusplus
 }
 #endif
