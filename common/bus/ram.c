@@ -546,7 +546,7 @@ unsigned long get_dma_addr(unsigned long guest_addr){
         mem_bank_t * global_mbp = bank_ptr(guest_addr);
         mem_config_t * memmap = get_global_memmap();
 	if(global_mbp == NULL){
-		fprintf(stderr, "Can not find the bank for the address 0x%lx\n", guest_addr);
+		skyeye_error("Can not find the bank for the address 0x%lx\n", guest_addr);
 		return 0;
 	}
 	
