@@ -1505,7 +1505,6 @@ get_addr_fp_t get_calc_addr_op(unsigned int inst)
 		return MLnS(ImmediatePostIndexed);
 	} else if (BITS(inst, 24, 27) == 0 && BITS(inst, 21, 22) == 0 && BIT(inst, 7) == 1 && BIT(inst, 4) == 1) {
 		//DEBUG_MSG;
-		printf("MLnS(RegisterPostIndexed), inst=0x%x\n", inst);
 		return MLnS(RegisterPostIndexed);
 	} else if (BITS(inst, 23, 27) == 0x11) {
 	/* 3 */
@@ -1788,7 +1787,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(cps)(unsigned int inst, int index)
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(cpy)(unsigned int inst, int index)
 {
-	#if 1
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(mov_inst));
 	mov_inst *inst_cream = (mov_inst *)inst_base->component;
 
@@ -1802,18 +1800,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(cpy)(unsigned int inst, int index)
 	inst_cream->shifter_operand = BITS(inst, 0, 11);
 	inst_cream->shtop_func = get_shtop(inst);
 
-	#endif
-	#if 0
-	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(cpy_inst));
-	cpy_inst *inst_cream = (cpy_inst *)inst_base->component;
-
-	inst_base->cond  = BITS(inst, 28, 31);
-	inst_base->idx	 = index;
-	inst_base->br	 = NON_BRANCH;
-
-	inst_cream->Rd = BITS(inst, 12, 15);
-	inst_cream->Rm = BITS(inst,  0,  3);
-	#endif
 	if (inst_cream->Rd == 15) {
 		inst_base->br = INDIRECT_BRANCH;
 	}
@@ -3977,10 +3963,6 @@ void InterpreterMainLoop(cpu_t *core)
 	}
 	CPY_INST:
 	{
-//		printf("cpy inst %x\n", cpu->Reg[15]);
-//		printf("pc:       %x\n", cpu->Reg[15]);
-//		debug_function(cpu);
-//		cpu->icount ++;
 		INC_ICOUNTER;
 		mov_inst *inst_cream = (mov_inst *)inst_base->component;
 //		cpy_inst *inst_cream = (cpy_inst *)inst_base->component;
@@ -4307,14 +4289,7 @@ void InterpreterMainLoop(cpu_t *core)
 			unsigned int value;
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 8);
 			if (fault) goto MMU_EXCEPTION;
-			//bus_read(8, addr, &value);
-//			printf("PC:%x\n", cpu->Reg[15]);
-//			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-//			printf("after : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
-//			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 16, 19)]);
-//			cpu->Reg[BITS(inst_cream->inst, 16, 19)] = addr;
-//			printf("after : %x\n", cpu->Reg[BITS(inst_cream->inst, 16, 19)]);
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				goto DISPATCH;
 			}
@@ -4503,9 +4478,6 @@ void InterpreterMainLoop(cpu_t *core)
 			unsigned int value;
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
 			if (fault) goto MMU_EXCEPTION;
-			//bus_read(8, addr, &value);
-//			printf("PC:%x\n", cpu->Reg[15]);
-//			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 
 			if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
@@ -4513,10 +4485,6 @@ void InterpreterMainLoop(cpu_t *core)
 			else
 				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = ROTATE_RIGHT_32(value,(8*(addr&0x3))) ;
 
-//			printf("after : %x\n", cpu->Reg[BITS(inst_cream->inst, 12, 15)]);
-//			printf("before : %x\n", cpu->Reg[BITS(inst_cream->inst, 16, 19)]);
-//			cpu->Reg[BITS(inst_cream->inst, 16, 19)] = addr;
-//			printf("after : %x\n", cpu->Reg[BITS(inst_cream->inst, 16, 19)]);
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				goto DISPATCH;
 			}
@@ -5133,17 +5101,7 @@ void InterpreterMainLoop(cpu_t *core)
 				operand2 = (BIT(RS, 15)) ? (BITS(RS, 0, 15) | 0xffff0000) : BITS(RS, 0, 15);
 			else
 				operand2 = (BIT(RS, 31)) ? (BITS(RS, 16, 31) | 0xffff0000) : BITS(RS, 16, 31);
-			if (cpu->icounter == 3539539214) {
-				printf("RM  : %08x\n", RM);
-				printf("RS  : %08x\n", RS);
-				printf("op1 : %08x\n", operand1);
-				printf("op2 : %08x\n", operand2);
-				printf("RN  : %08x\n", RN);
-			}
 			RD = operand1 * operand2 + RN;
-			if (cpu->icounter == 3539539214) {
-				printf("RD  : %08x\n", RD);
-			}
 			//FIXME: UPDATE Q FLAGS
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
