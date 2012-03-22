@@ -371,7 +371,10 @@ compute_fb_update_rect_linear(FbUpdateState*  fbs,
 
 static void goldfish_fb_update_display(conf_object_t *opaque)
 {
-    struct goldfish_fb_device *s = (goldfish_fb_device*)(opaque->obj);
+//    struct goldfish_fb_device *s = (goldfish_fb_device*)(opaque->obj);
+    conf_object_t* obj = get_conf_obj("goldfish_fb0");
+    struct goldfish_fb_device *s = (goldfish_fb_device *)obj->obj;
+
     uint32_t base;
     uint8_t*  dst_line;
     uint8_t*  src_line;
@@ -479,20 +482,20 @@ static exception_t goldfish_fb_read(conf_object_t *opaque, generic_address_t off
     fb_state_t* s = dev->fb;
     uint32_t temp; 
         
-    printf("framebuffer read offset:%d",offset);
     switch(offset) {
         case FB_GET_WIDTH:
             temp = ds_get_width(s->ds);
-            printf("FB_GET_WIDTH => %d\n", temp);
+            printf("FB_GET_WIDTH => 0x%x\n", temp);
             break;
 
         case FB_GET_HEIGHT:
             temp = ds_get_height(s->ds);
-            printf( "FB_GET_HEIGHT = %d\n", temp );
+            printf( "FB_GET_HEIGHT = 0x%x\n", temp );
             break;
 
         case FB_INT_STATUS:
             temp = s->int_status & s->int_enable;
+            printf( "FB_GET_INT_STATUS => 0x%x\n", temp);
             if(temp) {
                 s->int_status &= ~temp;
                 //goldfish_device_set_irq(&s->dev, 0, 0);
@@ -501,16 +504,17 @@ static exception_t goldfish_fb_read(conf_object_t *opaque, generic_address_t off
             break;
         case FB_GET_PHYS_WIDTH:
             temp = pixels_to_mm( ds_get_width(s->ds), s->dpi );
-            printf( "FB_GET_PHYS_WIDTH => %d\n", temp);
+            printf( "FB_GET_PHYS_WIDTH => 0x%x\n", temp);
             break;
 
         case FB_GET_PHYS_HEIGHT:
             temp  = pixels_to_mm( ds_get_height(s->ds), s->dpi );
-            printf( "FB_GET_PHYS_HEIGHT => %d\n", temp);
+            printf( "FB_GET_PHYS_HEIGHT => 0x%x\n", temp);
             break;
 
         case FB_GET_FORMAT:
             temp = goldfish_fb_get_pixel_format(s);
+            printf( "FB_GET_FORMAT => 0x%x\n", temp);
 
         default:
 	//cpu_abort (cpu_single_env, "goldfish_fb_read: Bad offset %x\n", offset);
@@ -529,7 +533,6 @@ static exception_t goldfish_fb_write(conf_object_t *opaque, generic_address_t of
     uint32_t val = *(uint32_t*)buf;
     int level;
     
-    printf("framebuffer write offset:%d",offset);
     switch(offset) {
         case FB_INT_ENABLE:
 		s->int_enable = val;
@@ -562,6 +565,7 @@ static exception_t goldfish_fb_write(conf_object_t *opaque, generic_address_t of
             }
 
 		level = s->int_status & s->int_enable;
+		printf("level is %d,int_status 0x%x,int_enable 0x%x\n",level,s->int_status,s->int_enable);
     //goldfish_device_set_irq(&s->dev, 0, (s->int_status & s->int_enable));
 		if (level == 1)
 		{
@@ -577,12 +581,12 @@ static exception_t goldfish_fb_write(conf_object_t *opaque, generic_address_t of
 		}
 
             if (need_resize) {
-                printf("FB_SET_BASE: need resize (rotation=%d)\n", s->rotation );
+                printf("FB_SET_BASE: need resize (rotation=0x%x)\n", s->rotation );
                 dpy_resize(s->ds);
             }
             } break;
         case FB_SET_ROTATION:
-            printf( "FB_SET_ROTATION %d\n", val);
+            printf( "FB_SET_ROTATION 0x%x\n", val);
             s->set_rotation = val;
             break;
         case FB_SET_BLANK:
@@ -643,7 +647,6 @@ goldfish_fb_device* new_goldfish_fb_device(char* obj_name){
 	fb_control->fb_ctrl = goldfish_fb_device_init;
 	SKY_register_interface(fb_control, obj_name, FB_CTRL_INTF_NAME);
 
-	printf("new framebuffer is ok\n");
 
 	return dev->obj;
 }

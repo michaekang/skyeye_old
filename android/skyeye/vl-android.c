@@ -30,9 +30,11 @@
 #include "android/skyeye/qemu-common.h"
 #include <skyeye_sched.h>
 #include <skyeye_lcd_intf.h>
+#include <skyeye_nand_intf.h>
 #include <skyeye_class.h>
 #include <skyeye_interface.h>
 #include "goldfish_fb.h"
+#include "goldfish_nand.h"
 #if 0
 #include "hw/hw.h"
 #include "hw/boards.h"
@@ -1770,6 +1772,7 @@ static void gui_update(void *opaque)
     DisplayState *ds = opaque;
     DisplayChangeListener *dcl = ds->listeners;
 
+    printf("in %s\n",__func__);
     dpy_refresh(ds);
 
     while (dcl != NULL) {
@@ -2609,6 +2612,12 @@ int main(int argc, char **argv, char **envp)
     goldfish_fb_control_intf* fb_control = (goldfish_fb_control_intf*)SKY_get_interface(conf_obj, FB_CTRL_INTF_NAME);
     fb_control->fb_ctrl();
 
+    nand_dev_controller_t* goldfish_nand;
+    conf_obj = get_conf_obj("goldfish_nand0");
+    goldfish_nand = (nand_dev_controller_t*)conf_obj->obj;
+    goldfish_nand_control_intf* nand_control = (goldfish_nand_control_intf*)SKY_get_interface(conf_obj, NAND_CTRL_INTF_NAME);
+
+
     /* Initialize sockets before anything else, so we can properly report
      * initialization failures back to the UI. */
 #ifdef _WIN32
@@ -3424,7 +3433,8 @@ int main(int argc, char **argv, char **envp)
 #endif
 #ifdef CONFIG_NAND
             case QEMU_OPTION_nand:
-                nand_add_dev(optarg);
+               // nand_add_dev(optarg);
+	        nand_control->nand_ctrl(optarg);
                 break;
 #endif
             case QEMU_OPTION_android_ports:
@@ -3656,7 +3666,8 @@ int main(int argc, char **argv, char **envp)
         } else {
             PANIC("Missing initial system image path!");
         }
-        nand_add_dev(tmp);
+       // nand_add_dev(tmp);
+        nand_control->nand_ctrl(tmp);
     }
 
     /* Initialize data partition image */
@@ -3692,7 +3703,8 @@ int main(int argc, char **argv, char **envp)
             pstrcat(tmp, sizeof(tmp), ",initfile=");
             pstrcat(tmp, sizeof(tmp), initImage);
         }
-        nand_add_dev(tmp);
+       // nand_add_dev(tmp);
+        nand_control->nand_ctrl(tmp);
     }
 
 #if 0 //modified by xiaoqiao
@@ -3897,7 +3909,8 @@ int main(int argc, char **argv, char **envp)
                 pstrcat(tmp, sizeof(tmp), partPath);
             }
         }
-        nand_add_dev(tmp);
+        //nand_add_dev(tmp);
+	nand_control->nand_ctrl(tmp);
     }
 
 #if 0 //modified by xiaoqiao
@@ -4337,6 +4350,7 @@ int main(int argc, char **argv, char **envp)
 #endif
 #if defined(CONFIG_SDL) && !defined(CONFIG_STANDALONE_CORE)
     case DT_SDL:
+	printf("\n\n\nsdl display init\n\n\n");
         sdl_display_init(ds, full_screen, no_frame);
         break;
 #elif defined(CONFIG_COCOA)
@@ -4373,7 +4387,12 @@ int main(int argc, char **argv, char **envp)
             ds->gui_timer = qemu_new_timer_ms(rt_clock, gui_update, ds);
             qemu_mod_timer(ds->gui_timer, qemu_get_clock_ms(rt_clock));
 #endif //endif xiaoqiao
-	ds->gui_timer = create_timer_scheduler(1, Periodic_sched,gui_update, ds, &id);
+//	ds->gui_timer = create_timer_scheduler(1, Periodic_sched,gui_update, ds, &id);
+	//create_thread_scheduler(10000000, Periodic_sched, gui_update, ds, &id);
+	create_thread_scheduler(10000000, Periodic_sched, gui_update, ds, &id);
+	printf("create listen timer id = %d\n",id);
+	list_thread_scheduler();
+	ds->gui_timer = id;
         }
         dcl = dcl->next;
     }
@@ -4383,7 +4402,9 @@ int main(int argc, char **argv, char **envp)
         nographic_timer = qemu_new_timer_ms(rt_clock, nographic_update, NULL);
         qemu_mod_timer(nographic_timer, qemu_get_clock_ms(rt_clock));
 #endif
-	ds->gui_timer = create_timer_scheduler(1, Periodic_sched,gui_update, ds, &id);
+	//ds->gui_timer = create_timer_scheduler(1, Periodic_sched,gui_update, ds, &id);
+	create_thread_scheduler(10000000, Periodic_sched, gui_update, ds, &id);
+	ds->gui_timer = id;
     }
 
     text_consoles_set_display(ds);
