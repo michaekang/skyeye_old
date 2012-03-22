@@ -131,6 +131,7 @@ static exception_t tty_write(conf_object_t *opaque, generic_address_t offset, ui
                     break;
 
                 case TTY_CMD_READ_BUFFER:
+		    {
 #if 0
                     if(s->ptr_len > s->data_count)
                         cpu_abort (cpu_single_env, "goldfish_tty_write: reading more data than available %d %d\n", s->ptr_len, s->data_count);
@@ -141,11 +142,21 @@ static exception_t tty_write(conf_object_t *opaque, generic_address_t offset, ui
                     cpu_memory_rw_debug(cpu_single_env,s->ptr, s->data, s->ptr_len,1);
 #endif
                     //printf("goldfish_tty_write: read %d bytes to %x\n", s->ptr_len, s->ptr);
+		    int fault;
+		    char   temp[1];
+		    skyeye_config_t* config = get_current_config();
+		    generic_arch_t *arch_instance = get_arch_instance(config->arch->arch_name);
+		    temp[0] = (char)(s->data)[0];
+		    fault = arch_instance->mmu_write(8, s->ptr, (uint32_t)temp[0]);
+		    if(fault)
+			fprintf(stderr, "SKYEYE:read virtual address error!!!\n" );
+
                     if(s->data_count > s->ptr_len)
                         memmove(s->data, s->data + s->ptr_len, s->data_count - s->ptr_len);
                     s->data_count -= s->ptr_len;
                     if(s->data_count == 0 && s->ready)
 			 dev->master->lower_signal(dev->signal_target, dev->line_no);
+		    }
                     break;
                 default:
                     //cpu_abort (cpu_single_env, "goldfish_tty_write: Bad command %x\n", value);
@@ -187,6 +198,25 @@ static void tty_receive(void *opaque, const uint8_t *buf, int size)
 }
 #endif
 
+static void tty_io_do_cycle(void* tty_dev){
+	goldfish_tty_device* dev = (goldfish_tty_device*)tty_dev;
+	tty_state_t* s = dev->tty;
+
+	struct timeval tv;
+	unsigned char buf;
+
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+
+	if(skyeye_uart_read(-1, &buf, 1, &tv, NULL) > 0)
+	{
+		s->data_count = 1;
+	        memcpy(s->data, &buf, 1);
+		dev->master->lower_signal(dev->signal_target, dev->line_no);
+	}
+
+
+}
 static conf_object_t* new_goldfish_tty_device(char* obj_name){
 	goldfish_tty_device* dev = skyeye_mm_zero(sizeof(goldfish_tty_device));
 	dev->obj = new_conf_object(obj_name, dev);
@@ -199,6 +229,8 @@ static conf_object_t* new_goldfish_tty_device(char* obj_name){
 	dev->io_memory->conf_obj = dev->obj;
 	dev->io_memory->read = tty_read;
 	dev->io_memory->write = tty_write;
+	uint32 id;
+	create_timer_scheduler(1, Periodic_sched, tty_io_do_cycle, dev, &id);
 	
 	return dev->obj;
 }
