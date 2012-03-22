@@ -119,19 +119,25 @@ static exception_t nand_read(conf_object_t *obj,generic_address_t offset,void* b
     	nand_dev_t *dev;
 	uint32_t data;
 
-    	if(s->dev >= s->dev_count)
-        	return -1;
-    	dev = s->dev + s->nand_dev;
     	switch (offset) {
     	case NAND_VERSION:
-        	data =  NAND_VERSION_CURRENT;
-		break;
+                *(uint32 *)buf =  NAND_VERSION_CURRENT;
+                return No_exp;
     	case NAND_NUM_DEV:
-        	data = s->dev_count;
-		break;
+        	//data = s->dev_count;
+               *(uint32 *)buf = nand_dev_count;
+                return No_exp;
    	 case NAND_RESULT:
-        	data = s->result;
-		break;
+                *(uint32 *)buf = s->result;
+                return No_exp;
+	}
+
+	if(s->dev >= nand_dev_count)
+		data = 0;
+
+	dev = nand_devs + s->dev;
+
+    	switch (offset) {
     	case NAND_DEV_FLAGS:
         	data = dev->flags;
 		break;
@@ -252,14 +258,23 @@ static uint32_t nand_dev_do_cmd(nand_dev_controller_t *s, uint32_t cmd)
 
     addr = s->addr_low | ((uint64_t)s->addr_high << 32);
     size = s->transfer_size;
-    if(s->dev >= s->dev_count)
+    if(s->dev >= nand_dev_count)
         return 0;
-    dev = s->nand_dev + s->dev;
+    dev = nand_devs + s->dev;
 
     switch(cmd) {
     case NAND_CMD_GET_DEV_NAME:
+	printf("size is %d,devname_len %d,devname %s\n",size,dev->devname_len,dev->devname);
         if(size > dev->devname_len)
             size = dev->devname_len;
+
+        int fault;
+        skyeye_config_t* config = get_current_config();
+        generic_arch_t *arch_instance = get_arch_instance(config->arch->arch_name);
+        fault = arch_instance->mmu_write(8, addr, (uint32_t *)dev->devname);
+        if(fault)
+                fprintf(stderr, "SKYEYE:write virtual address error!!!\n");
+
         return size;
     case NAND_CMD_READ:
         if(addr >= dev->max_size)
@@ -306,7 +321,7 @@ static exception_t nand_write(conf_object_t *obj,generic_address_t addr,void* bu
 	switch (addr) {
 	case NAND_DEV:
 		s->dev = value;
-		if(s->dev >= s->dev_count) {
+		if(s->dev >= nand_dev_count) {
 			fprintf(stderr,"in %s,bad dev %x\n",__FUNCTION__,value);
 		}
 		break;
