@@ -675,18 +675,19 @@ fault_t LnSWoUB(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsi
 	fault_t fault;
 	unsigned int Rn = BITS(inst, 16, 19);
 	unsigned int Rm = BITS(inst,  0,  3);
+	unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
 
-	unsigned int addr = cpu->Reg[Rn];
-	if (Rn == 15) addr += 8;
+	unsigned int addr = rn;
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
 	if (fault) return fault;
 
 	if (CondPassed(cpu, BITS(inst, 28, 31))) {
 		if (U_BIT) {
-			cpu->Reg[Rn] += cpu->Reg[Rm];
+			cpu->Reg[Rn] += rm;
 		} else {
-			cpu->Reg[Rn] -= cpu->Reg[Rm];
+			cpu->Reg[Rn] -= rm;
 		}
 	}
 	return fault;
@@ -775,9 +776,7 @@ fault_t MLnS(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsign
 	unsigned int immedH = BITS(inst,  8, 11);
 	unsigned int immedL = BITS(inst,  0,  3);
 	unsigned int addr;
-	unsigned int rn = cpu->Reg[Rn];
-	/* FIXME */
-	if (Rn == 15) {rn += 8; exit(-1);}
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
 	addr = rn;
 
 	virt_addr = addr;
@@ -801,18 +800,19 @@ fault_t MLnS(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigne
 	fault_t fault;
 	unsigned int Rn = BITS(inst, 16, 19);
 	unsigned int Rm = BITS(inst,  0,  3);
+	unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
+	unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
 
-	unsigned int addr = cpu->Reg[Rn];
-	if (Rn == 15) addr += 8;
+	unsigned int addr = rn;
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
 	if (fault) return fault;
 
 	if (CondPassed(cpu, BITS(inst, 28, 31))) {
 		if (U_BIT) {
-			cpu->Reg[Rn] += cpu->Reg[Rm];
+			cpu->Reg[Rn] += rm;
 		} else {
-			cpu->Reg[Rn] -= cpu->Reg[Rm];
+			cpu->Reg[Rn] -= rm;
 		}
 	}
 	return fault;
@@ -965,13 +965,13 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
 		break;
 	case 2:
 		if (shift_imm == 0){ /* ASR #32 */
-			if (cpu->Reg[Rm] >> 31)
+			if (rm >> 31)
 				index = 0xFFFFFFFF;
 			else
 				index = 0;
 		}
 		else
-			index = cpu->Reg[Rm] >> shift_imm;
+			index = rm >> shift_imm;
 		break;
 	case 3:
 		DEBUG_MSG;
