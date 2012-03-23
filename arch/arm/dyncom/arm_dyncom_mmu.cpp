@@ -421,8 +421,7 @@ fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, 
 
 #ifdef FAST_MEMORY
 	phys_addr = phys_addr | (virt_addr & 3);
-	if ((phys_addr & 0xf0000000) == 0x50000000) {
-		mem_read_directly(cpu, phys_addr, value, size);
+	if(mem_read_directly(cpu, phys_addr, value, size) == 0){
 		return fault;
 	}
 #endif
@@ -515,8 +514,7 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 	#endif
 #ifdef FAST_MEMORY
 	phys_addr = phys_addr | (virt_addr & 3);
-	if ((phys_addr & 0xf0000000) == BANK0_START) {
-		mem_write_directly(cpu, phys_addr, value, size);
+	if(mem_write_directly(cpu, phys_addr, value, size) == 0){
 		return fault;
 	}
 #endif
