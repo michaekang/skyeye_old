@@ -48,8 +48,9 @@
 /* FAST_MEMORY is only used in user mode simulation */
 #if USER_MODE_OPT
 #define OPT_LOCAL_REGISTERS
-#define FAST_MEMORY
 #endif
+
+#define FAST_MEMORY
 
 #define ENABLE_DEBUG_ME 0
 /* Running kernel should set ENABLE_ICOUNTER */
