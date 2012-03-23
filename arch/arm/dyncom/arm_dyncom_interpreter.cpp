@@ -401,6 +401,7 @@ static inline fault_t check_address_validity(arm_core_t *core, addr_t virt_addr,
 	*phys_addr = virt_addr;
 	return NO_FAULT;
 }
+
 #else
 fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t &value, uint32_t size);
 fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t value, uint32_t size);
@@ -3434,7 +3435,8 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 	/* Allocate memory and init InsCream */
 	/* Go on next, until terminal instruction */
 	/* Save start addr of basicblock in CreamCache */
-	arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
+	//arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
+	arm_processor *cpu = (arm_processor *)(core->cpu_data->obj);
 	ARM_INST_PTR inst_base = NULL;
 	unsigned int inst, inst_size = 4;
 	int idx;
@@ -3481,6 +3483,7 @@ translated:
 	};
 	pc_start = phys_addr;
 	if (!core->is_user_mode) {
+		//printf("before protect_code_page, pc_start=0x%x\n", pc_start);
 		protect_code_page(pc_start);
 	}
 	//printf("In %s,insert_bb pc=0x%x, TFlag=0x%x\n", __FUNCTION__, pc_start, cpu->TFlag);
@@ -3652,15 +3655,16 @@ void InterpreterMainLoop(cpu_t *core)
 			cpu->Reg[15] &= 0xfffffffe;
 		} else
 			cpu->Reg[15] &= 0xfffffffc;
-		counter --;
-		if (counter == 0) {
-			goto END;
-		}
 		/* check next instruction address is valid. */
-		if(core->is_user_mode){
-			phys_addr = cpu->Reg[15];
-		}
-		else{
+#if USER_MODE_OPT
+		phys_addr = cpu->Reg[15];
+#else
+		{
+			counter --;
+			if (counter == 0) {
+				goto END;
+			}
+
 			fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
 			if (fault) {
 				cpu->abortSig = true;
@@ -3671,6 +3675,7 @@ void InterpreterMainLoop(cpu_t *core)
 				goto END;
 			}
 		}
+#endif
 		if (find_bb(phys_addr, ptr) == -1) {
 			if (InterpreterTranslate(core, ptr, phys_addr) == FETCH_EXCEPTION)
 				goto END;
