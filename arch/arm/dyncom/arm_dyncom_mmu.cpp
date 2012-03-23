@@ -35,6 +35,62 @@
 #include "skyeye_ram.h"
 #include <execinfo.h>
 
+#ifdef FAST_MEMORY
+static inline void mem_read_raw(void *mem_ptr, uint32_t offset, uint32_t &value, int size)
+{
+	switch(size) {
+	case 8:
+		value = *((uint8_t *)mem_ptr + offset);
+		break;
+	case 16:
+		value = *(uint16_t *)((uint8_t *)mem_ptr + offset);
+		break;
+	case 32:
+		value = *(uint32_t *)((uint8_t *)mem_ptr + offset);
+		break;
+	}
+}
+
+static inline void mem_write_raw(void *mem_ptr, uint32_t offset, uint32_t value, int size)
+{
+	switch(size) {
+	case 8:
+		*((uint8_t *)mem_ptr + offset) = value & 0xff;
+		break;
+	case 16:
+		*(uint16_t *)((uint8_t *)mem_ptr + offset) = value & 0xffff;
+		break;
+	case 32:
+		*(uint32_t *)((uint8_t *)mem_ptr + offset) = value;
+		break;
+	}
+}
+
+static inline int mem_read_directly(cpu_t* cpu, uint32_t phys_addr, uint32_t &value, int size)
+{
+	int ret = -1;
+	uint32_t offset;
+	if (phys_addr >= BANK0_START && phys_addr < BANK0_END) {
+		offset = phys_addr - BANK0_START;
+		mem_read_raw(cpu->dyncom_engine->RAM, offset, value, size);
+		ret = 0;
+	}
+	return ret;
+}
+
+static inline int mem_write_directly(cpu_t* cpu, uint32_t phys_addr, uint32_t value, int size)
+{
+	int ret = -1;
+	uint32_t offset;
+	if (phys_addr >= BANK0_START && phys_addr < BANK0_END) {
+		offset = phys_addr - BANK0_START;
+		mem_write_raw(cpu->dyncom_engine->RAM, offset, value, size);
+		ret = 0;
+	}
+	return ret;
+}
+#endif
+
 static bool_t is_inside_page(cpu_t *cpu, addr_t a)
 {
 //	return ((a & 0xfffff000) == cpu->current_page_phys) ? True : False;
@@ -320,7 +376,10 @@ fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_
 		return fault;
 	}
 #endif
-
+#ifdef FAST_MEMORY
+	if(mem_read_directly(cpu, phys_addr, value, 32) == 0)
+		return fault;
+#endif
 	if (size == 8)
 		bus_read(8, phys_addr | (virt_addr & 3), &value);
 	else if (size == 16)
@@ -358,6 +417,14 @@ fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, 
 	}
 
 	if (fault) return fault;
+#endif
+
+#ifdef FAST_MEMORY
+	phys_addr = phys_addr | (virt_addr & 3);
+	if ((phys_addr & 0xf0000000) == 0x50000000) {
+		mem_read_directly(cpu, phys_addr, value, size);
+		return fault;
+	}
 #endif
 	if (size == 8)
 		bus_read(8, phys_addr | (virt_addr & 3), &value);
@@ -446,6 +513,13 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 //		exit(-1);
 	}
 	#endif
+#ifdef FAST_MEMORY
+	phys_addr = phys_addr | (virt_addr & 3);
+	if ((phys_addr & 0xf0000000) == BANK0_START) {
+		mem_write_directly(cpu, phys_addr, value, size);
+		return fault;
+	}
+#endif
 	if (size == 8)
 		bus_write(8, phys_addr | (virt_addr & 3), value);
 	else if (size == 16)
