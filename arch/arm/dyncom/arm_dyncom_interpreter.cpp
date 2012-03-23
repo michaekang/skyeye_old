@@ -357,10 +357,56 @@ typedef struct _MiscRegPstIdx {
 typedef struct _LSWordorUnsignedByte {
 } LDnST;
 
+#if USER_MODE_OPT
+static inline fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t &value, uint32_t size){
+	uint8_t* mem_ptr = cpu->dyncom_engine->RAM;
+	switch(size) {
+	case 8:
+		value = *((uint8_t *)mem_ptr + phys_addr);
+		break;
+	case 16:
+		value = *(uint16_t *)((uint8_t *)mem_ptr + phys_addr);
+		break;
+	case 32:
+		value = *(uint32_t *)((uint8_t *)mem_ptr + phys_addr);
+		break;
+	}
+	return NO_FAULT;
+}
+
+//static inline void interpreter_write_memory(void *mem_ptr, uint32_t offset, uint32_t value, int size)
+static inline fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t value, uint32_t size)
+{
+	uint8_t* mem_ptr = cpu->dyncom_engine->RAM;
+	switch(size) {
+	case 8:
+		*((uint8_t *)mem_ptr + phys_addr) = value & 0xff;
+		break;
+	case 16:
+		*(uint16_t *)((uint8_t *)mem_ptr + phys_addr) = value & 0xffff;
+		break;
+	case 32:
+		*(uint32_t *)((uint8_t *)mem_ptr + phys_addr) = value;
+		break;
+	}
+	return NO_FAULT;
+}
+
+static inline fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_t size){
+	uint8_t* mem_ptr = cpu->dyncom_engine->RAM;
+	value = *(uint32_t *)((uint8_t *)mem_ptr + virt_addr);
+	return NO_FAULT;
+}
+static inline fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw, tlb_type_t access_type = DATA_TLB){
+	*phys_addr = virt_addr;
+	return NO_FAULT;
+}
+#else
 fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t &value, uint32_t size);
 fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t value, uint32_t size);
 fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_t size);
 fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw, tlb_type_t access_type = DATA_TLB);
+#endif
 
 typedef fault_t (*get_addr_fp_t)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw);
 
