@@ -128,7 +128,7 @@ static void arch_arm_init(cpu_t *cpu, cpu_archinfo_t *info, cpu_archrf_t *rf)
 	// The address size is 32bits.
 	info->byte_size = 8;
 	info->word_size = 32;
-	info->float_size = 64;
+	info->float_size = 32;
 	info->address_size = 32;
 	// There are 16 32-bit GPRs
 	info->register_count[CPU_REG_GPR] = 19;
@@ -142,7 +142,7 @@ static void arch_arm_init(cpu_t *cpu, cpu_archinfo_t *info, cpu_archrf_t *rf)
 	info->register_count[CPU_REG_SPR] = VFP_REG_NUM;
 	info->register_size[CPU_REG_SPR] = 32;
 
-	info->register_count[CPU_REG_FPR] = 0;
+	info->register_count[CPU_REG_FPR] = 64;
 	info->register_size[CPU_REG_FPR] = 32;
 
 	info->psr_size = 32;
@@ -748,7 +748,8 @@ void arm_dyncom_init(arm_core_t* core){
 	//cpu->rf.srf = core->Spsr;
 	//cpu->rf.srf = &core->phys_pc;
 	cpu->rf.srf = core->Reg_usr;
-	cpu->rf.srf = core->ExtReg;
+	//cpu->rf.srf = core->ExtReg;
+	cpu->rf.frf = core->ExtReg;
        /* The flag address  */
 	cpu->info.flags_layout[0].flag_address = &core->TFlag;
 	cpu->info.flags_layout[1].flag_address = &core->NFlag;
