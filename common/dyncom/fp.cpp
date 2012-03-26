@@ -206,12 +206,16 @@ arch_load_fp_reg(cpu_t *cpu, uint32_t index, uint32_t bits,
 	}
 
 	/* optionally cast it */
-	if (bits != 0 && size != bits)
+	/*if (bits != 0 && size != bits)
 		v = fp_cast(cpu, bits, v, bb);
-
+	*/
 	return v;
 }
 
+Value* arch_get_fp_regs(cpu_t *cpu,uint32_t index,uint32_t bits,BasicBlock *bb){
+
+	return arch_get_fp_reg(cpu,index,bits,bb);
+}
 //////////////////////////////////////////////////////////////////////
 
 Value *
@@ -236,7 +240,7 @@ arch_cast_fp32(cpu_t *cpu, Value *v, BasicBlock *bb)
 		abort();
 	}
 #endif
-	return v;
+	return FP_BITCAST32(v);
 }
 
 Value *
@@ -263,7 +267,7 @@ arch_cast_fp64(cpu_t *cpu, Value *v, BasicBlock *bb)
 		abort();
 	}
 #endif
-	return v;
+	return FP_BITCAST64(v);
 }
 
 //
