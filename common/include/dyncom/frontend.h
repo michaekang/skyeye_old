@@ -152,9 +152,9 @@ uint32_t RAM32LE(uint8_t *RAM, addr_t a);
 #define FPTRUNC(s,v) new FPTruncInst(v, getFloatType(s), "", bb)
 #define FPEXT(s,v) new FPExtInst(v, getFloatType(s), "", bb)
 
-#define FPADD(a,b) ADD(a, b)
-#define FPSUB(a,b) SUB(a, b)
-#define FPMUL(a,b) MUL(a, b)
+#define FPADD(a,b) BinaryOperator::Create(Instruction::FAdd,a,b,"",bb)
+#define FPSUB(a,b) BinaryOperator::Create(Instruction::FSub,a,b,"",bb)
+#define FPMUL(a,b) BinaryOperator::Create(Instruction::FMul,a,b,"",bb)
 #define FPDIV(a,b) BinaryOperator::Create(Instruction::FDiv, a, b, "", bb)
 #define FPREM(a,b) BinaryOperator::Create(Instruction::FRem, a, b, "", bb)
 
@@ -178,6 +178,10 @@ uint32_t RAM32LE(uint8_t *RAM, addr_t a);
 
 #define FPCMP_OLE(a,b) new FCmpInst(*bb, FCmpInst::FCMP_OLE, a, b, "")
 #define FPCMP_ULE(a,b) new FCmpInst(*bb, FCmpInst::FCMP_ULE, a, b, "")
+
+#define FPNEGs(s,x) (FPSUB(FPCONST##s(0.0),x))
+#define FPNEG32(x) FPNEGs(32,x)
+#define FPNEG64(x) FPNEGs(64,x)
 
 /* condition */
 #define SELECT(c,a,b) (SelectInst::Create(c, a, b, "", bb))
@@ -214,6 +218,10 @@ uint32_t RAM32LE(uint8_t *RAM, addr_t a);
 #define FR128(i) arch_load_fp_reg(cpu, i, 128, bb)
 
 #define LETFP(i,v) arch_store_fp_reg(cpu, i, v, 0, bb)
+
+#define LETFPS(i,v) arch_store_fp_reg(cpu, i, v, 32, bb)
+
+#define LETFPD(i,v) arch_store_fp_reg(cpu, i, v, 64, bb)
 
 /* interface to memory */
 #define LOAD8(i,v) arch_put_reg(cpu, i, arch_load8(cpu,v,bb), 8, false, bb)
@@ -294,7 +302,7 @@ uint32_t RAM32LE(uint8_t *RAM, addr_t a);
 #define FPTOSI(s, v) new FPToSIInst(v, getIntegerType(s), "", bb)
 #define SITOFP(s, v) new SIToFPInst(v, getFloatType(s), "", bb)
 #define FPTOUI(s, v) new FPToUIInst(v, getIntegerType(s), "", bb)
-#define UITOFP(s, v) new UIToFPInst(v, getFloatType(s), "", bb)
+#define UITOFP(s,v) new UIToFPInst(v,  getFloatType(s), "", bb)
 
 /* float intrsinics */
 #define FPSQRT(v)    arch_sqrt(cpu, 64, v, bb)
