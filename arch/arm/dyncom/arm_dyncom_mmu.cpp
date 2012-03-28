@@ -32,6 +32,7 @@
 #include "arm_dyncom_run.h"
 #include "arm_dyncom_dec.h"
 #include "dyncom/tag.h"
+#include "dyncom/defines.h"
 #include "skyeye_ram.h"
 #include <execinfo.h>
 
@@ -549,6 +550,12 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 		phys_addr = virt_addr;
 		exit(-1);
 	}
+#ifdef FAST_MEMORY
+        phys_addr = phys_addr | (virt_addr & 3);
+        if(mem_read_directly(cpu, phys_addr, value, size) == 0){
+		goto skip_read;
+        }
+#endif
 	#if MMU_DEBUG
 	printf("bus read at %x\n", phys_addr);
 	#endif
@@ -565,6 +572,7 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 		}
 
 	}
+skip_read:
 	/* ldrex or ldrexb */
 	uint32 instr;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
@@ -669,7 +677,12 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	#endif
 	}
 #endif
-
+#ifdef FAST_MEMORY
+        phys_addr = phys_addr | (virt_addr & 3);
+        if(mem_write_directly(cpu, phys_addr, value, size) == 0){
+		goto skip_write;
+        }
+#endif
 	//bus_write(size, phys_addr, value);
 	if (size == 8) {
 		bus_write(8, phys_addr | (virt_addr & 3), value);
@@ -678,6 +691,7 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	} else {
 		bus_write(32, phys_addr, value);
 	}
+skip_write:
 	if (is_translated_code(cpu, phys_addr)) {
 		//clear native code when code section was written.
 		addr_t addr = find_bb_start(cpu, phys_addr);
