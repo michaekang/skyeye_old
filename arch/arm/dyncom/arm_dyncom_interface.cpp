@@ -223,6 +223,23 @@ extern unsigned VFPInit(arm_core_t* core);
 }
 #endif
 
+void set_timer()
+{
+        struct itimerval itv, oldtv;
+        itv.it_interval.tv_sec = 0;
+        itv.it_interval.tv_usec = 100;
+        itv.it_value.tv_sec = 0;
+        itv.it_value.tv_usec = 100;
+        setitimer(ITIMER_REAL, &itv, &oldtv);
+}
+
+uint64_t walltime;
+
+void update_walltime(int sig)
+{
+	walltime ++;
+}
+
 static bool arm_cpu_init()
 {
 	skyeye_config_t* config = get_current_config();
@@ -273,6 +290,9 @@ static bool arm_cpu_init()
 	cpu->boot_core_id = 0;
 
 	ARMul_EmulateInit(); /* Needed by the interpreter */
+
+        signal(SIGALRM, update_walltime);
+	set_timer();
 	
 	return true;
 }

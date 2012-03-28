@@ -3429,6 +3429,18 @@ void protect_code_page(uint32_t addr)
 	code_page_set.push_back((uint64_t)mem_ptr);
 }
 
+typedef struct _profiling_data {
+	uint32_t addr[2];
+	uint32_t count[2];
+	uint64_t clocktime;
+} profiling_data;
+
+/* Allocate memory for profiling data */
+void alloc_profiling_data()
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(profiling_data));
+}
+
 int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 {
 	/* Decode instruction, get index */
@@ -3481,6 +3493,7 @@ translated:
 		}
 		ret = inst_base->br;
 	};
+	alloc_profiling_data();
 	pc_start = phys_addr;
 	if (!core->is_user_mode) {
 		//printf("before protect_code_page, pc_start=0x%x\n", pc_start);
@@ -3549,6 +3562,26 @@ static bool InAPrivilegedMode(arm_core_t *core)
 						}                                                                  
 						#endif                                                             
 
+#define THRESHOLD			100
+#define DURATION			25
+#define PROFILE
+
+void gene_hot_path(uint32_t start_pc, profiling_data *prof, int id)
+{
+	extern uint64_t walltime;
+	if (prof->clocktime != walltime) {
+//		printf("decay\n");
+		prof->count[0] >>= (walltime - prof->clocktime);
+		prof->count[1] >>= (walltime - prof->clocktime);
+		prof->clocktime = walltime;
+	}
+	if (prof->count[id] >= THRESHOLD) {
+		printf("start : %x\n", start_pc);
+		printf("addr0 : %x count : %d\n", prof->addr[0], prof->count[0]);
+		printf("addr1 : %x count : %d\n", prof->addr[1], prof->count[1]);
+	}
+}
+
 /* r15 = r15 + 8 */
 void InterpreterMainLoop(cpu_t *core)
 {
@@ -3572,7 +3605,7 @@ void InterpreterMainLoop(cpu_t *core)
 								goto END
 						//printf("icounter is %llx line is %d pc is %x\n", cpu->icounter, __LINE__, cpu->Reg[15])
 	#define FETCH_INST			if (inst_base->br != NON_BRANCH)                                   \
-							goto DISPATCH;                                             \
+							goto PROFILING;                                             \
 						inst_base = (arm_inst *)&inst_buf[ptr]                             
 	#define INC_PC(l)			ptr += sizeof(arm_inst) + l
 	#define GOTO_NEXT_INST			goto *InstLabel[inst_base->idx]
@@ -3610,6 +3643,7 @@ void InterpreterMainLoop(cpu_t *core)
 						cpu->TFlag = (cpu->Cpsr >> 5) & 1;
 
 	#define CurrentModeHasSPSR		(cpu->Mode != SYSTEM32MODE) && (cpu->Mode != USER32MODE)
+	#define PC				(cpu->Reg[15])
 	
 
 	arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
@@ -3641,6 +3675,7 @@ void InterpreterMainLoop(cpu_t *core)
 	unsigned int lop, rop, dst;
 	unsigned int addr;
 	unsigned int phys_addr;
+	unsigned int last_pc = 0;
 	fault_t fault;
 	int counter = 4;
 	#if 0
@@ -3656,6 +3691,7 @@ void InterpreterMainLoop(cpu_t *core)
 		} else
 			cpu->Reg[15] &= 0xfffffffc;
 		/* check next instruction address is valid. */
+		last_pc = cpu->Reg[15];
 #if USER_MODE_OPT
 		phys_addr = cpu->Reg[15];
 #else
@@ -3683,6 +3719,38 @@ void InterpreterMainLoop(cpu_t *core)
 		inst_base = (arm_inst *)&inst_buf[ptr];
 		GOTO_NEXT_INST;
 	}
+	PROFILING:
+	{
+#ifdef PROFILE
+		if (PC > 0xc0000000)
+			goto DISPATCH;
+		inst_base = (arm_inst *)&inst_buf[ptr];
+		profiling_data *prof = (profiling_data *)inst_base->component;
+		if (prof->addr[0] == PC)
+			prof->count[0] ++;
+		else if (prof->addr[1] == PC)
+			prof->count[1] ++;
+		else {
+			if (prof->count[0] < prof->count[1]) {
+				prof->addr[0] = PC;
+				prof->count[0] = 1;
+			} else {
+				prof->addr[1] = PC;
+				prof->count[1] = 1;
+			}
+		}
+		if (prof->count[0] >= THRESHOLD) {
+			gene_hot_path(last_pc, prof, 0);
+			prof->count[0] = 0;
+		//	prof->count[1] = 0;
+		} else if (prof->count[1] >= THRESHOLD) {
+			gene_hot_path(last_pc, prof, 1);
+		//	prof->count[0] = 0;
+			prof->count[1] = 0;
+		}
+ #endif
+		goto DISPATCH;
+	}
 	ADC_INST:
 	{
 		INC_ICOUNTER;
@@ -3706,7 +3774,8 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(adc_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -3739,20 +3808,14 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(add_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (inst_cream->Rd == 15) {
-			goto DISPATCH;
-		}
 		INC_PC(sizeof(add_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
-#if 0
-		FETCH_INST;
-		GOTO_NEXT_INST;
-#endif
 	}
 	AND_INST:
 	{
@@ -3776,7 +3839,8 @@ void InterpreterMainLoop(cpu_t *core)
 				//UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(and_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -3793,10 +3857,12 @@ void InterpreterMainLoop(cpu_t *core)
 				LINK_RTN_ADDR;
 			}
 			SET_PC;
-			goto DISPATCH;
+			INC_PC(sizeof(bbl_inst));
+			goto PROFILING;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		goto DISPATCH;
+		INC_PC(sizeof(bbl_inst));
+		goto PROFILING;
 	}
 	BIC_INST:
 	{
@@ -3823,13 +3889,11 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_CFLAG_WITH_SC;
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(bic_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (inst_cream->Rd == 15) {
-			goto DISPATCH;
-		}
 		INC_PC(sizeof(bic_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -3861,11 +3925,13 @@ void InterpreterMainLoop(cpu_t *core)
 						+ signed_int + (BIT(inst, 24) << 1);
 				//DEBUG_MSG;
 			}
-			goto DISPATCH;
+			INC_PC(sizeof(blx_inst));
+			goto PROFILING;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 //		INC_PC(sizeof(bx_inst));
-		goto DISPATCH;
+		INC_PC(sizeof(blx_inst));
+		goto PROFILING;
 	}
 	BX_INST:
 	{
@@ -3877,11 +3943,13 @@ void InterpreterMainLoop(cpu_t *core)
 			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
 			cpu->Reg[15] = cpu->Reg[inst_cream->Rm] & 0xfffffffe;
 //			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
-			goto DISPATCH;
+			INC_PC(sizeof(bx_inst));
+			goto PROFILING;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 //		INC_PC(sizeof(bx_inst));
-		goto DISPATCH;
+		INC_PC(sizeof(bx_inst));
+		goto PROFILING;
 	}
 	BXJ_INST:
 	CDP_INST:
@@ -4020,13 +4088,13 @@ void InterpreterMainLoop(cpu_t *core)
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			RD = SHIFTER_OPERAND;
 //			RD = RM;
-			if ((inst_cream->Rd == 15))
-				goto DISPATCH;
+			if ((inst_cream->Rd == 15)) {
+				INC_PC(sizeof(mov_inst));
+				goto PROFILING;
+			}
 		}
 //		printf("cpy inst %x\n", cpu->Reg[15]);
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (inst_cream->Rd == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(mov_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4057,7 +4125,8 @@ void InterpreterMainLoop(cpu_t *core)
 //				UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(eor_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4215,13 +4284,11 @@ void InterpreterMainLoop(cpu_t *core)
 				#endif
  			}
 			if (BIT(inst, 15)) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BIT(inst_cream->inst, 15)) {
-			goto DISPATCH;
-		}
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4265,12 +4332,11 @@ void InterpreterMainLoop(cpu_t *core)
 				/* For armv5t, should enter thumb when bits[0] is non-zero. */
 				cpu->TFlag = value & 0x1;
 				cpu->Reg[15] &= 0xFFFFFFFE;
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4320,12 +4386,11 @@ void InterpreterMainLoop(cpu_t *core)
 			//bus_read(8, addr, &value);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4342,12 +4407,11 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4400,12 +4464,11 @@ void InterpreterMainLoop(cpu_t *core)
 			//bus_read(32, addr, &value);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4428,12 +4491,11 @@ void InterpreterMainLoop(cpu_t *core)
 			//bus_read(8, addr, &value);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4456,12 +4518,11 @@ void InterpreterMainLoop(cpu_t *core)
 //			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value & 0xffff;
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4483,12 +4544,11 @@ void InterpreterMainLoop(cpu_t *core)
 			}
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4509,12 +4569,11 @@ void InterpreterMainLoop(cpu_t *core)
 			}
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4537,12 +4596,11 @@ void InterpreterMainLoop(cpu_t *core)
 				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = ROTATE_RIGHT_32(value,(8*(addr&0x3))) ;
 
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4696,12 +4754,12 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
 			}
-			if (inst_cream->Rd == 15)
-				goto DISPATCH;
+			if (inst_cream->Rd == 15) {
+				INC_PC(sizeof(mla_inst));
+				goto PROFILING;
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (inst_cream->Rd == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(mla_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4728,13 +4786,13 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_ZFLAG(dst);
 				UPDATE_CFLAG_WITH_SC;
 			}
-			if (inst_cream->Rd == 15)
-				goto DISPATCH;
+			if (inst_cream->Rd == 15) {
+				INC_PC(sizeof(mov_inst));
+				goto PROFILING;
+			}
 //				return;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (inst_cream->Rd == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(mov_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4890,12 +4948,12 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_NFLAG(dst);
 				UPDATE_ZFLAG(dst);
 			}
-			if (inst_cream->Rd == 15)
-				goto DISPATCH;
+			if (inst_cream->Rd == 15) {
+				INC_PC(sizeof(mul_inst));
+				goto PROFILING;
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (inst_cream->Rd == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(mul_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4919,12 +4977,12 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_ZFLAG(dst);
 				UPDATE_CFLAG_WITH_SC;
 			}
-			if (inst_cream->Rd == 15)
-				goto DISPATCH;
+			if (inst_cream->Rd == 15) {
+				INC_PC(sizeof(mvn_inst));
+				goto PROFILING;
+			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (inst_cream->Rd == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(mvn_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -4952,12 +5010,11 @@ void InterpreterMainLoop(cpu_t *core)
 //				UPDATE_CFLAG(dst, lop, rop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(orr_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (inst_cream->Rd == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(orr_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5045,7 +5102,8 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_VFLAG_OVERFLOW_FROM(dst, lop, rop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(rsb_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5081,7 +5139,8 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_VFLAG_OVERFLOW_FROM((int)dst, (int)rop, (int)lop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(rsc_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5121,7 +5180,8 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_VFLAG_OVERFLOW_FROM(dst, rop, lop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(sbc_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5498,8 +5558,6 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5518,7 +5576,7 @@ void InterpreterMainLoop(cpu_t *core)
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		//if (BITS(inst_cream->inst, 12, 15) == 15)
-		//	goto DISPATCH;
+		//	goto PROFILING;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5551,8 +5609,6 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5583,8 +5639,6 @@ void InterpreterMainLoop(cpu_t *core)
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5613,8 +5667,6 @@ void InterpreterMainLoop(cpu_t *core)
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5633,7 +5685,7 @@ void InterpreterMainLoop(cpu_t *core)
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		//if (BITS(inst_cream->inst, 12, 15) == 15)
-		//	goto DISPATCH;
+		//	goto PROFILING;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5651,8 +5703,6 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		if (BITS(inst_cream->inst, 12, 15) == 15)
-			goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -5684,7 +5734,8 @@ void InterpreterMainLoop(cpu_t *core)
 				UPDATE_VFLAG_OVERFLOW_FROM(dst, lop, rop);
 			}
 			if (inst_cream->Rd == 15) {
-				goto DISPATCH;
+				INC_PC(sizeof(sub_inst));
+				goto PROFILING;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5858,7 +5909,8 @@ void InterpreterMainLoop(cpu_t *core)
 		b_2_thumb *inst_cream = (b_2_thumb *)inst_base->component;
 		cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
 		//printf(" BL_1_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
-		goto DISPATCH;
+		INC_PC(sizeof(b_2_thumb));
+		goto PROFILING;
 	}
 	B_COND_THUMB:
 	{
@@ -5869,7 +5921,8 @@ void InterpreterMainLoop(cpu_t *core)
 		else
 			cpu->Reg[15] += 2;
 		//printf(" B_COND_THUMB: imm=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[15]);
-		goto DISPATCH;
+		INC_PC(sizeof(b_cond_thumb));
+		goto PROFILING;
 	}
 	BL_1_THUMB:
 	{
@@ -5894,7 +5947,8 @@ void InterpreterMainLoop(cpu_t *core)
 			(cpu->Reg[14] + inst_cream->imm);
 		cpu->Reg[14] = tmp;
 		//printf(" BL_2_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
-		goto DISPATCH;
+		INC_PC(sizeof(bl_2_thumb));
+		goto PROFILING;
 	}
 	BLX_1_THUMB:
 	{	
@@ -5909,7 +5963,8 @@ void InterpreterMainLoop(cpu_t *core)
 		/* switch to arm state from thumb state */
 		cpu->TFlag = 0;
 		//printf("In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, r15=0x%x, \n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
-		goto DISPATCH;
+		INC_PC(sizeof(blx_1_thumb));
+		goto PROFILING;
 	}
 
 	UQADD16_INST:
