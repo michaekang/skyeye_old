@@ -35,7 +35,7 @@
 #include "skyeye_ram.h"
 #include <execinfo.h>
 
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 static inline void mem_read_raw(void *mem_ptr, uint32_t offset, uint32_t &value, int size)
 {
 	switch(size) {
@@ -376,7 +376,7 @@ fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_
 		return fault;
 	}
 #endif
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 	if(mem_read_directly(cpu, phys_addr, value, 32) == 0)
 		return fault;
 #endif
@@ -419,7 +419,7 @@ fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, 
 	if (fault) return fault;
 #endif
 
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 	phys_addr = phys_addr | (virt_addr & 3);
 	if(mem_read_directly(cpu, phys_addr, value, size) == 0){
 		return fault;
@@ -512,7 +512,7 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 //		exit(-1);
 	}
 	#endif
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 	phys_addr = phys_addr | (virt_addr & 3);
 	if(mem_write_directly(cpu, phys_addr, value, size) == 0){
 		return fault;

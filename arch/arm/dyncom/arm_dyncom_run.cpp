@@ -546,7 +546,7 @@ void arm_dyncom_init(arm_core_t* core){
 	
 	cpu->dyncom_engine->flags &= ~CPU_FLAG_SWAPMEM;
 
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 	if (pref->user_mode_sim){
 		cpu->dyncom_engine->RAM = (uint8_t*)get_dma_addr(0);
 	}

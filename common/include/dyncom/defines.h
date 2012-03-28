@@ -50,7 +50,7 @@
 #define OPT_LOCAL_REGISTERS
 #endif
 
-#define FAST_MEMORY
+#define FAST_MEMORY 1
 
 #define ENABLE_DEBUG_ME 0
 /* Running kernel should set ENABLE_ICOUNTER */

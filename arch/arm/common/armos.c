@@ -610,7 +610,7 @@ static mmap_area_t* new_mmap_area(int sim_addr, int len){
 		printf("error, failed %s\n",__FUNCTION__);
 		exit(0);
 	}
-#ifdef FAST_MEMORY   
+#if FAST_MEMORY   
 	if (mmap_next_base == -1)
 	{
 		mmap_next_base = get_skyeye_exec_info()->brk;
@@ -626,7 +626,7 @@ static mmap_area_t* new_mmap_area(int sim_addr, int len){
 	area->bank.objname = "mmap";
 	addr_mapping(&area->bank);
 
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 	if (get_skyeye_exec_info()->mmap_access)
 	{
 		/* FIXME check proper flags */

@@ -24,7 +24,7 @@ typedef struct mmap_area{
 	struct mmap_area *next;
 }mmap_area_t;
 
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 /* in user mode, mmap_base will be on initial brk,
    set at the first mmap request */
 #define mmap_base -1

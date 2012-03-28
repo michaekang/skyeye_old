@@ -144,7 +144,7 @@ typedef struct mmap_area{
 }mmap_area_t;
 mmap_area_t *mmap_global = NULL;
 
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 #define mmap_base 0x20000000
 #else
 #define mmap_base 0x50000000
@@ -168,7 +168,7 @@ static mmap_area_t* new_mmap_area(int sim_addr, int len){
 	area->bank.type = MEMTYPE_RAM;
 	area->bank.objname = "mmap";
 	addr_mapping(&area->bank);
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 	area->mmap_addr = (uint8_t*)get_dma_addr(mmap_next_base);
 #else
 	area->mmap_addr = malloc(len);

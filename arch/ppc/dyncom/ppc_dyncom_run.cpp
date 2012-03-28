@@ -486,7 +486,7 @@ void ppc_dyncom_init(e500_core_t* core){
 	else
 		cpu->syscall_func = NULL;
 	core->dyncom_cpu = get_conf_obj_by_cast(cpu, "cpu_t");
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
 	cpu->dyncom_engine->RAM = (uint8_t*)get_dma_addr(0);
 #endif
 	init_compiled_queue(cpu);
