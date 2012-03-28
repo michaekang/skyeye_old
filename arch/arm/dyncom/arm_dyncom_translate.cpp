@@ -41,6 +41,7 @@
 #include "arm_dyncom_run.h"
 //#include "armemu.h"
 #include "arm_dyncom_thumb.h"
+#include "arm_dyncom_tlb.h"
 #include "vfp/vfp.h"
 #include "skyeye_instr_length.h"
 #define DEBUG
@@ -992,9 +993,80 @@ int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		} else if(CRn == MMU_CACHE_OPS){
 			//SKYEYE_WARNING("cache operation have not implemented.\n");
 		} else if(CRn == MMU_TLB_OPS){
-			//SKYEYE_WARNING("tlb operation have not implemented.\n");
-			//		} else if (CRn == 7 && CRm == 14 && OPCODE_2 == 0) {
-			//			LET(R(RD));
+			switch (CRm) {
+				case 5: /* ITLB :*/
+				switch(OPCODE_2){
+					case 0: /* invalidate all */
+						//invalidate_all_tlb(state);
+						printf("{TLB} [INSN] invalidate all, not implement.\n");
+						//remove_tlb(INSN_TLB);
+						break;
+					case 1: /* invalidate by MVA */
+					{
+						//invalidate_by_mva(state, value);
+						//printf("{TLB} [INSN] invalidate by mva\n");
+						arch_arm_invalidate_by_mva(cpu, bb, R(RD));
+						break;
+					}
+					case 2: /* invalidate by asid */
+					{
+						//invalidate_by_asid(state, value);
+						//printf("{TLB} [INSN] invalidate by asid\n");
+						arch_arm_invalidate_by_asid(cpu, bb, R(RD));
+						break;
+					}
+					default:
+						break;
+					}
+
+				break;
+				case 6: /* DTLB */
+					switch(OPCODE_2){
+					case 0: /* invalidate all */
+						//invalidate_all_tlb(state);
+						//remove_tlb(DATA_TLB);
+						printf("{TLB} [DATA] invalidate all\n");
+						break;
+					case 1: /* invalidate by MVA */
+						//invalidate_by_mva(state, value);
+						//remove_tlb_by_mva(RD, DATA_TLB);
+						//printf("{TLB} [DATA] invalidate by mva\n");
+						arch_arm_invalidate_by_mva(cpu, bb, R(RD));
+						break;
+					case 2: /* invalidate by asid */
+						//invalidate_by_asid(state, value);
+						//remove_tlb_by_asid(RD, DATA_TLB);
+						//printf("{TLB} [DATA] invalidate by asid\n");
+						arch_arm_invalidate_by_asid(cpu, bb, R(RD));
+						break;
+					default:
+						break;
+					}
+					break;
+				case 7: /* UNIFILED TLB */
+					switch(OPCODE_2){
+					case 0: /* invalidate all */
+						//invalidate_all_tlb(state);
+						//remove_tlb(DATA_TLB);
+						//remove_tlb(INSN_TLB);
+						printf("{TLB} [UNIFILED] invalidate all\n");
+						break;
+					case 1: /* invalidate by MVA */
+						//invalidate_by_mva(state, value);
+						printf("{TLB} [UNIFILED] invalidate by mva\n");
+						break;
+					case 2: /* invalidate by asid */
+						//invalidate_by_asid(state, value);
+						printf("{TLB} [UNIFILED] invalidate by asid\n");
+						break;
+					default:
+						break;
+					}
+					break;
+				default:
+					break;
+			}
+
 		} else if(CRn == MMU_PID){
 			if(OPCODE_2 == 0)
 				LET(CP15_PID, R(RD));

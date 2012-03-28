@@ -34,7 +34,7 @@ existing ARM simulator.  */
 #define MODET (1)
 #endif
 #endif
-
+#include <dyncom/defines.h>
 //#include "armemu.h"
 #include "armos.h"
 #include "arm_dyncom_thumb.h"

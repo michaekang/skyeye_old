@@ -278,6 +278,8 @@ void remove_tlb_by_mva(uint32_t mva, tlb_type_t type)
 {
 	tlb[type].erase(mva);
 }
+uint32_t get_phys_page(ARMul_State* state, ARMword va);
+void insert_tlb(ARMul_State* state, ARMword va, ARMword pa);
 
 fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t size, uint32_t rw)
 {
@@ -287,6 +289,8 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 	ARMword perm;		/* physical addr access permissions */
 	fault_t fault = NO_FAULT;
 	int ap, sop;
+	int access_type = DATA_TLB;
+	static addr_t p = 0xFFFFFFFF;
 	#if MMU_DEBUG
 	printf("enter %s\n", __FUNCTION__);
 	#endif
@@ -295,6 +299,21 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 		*phys_addr = virt_addr;
 //		return NO_FAULT;
 	} else {
+		#if 1
+		//if (!tlb[access_type].get_phys_addr((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p)) {
+		if((p = get_phys_page(core, virt_addr)) != 0xFFFFFFFF){
+			#if 1
+			if (dyncom_check_perms(core, p & 3, rw)) {
+				*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
+				return fault;
+			}
+			#endif
+		}
+		else{
+			p = 0xFFFFFFFF;
+		}
+		#endif
+
 		fault = dyncom_mmu_translate(core, virt_addr, phys_addr, &ap, &sop);
 		#if MMU_DEBUG
 		printf("virt_addr is %x phys_addr is %x\n", virt_addr, *phys_addr);
@@ -305,6 +324,9 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 			printf("icounter is %lld\n", cpu->icounter);
 		#endif
 			return fault;
+		}
+		if((p != 0xFFFFFFFF) && (p & 0xfffff000) != ((*phys_addr) & 0xFFFFF000)){
+			printf("In %s, p = 0x%x, phys_addr=0x%x\n", __FUNCTION__, p, *phys_addr);
 		}
 		/* no tlb, only check permission */
 		if (!dyncom_check_perms(core, ap, rw)) {
@@ -320,6 +342,8 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 	} else if (size == 16) {
 		*phys_addr = (*phys_addr) | (virt_addr & 3);
 	}
+		
+	tlb[access_type].insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap );
 	#if MMU_DEBUG
 	printf("exit %s\n", __FUNCTION__);
 	#endif
@@ -360,7 +384,8 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 				return SUBPAGE_PERMISSION_FAULT;
 			}
 		}
-		tlb[access_type].insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap );
+		//tlb[access_type].insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap );
+		insert_tlb(core, (virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap);
 	}
 	return fault;
 }
