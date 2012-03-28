@@ -519,7 +519,7 @@ arch_arm_invalidate_by_mva_init(cpu_t *cpu){
 	Function *func = cast<Function>(func_const);
 	func->setCallingConv(CallingConv::C);
 	cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_MVA] = func;
-	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_INV_MVA] = (void*)invalidate_by_mva;
+	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_INV_MVA] = (void*)erase_by_mva;
 }
 
 void
@@ -561,7 +561,7 @@ arch_arm_invalidate_by_asid_init(cpu_t *cpu){
 	Function *func = cast<Function>(func_const);
 	func->setCallingConv(CallingConv::C);
 	cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_ASID] = func;
-	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_INV_ASID] = (void*)invalidate_by_asid;
+	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_INV_ASID] = (void*)erase_by_asid;
 }
 
 
@@ -657,7 +657,7 @@ void arm_dyncom_init(arm_core_t* core){
 	core->Mode = SVC32MODE;
 
 //	load_symbol_from_sysmap();
-	new_tlb(TLB_SIZE, ASID_SIZE);
+	//new_tlb(TLB_SIZE, ASID_SIZE);
 	/* undefined instr handler init */
 	arch_arm_undef_init(cpu);
 	arch_arm_invalidate_by_asid_init(cpu);

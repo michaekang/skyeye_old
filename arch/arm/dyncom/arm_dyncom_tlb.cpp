@@ -17,85 +17,54 @@
 */
 /**
 * @file arm_dyncom_tlb.cpp
-* @brief TLB implementation
+* @brief The tlb implementation with less memory
 * @author Michael.Kang blackfin.kang@gmail.com
 * @version 7849
-* @date 2012-03-26
+* @date 2012-03-28
 */
-
-#include "armdefs.h"
+#include <stdint.h> 
+#include <string.h>
+#include <stdlib.h>
+//typedef tlb_item 
 #include "arm_dyncom_tlb.h"
-#include <skyeye_mm.h>
-#include <skyeye_log.h>
-
-#define ASID (state->mmu.context_id & ASID_SIZE)
-static uint32_t** tlb_entry_array = NULL;
-static inline void invalidate_all_tlb(ARMul_State *state){
-	int i = 0;
-	//printf("In %s, all tlb is freed\n", __FUNCTION__);
-	if(tlb_entry_array == NULL)
-		return;
-	while(i < ASID){
-		if(tlb_entry_array[i] != NULL){
-			skyeye_free(tlb_entry_array[i]);
-			tlb_entry_array[i] = NULL;
-		}
-		i++;
+struct tlb_item {
+	uint32_t pa;
+	uint32_t va;
+};
+tlb_item tlb_cache[256][2048];
+int get_phys_page(unsigned int va, unsigned int &pa)
+{
+	tlb_item *tlb_entry = &tlb_cache[va & 0xff][(va >> 12) % 2048];
+	if (va == tlb_entry->va) {
+		pa = tlb_entry->pa;
+		return 0;
+	} else {
+		return -1;
 	}
-	//skyeye_free(tlb_entry_array);
-	//tlb_entry_array = NULL;
-	return;
-}
-void invalidate_by_mva(cpu_t* cpu, ARMword va){
-	int i;
-	LOG("In %s, va 0x%llx is freed, tlb_entry_array=0x%x\n", __FUNCTION__, va, tlb_entry_array);
-	for(i = 0; i < ASID_SIZE; i++){
-		if(tlb_entry_array[i] != NULL)
-			tlb_entry_array[i][va >> 12]= 0xFFFFFFFF;
-	}
-	LOG("In %s, finished.\n", __FUNCTION__);
-	return;
-}
-void invalidate_by_asid(ARMul_State *state, ARMword asid){
-	//LOG("In %s, asid %d is freed\n", __FUNCTION__, asid);
-	if(tlb_entry_array[asid] != NULL){
-		skyeye_free(tlb_entry_array[asid]);
-		tlb_entry_array[asid] = NULL;
-	}
-	return;
 }
 
-uint32_t get_phys_page(ARMul_State* state, ARMword va){
-	uint32_t phys_page = 0xFFFFFFFF;
-	if(tlb_entry_array && tlb_entry_array[ASID])
-		phys_page = tlb_entry_array[ASID][va >> 12];
-	//printf("In %s, for va=0x%x, page=0x%x\n", __func__, va, phys_page);
-	return phys_page;
+void insert(unsigned int va, unsigned int pa)
+{
+	tlb_item* tlb_entry = &tlb_cache[va & 0xff][(va >> 12) % 2048];
+	tlb_entry->va = va;
+	tlb_entry->pa = pa;
 }
 
-inline void insert_tlb(ARMul_State* state, ARMword va, ARMword pa){
-	int asid = ASID;
-	printf("In %s, asid=0x%x, tlb_entry_array=0x%x\n", __FUNCTION__, asid, tlb_entry_array);
-	if(tlb_entry_array[asid] == NULL){
-		printf("In %s, add new asid=0x%x\n", __FUNCTION__, asid);
-		tlb_entry_array[asid] = (uint32_t *)skyeye_mm(TLB_SIZE * sizeof(uint32_t));
-		memset(tlb_entry_array[asid], 0xFF, TLB_SIZE * sizeof(uint32_t));
-	}
-	tlb_entry_array[asid][va >> 12] = pa & 0xFFFFF000;
-	//printf("In %s, asid=0x%x, va=0x%x, pa=0x%x\n", __FUNCTION__, asid, va, pa);
-	return;
+void erase_by_mva(cpu_t* cpu, unsigned int va)
+{
+	tlb_cache[va & 0xff][(va >> 12) % 2048].va = 0;
 }
 
-uint32_t** new_tlb(int line, int way){
-	tlb_entry_array = (uint32_t**)skyeye_mm_zero(ASID_SIZE * sizeof(unsigned long));
-	//printf("In %s, tlb allocated %d bytes, tlb_entry_array=0x%x\n", __FUNCTION__, ASID_SIZE * sizeof(unsigned long), tlb_entry_array);
-	return tlb_entry_array;
+void erase_by_asid(cpu_t* cpu, unsigned int asid)
+{
+	memset(&tlb_cache[asid], 0, sizeof(tlb_item) * 2048);
 }
-void fini_tlb(){
-	int i = 0;
-	while(i++ < (TLB_SIZE - 1))
-		if(tlb_entry_array[i] != NULL)
-			skyeye_free(tlb_entry_array[i]);
-	skyeye_free(tlb_entry_array);
-	return;
+
+void clear()
+{
+	memset(tlb_cache, 0, sizeof(tlb_item) * 2048 * 256);
+}
+
+uint64_t* new_tlb(){
+	return (uint64_t*)tlb_cache;
 }
