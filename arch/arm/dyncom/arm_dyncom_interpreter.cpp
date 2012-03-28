@@ -3677,7 +3677,8 @@ void InterpreterMainLoop(cpu_t *core)
 	unsigned int phys_addr;
 	unsigned int last_pc = 0;
 	fault_t fault;
-	int counter = 4;
+	int counter = 10;
+	static unsigned int last_physical_base = 0, last_logical_base = 0;
 	#if 0
 	if (use == 1)
 		goto INIT_INST_LENGTH;
@@ -3701,14 +3702,21 @@ void InterpreterMainLoop(cpu_t *core)
 				goto END;
 			}
 
-			fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
-			if (fault) {
-				cpu->abortSig = true;
-				cpu->Aborted = ARMul_PrefetchAbortV;
-				cpu->AbortAddr = cpu->Reg[15];
-				cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
-				cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = cpu->Reg[15];
-				goto END;
+			if (last_logical_base == (cpu->Reg[15] & 0xfffff000))
+			       phys_addr = last_physical_base + (cpu->Reg[15] & 0xfff);
+			else {
+			       /* check next instruction address is valid. */
+			       fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
+			       if (fault) {
+				       cpu->abortSig = true;
+				       cpu->Aborted = ARMul_PrefetchAbortV;
+				       cpu->AbortAddr = cpu->Reg[15];
+				       cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
+				       cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = cpu->Reg[15];
+				       goto END;
+			       }
+			       last_logical_base = cpu->Reg[15] & 0xfffff000;
+			       last_physical_base = phys_addr & 0xfffff000;
 			}
 		}
 #endif
