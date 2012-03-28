@@ -43,9 +43,11 @@ static inline void mem_read_raw(void *mem_ptr, uint32_t offset, uint32_t &value,
 		value = *((uint8_t *)mem_ptr + offset);
 		break;
 	case 16:
+		//offset &= 0xFFFFFFFE;
 		value = *(uint16_t *)((uint8_t *)mem_ptr + offset);
 		break;
 	case 32:
+		//offset &= 0xFFFFFFFC;
 		value = *(uint32_t *)((uint8_t *)mem_ptr + offset);
 		break;
 	}
@@ -58,9 +60,11 @@ static inline void mem_write_raw(void *mem_ptr, uint32_t offset, uint32_t value,
 		*((uint8_t *)mem_ptr + offset) = value & 0xff;
 		break;
 	case 16:
+		//offset &= 0xFFFFFFFE;
 		*(uint16_t *)((uint8_t *)mem_ptr + offset) = value & 0xffff;
 		break;
 	case 32:
+		//offset &= 0xFFFFFFFC;
 		*(uint32_t *)((uint8_t *)mem_ptr + offset) = value;
 		break;
 	}
@@ -377,7 +381,7 @@ fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_
 	}
 #endif
 #if FAST_MEMORY
-	if(mem_read_directly(cpu, phys_addr, value, 32) == 0)
+	if(mem_read_directly(cpu, phys_addr & 0xFFFFFFFC, value, 32) == 0)
 		return fault;
 #endif
 	if (size == 8)
