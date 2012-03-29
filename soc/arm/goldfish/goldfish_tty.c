@@ -142,8 +142,11 @@ static exception_t tty_write(conf_object_t *opaque, generic_address_t offset, ui
                     cpu_memory_rw_debug(cpu_single_env,s->ptr, s->data, s->ptr_len,1);
 #endif
                     //printf("goldfish_tty_write: read %d bytes to %x\n", s->ptr_len, s->ptr);
+                    if(s->ptr_len > s->data_count)
+			fprintf(stderr, "goldfish_tty_write: reading more data than available %d %d\n", s->ptr_len, s->data_count);
 		    int fault;
 		    char   temp[1];
+		    int i;
 		    skyeye_config_t* config = get_current_config();
 		    generic_arch_t *arch_instance = get_arch_instance(config->arch->arch_name);
 		    temp[0] = (char)(s->data)[0];
@@ -151,9 +154,12 @@ static exception_t tty_write(conf_object_t *opaque, generic_address_t offset, ui
 		    if(fault)
 			fprintf(stderr, "SKYEYE:read virtual address error!!!\n" );
 
-                    if(s->data_count > s->ptr_len)
+		    for (i = 0;i < s->data_count;i++)
+			    printf("data[%d],%c\n",i,(char)(s->data)[i]);
+
+                   if(s->data_count > s->ptr_len)
                         memmove(s->data, s->data + s->ptr_len, s->data_count - s->ptr_len);
-                    s->data_count -= s->ptr_len;
+                    s->data_count -= 1;
                     if(s->data_count == 0 && s->ready)
 			 dev->master->lower_signal(dev->signal_target, dev->line_no);
 		    }
@@ -210,9 +216,15 @@ static void tty_io_do_cycle(void* tty_dev){
 
 	if(skyeye_uart_read(-1, &buf, 1, &tv, NULL) > 0)
 	{
-		s->data_count = 1;
-	        memcpy(s->data, &buf, 1);
-		dev->master->lower_signal(dev->signal_target, dev->line_no);
+	        memcpy(s->data + s->data_count, &buf, 1);
+		s->data_count += 1;
+		printf("in %s,%c\n",__func__,buf);
+		//dev->master->lower_signal(dev->signal_target, dev->line_no);
+		if(s->data_count > 0 && s->ready)
+		{
+			printf("tty send interrupt\n");
+			dev->master->raise_signal(dev->signal_target, dev->line_no);
+		}
 	}
 
 
@@ -230,8 +242,8 @@ static conf_object_t* new_goldfish_tty_device(char* obj_name){
 	dev->io_memory->read = tty_read;
 	dev->io_memory->write = tty_write;
 	uint32 id;
-	create_timer_scheduler(1, Periodic_sched, tty_io_do_cycle, dev, &id);
-	
+//	create_timer_scheduler(1, Periodic_sched, tty_io_do_cycle, dev, &id);
+	create_thread_scheduler(1000, Periodic_sched,  tty_io_do_cycle, dev, &id);
 	return dev->obj;
 }
 static void del_goldfish_tty_device(conf_object_t* dev){
