@@ -179,7 +179,7 @@ static uint32_t nand_dev_read_file(nand_dev_t *dev, uint32_t data, uint64_t addr
     generic_arch_t *arch = get_arch_instance("");
     ret = do_lseek(dev->fd, addr, SEEK_SET);
     while(len > 0) {
-        if(read_len < dev->erase_size) {
+        if(read_len < dev->erase_size) { // read all
             memset(dev->data, 0xff, dev->erase_size);
             read_len = dev->erase_size;
             eof = 1;
@@ -374,11 +374,18 @@ void nand_add_dev(const char *arg)
     int pad;
     ssize_t read_size;
     //uint32_t page_size = 2048;
+#if 0
     uint32_t page_size = 512;
     uint32_t extra_size = 16;
     uint32_t erase_pages = 16;
+#endif
 
-    VERBOSE_PRINT(init, "%s: %s", __FUNCTION__, arg);
+    uint32_t page_size = 2048;
+    uint32_t extra_size = 64;
+    uint32_t erase_pages = 64;
+
+    VERBOSE_PRINT(init, "%s: %s\n", __FUNCTION__, arg);
+    printf("%s: %s,nand_dev_count %d\n", __FUNCTION__, arg,nand_dev_count);
 
     while(arg) {
         next_arg = strchr(arg, ',');
@@ -574,6 +581,16 @@ static conf_object_t* new_nand_device(char *name){
 	nand_control->conf_obj = s->obj;
 	nand_control->nand_ctrl = nand_add_dev;
 	SKY_register_interface(nand_control, name, NAND_CTRL_INTF_NAME);
+#define O_BINARY 0
+	int initfd;
+	uint32_t dev_size;
+	initfd  = open("/home/xiaoqiao/develop/android_ui_qemu//ramdisk.img",O_BINARY | O_RDONLY);
+	dev_size = do_lseek(initfd,0,SEEK_END);
+	do_lseek(initfd,0,SEEK_SET);
+	printf("ramdisk size 0x%x\n",dev_size);
+	char * ramdisk_arg = "ramdisk,size=0x24625,file=/home/xiaoqiao/develop/android_ui_qemu//ramdisk.img";
+	nand_add_dev(ramdisk_arg);
+
 
 #if 0
 	s->nand_dev = skyeye_mm_zero(sizeof(nand_dev_t) * DEV_COUNT);
