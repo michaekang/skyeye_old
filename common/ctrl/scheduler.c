@@ -116,9 +116,15 @@ static void thread_scheduler(void){
 			/* Decrease dleta */
 			tmp->delta -= passed_utime;
 			DBG("In %s, tmp->delta=%d\n", __FUNCTION__, tmp->delta);
+			if (tmp->delta > (int)tmp->expiration)
+				tmp->delta = (int)tmp->expiration;
+//			if (tmp->id == 1
+//				printf("In %s, tmp->delta=0x%x,id %d\n", __FUNCTION__, tmp->delta,tmp->id);
 			
 			if(tmp->delta == 0 || tmp->delta < 0){
 				/* Sometimes, delta is missing */
+			//	if(tmp->id == 1)
+			//		printf("In %s, tmp->delta=%d\n", __FUNCTION__, tmp->delta);
 				if(tmp->delta < 0)
 					DBG("scheduler occur later \n");
 				/* execute the scheduler callback */
@@ -199,6 +205,7 @@ int create_thread_scheduler(unsigned int ms, sched_mode_t mode, sched_func_t fun
 	else
 		*id = LIST_FIRST(&thread_head)->id + 1;
 	e->id = *id;
+	printf("timer id = %d,delta = 0x%x,expiration = 0x%x\n",e->id,e->delta,e->expiration);
 
 RW_WRLOCK(thread_lock);
 	/* insert the event to the list */
