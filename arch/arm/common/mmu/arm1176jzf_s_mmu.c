@@ -25,7 +25,7 @@
 
 #include "armdefs.h"
 #include "bank_defs.h"
-
+#if 0
 #define TLB_SIZE 1024 * 1024
 #define ASID 255
 static uint32_t tlb_entry_array[TLB_SIZE][ASID];
@@ -56,7 +56,7 @@ static inline void insert_tlb(ARMul_State* state, ARMword va, ARMword pa){
 
 	return;
 }
-
+#endif
 #define BANK0_START 0x50000000
 static void* mem_ptr = NULL;
 //static void mem_read_raw(uint32_t offset, uint32_t &value, int size)
@@ -369,7 +369,7 @@ arm1176jzf_s_mmu_init (ARMul_State *state)
 	state->mmu.process_id = 0;
 	state->mmu.context_id = 0;
 	state->mmu.thread_uro_id = 0;
-	invalidate_all_tlb(state);
+	//invalidate_all_tlb(state);
 
 	return No_exp;
 }
@@ -526,13 +526,14 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 	}
 
 	/* va &= ~(WORD_SIZE - 1); */
+	#if 0
 	uint32_t page_base;
 	page_base = get_phys_page(state, va);
 	if((page_base & 0xFFF) == 0){
 		pa = (page_base << 12) | (va & 0xFFF);
 		goto skip_translation;
 	}
-
+	#endif
 	/*translate va to tlb */
 #if 0
 	fault = mmu_translate (state, va, ARM920T_D_TLB (), &tlb);
@@ -571,7 +572,7 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 		return fault;
 #endif
 
-	insert_tlb(state, va, pa);
+	//insert_tlb(state, va, pa);
 skip_translation:
 		/* *data = mem_read_word(state, pa); */
 	if (datatype == ARM_BYTE_TYPE) {
@@ -705,14 +706,14 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 		return ALIGNMENT_FAULT;
 	}
 	va &= ~(WORD_SIZE - 1);
-
+	#if 0
 	uint32_t page_base;
 	page_base = get_phys_page(state, va);
 	if((page_base & 0xFFF) == 0){
 		pa = (page_base << 12) | (va & 0xFFF);
 		goto skip_translation;
 	}
-
+	#endif
 	/*tlb translate */
 	fault = mmu_translate (state, va, &pa, &ap, &sop);
 #if 0
@@ -761,7 +762,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
             exit(-1);
     }
 #endif
-	insert_tlb(state, va, pa);
+	//insert_tlb(state, va, pa);
 skip_translation:
 	/* strex */
 	if(((state->CurrInstr & 0x0FF000F0) == 0x01800090) ||
@@ -1006,13 +1007,13 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 				{
 					switch(OPC_2){
 						case 0: /* invalidate all */
-							invalidate_all_tlb(state);
+							//invalidate_all_tlb(state);
 							break;
 						case 1: /* invalidate by MVA */
-							invalidate_by_mva(state, value);
+							//invalidate_by_mva(state, value);
 							break;
 						case 2: /* invalidate by asid */
-							invalidate_by_asid(state, value);
+							//invalidate_by_asid(state, value);
 							break;
 						default:
 							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
@@ -1024,13 +1025,13 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 				{
 					switch(OPC_2){
 						case 0: /* invalidate all */
-							invalidate_all_tlb(state);
+							//invalidate_all_tlb(state);
 							break;
 						case 1: /* invalidate by MVA */
-							invalidate_by_mva(state, value);
+							//invalidate_by_mva(state, value);
 							break;
 						case 2: /* invalidate by asid */
-							invalidate_by_asid(state, value);
+							//invalidate_by_asid(state, value);
 							break;
 						default:
 							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
@@ -1042,13 +1043,13 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 				{
 					switch(OPC_2){
 						case 0: /* invalidate all */
-							invalidate_all_tlb(state);
+							//invalidate_all_tlb(state);
 							break;
 						case 1: /* invalidate by MVA */
-							invalidate_by_mva(state, value);
+							//invalidate_by_mva(state, value);
 							break;
 						case 2: /* invalidate by asid */
-							invalidate_by_asid(state, value);
+							//invalidate_by_asid(state, value);
 							break;
 						default:
 							printf ("mmu_mcr wrote UNKNOWN - reg %d\n", creg);
