@@ -2383,7 +2383,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	DBG("\t\tin %s instruction is executed out.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
 	int dp_op = (BIT(8) == 1);
-	int d = dp_op ? BITS(12,15) | BIT(22) << 4 : BIT(22) | BITS(12,15) << 1;
+	int d = dp_op ? BITS(12,15) << 1 | BIT(22) : BIT(22) << 4 | BITS(12,15);
 	int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
 	int d2s = dp_op;
 	Value* v;
