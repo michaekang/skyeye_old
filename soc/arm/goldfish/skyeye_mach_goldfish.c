@@ -118,7 +118,8 @@ static void set_kernel_args(generic_arch_t* arch_instance)
 	size_t ram_size = 0x10000000;
 	generic_address_t loader_start = 0;
 	size_t initrd_size = 0x200000;
-	const char* kernel_cmdline = "qemu=1 console=ttyS0 android.qemud=ttyS1 android.checkjni=1 ndns=3 lpj=1000 noinitrd root=/dev/mtdblock0 rootfstype=yaffs init=linuxrc";
+	const char* kernel_cmdline = "qemu=1 console=ttyS0 android.qemud=ttyS1 android.checkjni=1 ndns=3 lpj=1000 noinitrd root=/dev/mtdblock0 rootfstype=yaffs2 init=init";
+       // const char* kernel_cmdline = "qemu=1 console=ttyS0 android.qemud=ttyS1 android.checkjni=1 ndns=3 lpj=1000 root=/dev/ram initrd=0x00800000,6M ramdisk_size=6144,rw mem=512M init=/bin/sh user_debug=255";
 	p = base + KERNEL_ARGS_ADDR;
 	/* ATAG_CORE */
 	WRITE_WORD(p, 5);
@@ -186,30 +187,42 @@ goldfish_io_reset (generic_arch_t* arch_instance)
 void
 goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 {
-	conf_object_t *obj;
+	conf_object_t *pci_obj;
 	goldfish_pic_device* goldfish_pic;
-	obj = pre_conf_obj("goldfish_pic0","goldfish_pic");
-	goldfish_pic = (goldfish_pic_device *)obj->obj;
+	pci_obj = pre_conf_obj("goldfish_interrupt_controller0","goldfish_pic");
+	printf("pci class name %s\n",pci_obj->class_name);
+	goldfish_pic = (goldfish_pic_device *)pci_obj->obj;
 
+	conf_object_t *bus_obj;
+	goldfish_bus_device_t* goldfish_bus;
+	bus_obj	= pre_conf_obj("goldfish_device_bus0","goldfish_bus");
+	goldfish_bus = (goldfish_bus_device_t*)bus_obj->obj;
+	goldfish_bus->line_no = BUS0_IRQ;
+	goldfish_bus->master = goldfish_pic->slave;
+	goldfish_bus->signal_target = goldfish_pic->obj;
+	goldfish_bus->add_device->add_device(bus_obj, pci_obj, -1, 0xff000000, 0x1000, 0, 1);
+ 
+	conf_object_t *timer_obj;
 	goldfish_timer_device* goldfish_timer;
-	obj	= pre_conf_obj("goldfish_timer0","goldfish_timer");
-	goldfish_timer = (goldfish_timer_device *)obj->obj;
+	timer_obj	= pre_conf_obj("goldfish_timer0","goldfish_timer");
+	goldfish_timer = (goldfish_timer_device *)timer_obj->obj;
 	goldfish_timer->line_no = TIMER0_IRQ;
-
 	goldfish_timer->master = goldfish_pic->slave;
 	goldfish_timer->signal_target = goldfish_pic->obj;
 
+	conf_object_t *tty_obj;
 	goldfish_tty_device* goldfish_tty;
-	obj	= pre_conf_obj("goldfish_tty0","goldfish_tty");
-	goldfish_tty = (goldfish_tty_device *)obj->obj;
+	tty_obj	= pre_conf_obj("goldfish_tty0","goldfish_tty");
+	goldfish_tty = (goldfish_tty_device *)tty_obj->obj;
 	goldfish_tty->line_no = TTY0_IRQ;
-
 	goldfish_tty->master = goldfish_pic->slave;
 	goldfish_tty->signal_target = goldfish_pic->obj;
+	goldfish_bus->add_device->add_device(bus_obj, tty_obj, 0, 0xff002000, 0x1000, TTY0_IRQ, 1);
 
-	nand_dev_controller_t* nand_ctrl;
-	obj = pre_conf_obj("goldfish_nand0","goldfish_nand");
-	nand_ctrl = obj->obj;
+	conf_object_t *nand_obj;
+	nand_dev_controller_t* goldfish_nand;
+	nand_obj = pre_conf_obj("goldfish_nand0","goldfish_nand");
+	goldfish_nand = nand_obj->obj;
 
 	addr_space_t* phys_mem = new_addr_space("goldfish_mach_space");
 
@@ -217,15 +230,17 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 
 	if (getenv("ANDROID") != NULL)
 	{
+		conf_object_t *fb_obj;
 		goldfish_fb_device* goldfish_fb;
-		obj = pre_conf_obj("goldfish_fb0","goldfish_fb");
-		goldfish_fb = (goldfish_fb_device *)obj->obj;
+		fb_obj = pre_conf_obj("goldfish_fb0","goldfish_fb");
+		goldfish_fb = (goldfish_fb_device *)fb_obj->obj;
 		goldfish_fb->line_no = FB0_IRQ;
 		goldfish_fb->master = goldfish_pic->slave;
 		goldfish_fb->signal_target = goldfish_pic->obj;
 		ret = add_map(phys_mem, 0xff005000, 0x1000, 0x0, goldfish_fb->io_memory, 1, 1);
 		if(ret != No_exp)
 			printf("Warnning, fb can not be mapped\n");
+		goldfish_bus->add_device->add_device(bus_obj, fb_obj, 0, 0xff005000, 0x1000, FB0_IRQ, 1);
 
 		conf_object_t* android = pre_conf_obj("android0", "android");
 	}
@@ -233,18 +248,27 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	ret = add_map(phys_mem, 0xff000000, 0x1000, 0x0, goldfish_pic->io_memory, 1, 1);
 	if(ret != No_exp)
 		printf("Warnning, pic can not be mapped\n");
-	ret = add_map(phys_mem, 0xff003000, 0x1000, 0x0, goldfish_timer->io_memory, 1, 1);
-	
-	if(ret != No_exp)
-		printf("Warnning, timer can not be mapped\n");
-	ret = add_map(phys_mem, 0xff004000, 0x1000, 0x0, nand_ctrl->io_memory, 1, 1);
-	if(ret != No_exp)
-		printf("Warnning, nand device can not be mapped\n");
 
+	ret = add_map(phys_mem, 0xff001000, 0x1000, 0x0, goldfish_bus->io_memory, 1, 1);
+	if(ret != No_exp)
+		printf("Warnning, bus can not be mapped\n");
+ 
 	ret = add_map(phys_mem, 0xff002000, 0x1000, 0x0, goldfish_tty->io_memory, 1, 1);
 	if(ret != No_exp)
 		printf("Warnning, tty can not be mapped\n");
 
+	ret = add_map(phys_mem, 0xff003000, 0x1000, 0x0, goldfish_timer->io_memory, 1, 1);
+	if(ret != No_exp)
+		printf("Warnning, timer can not be mapped\n");
+
+	ret = add_map(phys_mem, 0xff004000, 0x1000, 0x0, goldfish_nand->io_memory, 1, 1);
+	if(ret != No_exp)
+		printf("Warnning, nand device can not be mapped\n");
+
+
+	goldfish_bus->add_device->add_device(bus_obj, bus_obj, -1, 0xff001000, 0x1000, BUS0_IRQ, 1);
+	goldfish_bus->add_device->add_device(bus_obj, timer_obj, -1, 0xff003000, 0x1000, TIMER0_IRQ, 1);
+	goldfish_bus->add_device->add_device(bus_obj, nand_obj, -1, 0xff004000, 0x1000, 0, 1);
 
 	/* @Deprecated */
 	this_mach->mach_io_do_cycle = goldfish_io_do_cycle;

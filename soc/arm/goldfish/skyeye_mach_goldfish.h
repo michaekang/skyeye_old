@@ -27,5 +27,6 @@
 #include "goldfish_nand.h"
 #include "goldfish_tty.h"
 #include "goldfish_fb.h"
+#include "goldfish_bus.h"
 
 #endif /* __SKYEYE_MACH_GOLDFISH_H___ */

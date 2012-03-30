@@ -37,8 +37,6 @@ typedef struct {
 	int fd;
 }nand_dev_t;
 
-
-
 typedef struct {
 	conf_object_t *obj;
 	uint32_t base;

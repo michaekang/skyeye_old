@@ -23,8 +23,13 @@
 #include <skyeye_mm.h>
 #include <skyeye_obj.h>
 #include <skyeye_class.h>
+#include <skyeye_types.h>
 #include <skyeye_signal.h>
 #include "goldfish_bus.h"
+#include <skyeye_arch.h>
+#include <skyeye_config.h>
+#include <skyeye_sched.h>
+#include <skyeye_options.h>
 #include <stdio.h>
 
 #define PDEV_BUS_OP_DONE         0x00
@@ -78,10 +83,11 @@ static exception_t goldfish_add_device_no_io(conf_object_t* bus_obj, conf_object
 }
 
 static exception_t goldfish_bus_read(conf_object_t* opaque, generic_address_t offset, void* buf, size_t count) {
-	goldfish_bus_device_t *dev = (goldfish_bus_device_t*)(opaque->obj);
-    bus_state_t *s = (bus_state_t*)(dev->bus);
+	conf_object_t* obj = get_conf_obj("goldfish_device_bus0");
+	goldfish_bus_device_t *dev = (goldfish_bus_device_t *)obj->obj;
+	bus_state_t* s = dev->bus;
 
-    switch (offset) {
+        switch (offset) {
         case PDEV_BUS_OP:
             if(s->current) {
                 s->current->reported_state = 1;
@@ -94,14 +100,16 @@ static exception_t goldfish_bus_read(conf_object_t* opaque, generic_address_t of
                 s->current = s->current->next;
             if(s->current) {
                 //return PDEV_BUS_OP_ADD_DEV;
+		printf("add dev name %s\n",s->current->name);
 		*(uint32_t *)buf = PDEV_BUS_OP_ADD_DEV;
 	    }
             else {
-		dev->master->raise_signal(dev->signal_target, dev->line_no);
+		dev->master->lower_signal(dev->signal_target, dev->line_no);
                 //goldfish_device_set_irq(&s->dev, 0, 0);
                 //return PDEV_BUS_OP_DONE;
 		*(uint32_t *)buf = PDEV_BUS_OP_DONE;
             }
+	    break;
 
         case PDEV_BUS_NAME_LEN:
 		if (s->current) {
@@ -110,6 +118,7 @@ static exception_t goldfish_bus_read(conf_object_t* opaque, generic_address_t of
 		else {
 			*(uint32_t *)buf = 0;
 		}
+	        break;
         case PDEV_BUS_ID:
 		if (s->current) {
 			*(uint32_t *)buf = s->current->id;
@@ -117,6 +126,7 @@ static exception_t goldfish_bus_read(conf_object_t* opaque, generic_address_t of
 		else {
 			*(uint32_t *)buf = 0;
 		}
+		break;
             //return s->current ? s->current->id : 0;
         case PDEV_BUS_IO_BASE:
 			if (s->current) {
@@ -125,6 +135,7 @@ static exception_t goldfish_bus_read(conf_object_t* opaque, generic_address_t of
 			else {
 				*(uint32_t *)buf = 0;
 			}
+			break;
             //return s->current ? s->current->base : 0;
         case PDEV_BUS_IO_SIZE:
 			if (s->current) {
@@ -133,6 +144,7 @@ static exception_t goldfish_bus_read(conf_object_t* opaque, generic_address_t of
 			else {
 				*(uint32_t *)buf = 0;
 			}
+			break;
             //return s->current ? s->current->size : 0;
         case PDEV_BUS_IRQ:
 			if (s->current) {
@@ -141,6 +153,7 @@ static exception_t goldfish_bus_read(conf_object_t* opaque, generic_address_t of
 			else {
 				*(uint32_t *)buf = 0;
 			}
+			break;
             //return s->current ? s->current->irq : 0;
         case PDEV_BUS_IRQ_COUNT:
 			if (s->current) {
@@ -149,49 +162,74 @@ static exception_t goldfish_bus_read(conf_object_t* opaque, generic_address_t of
 			else {
 				*(uint32_t *)buf = 0;
 			}
-            //return s->current ? s->current->irq_count : 0;
-		default:
-			return No_exp;
-    }
+			break;
+	default:
+			break;
+	}
+	return No_exp;
 }
 
 //static void goldfish_bus_op_init(bus_state_t *s)
 static void goldfish_bus_op_init(conf_object_t* opaque) {
-	goldfish_bus_device_t* dev_bus = (goldfish_bus_device_t*)(opaque->obj);
-	bus_state_t* s = (bus_state_t*)(dev_bus->obj);
+	conf_object_t* obj = get_conf_obj("goldfish_device_bus0");
+	goldfish_bus_device_t *dev_bus = (goldfish_bus_device_t *)obj->obj;
+	bus_state_t* s = dev_bus->bus;
 	goldfish_device_t* dev = dev_bus->first_device;
+
 	while(dev) {
 		dev->reported_state = 0;
 		dev = dev->next;
 	}
 	s->current = NULL;
 	// FIXME: how  to do for irq
-	dev_bus->master->raise_signal(dev_bus->signal_target, dev_bus->line_no);
+	if (dev_bus->first_device != NULL)
+	{
+		printf("bus sent interrupt\n");
+		dev_bus->master->raise_signal(dev_bus->signal_target, dev_bus->line_no);
+	}
+	else
+		dev_bus->master->lower_signal(dev_bus->signal_target, dev_bus->line_no);
+
 	//goldfish_device_set_irq(&s->dev, 0, first_device != NULL);
 }
 
 static exception_t goldfish_bus_write(conf_object_t* opaque, generic_address_t offset, void* buf, size_t count) {
-	goldfish_bus_device_t* dev = (goldfish_bus_device_t*)(opaque->obj);
-	bus_state_t* s = (bus_state_t*)(dev->obj);
+	conf_object_t* obj = get_conf_obj("goldfish_device_bus0");
+	goldfish_bus_device_t *dev = (goldfish_bus_device_t *)obj->obj;
+	bus_state_t* s = dev->bus;
 	uint32_t value = *(uint32_t*)buf;
         switch(offset) {
 	case PDEV_BUS_OP:
             switch(value) {
                 case PDEV_BUS_OP_INIT:
+		    printf("init bus op\n");
                     goldfish_bus_op_init(opaque);
                     break;
                 default:
-					return Invarg_exp;
+	            return Invarg_exp;
             };
             break;
         case PDEV_BUS_GET_NAME:
+	    {
+	    uint32_t index;
+	    uint32_t fault;
+
             if(s->current) {
-				printf("Fixme: In %s, line = %d, offset = 0x%x\n", __FUNCTION__, __LINE__, offset);
-                //cpu_memory_rw_debug(cpu_single_env, value, (void*)s->current->name, strlen(s->current->name), 1);
+		    for (index = 0;index < strlen(s->current->name) - 1;index++)
+		    {
+			    skyeye_config_t* config = get_current_config();
+			    generic_arch_t *arch_instance = get_arch_instance(config->arch->arch_name);
+			    fault = arch_instance->mmu_write(8, value, (s->current->name)[index]);
+			    if(fault)
+				fprintf(stderr, "SKYEYE:read virtual address error!!!\n" );
+			     value ++;
+
+		    }
             }
+	    }
             break;
         default:
-			return Invarg_exp;
+		return Invarg_exp;
 	}
 	return No_exp;
 }
@@ -211,9 +249,8 @@ static conf_object_t* new_goldfish_bus_device(char* obj_name){
 		fprintf(stderr, "MM failed in %s\n", __FUNCTION__);
 		return NULL;
 	}
-	dev->io_memory->conf_obj = dev->obj;
-	dev->io_memory->access.read = goldfish_bus_read;
-	dev->io_memory->access.write = goldfish_bus_write;
+	dev->io_memory->read = goldfish_bus_read;
+	dev->io_memory->write = goldfish_bus_write;
 	dev->add_device->conf_obj = dev->obj;
 	dev->add_device->add_device = goldfish_add_device_no_io;
 	dev->goldfish_free_base = 0x10000;

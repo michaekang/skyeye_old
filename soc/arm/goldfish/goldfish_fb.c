@@ -375,6 +375,7 @@ static void goldfish_fb_update_display(conf_object_t *opaque)
     conf_object_t* obj = get_conf_obj("goldfish_fb0");
     struct goldfish_fb_device *s = (goldfish_fb_device *)obj->obj;
 
+//    printf("in %s\n",__func__);
     uint32_t base;
     uint8_t*  dst_line;
     uint8_t*  src_line;
@@ -535,6 +536,7 @@ static exception_t goldfish_fb_write(conf_object_t *opaque, generic_address_t of
     
     switch(offset) {
         case FB_INT_ENABLE:
+                printf( "WRITE ENABLE\n");
 		s->int_enable = val;
 		level = s->int_status & s->int_enable;
 		//goldfish_device_set_irq(&s->dev, 0, (s->int_status & s->int_enable));
@@ -558,6 +560,7 @@ static exception_t goldfish_fb_write(conf_object_t *opaque, generic_address_t of
             s->need_update = 1;
             s->need_int = 1;
             s->base_valid = 1;
+            printf( "WRITE BASE\n");
             if(s->set_rotation != s->rotation) {
                 printf("FB_SET_BASE: rotation : %d => %d\n", s->rotation, s->set_rotation);
                 s->rotation = s->set_rotation;
