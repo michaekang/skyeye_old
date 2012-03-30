@@ -194,7 +194,7 @@ void update_cond_from_fpscr(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t p
 	new StoreInst(v, ptr_V, false, bb);
 	//new StoreInst(t, ptr_T, false, bb);
 
-	printf("In %s\n", __FUNCTION__);
+//	printf("In %s\n", __FUNCTION__);
 	return;
 }
 
