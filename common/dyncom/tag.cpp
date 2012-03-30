@@ -510,7 +510,11 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 
 		if (tag & (TAG_BRANCH)) {
 			or_tag(cpu, new_pc, TAG_BRANCH_TARGET);
-			tag_recursive(cpu, new_pc, level+1);
+//			printf("new_pc : %x pc : %x\n", new_pc, pc);
+			if (new_pc != NEW_PC_NONE) {
+				new_pc = (pc & 0xfffff000) + (new_pc & 0xfff);
+				tag_recursive(cpu, new_pc, level+1);
+			}
 			if (!(tag & (TAG_CONDITIONAL)))
 				//return;
 				break;

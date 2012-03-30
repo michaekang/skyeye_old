@@ -491,9 +491,14 @@ int arm_tag_branch(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *ne
 		/* For R15 update , that should be NEW_PC_NONE */
 		*new_pc = ARM_BRANCH_TARGET;
 	else
-		*new_pc = NEW_PC_NONE;
+		*new_pc = ARM_BRANCH_TARGET;
+//		*new_pc = NEW_PC_NONE;
 	//printf("in %s pc is %x new pc is %x\n", __FUNCTION__, pc, ARM_BRANCH_TARGET);
 //	sleep(1);
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	/* If not in the same page, so address maybe invalidate. */
+	if ((pc >> 12) != (*new_pc >> 12))
+		*new_pc = NEW_PC_NONE;
 	*next_pc = pc + INSTR_SIZE;
 	if((instr >> 28 != 0xe) && (instr >> 28 != 0xf))
 	{
@@ -2288,8 +2293,8 @@ int DYNCOM_TAG(bbl)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
-	if(!is_user_mode(cpu))
-		*new_pc = NEW_PC_NONE;
+//	if(!is_user_mode(cpu))
+//		*new_pc = NEW_PC_NONE;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
