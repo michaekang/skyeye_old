@@ -639,7 +639,10 @@ Value *MisGetAddrRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 Value *MisGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = MisGetAddrImmOffset(cpu, instr, bb);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+		bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, Addr);
 
 	return Addr;
@@ -649,7 +652,10 @@ Value *MisGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *MisGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = MisGetAddrRegOffset(cpu, instr, bb);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+		bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, Addr);
 
 	return Addr;
@@ -659,7 +665,10 @@ Value *MisGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *MisGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = CHECK_READ_REG15_WA(RN);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+		bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, MisGetAddrImmOffset(cpu, instr, bb));
 
 	return Addr;
@@ -669,7 +678,10 @@ Value *MisGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *MisGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = CHECK_READ_REG15_WA(RN);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+		bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, MisGetAddrRegOffset(cpu, instr, bb));
 
 	return Addr;
@@ -687,7 +699,10 @@ Value *MisGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 		if(BITS(21,22) == 0x2){
 		/* Imm Offset */
 			Value* Addr = MisGetAddrImmOffset(cpu, instr, bb);
-			bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+			if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+				bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+			else
+				bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 			return Addr;
 		}else if(BITS(21,22) == 0x3){
 		/* Imm pre */
@@ -710,7 +725,10 @@ Value *MisGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 		if(BITS(21,22) == 0x0){
 		/* Reg offset */
 			Value* Addr = MisGetAddrRegOffset(cpu, instr, bb);
-			bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+			if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+				bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+			else
+				bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 			return Addr;
 		}else if(BITS(21,22) == 0x1){
 		/* Reg pre */
