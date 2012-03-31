@@ -3094,6 +3094,11 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	Value* base = (n == 15) ? ADD(AND(R(n), CONST(0xFFFFFFFC)), CONST(8)): R(n);
 	Value* Addr = add ? ADD(base, CONST(imm32)) : SUB(base, CONST(imm32));
 	DBG("VSTR :\n");
+	if(single)
+		bb = arch_check_mm(cpu, bb, Addr, 4, 0, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, 8, 0, cpu->dyncom_engine->bb_trap);
+
 	if(single){
 		arch_write_memory(cpu, bb, Addr, RSPR(d), 32);
 	}
@@ -3289,6 +3294,11 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 
 	DBG("\t\tin %s \n", __FUNCTION__);
 	Value* Addr = SUB(R(13), CONST(imm32));
+	if(single)
+		bb = arch_check_mm(cpu, bb, Addr, regs * 4, 0, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, regs * 8, 0, cpu->dyncom_engine->bb_trap);
+
 	int i;
 	for (i = 0; i < regs; i++)
 	{
@@ -3516,6 +3526,11 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 
 	Value* Addr = SELECT(CONST1(add), R(n), SUB(R(n), CONST(imm32)));
 	DBG("VSTM \n");
+	if(single)
+		bb = arch_check_mm(cpu, bb, Addr, regs * 4, 0, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, regs * 8, 0, cpu->dyncom_engine->bb_trap);
+
 	int i;	
 	for (i = 0; i < regs; i++)
 	{
@@ -3758,6 +3773,10 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	DBG("VPOP :\n");
 		
 	Value* Addr = R(13);
+	if(single)
+		bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
 		
 	for (i = 0; i < regs; i++)
 	{
@@ -3970,6 +3989,11 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		base = ADD(AND(base, CONST(0xFFFFFFFC)), CONST(8));
 	}
 	Value* Addr = add ? (ADD(base, CONST(imm32))) : (SUB(base, CONST(imm32)));
+	if(single)
+		bb = arch_check_mm(cpu, bb, Addr, 4, 1, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, 8, 1, cpu->dyncom_engine->bb_trap);
+
 	if(single){
 		LETS(d, arch_read_memory(cpu, bb, Addr, 0, 32));
 	}
@@ -4179,6 +4203,11 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	int regs   = single ? BITS(0, 7) : BITS(1, 7);
 
 	Value* Addr = SELECT(CONST1(add), R(n), SUB(R(n), CONST(imm32)));
+	if(single)
+		bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
+	else
+		bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
+
 	DBG("VLDM \n");
 	int i;	
 	for (i = 0; i < regs; i++)
