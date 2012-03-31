@@ -109,7 +109,7 @@ typedef bool_t			(*fp_is_page_start)(cpu_t* cpu, addr_t addr);
 typedef bool_t			(*fp_is_page_end)(cpu_t* cpu, addr_t addr);
 typedef uint32_t 		(*fp_read_memory_t)(cpu_t *cpu, addr_t addr, uint32_t size);
 typedef void 			(*fp_write_memory_t)(cpu_t *cpu, addr_t addr, uint32_t value, uint32_t size);
-typedef uint32_t		(*fp_check_mm_t)(cpu_t *cpu, uint32_t instr);
+typedef uint32_t		(*fp_check_mm_t)(cpu_t *cpu, uint32_t addr, int count, uint32_t read_flag);
 typedef int				(*fp_effective_to_physical)(struct cpu *cpu, uint32_t addr, uint32_t *result);
 typedef struct {
 	fp_is_inside_page is_inside_page;
@@ -422,6 +422,9 @@ typedef struct dyncom_engine{
 	Value *ptr_func_write_memory;
 	Value *ptr_func_check_mm;
 
+	/* Temp variable for address translation */
+	BasicBlock* bb_trap;
+	BasicBlock* bb_load_store;
 	/* arch functions are for each architecture to declare it's own functions
 	   which can be invoked in llvm IR.Usually,the functions to be invoked are
 	   C functions which are complex to be implemented by llvm IR.

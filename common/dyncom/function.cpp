@@ -484,7 +484,9 @@ cpu_create_function(cpu_t *cpu, const char *name,
 
 	std::vector<const Type*> type_func_check_mm_args;
 	type_func_check_mm_args.push_back(type_intptr);	/* intptr *cpu */
-	type_func_check_mm_args.push_back(type_i32);
+	type_func_check_mm_args.push_back(type_i32); /* virtual address */
+	type_func_check_mm_args.push_back(type_i32); /* count */
+	type_func_check_mm_args.push_back(type_i32); /* read flag */
 	FunctionType *type_func_check_mm_callout = FunctionType::get(
 		getIntegerType(32),	/* Result */
 		type_func_check_mm_args,	/* Params */

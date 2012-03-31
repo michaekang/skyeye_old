@@ -278,6 +278,7 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 		for (i = 0; i < 13; i++) {
 			if(BIT(i)){
 				ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+				//LOG("In %s, i=0x%x\n", __FUNCTION__, i);
 				LET(i, ret);
 				Addr = ADD(Addr, CONST(4));
 			}
@@ -297,6 +298,7 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 	for( i = 0; i < 16; i ++ ){
 		if(BIT(i)){
 			ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+			//LOG("In %s, i=0x%x\n", __FUNCTION__, i);
 			if(i == R15){
 				STORE(TRUNC1(AND(ret, CONST(1))), ptr_T);
 				LET(i, AND(ret, CONST(~0x1)));
@@ -416,6 +418,7 @@ Value *WOrUBGetAddrImmOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	else
 		Addr =  SUB(CHECK_READ_REG15_WA(RN), CONST(OFFSET12));
 
+	//bb = arch_check_mm(cpu, bb, Addr, read, cpu->dyncom_engine->bb_trap);
 	//CHECK_REG15();
 	return Addr;
 }
@@ -429,6 +432,7 @@ Value *WOrUBGetAddrRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	else
 		Addr =  SUB(CHECK_READ_REG15_WA(RN), R(RM));
 
+	//bb = arch_check_mm(cpu, bb, Addr, read, cpu->dyncom_engine->bb_trap);
 	return Addr;
 }
 
@@ -467,72 +471,81 @@ Value *WOrUBGetAddrScaledRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	else
 		Addr = SUB(CHECK_READ_REG15_WA(RN), index);
 
+	//bb = arch_check_mm(cpu, bb, Addr, read, cpu->dyncom_engine->bb_trap);
 	return Addr;
 }
 
 /* Getting Word or Unsigned Byte Address Immediate Preload operand.in arm doc */
-Value *WOrUBGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = WOrUBGetAddrImmOffset(cpu, instr, bb);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, Addr);
 	return Addr;
 }
 
 /* Getting Word or Unsigned Byte Address Register Preload operand.in arm doc */
-Value *WOrUBGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = WOrUBGetAddrRegOffset(cpu, instr, bb);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, Addr);
 	return Addr;
 }
 
 /* Getting Word or Unsigned Byte Address scaled Register Pre-indexed operand.in arm doc */
-Value *WOrUBGetAddrScaledRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddrScaledRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 {
 	Value *Addr = WOrUBGetAddrScaledRegOffset(cpu, instr, bb);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, Addr);
 	return Addr;
 }
 
 /* Getting Word or Unsigned Byte Immediate Post-indexed operand.in arm doc */
-Value *WOrUBGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 {
 	Value *Addr = R(RN);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN,WOrUBGetAddrImmOffset(cpu, instr, bb));
 	return Addr;
 }
 
 /* Getting Word or Unsigned Byte Address register Post-indexed operand.in arm doc */
-Value *WOrUBGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = R(RN);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN,WOrUBGetAddrRegOffset(cpu, instr, bb));
 	return Addr;
 }
 
 /* Getting Word or Unsigned Byte Address scaled register Post-indexed operand.in arm doc */
-Value *WOrUBGetAddrScaledRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddrScaledRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
-	Value *Addr = R(RN);;
+	Value *Addr = R(RN);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN,WOrUBGetAddrScaledRegOffset(cpu, instr, bb));
 	return Addr;
 }
 
 /* Getting Word or Unsigned Byte Address Immediate operand operations collection */
-Value *WOrUBGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	if(BITS(24,27) == 0x5){
 		if(!BIT(21)){
 		/* ImmOff */
-			return WOrUBGetAddrImmOffset(cpu, instr, bb);
+			Value* Addr= WOrUBGetAddrImmOffset(cpu, instr, bb);
+			bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+			return Addr;
 		}else{
 		/* ImmPre */
-			return WOrUBGetAddrImmPre(cpu, instr, bb);
+			return WOrUBGetAddrImmPre(cpu, instr, bb, read);
 		}
 	}else if(BITS(24,27) == 0x4){
 		/* ImmPost */
 		if(!BIT(21) || BIT(21)){
-			return WOrUBGetAddrImmPost(cpu, instr, bb);
+			return WOrUBGetAddrImmPost(cpu, instr, bb, read);
 		}
 	}
 	printf(" Error in WOrUB Get Imm Addr instr is %x \n", instr);
@@ -540,50 +553,56 @@ Value *WOrUBGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 }
 
 /* Getting Word or Unsigned Byte Address reg operand operations collection */
-Value *WOrUBGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	if(BITS(24,27) == 0x7){
 		if(!BIT(21)){
 		/* Reg off */
 			if(!BITS(4,11)){
-				return WOrUBGetAddrRegOffset(cpu, instr, bb);
+				Value* Addr = WOrUBGetAddrRegOffset(cpu, instr, bb);
+				bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+				return Addr;
 			}else{
 			/* scaled reg */
-				return WOrUBGetAddrScaledRegOffset(cpu, instr, bb);
+				Value* Addr = WOrUBGetAddrScaledRegOffset(cpu, instr, bb);
+				bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+				return Addr;
 			}
 		} else {
 		/* Reg pre */
 			if(!BITS(4,11)){
-				return WOrUBGetAddrRegPre(cpu, instr, bb);
+				return WOrUBGetAddrRegPre(cpu, instr, bb, read);
 			}else{
 			/* scaled reg */
-				return WOrUBGetAddrScaledRegPre(cpu, instr, bb);
+				return WOrUBGetAddrScaledRegPre(cpu, instr, bb, read);
 			}
 		}
 	}else if(BITS(24,27) == 0x6){
 		if(!BIT(21)){
 		/* Reg post */
 			if(!BITS(4,11)){
-				return WOrUBGetAddrRegPost(cpu, instr, bb);
+				return WOrUBGetAddrRegPost(cpu, instr, bb, read);
 			}else{
 			/* scaled reg */
-				return WOrUBGetAddrScaledRegPost(cpu, instr, bb);
+				return WOrUBGetAddrScaledRegPost(cpu, instr, bb, read);
 			}
 		}
 	} else if (BITS(24, 27) == 0x5 && BIT(21) == 0) {
-		return WOrUBGetAddrImmOffset(cpu, instr, bb);
+		Value* Addr = WOrUBGetAddrImmOffset(cpu, instr, bb);
+		arch_check_mm(cpu, bb, Addr, read, 4, cpu->dyncom_engine->bb_trap);
+		return Addr;
 	}
 	printf(" Error in WOrUB Get Reg Addr inst is %x\n", instr);
 	return NULL;
 }
 
 /* Getting Word or Unsigned Byte Address operand operations collection */
-Value *WOrUBGetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *WOrUBGetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	if(!BIT(25))
-		return WOrUBGetAddrImm(cpu, instr, bb);
+		return WOrUBGetAddrImm(cpu, instr, bb, read);
 	else
-		return WOrUBGetAddrReg(cpu, instr, bb);
+		return WOrUBGetAddrReg(cpu, instr, bb, read);
 }
 
 /* Addr Mode 3, following arm operand doc */
@@ -617,56 +636,62 @@ Value *MisGetAddrRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 }
 
 /* Getting Miscellaneous Address immdiate pre-indexed operand.in arm doc */
-Value *MisGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *MisGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = MisGetAddrImmOffset(cpu, instr, bb);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, Addr);
 
 	return Addr;
 }
 
 /* Getting Miscellaneous Address registers pre-indexed operand.in arm doc */
-Value *MisGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *MisGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = MisGetAddrRegOffset(cpu, instr, bb);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, Addr);
 
 	return Addr;
 }
 
 /* Getting Miscellaneous Address immdiate post-indexed operand.in arm doc */
-Value *MisGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *MisGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = CHECK_READ_REG15_WA(RN);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, MisGetAddrImmOffset(cpu, instr, bb));
 
 	return Addr;
 }
 
 /* Getting Miscellaneous Address register post-indexed operand.in arm doc */
-Value *MisGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *MisGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = CHECK_READ_REG15_WA(RN);
+	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 	LET(RN, MisGetAddrRegOffset(cpu, instr, bb));
 
 	return Addr;
 }
 
 /* Getting Miscellaneous Address immdiate operand operation collection. */
-Value *MisGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *MisGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	if(BITS(24,27) == 0x0){
 		if(BITS(21,22) == 0x2){
 		/* Imm Post */
-			return MisGetAddrImmPost(cpu, instr, bb);
+			return MisGetAddrImmPost(cpu, instr, bb, read);
 		}
 	}else if(BITS(24,27) == 0x1){
 		if(BITS(21,22) == 0x2){
 		/* Imm Offset */
-			return MisGetAddrImmOffset(cpu, instr, bb);
+			Value* Addr = MisGetAddrImmOffset(cpu, instr, bb);
+			bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+			return Addr;
 		}else if(BITS(21,22) == 0x3){
 		/* Imm pre */
-			return MisGetAddrImmPre(cpu, instr, bb);
+			return MisGetAddrImmPre(cpu, instr, bb, read);
 		}
 	}
 	printf(" Error in Mis Get Imm Addr \n");
@@ -674,20 +699,22 @@ Value *MisGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 }
 
 /* Getting Miscellaneous Address register operand operation collection. */
-Value *MisGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *MisGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 {
 	if(BITS(24,27) == 0x0){
 		if(BITS(21,22) == 0x0){
 		/* Reg Post */
-			return MisGetAddrRegPost(cpu, instr, bb);
+			return MisGetAddrRegPost(cpu, instr, bb, read);
 		}
 	}else if(BITS(24,27) == 0x1){
 		if(BITS(21,22) == 0x0){
 		/* Reg offset */
-			return MisGetAddrRegOffset(cpu, instr, bb);
+			Value* Addr = MisGetAddrRegOffset(cpu, instr, bb);
+			bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+			return Addr;
 		}else if(BITS(21,22) == 0x1){
 		/* Reg pre */
-			return MisGetAddrRegPre(cpu, instr, bb);
+			return MisGetAddrRegPre(cpu, instr, bb, read);
 		}
 	}
 	printf(" (DEC) Error in Mis Get Reg Addr %x\n", instr);
@@ -696,19 +723,19 @@ Value *MisGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 
 
 /* Getting Miscellaneous Address operand operation collection. */
-Value *MisGetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+static Value *MisGetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	if(BIT(22))
-		return MisGetAddrImm(cpu, instr, bb);
+		return MisGetAddrImm(cpu, instr, bb, read);
 	else
-		return MisGetAddrReg(cpu, instr, bb);
+		return MisGetAddrReg(cpu, instr, bb, read);
 
 	return NULL;
 }
 
 /* Addr Mode 4 */
 /* Getting Load Store Multiple Address and Increment After operand */
-Value *LSMGetAddrIA(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *LSMGetAddrIA(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	int i =  BITS(0,15);
 	int count = 0;
@@ -721,6 +748,7 @@ Value *LSMGetAddrIA(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 
 	Addr = CHECK_READ_REG15_WA(RN);
 
+	bb = arch_check_mm(cpu, bb, Addr, count * 4 , read, cpu->dyncom_engine->bb_trap);
 	if(LSWBIT)
 		LET(RN, ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
 
@@ -728,7 +756,7 @@ Value *LSMGetAddrIA(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 }
 
 /* Getting Load Store Multiple Address and Increment Before operand */
-Value *LSMGetAddrIB(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *LSMGetAddrIB(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	int i =  BITS(0,15);
 	int count = 0;
@@ -738,8 +766,9 @@ Value *LSMGetAddrIB(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 			count ++;
 		i = i >> 1;
 	}
-
+	assert(count != 0);
 	Addr = ADD(CHECK_READ_REG15_WA(RN), CONST(4));
+	bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
 	if(LSWBIT)
 		LET(RN, ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
 
@@ -747,7 +776,7 @@ Value *LSMGetAddrIB(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 }
 
 /* Getting Load Store Multiple Address and Decrement After operand. */
-Value *LSMGetAddrDA(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *LSMGetAddrDA(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	int i =  BITS(0,15);
 	int count = 0;
@@ -759,6 +788,7 @@ Value *LSMGetAddrDA(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	}
 
 	Addr = ADD(SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)), CONST(4));
+	bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
 	if(LSWBIT)
 		LET(RN, SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
 
@@ -766,7 +796,7 @@ Value *LSMGetAddrDA(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 }
 
 /* Getting Load Store Multiple Address and Decrement Before operand. */
-Value *LSMGetAddrDB(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *LSMGetAddrDB(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	int i =  BITS(0,15);
 	int count = 0;
@@ -778,6 +808,7 @@ Value *LSMGetAddrDB(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	}
 
 	Addr = SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4));
+	bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
 	if(LSWBIT)
 		LET(RN, SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
 
@@ -785,39 +816,50 @@ Value *LSMGetAddrDB(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 }
 
 /* Getting Load Store Multiple Address operand operation collection. */
-Value *LSMGetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *LSMGetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 {
 	if(BITS(24,27) == 0x8){
 		if(BIT(23)){
 		/* IA */
-			return LSMGetAddrIA(cpu, instr, bb);
+			return LSMGetAddrIA(cpu, instr, bb, read);
 		}else{
 		/* DA */
-			return LSMGetAddrDA(cpu, instr, bb);
+			return LSMGetAddrDA(cpu, instr, bb, read);
 		}
 	}else if(BITS(24,27) == 0x9){
 		if(BIT(23)){
 		/* IB */
-			return LSMGetAddrIB(cpu, instr, bb);
+			return LSMGetAddrIB(cpu, instr, bb, read);
 		}else{
 		/* DB */
-			return LSMGetAddrDB(cpu, instr, bb);
+			return LSMGetAddrDB(cpu, instr, bb, read);
 		}
 	}
 
 	printf(" Error in LSM Get Imm Addr BITS(24,27) is 0x%x\n", BITS(24,27));
 	return NULL;
 }
-
+Value* GetPhysAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value* virtAddr, int read){
+        
+        //Value* phys_page = arm_dyncom_check_mm(cpu, bb, instr, virtAddr, read);
+	//arch_check_mm(cpu, instr, bb, bb, cpu->dyncom_engine->bb_trap);
+	//Value *cond = ICMP_EQ(AND(phys_page, CONST(0x1)), CONST(0));
+	//arch_branch(1, cpu->dyncom_engine->bb_trap, cpu->dyncom_engine->bb_load_store, cond, bb);
+        
+	//bb = cpu->dyncom_engine->bb_load_store;
+        /* The memory translation is successfully, we should: is finished */
+	//return OR(AND(phys_page, CONST(0xFFFFF000)), AND(virtAddr, CONST(0xFFF)));
+	return CONST(0);
+}
 /* all,Getting Load Store Address operand operation collection */
-Value *GetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
+Value *GetAddr(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	if(BITS(24,27) == 0x1 || BITS(24,27) == 0x2 || BITS(24, 27) == 0){
-		return MisGetAddr(cpu,instr,bb);
+		return MisGetAddr(cpu,instr,bb, read);
 	}else if(BITS(24,27) == 0x4 || BITS(24,27) == 0x5 || BITS(24,27) == 0x6 || BITS(24,27) == 0x7 ){
-		return WOrUBGetAddr(cpu,instr,bb);
+		return WOrUBGetAddr(cpu,instr,bb, read);
 	}else if(BITS(24,27) == 0x8 || BITS(24,27) == 0x9){
-		return LSMGetAddr(cpu,instr,bb);
+		return LSMGetAddr(cpu,instr,bb, read);
 	}
 
 	printf("Not a Load Store Addr operation %x\n", instr);

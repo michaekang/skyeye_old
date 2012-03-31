@@ -60,7 +60,7 @@ void erase_by_asid(cpu_t* cpu, unsigned int asid)
 	memset(&tlb_cache[asid], 0, sizeof(tlb_item) * 2048);
 }
 
-void clear()
+void erase_all(cpu_t* cpu)
 {
 	memset(tlb_cache, 0, sizeof(tlb_item) * 2048 * 256);
 }

@@ -105,12 +105,23 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 		cur_bb = bb_cond;
 	}
 	if ((tag & TAG_MEMORY) && !is_user_mode(cpu)) { //&& !(tag & TAG_BRANCH)) {
+		#if 0
 		uint32_t instr;
 		bus_read(32, pc, &instr);
 		cur_bb = arch_check_mm(cpu, instr, cur_bb, bb_next, bb_trap);
+		#endif
+		cpu->dyncom_engine->bb_trap = bb_trap;
 	}
 
 	cpu->f.translate_instr(cpu, pc, cur_bb);
+	if ((tag & TAG_MEMORY) && !is_user_mode(cpu)) { //&& !(tag & TAG_BRANCH)) {
+		#if 0
+		uint32_t instr;
+		bus_read(32, pc, &instr);
+		cur_bb = arch_check_mm(cpu, instr, cur_bb, bb_next, bb_trap);
+		#endif
+		cur_bb = cpu->dyncom_engine->bb_load_store;
+	}
 	if ((tag & TAG_NEED_PC) && !is_user_mode(cpu)) {
 		BasicBlock *bb = cur_bb;
 		Value *vpc = new LoadInst(cpu->ptr_PC, "", false, bb);

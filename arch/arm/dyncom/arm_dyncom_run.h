@@ -8,6 +8,7 @@ void switch_mode(arm_core_t *core, uint32_t mode);
 void arch_arm_undef(cpu_t *cpu, BasicBlock *bb, uint32_t instr);
 void arch_arm_invalidate_by_mva(cpu_t *cpu, BasicBlock *bb, Value* mva);
 void arch_arm_invalidate_by_asid(cpu_t *cpu, BasicBlock *bb, Value* asid);
+void arch_arm_invalidate_by_all(cpu_t *cpu, BasicBlock *bb);
 extern uint32_t is_int_in_interpret(cpu_t *cpu);
 
 /* FIXME, we temporarily think thumb instruction is always 16 bit */

@@ -797,30 +797,37 @@ arch_syscall(cpu_t *cpu, BasicBlock *bb, uint32_t num)
 }
 
 BasicBlock *
-arch_check_mm(cpu_t *cpu, uint32_t instr, BasicBlock *bb, BasicBlock *next_bb, BasicBlock *exit_bb)
+arch_check_mm(cpu_t *cpu, BasicBlock *bb, Value* addr, int count, int read, BasicBlock *exit_bb)
 {
+	if(is_user_mode(cpu)){
+		cpu->dyncom_engine->bb_load_store = bb;
+		return bb;
+	}
 	#if 1
 	if (cpu->dyncom_engine->ptr_func_check_mm == NULL) {
 		printf("No check mm\n");
 		return bb;
 	}
 	#endif
+	if(count == 0){
+		printf("count=0\n");
+		abort();	
+		exit(-1);
+	}
 	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
 	params.push_back(v_cpu_ptr);
-	params.push_back(CONST(instr));
+	params.push_back(addr);
+	params.push_back(CONST(count));
+	params.push_back(CONST(read));
 	// XXX synchronize cpu context!
 	Value *exit_val = CallInst::Create(cpu->dyncom_engine->ptr_func_check_mm, params.begin(), params.end(), "", bb);
 //    return bb;
 	Value *cond = ICMP_EQ(exit_val, CONST(0));
-	BasicBlock *main_bb = BasicBlock::Create(_CTX(), "load_store", cpu->dyncom_engine->cur_func, 0);
-	if (next_bb) {
-		arch_branch(1, main_bb, exit_bb, cond, bb);
-	} else {
-		printf("No next_bb");
-		exit(-1);
-	}
-	return main_bb;
+	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store", cpu->dyncom_engine->cur_func, 0);
+	cpu->dyncom_engine->bb_load_store = load_store_bb;
+	arch_branch(1, load_store_bb, exit_bb, cond, bb);
+	return load_store_bb;
 }

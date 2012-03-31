@@ -301,7 +301,11 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 	} else {
 		#if 1
 		if (!get_phys_page((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p)) {
-		//if((p = get_phys_page(core, virt_addr)) != 0xFFFFFFFF){
+			#if 0
+			if(core->Reg[15] == 0xade76ae0){
+				printf("In %s , TLB hit, icounter=%lld, pc=0x%x, addr=0x%x, phys_page=0x%x, fault=0x%x\n", __FUNCTION__, core->icounter, core->Reg[15], virt_addr, p, fault);
+			}
+			#endif
 			#if 1
 			if (dyncom_check_perms(core, p & 3, rw)) {
 				*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
@@ -568,11 +572,12 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size)
 {
 	uint32_t value;
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
 	fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 1);
 	if (NO_FAULT != fault) {
-		printf("mmu read fault %d\n", fault);
+		printf("icounter=%lld, mmu read fault %d, virt_addr=0x%x, pc=0x%x\n", core->icounter, fault, virt_addr, core->Reg[15]);
 		phys_addr = virt_addr;
 		exit(-1);
 	}
@@ -601,7 +606,6 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 skip_read:
 	/* ldrex or ldrexb */
 	uint32 instr;
-	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	if(!((core->Cpsr & (1 << THUMB_BIT)) | core->TFlag)){
 		bus_read(32, core->phys_pc, &instr);
 
@@ -1238,7 +1242,7 @@ static addr_t GetAddr(cpu_t *cpu, uint32_t instr, addr_t* end_addr)
 //	return CONST(0);
 	return 0;
 }
-
+#if 0
 /* Check address load/store instruction access.*/
 static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 {
@@ -1388,6 +1392,46 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 	if (fault) {
 		#if 0
 		printf("pc is %x phys_pc is %x instr is %x\n", core->Reg[15], addr, instr);
+		printf("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
+		printf("fault is %d\n", fault);
+		#endif
+		core->abortSig = true;
+		core->Aborted = ARMul_DataAbortV;
+		core->AbortAddr = addr;
+		core->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
+		core->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
+		return 1;
+	}
+	return 0;
+}
+#endif
+static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t read)
+{
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	uint32_t phys_addr;
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	fault_t fault = NO_FAULT;
+	#if 0
+	if(core->Reg[15] == 0xade76ae0){
+		printf("In %s , icounter=%lld, pc=0x%x, addr=0x%x, count=0x%x, fault=0x%x\n", __FUNCTION__, core->icounter, core->Reg[15], addr, count, fault);
+	}
+	#endif
+	while(count){
+		fault = get_phys_addr(cpu, addr, &phys_addr, 32, read);
+		if(fault)
+			break;
+		addr += 4;
+		count -= 4;
+        }
+	#if 0
+	if(core->Reg[15] == 0xade76ae0){
+		printf("In %s , pc=0x%x, addr=0x%x, count=0x%x, fault=0x%x\n", __FUNCTION__, core->Reg[15], addr, count, fault);
+	}
+	#endif
+	//fault = get_phys_addr(cpu, addr, &phys_addr, 32, read);
+	if (fault) {
+		#if 0
+		printf("pc is %x addr is %x count is %x\n", core->Reg[15], addr, count);
 		printf("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
 		printf("fault is %d\n", fault);
 		#endif

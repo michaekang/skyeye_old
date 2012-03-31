@@ -37,4 +37,5 @@ uint64_t* new_tlb();
 //void invalidate_by_mva(cpu_t* cpu, ARMword va);
 void erase_by_asid(cpu_t* cpu, unsigned int asid);
 void erase_by_mva(cpu_t* cpu, unsigned int va);
+void erase_all(cpu_t* cpu);
 #endif

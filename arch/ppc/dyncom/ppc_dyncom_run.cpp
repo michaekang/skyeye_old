@@ -241,7 +241,7 @@ static arch_func_t powerpc_arch_func = {
 };
 
 /* Check address load/store instruction access.*/
-static uint32_t ppc_check_mm(cpu_t *cpu, uint32_t instr){
+static uint32_t ppc_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t read_flag){
 	return 0;
 }
 static arch_mem_ops_t ppc_dyncom_mem_ops = {
