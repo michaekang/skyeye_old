@@ -94,8 +94,6 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 		}
 		else{
 			if (tag & TAG_BEFORE_SYSCALL){
-				printf("In %s, next_pc=0x%x\n", __FUNCTION__, next_pc);
-				sleep(4);
 				emit_store_pc(cpu, cur_bb, next_pc);
 				BranchInst::Create(bb_cond, bb_trap, c, cur_bb);
 			}
