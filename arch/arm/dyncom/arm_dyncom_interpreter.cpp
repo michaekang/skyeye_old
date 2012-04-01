@@ -36,6 +36,7 @@ using namespace std;
 #include "bank_defs.h"
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_run.h"
+#include "arm_dyncom_tlb.h"
 #include "skyeye_ram.h"
 #include "vfp/vfp.h"
 
@@ -3576,9 +3577,9 @@ void gene_hot_path(uint32_t start_pc, profiling_data *prof, int id)
 		prof->clocktime = walltime;
 	}
 	if (prof->count[id] >= THRESHOLD) {
-		printf("start : %x\n", start_pc);
-		printf("addr0 : %x count : %d\n", prof->addr[0], prof->count[0]);
-		printf("addr1 : %x count : %d\n", prof->addr[1], prof->count[1]);
+		//printf("start : %x\n", start_pc);
+		//printf("addr0 : %x count : %d\n", prof->addr[0], prof->count[0]);
+		//printf("addr1 : %x count : %d\n", prof->addr[1], prof->count[1]);
 	}
 }
 
@@ -4659,17 +4660,19 @@ void InterpreterMainLoop(cpu_t *core)
 							case 0: /* invalidate all */
 								//invalidate_all_tlb(state);
 								printf("{TLB} [INSN] invalidate all\n");
-								remove_tlb(INSN_TLB);
+								//remove_tlb(INSN_TLB);
+								erase_all(core);
 								break;
 							case 1: /* invalidate by MVA */
 								//invalidate_by_mva(state, value);
 								//printf("{TLB} [INSN] invalidate by mva\n");
-								remove_tlb_by_mva(RD, INSN_TLB);
+								//remove_tlb_by_mva(RD, INSN_TLB);
+								erase_by_mva(core, RD);
 								break;
 							case 2: /* invalidate by asid */
 								//invalidate_by_asid(state, value);
 								//printf("{TLB} [INSN] invalidate by asid\n");
-								remove_tlb_by_asid(RD, INSN_TLB);
+								erase_by_asid(core, RD);
 								break;
 							default:
 								break;
@@ -4680,17 +4683,20 @@ void InterpreterMainLoop(cpu_t *core)
 							switch(OPCODE_2){
 							case 0: /* invalidate all */
 								//invalidate_all_tlb(state);
-								remove_tlb(DATA_TLB);
+								//remove_tlb(DATA_TLB);
+								erase_all(core);
 								printf("{TLB} [DATA] invalidate all\n");
 								break;
 							case 1: /* invalidate by MVA */
 								//invalidate_by_mva(state, value);
-								remove_tlb_by_mva(RD, DATA_TLB);
+								//remove_tlb_by_mva(RD, DATA_TLB);
+								erase_by_mva(core, RD);
 								//printf("{TLB} [DATA] invalidate by mva\n");
 								break;
 							case 2: /* invalidate by asid */
 								//invalidate_by_asid(state, value);
-								remove_tlb_by_asid(RD, DATA_TLB);
+								//remove_tlb_by_asid(RD, DATA_TLB);
+								erase_by_asid(core, RD);
 								//printf("{TLB} [DATA] invalidate by asid\n");
 								break;
 							default:
@@ -4701,8 +4707,9 @@ void InterpreterMainLoop(cpu_t *core)
 							switch(OPCODE_2){
 							case 0: /* invalidate all */
 								//invalidate_all_tlb(state);
-								remove_tlb(DATA_TLB);
-								remove_tlb(INSN_TLB);
+								erase_all(core);
+								//remove_tlb(DATA_TLB);
+								//remove_tlb(INSN_TLB);
 								//printf("{TLB} [UNIFILED] invalidate all\n");
 								break;
 							case 1: /* invalidate by MVA */

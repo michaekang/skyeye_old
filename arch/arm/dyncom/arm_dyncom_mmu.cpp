@@ -365,7 +365,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 		*phys_addr = virt_addr;
 //		return NO_FAULT;
 	} else {
-		if (!tlb[access_type].get_phys_addr((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p)) {
+		if (!get_phys_page((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p)) {
 			if (dyncom_check_perms(core, p & 3, rw)) {
 				*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
 				return fault;
@@ -389,7 +389,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 				return SUBPAGE_PERMISSION_FAULT;
 			}
 		}
-		tlb[access_type].insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap );
+		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap );
 		//insert_tlb(core, (virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap);
 	}
 	return fault;
