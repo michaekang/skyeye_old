@@ -280,7 +280,7 @@ void remove_tlb_by_mva(uint32_t mva, tlb_type_t type)
 	tlb[type].erase(mva);
 }
 void insert_tlb(ARMul_State* state, ARMword va, ARMword pa);
-
+#if 0
 fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t size, uint32_t rw)
 {
 	ARMword pa, real_va, temp, offset;
@@ -354,7 +354,7 @@ fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t 
 	#endif
 	return fault;
 }
-
+#endif
 fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw, tlb_type_t access_type = DATA_TLB)
 {
 	fault_t fault = NO_FAULT;
@@ -575,7 +575,8 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
-	fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 1);
+	//fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 1);
+	fault = check_address_validity(core, virt_addr, &phys_addr, 1);
 	if (NO_FAULT != fault) {
 		printf("icounter=%lld, mmu read fault %d, virt_addr=0x%x, pc=0x%x\n", core->icounter, fault, virt_addr, core->Reg[15]);
 		phys_addr = virt_addr;
@@ -623,7 +624,9 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 {
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
-	fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 0);
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	//fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 0);
+	fault = check_address_validity(core, virt_addr, &phys_addr, 0);
 //	if (phys_addr >= 0x71200000 && phys_addr <= 0x71200003) {
 #if 0
 	if (cpu->icounter > 248319240) {
@@ -646,7 +649,6 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 #endif
 	/* strex, strexb*/
 	uint32 instr;
-	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	if(!((core->Cpsr & (1 << THUMB_BIT)) || core->TFlag)){
 		bus_read(32, core->phys_pc, &instr);
 		if(((instr & 0x0FF000F0) == 0x01800090) ||
@@ -1384,6 +1386,7 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t instr)
 		LOG("In %s, pc is %x phys_pc is %x instr is %x, end_addr=0x%x\n", __FUNCTION__, core->Reg[15], addr, instr, end_addr);
 	#endif
 	while(addr != end_addr){
+		//fault = get_phys_addr(cpu, addr, &phys_addr, 32, rw);
 		fault = get_phys_addr(cpu, addr, &phys_addr, 32, rw);
 		if(fault)
 			break;
@@ -1417,7 +1420,8 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t
 	}
 	#endif
 	while(count){
-		fault = get_phys_addr(cpu, addr, &phys_addr, 32, read);
+		//fault = get_phys_addr(cpu, addr, &phys_addr, 32, read);
+		fault = check_address_validity(core, addr, &phys_addr, read);
 		if(fault)
 			break;
 		addr += 4;
@@ -1454,7 +1458,8 @@ static int arch_arm_effective_to_physical(cpu_t *cpu, uint32_t addr, uint32_t *r
 		*result = addr;
 		return 0;
 	} else {
-		fault = get_phys_addr(cpu, addr, &phys_addr, 32, 1);
+		//fault = get_phys_addr(cpu, addr, &phys_addr, 32, 1);
+		fault = check_address_validity(core, addr, &phys_addr, 1);
 		if (fault) {
 			LOG("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
 			LOG("fault is %d\n", fault);

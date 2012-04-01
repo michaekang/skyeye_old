@@ -1,3 +1,28 @@
+/* Copyright (C) 
+* 2012 - Michael.Kang blackfin.kang@gmail.com
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+* 
+*/
+/**
+* @file arm_dyncom_mmu.h
+* @brief The interface for mmu
+* @author Michael.Kang blackfin.kang@gmail.com
+* @version 7849
+* @date 2012-04-01
+*/
+
 #ifndef ARM_DYNCOM_MMU_H
 #define ARM_DYNCOM_MMU_H
 
@@ -33,8 +58,8 @@ void remove_tlb_by_mva(uint32_t mva, tlb_type_t type);
 extern arch_mem_ops_t arm_dyncom_mem_ops;
 /* FIXME, the physical address for s3c6410, should get 
 these value from skyeye.conf */
-#define BANK0_START 0x50000000
-#define BANK0_SIZE 0x20000000
+#define BANK0_START 0x40000000
+#define BANK0_SIZE 0x30000000
 #define BANK0_END (BANK0_START + BANK0_SIZE)
 
 #endif
