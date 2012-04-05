@@ -26,16 +26,17 @@
 #ifndef __ARM_DYNCOM_TLB_H__
 #define __ARM_DYNCOM_TLB_H__
 #include <skyeye_dyncom.h>
-#define TLB_SIZE 1024 * 1024
+#include "arm_dyncom_mmu.h"
+#define TLB_SIZE 4096
 #define ASID_SIZE 255
 
-int get_phys_page(unsigned int va, unsigned int &pa);
-void insert(unsigned int va, unsigned int pa);
+int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type);
+void insert(unsigned int va, unsigned int pa, tlb_type_t access_type);
 uint64_t* new_tlb();
 //inline void insert_tlb(ARMul_State* state, ARMword va, ARMword pa);
 //void invalidate_by_asid(ARMul_State *state, ARMword asid);
 //void invalidate_by_mva(cpu_t* cpu, ARMword va);
-void erase_by_asid(cpu_t* cpu, unsigned int asid);
-void erase_by_mva(cpu_t* cpu, unsigned int va);
-void erase_all(cpu_t* cpu);
+void erase_by_asid(cpu_t* cpu, unsigned int asid, tlb_type_t access_type);
+void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type);
+void erase_all(cpu_t* cpu, tlb_type_t access_type);
 #endif

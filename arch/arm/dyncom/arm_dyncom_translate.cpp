@@ -1024,21 +1024,21 @@ int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 					case 0: /* invalidate all */
 						//invalidate_all_tlb(state);
 						printf("{TLB} [INSN] invalidate all, not implement.\n");
-						arch_arm_invalidate_by_all(cpu, bb);
+						arch_arm_invalidate_by_all(cpu, bb, INSN_TLB);
 						//remove_tlb(INSN_TLB);
 						break;
 					case 1: /* invalidate by MVA */
 					{
 						//invalidate_by_mva(state, value);
 						//printf("{TLB} [INSN] invalidate by mva\n");
-						arch_arm_invalidate_by_mva(cpu, bb, R(RD));
+						arch_arm_invalidate_by_mva(cpu, bb, R(RD), INSN_TLB);
 						break;
 					}
 					case 2: /* invalidate by asid */
 					{
 						//invalidate_by_asid(state, value);
 						//printf("{TLB} [INSN] invalidate by asid\n");
-						arch_arm_invalidate_by_asid(cpu, bb, R(RD));
+						arch_arm_invalidate_by_asid(cpu, bb, R(RD), INSN_TLB);
 						break;
 					}
 					default:
@@ -1052,19 +1052,19 @@ int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 						//invalidate_all_tlb(state);
 						//remove_tlb(DATA_TLB);
 						//printf("{TLB} [DATA] invalidate all\n");
-						arch_arm_invalidate_by_all(cpu, bb);
+						arch_arm_invalidate_by_all(cpu, bb, DATA_TLB);
 						break;
 					case 1: /* invalidate by MVA */
 						//invalidate_by_mva(state, value);
 						//remove_tlb_by_mva(RD, DATA_TLB);
 						//printf("{TLB} [DATA] invalidate by mva\n");
-						arch_arm_invalidate_by_mva(cpu, bb, R(RD));
+						arch_arm_invalidate_by_mva(cpu, bb, R(RD), DATA_TLB);
 						break;
 					case 2: /* invalidate by asid */
 						//invalidate_by_asid(state, value);
 						//remove_tlb_by_asid(RD, DATA_TLB);
 						//printf("{TLB} [DATA] invalidate by asid\n");
-						arch_arm_invalidate_by_asid(cpu, bb, R(RD));
+						arch_arm_invalidate_by_asid(cpu, bb, R(RD), DATA_TLB);
 						break;
 					default:
 						break;
@@ -1076,16 +1076,21 @@ int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 						//invalidate_all_tlb(state);
 						//remove_tlb(DATA_TLB);
 						//remove_tlb(INSN_TLB);
-						arch_arm_invalidate_by_all(cpu, bb);
+						arch_arm_invalidate_by_all(cpu, bb, DATA_TLB);
+						arch_arm_invalidate_by_all(cpu, bb, INSN_TLB);
 						printf("{TLB} [UNIFILED] invalidate all\n");
 						break;
 					case 1: /* invalidate by MVA */
 						//invalidate_by_mva(state, value);
 						printf("{TLB} [UNIFILED] invalidate by mva\n");
+						arch_arm_invalidate_by_mva(cpu, bb, R(RD), DATA_TLB);
+						arch_arm_invalidate_by_mva(cpu, bb, R(RD), INSN_TLB);
 						break;
 					case 2: /* invalidate by asid */
 						//invalidate_by_asid(state, value);
 						printf("{TLB} [UNIFILED] invalidate by asid\n");
+						arch_arm_invalidate_by_asid(cpu, bb, R(RD), DATA_TLB);
+						arch_arm_invalidate_by_asid(cpu, bb, R(RD), INSN_TLB);
 						break;
 					default:
 						break;

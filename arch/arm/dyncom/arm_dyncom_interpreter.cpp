@@ -4661,18 +4661,18 @@ void InterpreterMainLoop(cpu_t *core)
 								//invalidate_all_tlb(state);
 								printf("{TLB} [INSN] invalidate all\n");
 								//remove_tlb(INSN_TLB);
-								erase_all(core);
+								erase_all(core, INSN_TLB);
 								break;
 							case 1: /* invalidate by MVA */
 								//invalidate_by_mva(state, value);
 								//printf("{TLB} [INSN] invalidate by mva\n");
 								//remove_tlb_by_mva(RD, INSN_TLB);
-								erase_by_mva(core, RD);
+								erase_by_mva(core, RD, INSN_TLB);
 								break;
 							case 2: /* invalidate by asid */
 								//invalidate_by_asid(state, value);
 								//printf("{TLB} [INSN] invalidate by asid\n");
-								erase_by_asid(core, RD);
+								erase_by_asid(core, RD, INSN_TLB);
 								break;
 							default:
 								break;
@@ -4684,19 +4684,19 @@ void InterpreterMainLoop(cpu_t *core)
 							case 0: /* invalidate all */
 								//invalidate_all_tlb(state);
 								//remove_tlb(DATA_TLB);
-								erase_all(core);
+								erase_all(core, DATA_TLB);
 								printf("{TLB} [DATA] invalidate all\n");
 								break;
 							case 1: /* invalidate by MVA */
 								//invalidate_by_mva(state, value);
 								//remove_tlb_by_mva(RD, DATA_TLB);
-								erase_by_mva(core, RD);
+								erase_by_mva(core, RD, DATA_TLB);
 								//printf("{TLB} [DATA] invalidate by mva\n");
 								break;
 							case 2: /* invalidate by asid */
 								//invalidate_by_asid(state, value);
 								//remove_tlb_by_asid(RD, DATA_TLB);
-								erase_by_asid(core, RD);
+								erase_by_asid(core, RD, DATA_TLB);
 								//printf("{TLB} [DATA] invalidate by asid\n");
 								break;
 							default:
@@ -4707,17 +4707,22 @@ void InterpreterMainLoop(cpu_t *core)
 							switch(OPCODE_2){
 							case 0: /* invalidate all */
 								//invalidate_all_tlb(state);
-								erase_all(core);
+								erase_all(core, INSN_TLB);
+								erase_all(core, DATA_TLB);
 								//remove_tlb(DATA_TLB);
 								//remove_tlb(INSN_TLB);
 								//printf("{TLB} [UNIFILED] invalidate all\n");
 								break;
 							case 1: /* invalidate by MVA */
 								//invalidate_by_mva(state, value);
+								erase_by_mva(core, RD, DATA_TLB);
+								erase_by_mva(core, RD, INSN_TLB);
 								printf("{TLB} [UNIFILED] invalidate by mva\n");
 								break;
 							case 2: /* invalidate by asid */
 								//invalidate_by_asid(state, value);
+								erase_by_asid(core, RD, DATA_TLB);
+								erase_by_asid(core, RD, INSN_TLB);
 								printf("{TLB} [UNIFILED] invalidate by asid\n");
 								break;
 							default:

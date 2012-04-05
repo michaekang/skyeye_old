@@ -31,10 +31,11 @@ struct tlb_item {
 	uint32_t pa;
 	uint32_t va;
 };
-tlb_item tlb_cache[256][2048];
-int get_phys_page(unsigned int va, unsigned int &pa)
+static tlb_item tlb_cache[TLB_TOTAL][256][TLB_SIZE];
+//static tlb_table tlb[TLB_TOTAL];
+int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type)
 {
-	tlb_item *tlb_entry = &tlb_cache[va & 0xff][(va >> 12) % 2048];
+	tlb_item *tlb_entry = &tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE];
 	if (va == tlb_entry->va) {
 		pa = tlb_entry->pa;
 		return 0;
@@ -43,26 +44,26 @@ int get_phys_page(unsigned int va, unsigned int &pa)
 	}
 }
 
-void insert(unsigned int va, unsigned int pa)
+void insert(unsigned int va, unsigned int pa, tlb_type_t access_type)
 {
-	tlb_item* tlb_entry = &tlb_cache[va & 0xff][(va >> 12) % 2048];
+	tlb_item* tlb_entry = &tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE];
 	tlb_entry->va = va;
 	tlb_entry->pa = pa;
 }
 
-void erase_by_mva(cpu_t* cpu, unsigned int va)
+void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type)
 {
-	tlb_cache[va & 0xff][(va >> 12) % 2048].va = 0;
+	tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE].va = 0;
 }
 
-void erase_by_asid(cpu_t* cpu, unsigned int asid)
+void erase_by_asid(cpu_t* cpu, unsigned int asid, tlb_type_t access_type)
 {
-	memset(&tlb_cache[asid], 0, sizeof(tlb_item) * 2048);
+	memset(&tlb_cache[access_type][asid], 0, sizeof(tlb_item) * TLB_SIZE);
 }
 
-void erase_all(cpu_t* cpu)
+void erase_all(cpu_t* cpu, tlb_type_t access_type)
 {
-	memset(tlb_cache, 0, sizeof(tlb_item) * 2048 * 256);
+	memset(&tlb_cache[access_type], 0, sizeof(tlb_item) * TLB_SIZE * 256);
 }
 
 uint64_t* new_tlb(){

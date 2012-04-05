@@ -262,7 +262,7 @@ dyncom_mmu_translate (arm_core_t *core, ARMword virt_addr, ARMword *phys_addr, i
 	}
 	return NO_FAULT;
 }
-
+#if 0
 static tlb_table tlb[TLB_TOTAL];
 
 void remove_tlb_by_asid(uint32_t asid, tlb_type_t type)
@@ -280,6 +280,7 @@ void remove_tlb_by_mva(uint32_t mva, tlb_type_t type)
 	tlb[type].erase(mva);
 }
 void insert_tlb(ARMul_State* state, ARMword va, ARMword pa);
+#endif
 #if 0
 fault_t get_phys_addr(cpu_t *cpu, addr_t virt_addr, addr_t *phys_addr, uint32_t size, uint32_t rw)
 {
@@ -365,7 +366,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 		*phys_addr = virt_addr;
 //		return NO_FAULT;
 	} else {
-		if (!get_phys_page((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p)) {
+		if (!get_phys_page((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
 			if (dyncom_check_perms(core, p & 3, rw)) {
 				*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
 				return fault;
@@ -389,7 +390,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 				return SUBPAGE_PERMISSION_FAULT;
 			}
 		}
-		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap );
+		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap , access_type);
 		//insert_tlb(core, (virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap);
 	}
 	return fault;
@@ -1421,7 +1422,7 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t
 	#endif
 	while(count){
 		//fault = get_phys_addr(cpu, addr, &phys_addr, 32, read);
-		fault = check_address_validity(core, addr, &phys_addr, read);
+		fault = check_address_validity(core, addr, &phys_addr, read, DATA_TLB);
 		if(fault)
 			break;
 		addr += 4;
@@ -1459,7 +1460,7 @@ static int arch_arm_effective_to_physical(cpu_t *cpu, uint32_t addr, uint32_t *r
 		return 0;
 	} else {
 		//fault = get_phys_addr(cpu, addr, &phys_addr, 32, 1);
-		fault = check_address_validity(core, addr, &phys_addr, 1);
+		fault = check_address_validity(core, addr, &phys_addr, 1, INSN_TLB);
 		if (fault) {
 			LOG("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
 			LOG("fault is %d\n", fault);

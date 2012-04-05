@@ -481,7 +481,7 @@ arch_arm_undef_init(cpu_t *cpu){
 }
 
 void
-arch_arm_invalidate_by_mva(cpu_t *cpu, BasicBlock *bb, Value* mva)
+arch_arm_invalidate_by_mva(cpu_t *cpu, BasicBlock *bb, Value* mva, tlb_type_t access_type)
 {
 	if (cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_MVA] == NULL) {
 		printf("in %s Could not find callout\n", __FUNCTION__);
@@ -494,6 +494,7 @@ arch_arm_invalidate_by_mva(cpu_t *cpu, BasicBlock *bb, Value* mva)
 	params.push_back(v_cpu_ptr);
 	params.push_back(CONST(ARM_DYNCOM_CALLOUT_INV_MVA));
 	params.push_back(mva);
+	params.push_back(CONST(access_type));
 	/* When using a custom callout, must put the callout index as argument for dyncom_callout */
 	//params.push_back(CONST(instr)); // no need for now, the callout func takes no argument
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_MVA], params.begin(), params.end(), "", bb);
@@ -508,12 +509,13 @@ arch_arm_invalidate_by_mva_init(cpu_t *cpu){
 	type_func_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_args.push_back(type_i32);	/* unsinged int */
 	type_func_args.push_back(type_i32);	/* mva */
+	type_func_args.push_back(type_i32);	/* access type */
 	FunctionType *type_func_callout = FunctionType::get(
 		Type::getInt32Ty(cpu->dyncom_engine->mod->getContext()),	//return
 		type_func_args,	/* Params */
 		false);		      	/* isVarArg */
 	/* For a custom callout, the dyncom_calloutX functions should be used */
-	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout1",	//function name
+	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout2",	//function name
 		type_func_callout);	//return
 	if(func_const == NULL)
 		fprintf(stderr, "Error:cannot insert function:undefined_instr_callout.\n");
@@ -524,7 +526,7 @@ arch_arm_invalidate_by_mva_init(cpu_t *cpu){
 }
 
 void
-arch_arm_invalidate_by_asid(cpu_t *cpu, BasicBlock *bb, Value* asid)
+arch_arm_invalidate_by_asid(cpu_t *cpu, BasicBlock *bb, Value* asid, tlb_type_t access_type)
 {
 	if (cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_ASID] == NULL) {
 		printf("in %s Could not find callout\n", __FUNCTION__);
@@ -538,6 +540,7 @@ arch_arm_invalidate_by_asid(cpu_t *cpu, BasicBlock *bb, Value* asid)
 	/* When using a custom callout, must put the callout index as argument for dyncom_callout */
 	params.push_back(CONST(ARM_DYNCOM_CALLOUT_INV_ASID));
 	params.push_back(asid);
+	params.push_back(CONST(access_type));
 	//params.push_back(CONST(instr)); // no need for now, the callout func takes no argument
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_ASID], params.begin(), params.end(), "", bb);
 }
@@ -550,12 +553,13 @@ arch_arm_invalidate_by_asid_init(cpu_t *cpu){
 	type_func_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_args.push_back(type_i32);	/* unsinged int */
 	type_func_args.push_back(type_i32);	/* asid */
+	type_func_args.push_back(type_i32);	/* access type */
 	FunctionType *type_func_callout = FunctionType::get(
 		Type::getInt32Ty(cpu->dyncom_engine->mod->getContext()),	//return
 		type_func_args,	/* Params */
 		false);		      	/* isVarArg */
 	/* For a custom callout, the dyncom_calloutX functions should be used */
-	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout1",	//function name
+	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout2",	//function name
 		type_func_callout);	//return
 	if(func_const == NULL)
 		fprintf(stderr, "Error:cannot insert function:undefined_instr_callout.\n");
@@ -566,7 +570,7 @@ arch_arm_invalidate_by_asid_init(cpu_t *cpu){
 }
 
 void
-arch_arm_invalidate_by_all(cpu_t *cpu, BasicBlock *bb)
+arch_arm_invalidate_by_all(cpu_t *cpu, BasicBlock *bb, tlb_type_t access_type)
 {
 	if (cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_ALL] == NULL) {
 		printf("in %s Could not find callout\n", __FUNCTION__);
@@ -579,6 +583,7 @@ arch_arm_invalidate_by_all(cpu_t *cpu, BasicBlock *bb)
 	params.push_back(v_cpu_ptr);
 	/* When using a custom callout, must put the callout index as argument for dyncom_callout */
 	params.push_back(CONST(ARM_DYNCOM_CALLOUT_INV_ALL));
+	params.push_back(CONST(access_type));
 	//params.push_back(CONST(instr)); // no need for now, the callout func takes no argument
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_ALL], params.begin(), params.end(), "", bb);
 }
@@ -591,12 +596,13 @@ arch_arm_invalidate_by_all_init(cpu_t *cpu){
 	const IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
 	type_func_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_args.push_back(type_i32);	/* unsinged int */
+	type_func_args.push_back(type_i32);	/* access type */
 	FunctionType *type_func_callout = FunctionType::get(
 		Type::getInt32Ty(cpu->dyncom_engine->mod->getContext()),	//return
 		type_func_args,	/* Params */
 		false);		      	/* isVarArg */
 	/* For a custom callout, the dyncom_calloutX functions should be used */
-	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout",	//function name
+	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout1",	//function name
 		type_func_callout);	//return
 	if(func_const == NULL)
 		fprintf(stderr, "Error:cannot insert function:undefined_instr_callout.\n");
