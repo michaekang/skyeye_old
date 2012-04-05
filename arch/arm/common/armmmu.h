@@ -120,12 +120,18 @@ typedef enum fault_t
 {
 	NO_FAULT = 0x0,
 	ALIGNMENT_FAULT = 0x1,
+
 	SECTION_TRANSLATION_FAULT = 0x5,
 	PAGE_TRANSLATION_FAULT = 0x7,
 	SECTION_DOMAIN_FAULT = 0x9,
 	PAGE_DOMAIN_FAULT = 0xB,
 	SECTION_PERMISSION_FAULT = 0xD,
 	SUBPAGE_PERMISSION_FAULT = 0xF,
+
+	/* defined by skyeye */
+	TLB_READ_MISS = 0x30,
+	TLB_WRITE_MISS = 0x40,
+
 } fault_t;
 
 typedef struct mmu_ops_s

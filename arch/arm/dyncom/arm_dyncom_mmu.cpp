@@ -598,7 +598,7 @@ skip_write:
 	}
 	//bus_write(size, virt_addr, value);
 }
-
+#if 0
 static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t read)
 {
 	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
@@ -638,6 +638,98 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t
 		return 1;
 	}
 	return 0;
+}
+#endif
+static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t read)
+{
+	uint32_t phys_addr;
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	fault_t fault = NO_FAULT;
+	int ap, sop;
+	uint32_t p;
+	if ((CP15REG(CP15_CONTROL) & 1) == 0) {
+		/* MMU or MPU disabled. */
+		//*phys_addr = virt_addr;
+		return 0;
+	}
+	while(count){
+		if (!get_phys_page((addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p, DATA_TLB)) {
+			if (dyncom_check_perms(core, p & 3, read)) {
+				/* TLB hit */
+				//*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
+				//return 0;
+			}
+			else
+				break;
+		}
+		else
+			break;
+		count -= 4;
+		addr += 4; 
+	}
+	if(count == 0){
+		/* No fault */
+		return 0;
+	}
+	//printf("In %s, tlb miss for addr 0x%x, fault=0x%x\n", __FUNCTION__, addr, core->CP15[CP15(CP15_FAULT_STATUS)]);
+	/* TLB miss */
+	fault = read? TLB_READ_MISS:TLB_WRITE_MISS;
+	core->abortSig = true;
+	core->Aborted = ARMul_DataAbortV;
+	core->AbortAddr = addr;
+	core->CP15[CP15(CP15_FAULT_STATUS)] |= fault; /* two kind of fault possible exist at the same time , tlb fault and other data fault */
+	//core->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
+	//printf("In %s, after tlb miss for addr 0x%x, fault=0x%x, fault addr=0x%x\n", __FUNCTION__, addr, core->CP15[CP15(CP15_FAULT_STATUS)], core->CP15[CP15(CP15_FAULT_ADDRESS)]);
+	return 1;
+}
+
+int fill_tlb(arm_core_t* core){
+	fault_t fault = NO_FAULT;
+	int read;
+	addr_t addr, phys_addr;
+	addr = core->AbortAddr;
+	if((core->CP15[CP15(CP15_FAULT_STATUS)] & 0xF0)== TLB_READ_MISS)
+		read = 1;
+	else if((core->CP15[CP15(CP15_FAULT_STATUS)] & 0xF0) == TLB_WRITE_MISS)
+		read = 0;
+	else /* NOT tlb */{
+		/* something wrong */
+		printf("not tlb fault , fault is %d, addr=0x%x\n", core->CP15[CP15(CP15_FAULT_STATUS)], core->AbortAddr);
+		;
+	}
+	fault = check_address_validity(core, addr, &phys_addr, read, DATA_TLB);
+	if(fault != NO_FAULT){
+		//LOG("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
+		//LOG("fault is %d\n", fault);
+		//printf("In %s, fault happened, addr=0x%x, fault=%d\n", __FUNCTION__, addr, fault);
+		core->abortSig = true;
+		core->Aborted = ARMul_DataAbortV;
+		core->AbortAddr = addr;
+		core->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
+		core->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
+		return 1;
+	}
+	else{
+		/* TLB fault happend after we enter the DataAbort handler 
+		 * So we need to restore the DataAbort environment here.
+		 * Let DataAbort handler keep going its way.
+		 */
+		if(core->CP15[CP15(CP15_FAULT_STATUS)] & 0xF){
+			core->abortSig = false;
+			core->Aborted = 0;
+			core->AbortAddr = core->CP15[CP15(CP15_FAULT_ADDRESS)];
+			core->CP15[CP15(CP15_FAULT_STATUS)] &= 0xf;
+			//printf("In %s, TLB refill and data abort at 0x%x, fault=%d\n", __FUNCTION__, core->AbortAddr, core->CP15[CP15(CP15_FAULT_STATUS)]);
+			return 0;
+		}
+		else{
+			core->abortSig = false;
+			core->Aborted = 0;
+			core->CP15[CP15(CP15_FAULT_STATUS)] = 0x0;
+			/* fill tlb successfully */
+			return 0;
+		}
+	}
 }
 
 static int arch_arm_effective_to_physical(cpu_t *cpu, uint32_t addr, uint32_t *result){

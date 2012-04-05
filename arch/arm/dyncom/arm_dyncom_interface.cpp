@@ -201,6 +201,11 @@ static void per_cpu_step(conf_object_t * running_core){
 	}
 	if (core->abortSig) {
 		//printf("In %s, abortSig occured at pc %x with signal %x\n", __FUNCTION__, core->Reg[15], core->Aborted);
+		if((running_mode == PURE_DYNCOM) && (core->Aborted == ARMul_DataAbortV)){
+			if(fill_tlb(core) == 0)
+				return;
+		}
+		//printf("In %s, abortSig occured at pc %x with signal 0x%x, fault=0x%x\n", __FUNCTION__, core->Reg[15], core->Aborted, core->CP15[CP15(CP15_FAULT_STATUS)]);
 		arm_dyncom_abort(core, core->Aborted);
 	}
 	if (!core->NirqSig) {
