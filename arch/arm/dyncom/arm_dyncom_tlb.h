@@ -28,7 +28,7 @@
 #include <skyeye_dyncom.h>
 #include "arm_dyncom_mmu.h"
 #define TLB_SIZE 4096
-#define ASID_SIZE 255
+#define ASID_SIZE 256
 
 int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type);
 void insert(unsigned int va, unsigned int pa, tlb_type_t access_type);
@@ -39,4 +39,7 @@ uint64_t* new_tlb();
 void erase_by_asid(cpu_t* cpu, unsigned int asid, tlb_type_t access_type);
 void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type);
 void erase_all(cpu_t* cpu, tlb_type_t access_type);
+
+#define GET_AP(phys_page) ((phys_page & 0xC) >> 2)
+#define VALID_PHYS_PAGE(p) (p & 0x1)
 #endif

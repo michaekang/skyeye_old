@@ -74,6 +74,7 @@ enum{
 	ARM_DYNCOM_CALLOUT_INV_MVA,
 	ARM_DYNCOM_CALLOUT_INV_ASID,
 	ARM_DYNCOM_CALLOUT_INV_ALL,
+	ARM_DYNCOM_CALLOUT_DEBUG_PRINT,
 	ARM_DYNCOM_MAX_CALLOUT
 };
 
@@ -588,6 +589,147 @@ arch_arm_invalidate_by_all(cpu_t *cpu, BasicBlock *bb, tlb_type_t access_type)
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_INV_ALL], params.begin(), params.end(), "", bb);
 }
 
+void debug_print(cpu_t* cpu, unsigned long arg0, int arg1, int arg2){
+#if 1
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	if(core->Reg[15] == 0x400e852c){
+	if(arg2 == 0)
+		printf("\n---------------\n");
+	printf("In %s, arg0=0x%llx, arg1=0x%llx, arg2=0x%llx\n", __FUNCTION__, arg0, arg1, arg2);
+	if(arg2 == 0xd)
+		printf("------------------\n");
+	}
+#endif
+	return;
+}
+void
+arch_arm_debug_print(cpu_t *cpu, BasicBlock *bb, Value* arg0, Value* arg1, Value* arg2)
+{
+	if (cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_DEBUG_PRINT] == NULL) {
+		printf("in %s Could not find callout\n", __FUNCTION__);
+		return;
+	}
+	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
+	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
+	std::vector<Value *> params;
+	params.push_back(v_cpu_ptr);
+	/* When using a custom callout, must put the callout index as argument for dyncom_callout */
+	params.push_back(CONST(ARM_DYNCOM_CALLOUT_DEBUG_PRINT));
+	params.push_back(arg0);
+	params.push_back(arg1);
+	params.push_back(arg2);
+	//params.push_back(CONST(instr)); // no need for now, the callout func takes no argument
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_DEBUG_PRINT], params.begin(), params.end(), "", bb);
+}
+
+static void 
+arch_arm_debug_print_init(cpu_t *cpu){
+	//types
+	std::vector<const Type*> type_func_args;
+	PointerType *type_intptr = PointerType::get(cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX()), 0);
+	const IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
+	const IntegerType *type_i64 = IntegerType::get(_CTX(), 64);
+	type_func_args.push_back(type_intptr);	/* intptr *cpu */
+	type_func_args.push_back(type_i32);	/* unsinged int */
+	type_func_args.push_back(type_i64);	/* arg0 unsigned int */
+	type_func_args.push_back(type_i32);	/* arg1  */
+	type_func_args.push_back(type_i32);	/* arg2  */
+	FunctionType *type_func_callout = FunctionType::get(
+		Type::getInt32Ty(cpu->dyncom_engine->mod->getContext()),	//return
+		type_func_args,	/* Params */
+		false);		      	/* isVarArg */
+	/* For a custom callout, the dyncom_calloutX functions should be used */
+	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout3",	//function name
+		type_func_callout);	//return
+	if(func_const == NULL)
+		fprintf(stderr, "Error:cannot insert function:undefined_instr_callout.\n");
+	Function *func = cast<Function>(func_const);
+	func->setCallingConv(CallingConv::C);
+	cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_DEBUG_PRINT] = func;
+	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_DEBUG_PRINT] = (void*)debug_print;
+}
+
+BasicBlock *
+arch_check_mm(cpu_t *cpu, BasicBlock *bb, Value* addr, int count, int read, BasicBlock *exit_bb)
+{
+	if(is_user_mode(cpu)){
+		cpu->dyncom_engine->bb_load_store = bb;
+		return bb;
+	}
+	#if 1
+	if (cpu->dyncom_engine->ptr_func_check_mm == NULL) {
+		printf("No check mm\n");
+		return bb;
+	}
+	#endif
+	if(count == 0){
+		printf("count=0\n");
+		abort();	
+		exit(-1);
+	}
+	Value* result = CONST1(0);
+	int fault = read? TLB_READ_MISS:TLB_WRITE_MISS;
+	Value* fault_addr = CONST(0xdeadc0de);
+	Value* fault_status = CONST(0);
+	while(count){
+		/* va = (addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff)*/
+		Value* va = OR(AND(R(CP15_CONTEXT_ID), CONST(0xFF)), AND(addr, CONST(0xFFFFF000)));
+		/* get index , index = tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE]; */
+		Value* index = ADD(MUL(AND(va, CONST(0xFF)), CONST(TLB_SIZE)), UREM(LSHR(va, CONST(12)), CONST(TLB_SIZE)));
+		//arch_arm_debug_print(cpu, bb, ZEXT64(index), R(15), CONST(0));
+		arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(1));
+		//arch_arm_debug_print(cpu, bb, ZEXT64(va), R(15), CONST(2));
+		//Value* a = GetElementPtrInst::Create(cpu->dyncom_engine->ptr_TLB, index, "", bb);
+		//a = new BitCastInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
+		/* address = TLB + index * sizeof(unsigned long) */
+		//Value* a = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
+
+		/*
+		 * Not multi-thread safe, we should pass TLB as an argument
+		 */
+		Value* a = ADD(CONST64(cpu->dyncom_engine->TLB), ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
+		//printf("In %s, cpu->dyncom_engine->TLB=0x%llx\n", __FUNCTION__, cpu->dyncom_engine->TLB);
+		//arch_arm_debug_print(cpu, bb, CONST64(cpu->dyncom_engine->TLB), R(15), CONST(10));
+		//arch_arm_debug_print(cpu, bb, a, R(15), CONST(11));
+		a = new IntToPtrInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
+		Value* tlb_entry = new LoadInst(a, "", false, bb);
+		//arch_arm_debug_print(cpu, bb, tlb_entry, R(15), CONST(12));
+		result = OR(result, ICMP_NE(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000)), CONST64(32))), va));
+		arch_arm_debug_print(cpu, bb, ZEXT64(result), R(15), CONST(13));
+		
+		/*
+		 * if(fault_addr == 0xdeadc0de && result)
+		 *	fault_addr = addr;
+		 */
+		fault_addr = SELECT(result, SELECT(ICMP_EQ(fault_addr, CONST(0xdeadc0de)), addr, fault_addr), CONST(0xDEADC0DE));
+		fault_status = SELECT(result, CONST(fault), CONST(0));
+		count -= 4;
+		addr = ADD(addr, CONST(4));
+	}
+	LET(CP15_TLB_FAULT_STATUS, AND(fault_status, CONST(0xFF)));
+	LET(CP15_TLB_FAULT_ADDR, fault_addr);
+	/*if result is zero, so all the address can be found in TLB */
+	//exit_val = result;
+#if 0
+	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
+	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
+	std::vector<Value *> params;
+	params.push_back(v_cpu_ptr);
+	params.push_back(addr);
+	params.push_back(CONST(count));
+	params.push_back(CONST(read));
+	// XXX synchronize cpu context!
+	Value *exit_val = CallInst::Create(cpu->dyncom_engine->ptr_func_check_mm, params.begin(), params.end(), "", bb);
+#endif
+//    return bb;
+	Value *cond = ICMP_NE(result, CONST1(1));
+	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store", cpu->dyncom_engine->cur_func, 0);
+	cpu->dyncom_engine->bb_load_store = load_store_bb;
+	arch_branch(1, load_store_bb, exit_bb, cond, bb);
+	return load_store_bb;
+}
 static void 
 arch_arm_invalidate_by_all_init(cpu_t *cpu){
 	//types
@@ -689,7 +831,7 @@ void arm_dyncom_init(arm_core_t* core){
 	}
 	else{
 		cpu->dyncom_engine->RAM = (uint8_t*)get_dma_addr(BANK0_START);
-		//cpu->dyncom_engine->TLB = (uint32_t*)new_tlb(TLB_SIZE, ASID_SIZE);
+		cpu->dyncom_engine->TLB = (unsigned long)new_tlb();
 	}
 #endif
 
@@ -710,6 +852,7 @@ void arm_dyncom_init(arm_core_t* core){
 	arch_arm_invalidate_by_asid_init(cpu);
 	arch_arm_invalidate_by_mva_init(cpu);
 	arch_arm_invalidate_by_all_init(cpu);
+	arch_arm_debug_print_init(cpu);
 	
 	init_compiled_queue(cpu);
 	if(running_mode == HYBRID || running_mode == PURE_DYNCOM){

@@ -199,13 +199,28 @@ static void per_cpu_step(conf_object_t * running_core){
 		core->syscallSig = 0;
 		arm_dyncom_abort(core, ARMul_SWIV);
 	}
+	if((core->CP15[CP15(CP15_TLB_FAULT_STATUS)] & 0xf0)){
+		//printf("\n\n###############In %s, fsr=0x%x, fault_addr=0x%x, pc=0x%x\n\n", __FUNCTION__, core->CP15[CP15(CP15_FAULT_STATUS)], core->CP15[CP15(CP15_FAULT_ADDRESS)], core->Reg[15]);
+		core->Reg[15] -= 4;
+		if(fill_tlb(core) == 0)
+			return;
+	}
+
 	if (core->abortSig) {
 		//printf("In %s, abortSig occured at pc %x with signal %x\n", __FUNCTION__, core->Reg[15], core->Aborted);
-		if((running_mode == PURE_DYNCOM) && (core->Aborted == ARMul_DataAbortV)){
+		//if((running_mode == PURE_DYNCOM) && (core->Aborted == ARMul_DataAbortV)){
+		/* if TLB fault here */
+		#if 0
+		if((running_mode == PURE_DYNCOM) && (core->CP15[CP15(CP15_FAULT_STATUS)] & 0xf0)){
 			if(fill_tlb(core) == 0)
 				return;
 		}
-		//printf("In %s, abortSig occured at pc %x with signal 0x%x, fault=0x%x\n", __FUNCTION__, core->Reg[15], core->Aborted, core->CP15[CP15(CP15_FAULT_STATUS)]);
+		else{
+			/* something wrong */
+			printf("In %s, abortSig occured at pc %x with signal 0x%x, fault=0x%x\n", __FUNCTION__, core->Reg[15], core->Aborted, core->CP15[CP15(CP15_FAULT_STATUS)]);
+		}
+		#endif
+		printf("In %s, abortSig occured at pc %x with signal 0x%x, fault=0x%x\n", __FUNCTION__, core->Reg[15], core->Aborted, core->CP15[CP15(CP15_FAULT_STATUS)]);
 		arm_dyncom_abort(core, core->Aborted);
 	}
 	if (!core->NirqSig) {

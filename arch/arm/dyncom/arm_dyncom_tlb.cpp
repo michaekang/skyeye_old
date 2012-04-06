@@ -31,11 +31,12 @@ struct tlb_item {
 	uint32_t pa;
 	uint32_t va;
 };
-static tlb_item tlb_cache[TLB_TOTAL][256][TLB_SIZE];
+//static tlb_item* tlb_cache = NULL;
+static uint64_t tlb_cache[TLB_TOTAL][ASID_SIZE][TLB_SIZE];
 //static tlb_table tlb[TLB_TOTAL];
 int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type)
 {
-	tlb_item *tlb_entry = &tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE];
+	tlb_item *tlb_entry = (tlb_item *)&tlb_cache[access_type][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE];
 	if (va == tlb_entry->va) {
 		pa = tlb_entry->pa;
 		return 0;
@@ -46,14 +47,15 @@ int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type)
 
 void insert(unsigned int va, unsigned int pa, tlb_type_t access_type)
 {
-	tlb_item* tlb_entry = &tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE];
+	tlb_item* tlb_entry = (tlb_item* )&tlb_cache[access_type][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE];
+	//printf("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
 	tlb_entry->va = va;
 	tlb_entry->pa = pa;
 }
 
 void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type)
 {
-	tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE].va = 0;
+	tlb_cache[access_type][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
 }
 
 void erase_by_asid(cpu_t* cpu, unsigned int asid, tlb_type_t access_type)
@@ -63,9 +65,17 @@ void erase_by_asid(cpu_t* cpu, unsigned int asid, tlb_type_t access_type)
 
 void erase_all(cpu_t* cpu, tlb_type_t access_type)
 {
-	memset(&tlb_cache[access_type], 0, sizeof(tlb_item) * TLB_SIZE * 256);
+	memset(&tlb_cache[access_type], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
 }
 
 uint64_t* new_tlb(){
+	int size = TLB_TOTAL * TLB_SIZE * ASID_SIZE;
+	#if 0
+	tlb_cache = (tlb_item*)mmap(NULL, size, PROT_WRITE, MAP_32BIT|MAP_ANONYMOUS, NULL, 0);
+	if(tlb_cache == MAP_FAILED){
+		skyeye_debug("mmap failed errno is %d\n", errno);
+	}
+	#endif
+	printf("In %s, get TLB 0x%llx\n", __FUNCTION__, (unsigned long)tlb_cache);
 	return (uint64_t*)tlb_cache;
 }
