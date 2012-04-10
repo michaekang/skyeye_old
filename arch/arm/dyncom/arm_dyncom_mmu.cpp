@@ -268,14 +268,13 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 				return fault;
 			}
 			else{
-				printf("In %s, virt_addr=0x%x, check_perm failed\n", __FUNCTION__, virt_addr);
+				//printf("In %s, virt_addr=0x%x, check_perm failed\n", __FUNCTION__, virt_addr);
 			}
 		}
 
 		fault = dyncom_mmu_translate(core, virt_addr, phys_addr, &ap, &sop);
 		if (fault) {
-		//#if MMU_DEBUG
-		#if 1
+		#if MMU_DEBUG
 			printf("fault:%d\n", fault);
 			printf("virt_addr:0x%08x\n", virt_addr);
 			printf("icounter:%lld\n", core->icounter);
@@ -708,12 +707,16 @@ int fill_tlb(arm_core_t* core){
 	if(fault != NO_FAULT){
 		//LOG("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
 		//LOG("fault is %d\n", fault);
-		printf("In %s, fault happened, addr=0x%x, fault=%d\n", __FUNCTION__, addr, fault);
+		//printf("In %s, fault happened, addr=0x%x, fault=%d\n", __FUNCTION__, addr, fault);
 		core->abortSig = true;
 		core->Aborted = ARMul_DataAbortV;
 		core->AbortAddr = addr;
 		core->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
 		core->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
+
+		core->CP15[CP15(CP15_TLB_FAULT_STATUS)] = 0x0;
+		core->CP15[CP15(CP15_TLB_FAULT_ADDR)] = 0xdeadc0de;
+
 		return 1;
 	}
 	else{

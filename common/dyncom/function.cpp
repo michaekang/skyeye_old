@@ -459,6 +459,7 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	PointerType *type_intptr = PointerType::get(cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX()), 0);
 	// - uint32_t
 	const IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
+	const IntegerType *type_i64 = IntegerType::get(_CTX(), 64);
 
 	/* read memory in IR */
 	std::vector<const Type*> type_func_read_memory_args;
@@ -502,6 +503,7 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	type_func_args.push_back(cpu->dyncom_engine->type_pread_memory);
 	type_func_args.push_back(cpu->dyncom_engine->type_pwrite_memory);
 	type_func_args.push_back(cpu->dyncom_engine->type_check_mm);
+	type_func_args.push_back(type_i64);				/* uint64_t *TLB */
 	FunctionType* type_func = FunctionType::get(
 		getIntegerType(32),		/* Result */
 		type_func_args,		/* Params */
@@ -542,6 +544,9 @@ cpu_create_function(cpu_t *cpu, const char *name,
 		cpu->dyncom_engine->ptr_func_write_memory->setName("writememory");
 		cpu->dyncom_engine->ptr_func_check_mm = args++;
 		cpu->dyncom_engine->ptr_func_check_mm->setName("checkmm");
+		cpu->dyncom_engine->ptr_TLB = args++;
+		cpu->dyncom_engine->ptr_TLB->setName("TLB");
+
 	}
 
 	// entry basicblock

@@ -35,6 +35,7 @@
 #define ptr_C	cpu->ptr_C
 #define ptr_V	cpu->ptr_V
 #define ptr_I 	cpu->ptr_I
+#define ptr_T 	cpu->ptr_T
 #define	ptr_CPSR cpu->ptr_gpr[16]
 
 /* for MUL instructions */
@@ -100,6 +101,7 @@
 #define CHECK_RN_PC  (RN==15? ADD(AND(R(RN), CONST(~0x1)), CONST(INSTR_SIZE * 2)):R(RN))
 #define CHECK_RN_PC_WA  (RN==15? ADD(AND(R(RN), CONST(~0x3)), CONST(INSTR_SIZE * 2)):R(RN))
 
+#define GET_USER_MODE() (OR(ICMP_EQ(R(MODE_REG), CONST(USER32MODE)), ICMP_EQ(R(MODE_REG), CONST(SYSTEM32MODE))))
 Value *operand(cpu_t *cpu,  uint32_t instr, BasicBlock *bb, Value *sco);
 uint32_t boperand(uint32_t instr);
 int set_condition(cpu_t *cpu, Value *ret, BasicBlock *bb, Value *op1, Value *op2);

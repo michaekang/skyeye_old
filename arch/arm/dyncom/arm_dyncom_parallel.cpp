@@ -324,10 +324,17 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 			ARMul_OSHandleSWI(core, BITS(0,19));
 		#endif
 			}
-			core->Reg[15] += 4;
+			core->Reg[15] += get_instr_size(cpu);
 			//if (get_skyeye_pref()->start_logging)
 			//	printf("Trap - Handled %x\n", core->phys_pc);
 			return 0;
+		}
+
+		if((core->CP15[CP15(CP15_TLB_FAULT_STATUS)] & 0xf0)){
+			//printf("\n\n###############In %s, fsr=0x%x, fault_addr=0x%x, pc=0x%x\n\n", __FUNCTION__, core->CP15[CP15(CP15_FAULT_STATUS)], core->CP15[CP15(CP15_FAULT_ADDRESS)], core->Reg[15]);
+			//core->Reg[15] -= get_instr_size(cpu_dyncom);
+			if(fill_tlb(core) == 0)
+				return 0;
 		}
 		
 		if (core->syscallSig) {
@@ -338,7 +345,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		}
 			
 		/* if regular trap */
-		core->Reg[15] += 4;
+		core->Reg[15] += get_instr_size(cpu);
 		uint32_t mode = core->Cpsr & 0x1f;
 		if ((mode != core->Mode) && (!is_user_mode(cpu))) {
 			switch_mode(core, mode);

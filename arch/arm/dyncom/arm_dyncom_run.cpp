@@ -60,8 +60,8 @@
 #include "dyncom/defines.h"
 #include "common/mmu/arm1176jzf_s_mmu.h"
 #include "armmmu.h"
-
-#include "dyncom/arm_dyncom_mmu.h"
+#include "arm_dyncom_dec.h"
+#include "arm_dyncom_mmu.h"
 
 #define LOG_IN_CLR	skyeye_printf_in_color
 
@@ -348,21 +348,21 @@ static void arch_arm_emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 	Value *c = TRUNC1(AND(LSHR(nzcv, CONST(1)), CONST(1)));
 	Value *v = TRUNC1(AND(LSHR(nzcv, CONST(0)), CONST(1)));
 	Value *t = TRUNC1(LSHR(AND(LOAD(cpu->ptr_gpr[16]), CONST(1 << THUMB_BIT)), CONST(THUMB_BIT)));
-	new StoreInst(n, cpu->ptr_N, false, bb);
-	new StoreInst(z, cpu->ptr_Z, false, bb);
-	new StoreInst(c, cpu->ptr_C, false, bb);
-	new StoreInst(v, cpu->ptr_V, false, bb);
-	new StoreInst(t, cpu->ptr_T, false, bb);
+	new StoreInst(n, ptr_N, false, bb);
+	new StoreInst(z, ptr_Z, false, bb);
+	new StoreInst(c, ptr_C, false, bb);
+	new StoreInst(v, ptr_V, false, bb);
+	new StoreInst(t, ptr_T, false, bb);
 }
 
 static void arch_arm_spill_reg_state(cpu_t *cpu, BasicBlock *bb)
 {
 		/* Save N Z C V T */
-	Value *z = SHL(ZEXT32(LOAD(cpu->ptr_Z)), CONST(30));
-	Value *n = SHL(ZEXT32(LOAD(cpu->ptr_N)), CONST(31));
-	Value *c = SHL(ZEXT32(LOAD(cpu->ptr_C)), CONST(29));
-	Value *v = SHL(ZEXT32(LOAD(cpu->ptr_V)), CONST(28));
-	Value *t = SHL(ZEXT32(LOAD(cpu->ptr_T)), CONST(THUMB_BIT));
+	Value *z = SHL(ZEXT32(LOAD(ptr_Z)), CONST(30));
+	Value *n = SHL(ZEXT32(LOAD(ptr_N)), CONST(31));
+	Value *c = SHL(ZEXT32(LOAD(ptr_C)), CONST(29));
+	Value *v = SHL(ZEXT32(LOAD(ptr_V)), CONST(28));
+	Value *t = SHL(ZEXT32(LOAD(ptr_T)), CONST(THUMB_BIT));
 	Value *nzcv = OR(OR(OR(z, n), c), v);
 	Value *cpsr = OR(AND(LOAD(cpu->ptr_gpr[16]), CONST(0x0fffffff)), nzcv);
 	/* restore the T bit for arm */
@@ -671,14 +671,13 @@ arch_check_mm(cpu_t *cpu, BasicBlock *bb, Value* addr, int count, int read, Basi
 	Value* result = CONST1(0);
 	int fault = read? TLB_READ_MISS:TLB_WRITE_MISS;
 	Value* fault_addr = CONST(0xdeadc0de);
-	Value* fault_status = CONST(0);
 	while(count){
 		/* va = (addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff)*/
 		Value* va = OR(AND(R(CP15_CONTEXT_ID), CONST(0xFF)), AND(addr, CONST(0xFFFFF000)));
 		/* get index , index = tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE]; */
 		Value* index = ADD(MUL(AND(va, CONST(0xFF)), CONST(TLB_SIZE)), UREM(LSHR(va, CONST(12)), CONST(TLB_SIZE)));
 		//arch_arm_debug_print(cpu, bb, ZEXT64(index), R(15), CONST(0));
-		arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(1));
+		//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(1));
 		//arch_arm_debug_print(cpu, bb, ZEXT64(va), R(15), CONST(2));
 		//Value* a = GetElementPtrInst::Create(cpu->dyncom_engine->ptr_TLB, index, "", bb);
 		//a = new BitCastInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
@@ -686,7 +685,7 @@ arch_check_mm(cpu_t *cpu, BasicBlock *bb, Value* addr, int count, int read, Basi
 		//Value* a = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
 
 		/*
-		 * Not multi-thread safe, we should pass TLB as an argument
+		 * FIXME, Not multi-thread safe, we should pass TLB as an argument
 		 */
 		Value* a = ADD(CONST64(cpu->dyncom_engine->TLB), ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
 		//printf("In %s, cpu->dyncom_engine->TLB=0x%llx\n", __FUNCTION__, cpu->dyncom_engine->TLB);
@@ -696,19 +695,47 @@ arch_check_mm(cpu_t *cpu, BasicBlock *bb, Value* addr, int count, int read, Basi
 		Value* tlb_entry = new LoadInst(a, "", false, bb);
 		//arch_arm_debug_print(cpu, bb, tlb_entry, R(15), CONST(12));
 		result = OR(result, ICMP_NE(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000)), CONST64(32))), va));
-		arch_arm_debug_print(cpu, bb, ZEXT64(result), R(15), CONST(13));
-		
+	
+#if 1
+		//fault_status = SELECT(result, CONST(1), CONST(0));
+
+		/*  
+		 *       AP        Priv Permissions       User Permissions
+		 *	--------------------------------------------------
+		 *       00        No access              No Access
+		 *       01        Read/Write             No Access
+		 *       10        Read/Write             Read only
+		 *       11        Read/Write             Read/Write
+		 */
+		Value* user_mode = GET_USER_MODE();
+		Value* ap = TRUNC32(LSHR(AND(tlb_entry, CONST64(0xC)), CONST64(2)));
+		/*
+		 * if (result == 0)
+		 *	if(ap == 0)
+		 *		result = 1 ; permission fault happened
+		 *	else
+		 *		result = 0
+		 * else
+		 *	result = result 
+		 */
+		result = SELECT(result, result, SELECT(ICMP_EQ(ap, CONST(0)), CONST1(1), result));
+		result = SELECT(result, result, SELECT(AND(ICMP_EQ(ap, CONST(1)), ICMP_EQ(user_mode, CONST1(1))),
+				CONST1(1), result));
+		result = SELECT(result, result, SELECT(AND(AND(ICMP_EQ(ap, CONST(2)), ICMP_EQ(user_mode, CONST1(1))), ICMP_EQ(CONST(read), CONST(0))), CONST1(1), result));
+		result = SELECT(ICMP_EQ(ap, CONST(3)), result, result);
+#endif
+		//arch_arm_debug_print(cpu, bb, ZEXT64(result), R(15), CONST(13));
 		/*
 		 * if(fault_addr == 0xdeadc0de && result)
 		 *	fault_addr = addr;
 		 */
 		fault_addr = SELECT(result, SELECT(ICMP_EQ(fault_addr, CONST(0xdeadc0de)), addr, fault_addr), CONST(0xDEADC0DE));
-		fault_status = SELECT(result, CONST(fault), CONST(0));
+
 		count -= 4;
 		addr = ADD(addr, CONST(4));
 	}
-	LET(CP15_TLB_FAULT_STATUS, AND(fault_status, CONST(0xFF)));
-	LET(CP15_TLB_FAULT_ADDR, fault_addr);
+	LET(CP15_TLB_FAULT_STATUS, SELECT(result, CONST(fault), R(CP15_TLB_FAULT_STATUS)));
+	LET(CP15_TLB_FAULT_ADDR, SELECT(result, fault_addr, R(CP15_TLB_FAULT_ADDR)));
 	/*if result is zero, so all the address can be found in TLB */
 	//exit_val = result;
 #if 0

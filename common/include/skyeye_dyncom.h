@@ -275,7 +275,7 @@ typedef void (*syscall_function_t)(cpu_t*, uint32_t);
 typedef void (*callout)(cpu_t *);
 typedef void (*callout1)(cpu_t *, uint32_t);
 typedef void (*callout2)(cpu_t *, uint32_t, uint32_t);
-typedef void (*callout3)(cpu_t *, uint32_t, uint32_t, uint32_t);
+typedef void (*callout3)(cpu_t *, uint64_t, uint32_t, uint32_t);
 typedef void (*callout4)(cpu_t *, uint32_t, uint32_t, uint32_t, uint32_t);
 
 
@@ -401,6 +401,7 @@ typedef struct dyncom_engine{
 	uint32_t functions;
 	ExecutionEngine *exec_engine;
 	uint8_t *RAM;
+	unsigned long TLB;
 //for four memory region
     tag_t *tag_array[4];
     uint32_t code_size[4];
@@ -415,6 +416,7 @@ typedef struct dyncom_engine{
 	PointerType *type_check_mm;
 
 	Value *ptr_RAM;
+	Value *ptr_TLB;
 	Value *ptr_grf; // gpr register file
 	Value *ptr_srf; // gpr register file
 	Value *ptr_frf; // fp register file
@@ -432,7 +434,7 @@ typedef struct dyncom_engine{
 	   ptr_arch_func[0] is debug function.
 	   ptr_arch_func[1] is syscall function for user mode simulation.
 	   SO in your architecture, you can use callout function from 2 */
-	#define MAX_ARCH_FUNC_NUM 5
+	#define MAX_ARCH_FUNC_NUM 10
 	Value *ptr_arch_func[MAX_ARCH_FUNC_NUM];
 	void *arch_func[MAX_ARCH_FUNC_NUM];
 } dyncom_engine_t;

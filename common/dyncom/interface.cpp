@@ -441,7 +441,7 @@ cpu_translate(cpu_t *cpu, addr_t addr)
 }
 
 //typedef int (*fp_t)(uint8_t *RAM, void *grf, void *frf, read_memory_t readfp, write_memory_t writefp);
-typedef int (*fp_t)(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, fp_check_mm_t checkfp);
+typedef int (*fp_t)(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, fp_check_mm_t checkfp, unsigned long TLB);
 /* cpu run for user mode application */
 int
 um_cpu_run(cpu_t *cpu){
@@ -560,7 +560,7 @@ cpu_run(cpu_t *cpu)
 #endif
 		UPDATE_TIMING(cpu, TIMER_RUN, true);
 		LOG("******Run jit 0x%x\n", pc);
-		ret = pfunc(cpu->dyncom_engine->RAM, cpu->rf.grf, cpu->rf.srf, cpu->rf.frf, cpu->mem_ops.read_memory, cpu->mem_ops.write_memory, cpu->mem_ops.check_mm);
+		ret = pfunc(cpu->dyncom_engine->RAM, cpu->rf.grf, cpu->rf.srf, cpu->rf.frf, cpu->mem_ops.read_memory, cpu->mem_ops.write_memory, cpu->mem_ops.check_mm, cpu->dyncom_engine->TLB);
 		if (cpu->icounter > 248765780) {
 //			printf("out of jit ret is %d icounter is %lld\n", ret, cpu->icounter);
 //			return ret;
@@ -702,7 +702,7 @@ extern "C" void dyncom_callout2(cpu_t *cpu, uint32_t index, uint32_t arg1, uint3
 	}
 	((callout2)cpu->dyncom_engine->arch_func[index])(cpu, arg1, arg2);
 }
-extern "C" void dyncom_callout3(cpu_t *cpu, uint32_t index, uint32_t arg1, uint32_t arg2, uint32_t arg3)
+extern "C" void dyncom_callout3(cpu_t *cpu, uint32_t index, uint64_t arg1, uint32_t arg2, uint32_t arg3)
 {
 	if(index > MAX_ARCH_FUNC_NUM || index < 0){
 		skyeye_log(Error_log, __func__, "In %s Callout function %d not exsit.\n", __func__, index);

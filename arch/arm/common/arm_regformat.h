@@ -46,6 +46,7 @@ enum arm_regno{
 	SPSR_UNDEF,
 	SPSR_IRQ,
 	SPSR_FIRQ,
+	MODE_REG, /* That is the cpsr[4 : 0], just for calculation easily */
 	CP15_BASE,
 	CP15_C0 = CP15_BASE,
 	CP15_C0_C0 = CP15_C0,

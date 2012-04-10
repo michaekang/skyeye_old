@@ -725,6 +725,7 @@ Value *MisGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 		if(BITS(21,22) == 0x0){
 		/* Reg offset */
 			Value* Addr = MisGetAddrRegOffset(cpu, instr, bb);
+			/* ldrd and strd */
 			if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
 				bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
 			else
