@@ -1111,6 +1111,14 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		refresh_signal->conf_obj = slave_signal->conf_obj;
 		refresh_signal->trigger = slave_signal->trigger;
 		conf_object_t* android = pre_conf_obj("android_0", "android");
+
+		conf_object_t* goldfish_events = pre_conf_obj("goldfish_events_0", "goldfish_events");
+		memory_space_intf* goldfish_events_io_memory = (memory_space_intf*)SKY_get_interface(goldfish_events, MEMORY_SPACE_INTF_NAME);
+		DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, goldfish_events_io_memory);
+		ret = add_map(phys_mem, 0x7f00d000, 0x1000, 0x0, goldfish_events_io_memory, 1, 1);
+		if(ret != No_exp){
+			skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for ac97\n");
+		}
 #endif
 
 		general_signal_intf* lcd_intr_signal = (lcd_control_intf*)SKY_get_interface(lcd, GENERAL_SIGNAL_INTF_NAME);
