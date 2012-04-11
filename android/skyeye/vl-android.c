@@ -2604,7 +2604,6 @@ int main(int argc, char **argv, char **envp)
     STRALLOC_DEFINE(kernel_params);
     STRALLOC_DEFINE(kernel_config);
     int    dns_count = 0;
-#endif
 
     goldfish_fb_device* goldfish_fb;
     conf_object_t* conf_obj = get_conf_obj("goldfish_fb0");
@@ -2617,6 +2616,7 @@ int main(int argc, char **argv, char **envp)
     goldfish_nand = (nand_dev_controller_t*)conf_obj->obj;
     goldfish_nand_control_intf* nand_control = (goldfish_nand_control_intf*)SKY_get_interface(conf_obj, NAND_CTRL_INTF_NAME);
 
+#endif
 
     /* Initialize sockets before anything else, so we can properly report
      * initialization failures back to the UI. */
@@ -3434,7 +3434,7 @@ int main(int argc, char **argv, char **envp)
 #ifdef CONFIG_NAND
             case QEMU_OPTION_nand:
                // nand_add_dev(optarg);
-	        nand_control->nand_ctrl(optarg);
+//	        nand_control->nand_ctrl(optarg);
                 break;
 #endif
             case QEMU_OPTION_android_ports:
@@ -3667,7 +3667,7 @@ int main(int argc, char **argv, char **envp)
             PANIC("Missing initial system image path!");
         }
        // nand_add_dev(tmp);
-        nand_control->nand_ctrl(tmp);
+        //nand_control->nand_ctrl(tmp);
     }
 
     /* Initialize data partition image */
@@ -3704,7 +3704,7 @@ int main(int argc, char **argv, char **envp)
             pstrcat(tmp, sizeof(tmp), initImage);
         }
        // nand_add_dev(tmp);
-        nand_control->nand_ctrl(tmp);
+        //nand_control->nand_ctrl(tmp);
     }
 
 #if 0 //modified by xiaoqiao
@@ -3910,7 +3910,7 @@ int main(int argc, char **argv, char **envp)
             }
         }
         //nand_add_dev(tmp);
-	nand_control->nand_ctrl(tmp);
+	//nand_control->nand_ctrl(tmp);
     }
 
 #if 0 //modified by xiaoqiao

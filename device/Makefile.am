@@ -30,6 +30,7 @@ dev_lcd = lcd/dev_lcd_au1100.c  lcd/dev_lcd_s3c2410.c   lcd/skyeye_lcd.c \
 lcd/dev_lcd_ep7312.c  lcd/dev_lcd_s3c44b0x.c lcd/dev_lcd_pxa.c lcd/lcd_module.c
 
 gtk_lcd = lcd_gtk/lcd_gtk_module.c lcd_gtk/lcd_gtk.c
+sdl_lcd = lcd_sdl/lcd_sdl_module.c lcd_sdl/lcd_sdl.c
 
 #dev_net = net/dev_net_cs8900a.c  net/dev_net_s3c4510b.c net/skyeye_net_tuntap.c \
 #net/dev_net_rtl8019.c  net/skyeye_net.c    net/skyeye_net_vnet.c net/net_module.c
@@ -54,6 +55,10 @@ if GTK_LCD
 libgtk_lcd_la_SOURCES = $(gtk_lcd) 
 libgtk_lcd_la_LDFLAGS = -module $(LCD_LIBS)
 endif
+
+libsdl_lcd_la_SOURCES = $(sdl_lcd) 
+libsdl_lcd_la_LDFLAGS = -module -L../android/objs/emulator_libui -lemulator_libui
+
 
 libsdhci_s3c6410_la_SOURCES = $(dev_sdhci_s3c6410)
 libsdhci_s3c6410_la_LDFLAGS = -module
@@ -111,6 +116,7 @@ endif
 if GTK_LCD
 pkglib_LTLIBRARIES += libgtk_lcd.la
 endif
+pkglib_LTLIBRARIES += libsdl_lcd.la
 
 
 DEFS = -DMODET -g -O2 -D_FILE_OFFSET_BITS=64 -DSTANDALONE -DDEFAULT_INLINE=0  @COMMON_CFLAGS@
@@ -119,9 +125,12 @@ skyeye_bin_dir = \"$(prefix)/bin/\"
 INCLUDES = -I./ @COMMON_INCLUDES@ -I./uart_16550 -DSKYEYE_BIN=$(skyeye_bin_dir)
 
 INCLUDES += @LCD_CFLAGS@
+INCLUDES +=/usr/include/gtk-2.0/ 
 if GTK_LCD
 liblcd_la_SOURCES += lcd/skyeye_lcd_gtk.c
 endif # GTK_LCD
 if WIN32_LCD
 liblcd_la_SOURCES += lcd/skyeye_lcd_win32.c
 endif # WIN32_LCD
+INCLUDES += -I../android/
+INCLUDES += -I../android/skyeye/

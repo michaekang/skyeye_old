@@ -1,8 +1,9 @@
 
 #SUBDIRS =  arch/arm/ arch/bfin arch/coldfire arch/mips arch/ppc/ arch/x86/ device/ utils/ arch/sparc/ libltdl common/ soc/arm/
-SUBDIRS =  common/ device/ utils/
-
+SUBDIRS =  common/
 include Makefile.android
+
+SUBDIRS +=  common/ device/ utils/
 if BUILD_ARM
 SUBDIRS += arch/arm
 SUBDIRS += soc/arm

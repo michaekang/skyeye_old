@@ -1048,7 +1048,8 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		exception_t ret;
         	ret = add_map(phys_mem, 0x77100000, 0x100000, 0x0, lcd_io_memory, 1, 1);
         	//ret = add_map(phys_mem, 0x77600000, 0x100000, 0x0, lcd_io_memory, 1, 1);
-#ifdef GTK_LCD
+//#ifdef GTK_LCD
+#if 0
 		/* set the lcd_ctrl_0 attribute for lcd */
 		conf_object_t* gtk_painter = pre_conf_obj("gtk_lcd_0", "gtk_lcd");
 		/* register touchscreen for lcd_gtk */
@@ -1068,6 +1069,27 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		refresh_signal->conf_obj = slave_signal->conf_obj;
 		refresh_signal->trigger = slave_signal->trigger;
 #endif
+#if 1
+		/* set the lcd_ctrl_0 attribute for lcd */
+		conf_object_t* sdl_painter = pre_conf_obj("lcd_sdl_0", "lcd_sdl");
+		/* register touchscreen for lcd_gtk */
+
+		lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(sdl_painter, LCD_CTRL_INTF_NAME);
+		attr_value_t* attr = make_new_attr(Val_ptr);
+		attr->u.ptr = lcd_ctrl;
+
+		mach_lcd_ctrl = lcd_ctrl;
+		/* set the attribute of lcd */
+		SKY_set_attr(lcd, "lcd_ctrl_0", attr);
+
+		simple_signal_intf* refresh_signal = (simple_signal_intf*)SKY_get_interface(sdl_painter, SIMPLE_SIGNAL_INTF_NAME);
+		simple_signal_intf* slave_signal = (simple_signal_intf*)SKY_get_interface(lcd, SIMPLE_SIGNAL_INTF_NAME);
+		/* connect the signal line, so lcd get notified when gtk finished refresh */
+		refresh_signal->conf_obj = slave_signal->conf_obj;
+		refresh_signal->trigger = slave_signal->trigger;
+		conf_object_t* android = pre_conf_obj("android_0", "android");
+#endif
+
 		general_signal_intf* lcd_intr_signal = (lcd_control_intf*)SKY_get_interface(lcd, GENERAL_SIGNAL_INTF_NAME);
 		lcd_intr_signal->conf_obj = vic_signal->conf_obj;
 		lcd_intr_signal->raise_signal = vic_signal->raise_signal;
