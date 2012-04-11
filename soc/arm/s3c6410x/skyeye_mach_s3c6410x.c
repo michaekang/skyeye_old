@@ -106,7 +106,30 @@ s3c6410x_update_int (void *arch_instance)
 static void
 s3c6410x_set_ext_intr (u32 interrupt)
 {
-	/* io.eintpend |= (1 << interrupt); */
+	exception_t ret;
+	uint32 eint0pend = 1 << interrupt;
+	uint32 eint0mask = ~(1 << interrupt);
+	conf_object_t* conf_obj = get_conf_obj("s3c6410_mach_space");
+	addr_space_t* phys_mem = (addr_space_t*)conf_obj->obj;
+	ret = phys_mem->memory_space->write(conf_obj, EINT0PEND, &eint0pend, 4);
+	ret = phys_mem->memory_space->write(conf_obj, EINT0MASK, &eint0mask, 4);
+
+	uint32 irq_no;
+	if (interrupt >= 0 && interrupt < 4)
+		irq_no = INT_EINT0;
+	else if (interrupt < 12)
+		irq_no = INT_EINT1;
+	else if (interrupt < 20)
+		irq_no = INT_EINT2;
+	else if (interrupt < 28)
+		irq_no = INT_EINT3;
+	else
+		return;
+
+	io.vic0rawintr |= 1 << irq_no;
+	io.vic0irqstatus |=  ((1 << irq_no) & ~(io.vic0intselect) & io.vic0intenable);
+	io.vic0fiqstatus |=  ((1 << irq_no) & io.vic0intselect & io.vic0intenable);
+
 }
 
 static int
