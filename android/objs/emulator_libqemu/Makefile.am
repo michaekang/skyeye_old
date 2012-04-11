@@ -16,6 +16,7 @@ CORE_MISC_SOURCES = \
     $(top_srcdir)/android/skyeye/charpipe.c \
     $(top_srcdir)/android/skyeye/console.c \
     $(top_srcdir)/android/skyeye/cutils.c \
+    $(top_srcdir)/android/skyeye/input.c \
     $(top_srcdir)/android/skyeye/iohandler.c \
     $(top_srcdir)/android/skyeye/notify.c \
     $(top_srcdir)/android/skyeye/osdep.c \
