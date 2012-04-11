@@ -4389,7 +4389,7 @@ int main(int argc, char **argv, char **envp)
 #endif //endif xiaoqiao
 //	ds->gui_timer = create_timer_scheduler(1, Periodic_sched,gui_update, ds, &id);
 	//create_thread_scheduler(10000000, Periodic_sched, gui_update, ds, &id);
-	create_thread_scheduler(10000000, Periodic_sched, gui_update, ds, &id);
+	create_thread_scheduler(10000, Periodic_sched, gui_update, ds, &id);
 	printf("create listen timer id = %d\n",id);
 	list_thread_scheduler();
 	ds->gui_timer = id;
@@ -4403,7 +4403,7 @@ int main(int argc, char **argv, char **envp)
         qemu_mod_timer(nographic_timer, qemu_get_clock_ms(rt_clock));
 #endif
 	//ds->gui_timer = create_timer_scheduler(1, Periodic_sched,gui_update, ds, &id);
-	create_thread_scheduler(10000000, Periodic_sched, gui_update, ds, &id);
+	create_thread_scheduler(10000, Periodic_sched, gui_update, ds, &id);
 	ds->gui_timer = id;
     }
 
