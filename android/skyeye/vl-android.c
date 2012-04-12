@@ -1772,7 +1772,6 @@ static void gui_update(void *opaque)
     DisplayState *ds = opaque;
     DisplayChangeListener *dcl = ds->listeners;
 
-    printf("in %s\n",__func__);
     dpy_refresh(ds);
 
     while (dcl != NULL) {

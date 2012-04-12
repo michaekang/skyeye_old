@@ -28,6 +28,7 @@
 #include <memory_space.h>
 #include "user-events.h"
 
+#define MAX_EVENTS 256*4
 struct goldfish_events_device;
 typedef struct events_state {
 	struct goldfish_events_device* dev;
@@ -54,7 +55,8 @@ typedef struct events_state {
 
 typedef struct goldfish_events_device{
 	conf_object_t* obj;
-	int line_no;
+	int internal_irq;
+	int extern_irq;
 	events_state_t* events;
 
 	conf_object_t* signal_target;

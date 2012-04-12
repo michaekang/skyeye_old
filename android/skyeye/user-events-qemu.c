@@ -25,7 +25,7 @@ user_event_keycodes(int *kcodes, int count)
 void
 user_event_keycode(int  kcode)
 {
-    //kbd_put_keycode(kcode);
+    kbd_put_keycode(kcode);
 }
 
 void
@@ -44,7 +44,7 @@ user_event_key(unsigned code, unsigned down)
 void
 user_event_mouse(int dx, int dy, int dz, unsigned buttons_state)
 {
-    //kbd_mouse_event(dx, dy, dz, buttons_state);
+    kbd_mouse_event(dx, dy, dz, buttons_state);
 }
 
 static QEMUPutGenericEvent *generic_event_callback;

@@ -34,9 +34,6 @@
 #include "goldfish_events.h"
 
 
-
-#define MAX_EVENTS 256*4
-
 enum {
     REG_READ        = 0x00,
     REG_SET_PAGE    = 0x00,
@@ -68,11 +65,21 @@ enum {
 extern const char*  android_skin_keycharmap;
 
 void
-goldfish_events_set_update_intr ()
+goldfish_events_set_update_intr (int level)
 {
+	goldfish_events_device* dev;
+	conf_object_t* obj = get_conf_obj("goldfish_events_0");
+	dev = (goldfish_events_device *)obj->obj;
+
 	struct machine_config *mc = (struct machine_config *) get_current_mach();
-	mc->mach_set_intr (11);
-	mc->mach_update_intr (mc);
+	printf("[skyeye]in %s,send events interrupt\n",__func__);
+	mc->mach_set_intr (dev->extern_irq);
+
+	if (level == 0) 
+	      dev->master->raise_signal(dev->master->conf_obj,dev->internal_irq);
+	else
+	      dev->master->lower_signal(dev->master->conf_obj,dev->internal_irq);
+
 }
 
 static void enqueue_event(unsigned int type, unsigned int code, int value)
@@ -94,10 +101,14 @@ static void enqueue_event(unsigned int type, unsigned int code, int value)
 
     if(s->first == s->last) {
 	if (s->state == STATE_LIVE)
-	    goldfish_events_set_update_intr ();
+	{
+		printf("[skyeye] events enabled\n");
+		goldfish_events_set_update_intr (1);
+	}
 
 //	  qemu_irq_raise(s->irq);
 	else {
+		printf("[skyeye] events disabled\n");
 	  s->state = STATE_BUFFERED;
 	}
     }
@@ -122,18 +133,20 @@ static unsigned dequeue_event()
     events_state_t* s = dev->events;
 
     if(s->first == s->last) {
+	printf("[skyeye] in %s,queue is already empty\n",__func__);
         return 0;
     }
 
     n = s->events[s->first];
 
+    printf("[skyeye]in %s\n",__func__);
     s->first = (s->first + 1) & (MAX_EVENTS - 1);
 
     if(s->first == s->last) {
-	    goldfish_events_set_update_intr ();
         //qemu_irq_lower(s->irq);
+	goldfish_events_set_update_intr (0);
     }
-#ifdef TARGET_I386
+//#ifdef TARGET_I386
     /*
      * Adding the logic to handle edge-triggered interrupts for x86
      * because the exisiting goldfish events device basically provides
@@ -147,9 +160,12 @@ static unsigned dequeue_event()
     else if (((s->first + 2) & (MAX_EVENTS - 1)) < s->last ||
                (s->first & (MAX_EVENTS - 1)) > s->last) { /* if there still is an event */
 //        qemu_irq_lower(s->irq);
+	  printf("[skyeye]there are also events in the queue\n");
+	  goldfish_events_set_update_intr (0);
+	  goldfish_events_set_update_intr (1);
  //       qemu_irq_raise(s->irq);
     }
-#endif
+//#endif
     return n;
 }
 
@@ -165,6 +181,7 @@ get_charmap_name()
         return s->name;
 
     s->name = android_get_charmap_name();
+    printf("[skyeye] char map is %s\n",s->name);
     return s->name;
 }
 
@@ -225,8 +242,13 @@ static exception_t events_read(conf_object_t *opaque, generic_address_t offset, 
      */
     if (offset == REG_LEN && s->page == PAGE_ABSDATA) {
 	if (s->state == STATE_BUFFERED)
-	    goldfish_events_set_update_intr ();
+	{
+		printf("[skyeye]events driver is already enabled\n");
+		printf("[skyeye]we should to handler the events before\n");
+		goldfish_events_set_update_intr (1);
+	}
 	  //qemu_irq_raise(s->irq);
+	printf("[skyeye] events driver can handler the events now\n");
 	s->state = STATE_LIVE;
     }
 
@@ -240,7 +262,6 @@ static exception_t events_read(conf_object_t *opaque, generic_address_t offset, 
 }
 
 static exception_t events_write(conf_object_t* opaque, generic_address_t offset, void* value, size_t count) {
-{
 
     goldfish_events_device* dev;
     conf_object_t* obj = get_conf_obj("goldfish_events_0");
@@ -256,31 +277,27 @@ static exception_t events_write(conf_object_t* opaque, generic_address_t offset,
 
 static void events_put_keycode(void *x, int keycode)
 {
-    goldfish_events_device* dev;
-    conf_object_t* obj = get_conf_obj("goldfish_events_0");
-    dev = (goldfish_events_device *)obj->obj;
-    events_state_t* s = dev->events;
-
+    events_state_t *s = (events_state_t *) x;
+    printf("[skyeye key] in %s \n",__func__);
     enqueue_event(EV_KEY, keycode&0x1ff, (keycode&0x200) ? 1 : 0);
 }
 
 static void events_put_mouse(void *opaque, int dx, int dy, int dz, int buttons_state)
 {
 
-    goldfish_events_device* dev;
-    conf_object_t* obj = get_conf_obj("goldfish_events_0");
-    dev = (goldfish_events_device *)obj->obj;
-    events_state_t* s = dev->events;
+    events_state_t *s = (events_state_t *) opaque;
     /* in the Android emulator, we use dz == 0 for touchscreen events,
      * and dz == 1 for trackball events. See the kbd_mouse_event calls
      * in android/skin/trackball.c and android/skin/window.c
      */
     if (dz == 0) {
+	printf("[skyeye touch]in %s,touchscreen moved\n",__func__);
         enqueue_event(EV_ABS, ABS_X, dx);
         enqueue_event(EV_ABS, ABS_Y, dy);
         enqueue_event(EV_ABS, ABS_Z, dz);
         enqueue_event(EV_KEY, BTN_TOUCH, buttons_state&1);
     } else {
+	printf("[skyeye mouse]in %s,key pressed\n",__func__);
         enqueue_event(EV_REL, REL_X, dx);
         enqueue_event(EV_REL, REL_Y, dy);
     }
@@ -290,10 +307,7 @@ static void events_put_mouse(void *opaque, int dx, int dy, int dz, int buttons_s
 static void  events_put_generic(void*  opaque, int  type, int  code, int  value)
 {
 
-    goldfish_events_device* dev;
-    conf_object_t* obj = get_conf_obj("goldfish_events_0");
-    dev = (goldfish_events_device *)obj->obj;
-    events_state_t* s = dev->events;
+    events_state_t *s = (events_state_t *) opaque;
     enqueue_event(type, code, value);
 }
 
@@ -358,7 +372,7 @@ events_clr_bit(int type, int bit)
     }
 }
 
-void events_dev_init(uint32_t base, qemu_irq irq)
+void events_dev_init()
 {
     int iomemtype;
     AndroidHwConfig*  config = android_hw;
@@ -549,6 +563,18 @@ static conf_object_t* new_goldfish_events_device(char* obj_name){
 	io_memory->read = events_read;
 	io_memory->write = events_write;
 	SKY_register_interface(io_memory, obj_name, MEMORY_SPACE_INTF_NAME);	
+
+	general_signal_intf* events_signal = skyeye_mm_zero(sizeof(general_signal_intf));
+	events_signal->conf_obj = NULL;
+	events_signal->raise_signal = NULL;
+	events_signal->lower_signal = NULL;
+	dev->master = events_signal;
+	dev->internal_irq = 1; /* Frame sync */
+	dev->extern_irq = 11; /* Frame sync */
+	SKY_register_interface(events_signal, obj_name, GENERAL_SIGNAL_INTF_NAME);
+
+
+	events_dev_init();
 
 	return dev->obj;
 }

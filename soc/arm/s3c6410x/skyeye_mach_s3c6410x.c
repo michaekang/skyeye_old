@@ -39,6 +39,7 @@
 #include <skyeye_log.h>
 #include <skyeye_uart.h>
 #include <skyeye_mm.h>
+#include <skyeye_signal.h>
 
 #ifdef __CYGWIN__
 #include <time.h>
@@ -1119,12 +1120,19 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		if(ret != No_exp){
 			skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for ac97\n");
 		}
+
 #endif
 
 		general_signal_intf* lcd_intr_signal = (lcd_control_intf*)SKY_get_interface(lcd, GENERAL_SIGNAL_INTF_NAME);
 		lcd_intr_signal->conf_obj = vic_signal->conf_obj;
 		lcd_intr_signal->raise_signal = vic_signal->raise_signal;
 		lcd_intr_signal->lower_signal = vic_signal->lower_signal;
+#if 1
+		general_signal_intf* events_intr_signal = (lcd_control_intf*)SKY_get_interface(goldfish_events, GENERAL_SIGNAL_INTF_NAME);
+		events_intr_signal->conf_obj = vic_signal->conf_obj;
+		events_intr_signal->raise_signal = vic_signal->raise_signal;
+		events_intr_signal->lower_signal = vic_signal->lower_signal;
+#endif
 
 	}
 	else{
