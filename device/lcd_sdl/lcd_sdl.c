@@ -464,8 +464,10 @@ static void lcd_sdl_update_display(conf_object_t *opaque)
     rect.xmax += 1;
     rect.ymax += 1;
 
+#if 0
     printf("lcd_sdl_update_display (y:%d,h:%d,x=%d,w=%d)\n",
            rect.ymin, rect.ymax-rect.ymin, rect.xmin, rect.xmax-rect.xmin);
+#endif
 
     dpy_update(s->fb->ds, rect.xmin, rect.ymin, rect.xmax-rect.xmin, rect.ymax-rect.ymin);
 
@@ -511,6 +513,51 @@ static int lcd_sdl_open(conf_object_t *opaque, lcd_surface_t* surface)
 void lcd_sdl_close()
 {
 	return NULL;
+}
+
+static void skPenEvent(int *buffer, int eventType, int stateType, int x, int y)
+{
+//      printf("\nSkyEye: skPenEvent():event type=%d\n(x=%d,y=%d)\n",down,x,y);
+	buffer[0] = x;
+	buffer[1] = y;
+	buffer[2] = 0;		// dx
+	buffer[3] = 0;		// dy
+	buffer[4] = eventType;	// event from pen (DOWN,UP,CLICK,MOVE)
+	buffer[5] = stateType;	// state of pen (DOWN,UP,ERROR)
+	buffer[6] = 1;		// no of the event
+	buffer[7] = 0;		// time of the event (ms) since ts_open
+}
+
+static void events_put_keycode(void *x, int keycode)
+{
+    printf("[skyeye key] in %s \n",__func__);
+}
+
+static void events_put_mouse(void *opaque, int dx, int dy, int dz, int buttons_state)
+{
+	conf_object_t* obj = get_conf_obj("lcd_sdl_0");
+	struct lcd_sdl_device *lcd_dev = (lcd_sdl_device *)obj->obj;
+
+	int *Pen_buffer;
+	lcd_touchscreen_t* lcd_ts = SKY_get_interface(obj, LCD_TS_INTF_NAME);
+        Pen_buffer = get_pen_buffer();
+	switch(buttons_state)
+	{
+		case 0:
+			skPenEvent(Pen_buffer, 0, 1, dx, dy);
+			break;
+		case 1:
+			skPenEvent(Pen_buffer, 0, 0, dx, dy);
+			break;
+		case 2:
+			if (Pen_buffer[5] == 0){
+				skPenEvent(Pen_buffer, 1, 0, dx, dy);
+			}
+			break;
+		default:
+			break;
+	}
+	lcd_ts->touchscreen_update_status(lcd_ts->obj, Pen_buffer);
 }
 
 static conf_object_t* new_lcd_sdl(char* obj_name){
@@ -564,6 +611,8 @@ static conf_object_t* new_lcd_sdl(char* obj_name){
 	SKY_register_interface(refresh_signal, obj_name, SIMPLE_SIGNAL_INTF_NAME);
 	dev->master = refresh_signal;
 
+	qemu_add_kbd_event_handler(events_put_keycode, dev);
+	qemu_add_mouse_event_handler(events_put_mouse,dev, 1, "s3c6410-events");
 
 	/* Register io function to the object */
 	return dev->obj;

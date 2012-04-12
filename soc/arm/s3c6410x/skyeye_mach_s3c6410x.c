@@ -1093,11 +1093,11 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		refresh_signal->conf_obj = slave_signal->conf_obj;
 		refresh_signal->trigger = slave_signal->trigger;
 #endif
-#if 1
 		/* set the lcd_ctrl_0 attribute for lcd */
 		conf_object_t* sdl_painter = pre_conf_obj("lcd_sdl_0", "lcd_sdl");
 		/* register touchscreen for lcd_gtk */
 
+		SKY_register_interface(lcd_ts, sdl_painter->objname, LCD_TS_INTF_NAME);
 		lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(sdl_painter, LCD_CTRL_INTF_NAME);
 		attr_value_t* attr = make_new_attr(Val_ptr);
 		attr->u.ptr = lcd_ctrl;
@@ -1113,6 +1113,7 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		refresh_signal->trigger = slave_signal->trigger;
 		conf_object_t* android = pre_conf_obj("android_0", "android");
 
+#if 0
 		conf_object_t* goldfish_events = pre_conf_obj("goldfish_events_0", "goldfish_events");
 		memory_space_intf* goldfish_events_io_memory = (memory_space_intf*)SKY_get_interface(goldfish_events, MEMORY_SPACE_INTF_NAME);
 		DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, goldfish_events_io_memory);
@@ -1120,14 +1121,14 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		if(ret != No_exp){
 			skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for ac97\n");
 		}
-
 #endif
+
 
 		general_signal_intf* lcd_intr_signal = (lcd_control_intf*)SKY_get_interface(lcd, GENERAL_SIGNAL_INTF_NAME);
 		lcd_intr_signal->conf_obj = vic_signal->conf_obj;
 		lcd_intr_signal->raise_signal = vic_signal->raise_signal;
 		lcd_intr_signal->lower_signal = vic_signal->lower_signal;
-#if 1
+#if 0
 		general_signal_intf* events_intr_signal = (lcd_control_intf*)SKY_get_interface(goldfish_events, GENERAL_SIGNAL_INTF_NAME);
 		events_intr_signal->conf_obj = vic_signal->conf_obj;
 		events_intr_signal->raise_signal = vic_signal->raise_signal;
