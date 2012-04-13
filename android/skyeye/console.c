@@ -1461,7 +1461,6 @@ DisplayState *graphic_console_init(vga_hw_update_ptr update,
     s->hw = opaque;
 
     register_displaystate(ds);
-    printf("in %s\n",__func__);
     return ds;
 }
 

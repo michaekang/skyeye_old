@@ -44,6 +44,7 @@ user_event_key(unsigned code, unsigned down)
 void
 user_event_mouse(int dx, int dy, int dz, unsigned buttons_state)
 {
+    printf("[skyeye mouse] %s\n",__func__);
     kbd_mouse_event(dx, dy, dz, buttons_state);
 }
 

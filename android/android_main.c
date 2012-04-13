@@ -341,7 +341,6 @@ int android_main()
 
     /* Parses options and builds an appropriate AVD. */
     avd = android_avdInfo = createAVD(opts, &inAndroidBuild);
-    printf("createAVD is OK\n");
 
     /* get the skin from the virtual device configuration */
     if (opts->skindir != NULL) {
@@ -355,7 +354,6 @@ int android_main()
         char* skinDir;
 
         avdInfo_getSkinInfo(avd, &skinName, &skinDir);
-	printf("avdInfo_getSkinInfo is ok\n");
 
         if (opts->skin == NULL) {
             opts->skin = skinName;
@@ -374,7 +372,6 @@ int android_main()
         derror("could not read hardware configuration ?");
         exit(1);
     }
-    printf("avdInfo_initHwConfig is ok\n");
 
     if (opts->keyset) {
         parse_keyset(opts->keyset, opts);
@@ -412,10 +409,8 @@ int android_main()
 
 
     user_config_init();
-    printf("user_config_init is ok\n");
     parse_skin_files(opts->skindir, opts->skin, opts, hw,
                      &skinConfig, &skinPath);
-    printf("parse_skin_files is ok\n");
 
     if (!opts->netspeed && skin_network_speed) {
         D("skin network speed: '%s'", skin_network_speed);
@@ -485,7 +480,6 @@ int android_main()
              forceArmv7 = 1;
          }
     }
-    printf("kernel is ok\n");
 
     if (boot_prop_ip[0]) {
         args[n++] = "-boot-property";
@@ -538,7 +532,6 @@ int android_main()
 
     hw->disk_ramdisk_path = avdInfo_getRamdiskPath(avd);
     D("autoconfig: -ramdisk %s", hw->disk_ramdisk_path);
-    printf("ramdisk is ok\n");
 
     /* -partition-size is used to specify the max size of both the system
      * and data partition sizes.
@@ -560,7 +553,6 @@ int android_main()
         }
         defaultPartitionSize = (uint64_t) sizeMB * ONE_MB;
     }
-    printf("partition_size is ok\n");
 
 
     /** SYSTEM PARTITION **/
@@ -648,7 +640,6 @@ int android_main()
             _adjustPartitionSize("system", systemBytes, defaultPartitionSize,
                                  avdInfo_inAndroidBuild(avd));
     }
-    printf("SYSTEM PARTITION is ok\n");
 
     /** DATA PARTITION **/
 
@@ -719,7 +710,6 @@ int android_main()
             _adjustPartitionSize("data", dataBytes, defaultBytes,
                                  avdInfo_inAndroidBuild(avd));
     }
-    printf("DATA PARTITION is ok\n");
 
     /** CACHE PARTITION **/
 
@@ -756,7 +746,6 @@ int android_main()
             hw->disk_cachePartition_path = ASTRDUP(opts->cache);
         }
     }
-    printf("CACHE PARTITION is ok\n");
 
     /** SD CARD PARTITION */
 
@@ -1215,13 +1204,11 @@ int android_main()
 
     /* Setup SDL UI just before calling the code */
     init_sdl_ui(skinConfig, skinPath, opts);
-    printf("init_sdl_ui is ok\n");
 
     if (attach_ui_to_core(opts) < 0) {
         derror("Can't attach to core!");
         exit(1);
     }
-    printf("attach_ui_to_core is ok\n");
 
     free(argv);
     return qemu_main(n, args);
