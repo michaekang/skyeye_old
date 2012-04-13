@@ -263,11 +263,13 @@ int arch_arm_tag_instr(cpu_t *cpu, addr_t pc, tag_t *tag, addr_t *new_pc, addr_t
 int arch_arm_translate_instr(cpu_t *cpu, addr_t pc, BasicBlock *bb) {
 	int instr_size = INSTR_SIZE;
 	uint32_t instr = 0xdeadc0de;
+	INIT_WB(CONST(0xdeadc0de), 0);
 	if(bus_read(32, pc, &instr) != 0){
                 /* instruction read error handler here */
 		printf("In %s, cant read addr 0x%x\n", __FUNCTION__, pc);
 		exit(-1);
 	}
+	//printf("In %s, instr=0x%x, pc = 0x%x\n", __FUNCTION__, instr, pc);
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	if(core->Cpsr &  (1 << THUMB_BIT)){
 		uint32 arm_inst;
@@ -397,11 +399,16 @@ thumb_translate_cond(cpu_t *cpu, uint32_t instr, BasicBlock *bb) {
 
 Value *
 arm_translate_cond(cpu_t *cpu, uint32_t instr, BasicBlock *bb) {
+	//arch_arm_debug_print(cpu, bb, CONST64(instr), R(15), CONST(40));
 	switch ((instr) >> 28) {
 		case 0x0: /* EQ */
 			return LOAD(ptr_Z);
 		case 0x1: /* NE */
-			return NOT(LOAD(ptr_Z));
+			{
+			//return NOT(LOAD(ptr_Z));
+			Value* v = NOT(LOAD(ptr_Z));
+			return v;
+			}
 		case 0x2: /* CS */
 			return LOAD(ptr_C);
 		case 0x3: /* CC */
@@ -857,9 +864,10 @@ int DYNCOM_TRANS(ldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
 	if (BIT(15)) {
 		SET_NEW_PAGE;
 		if (BITS(25, 27) == 4 && BIT(22) == 1 && BIT(20) == 1) {
@@ -867,6 +875,7 @@ int DYNCOM_TRANS(ldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			cpu->f.emit_decode_reg(cpu, bb);
 		}
 	}
+	EXECUTE_WB(RN);
 	return No_exp;
 }
 int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -875,9 +884,10 @@ int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 //	sleep(2);
 	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
 	#if 0
 	if (RD == 15) {
 		/* set the bit[0] to thumb bit */
@@ -887,6 +897,9 @@ int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		SET_NEW_PAGE;
 	}
 	#endif
+	//printf("In %s, before WB\n", __FUNCTION__);
+	EXECUTE_WB(RN);
+	//printf("In %s, after WB\n", __FUNCTION__);
 	return 0;
 }
 int DYNCOM_TRANS(ldrb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -901,9 +914,11 @@ int DYNCOM_TRANS(ldrb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* I = 0, P = 1, U = 1, B = 1, W = 1 */
 	
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
 
 	return 0;
 }
@@ -911,9 +926,12 @@ int DYNCOM_TRANS(ldrbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(ldrd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -921,9 +939,12 @@ int DYNCOM_TRANS(ldrd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value* Rn;
 	/* LDRD P = 0, U = 0, I = 0, W = 0 */
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(ldrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -931,7 +952,7 @@ int DYNCOM_TRANS(ldrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value* Rn;
 //	Value *addr = GetAddr(cpu, instr, bb);
 	Value *addr = R(RN);
-	bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
+	//bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	return No_exp;
 }
@@ -940,7 +961,7 @@ int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	//Value *addr = GetAddr(cpu, instr, bb);
 	Value* Rn;
 	Value *addr = R(RN);
-	bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
+	//bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	return No_exp;
 }
@@ -950,20 +971,28 @@ int DYNCOM_TRANS(ldrh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value* Rn;
 	/* P = 1, U = 1, I = 1, W = 0 */
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(ldrsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* should check if RN == RD for writeback case */
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	//LoadStore(cpu,instr,bb,addr);
+	
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	//LoadStore(cpu,instr,bb,addr);
-	Value *ret = arch_read_memory(cpu, bb, addr, 0, 8);
+
+	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 8);
 	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x80)), CONST(0)), ret, OR(CONST(0xffffff00), ret)));
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(ldrsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -971,11 +1000,14 @@ int DYNCOM_TRANS(ldrsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* LDRSH P=1 U=1 W=0 */
 	/* should check if RN == RD for writeback case */
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	//LoadStore(cpu,instr,bb,addr);	
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	//LoadStore(cpu,instr,bb,addr);
-	Value *ret = arch_read_memory(cpu, bb, addr, 0, 16);
+
+	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 16);
 	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x8000)), CONST(0)), ret, OR(CONST(0xffff0000), ret)));
+	EXECUTE_WB(RN);
 
 	return 0;
 }
@@ -983,9 +1015,12 @@ int DYNCOM_TRANS(ldrt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(mcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1758,9 +1793,12 @@ int DYNCOM_TRANS(stm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value* Rn = R(RN);
 	/* STM(1) P = 1, U = 0, W = 1 */
 	Value *addr = GetAddr(cpu, instr, bb, 0);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return No_exp;
 }
 int DYNCOM_TRANS(str)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1769,10 +1807,13 @@ int DYNCOM_TRANS(str)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value* Rn;
 	/* I = 0, P = 1, U = 1, W = 0, B = 0 */
 	Value *addr = GetAddr(cpu, instr, bb, 0);
-	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
 	//StoreWord(cpu, instr, bb, addr);
 	LoadStore(cpu,instr,bb,addr, Rn);
+	if(!is_user_mode(cpu))
+		bb = cpu->dyncom_engine->bb_load_store;
+
+	EXECUTE_WB(RN);
+
 	return No_exp;
 
 }
@@ -1784,18 +1825,24 @@ int DYNCOM_TRANS(strb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* STRB, No WriteBack, Pre Inc, Regist + Immed || Regist */
 	/*  I = 0, P = 1, U = 1, B = 1, W = 0 */
 	Value *addr = GetAddr(cpu, instr, bb, 0);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return No_exp;
 }
 int DYNCOM_TRANS(strbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb, 0);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(strd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1803,9 +1850,12 @@ int DYNCOM_TRANS(strd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* STRD P = 0, U = 0, I = 0, W = 0 */
 	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb, 0);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1814,8 +1864,10 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 //	LoadStore(cpu,instr,bb,addr);
 	Value *addr = R(RN);
 	Value *val = R(RM);
-	bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
-	arch_write_memory(cpu, bb, addr, val, 32);
+	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	arch_write_memory(cpu, bb, phys_addr, val, 32);
 	return 0;
 }
 int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1824,8 +1876,10 @@ int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 //	LoadStore(cpu,instr,bb,addr);
 	Value *addr = R(RN);
 	Value *val = AND(R(RM), CONST(0xff));
-	bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
-	arch_write_memory(cpu, bb, addr, val, 8);
+	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	arch_write_memory(cpu, bb, phys_addr, val, 8);
 	return No_exp;
 }
 int DYNCOM_TRANS(strh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1834,18 +1888,24 @@ int DYNCOM_TRANS(strh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* P = 0, U = 0, I = 0, W = 0 */
 	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb, 0);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(strt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	Value* Rn;
 	Value *addr = GetAddr(cpu, instr, bb, 0);
+	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
-	LoadStore(cpu,instr,bb,addr, Rn);
+
+	EXECUTE_WB(RN);
+
 	return 0;
 }
 int DYNCOM_TRANS(sub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1887,9 +1947,11 @@ int DYNCOM_TRANS(swi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 }
 int DYNCOM_TRANS(swp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	Value* Addr = R(RN);
-	bb = arch_check_mm(cpu, bb, Addr, 4, 0, cpu->dyncom_engine->bb_trap);
-	Value *Val = arch_read_memory(cpu, bb, Addr, 0, 32);
-	arch_write_memory(cpu, bb, Addr, Val, 32);
+	//bb = arch_check_mm(cpu, bb, Addr, 4, 0, cpu->dyncom_engine->bb_trap);
+	Value* phys_addr = get_phys_addr(cpu, bb, Addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	Value *Val = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	arch_write_memory(cpu, bb, phys_addr, Val, 32);
 	LET(RD, Val);
 	return No_exp;
 }

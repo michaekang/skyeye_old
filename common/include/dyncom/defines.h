@@ -36,7 +36,7 @@
 // allocation for us
 
 /* The USER_MODE_OPT can not work with kernel running */
-#define USER_MODE_OPT 0
+#define USER_MODE_OPT 1
 
 // DFS limit when CPU_CODEGEN_TAG_LIMIT is set by the client.
 // '6' is the optimum for OpenBSD's 'date' on M88K.

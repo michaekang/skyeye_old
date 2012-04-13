@@ -682,6 +682,7 @@ arch_debug_me(cpu_t *cpu, BasicBlock *bb, BasicBlock *exit_bb)
 	return next_bb;
 }
 
+
 /**
  * @brief Generate the write memory llvm IR 
  *
@@ -705,6 +706,8 @@ void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, ui
 		exit(0);
 	}
 #else
+	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
+	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 0, cpu->dyncom_engine->bb_trap);
 	if (cpu->dyncom_engine->ptr_func_write_memory == NULL) {
 		return;
 	}
@@ -758,6 +761,9 @@ Value *arch_read_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, uint32_t sign, 
 	if (cpu->dyncom_engine->ptr_func_read_memory == NULL) {
 		return NULL;
 	}
+
+	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 1, cpu->dyncom_engine->bb_trap);
+
 	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));

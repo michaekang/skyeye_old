@@ -41,5 +41,7 @@ static inline uint32 CHECK_READ_REG15(arm_core_t* core, int Rn){
 	return (Rn == 15)? ((core->Reg[15] & ~0x1) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
 }
 
+Value* get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read);
+void arch_arm_debug_print(cpu_t *cpu, BasicBlock *bb, Value* arg0, Value* arg1, Value* arg2);
 #endif
 

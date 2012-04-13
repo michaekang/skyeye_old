@@ -22,7 +22,7 @@
 * @version 7849
 * @date 2012-03-08
 */
-#include "lru_tlb.h"
+//#include "lru_tlb.h"
 #include "arm_dyncom_mmu.h"
 #include "arm_dyncom_tlb.h"
 #include "arm_dyncom_thumb.h"
@@ -289,6 +289,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 				return SUBPAGE_PERMISSION_FAULT;
 			}
 		}
+		//printf("In %s, get phys_addr=0x%x\n", __FUNCTION__, *phys_addr);
 		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (ap << 2) | 0x1 , access_type);
 		//insert_tlb(core, (virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap);
 	}
@@ -443,12 +444,15 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
 	//fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 1);
+	#if 0
 	fault = check_address_validity(core, virt_addr, &phys_addr, 1);
 	if (NO_FAULT != fault) {
 		printf("icounter=%lld, mmu read fault %d, virt_addr=0x%x, pc=0x%x\n", core->icounter, fault, virt_addr, core->Reg[15]);
 		phys_addr = virt_addr;
 		exit(-1);
 	}
+	#endif
+	phys_addr = virt_addr;
 #ifdef FAST_MEMORY
         phys_addr = phys_addr | (virt_addr & 3);
         if(mem_read_directly(cpu, phys_addr, value, size) == 0){
@@ -472,6 +476,7 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 
 	}
 skip_read:
+	//printf("read:pc=0x%x, virt_addr=0x%x, addr=0x%x, data=0x%x\n\n", core->Reg[15], virt_addr,  phys_addr | (virt_addr & 3), value);
 	/* ldrex or ldrexb */
 	uint32 instr;
 	if(!((core->Cpsr & (1 << THUMB_BIT)) | core->TFlag)){
@@ -493,6 +498,7 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	fault_t fault = NO_FAULT;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	//fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 0);
+#if 0
 	fault = check_address_validity(core, virt_addr, &phys_addr, 0);
 //	if (phys_addr >= 0x71200000 && phys_addr <= 0x71200003) {
 #if 0
@@ -506,8 +512,10 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 		printf("mmu write fault %d\n", fault);
 		exit(-1);
 	}
+#endif
+	phys_addr = virt_addr;
 	#if MMU_DEBUG
-	printf("bus write at %x\n", phys_addr);
+	printf("bus write at %x pc=0x%x\n", phys_addr, core->Reg[15]);
 	#endif
 #if 0
 	if (phys_addr == 0x50c27fe4 && cpu->icounter > 248306791) {
@@ -577,6 +585,7 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	#endif
 	}
 #endif
+	//printf("pc=0x%x, addr=0x%x, data=0x%x\n", core->Reg[15],  phys_addr | (virt_addr & 3), value);
 #ifdef FAST_MEMORY
         phys_addr = phys_addr | (virt_addr & 3);
         if(mem_write_directly(cpu, phys_addr, value, size) == 0){

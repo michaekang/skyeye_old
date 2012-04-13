@@ -124,6 +124,22 @@ struct instruction_set_encoding_item {
 
 typedef struct instruction_set_encoding_item ISEITEM;
 
+#define RECORD_WB(value, flag) {cpu->dyncom_engine->wb_value = value;cpu->dyncom_engine->wb_flag = flag;}
+#define INIT_WB(wb_value, wb_flag) RECORD_WB(wb_value, wb_flag)
+
+#define EXECUTE_WB(base_reg)		{if(cpu->dyncom_engine->wb_flag) \
+                                               LET(base_reg, cpu->dyncom_engine->wb_value);}
+inline int get_reg_count(uint32_t instr){
+	int i =  BITS(0,15);
+	int count = 0;
+	while(i){
+		if(i & 1)
+			count ++;
+		i = i >> 1;
+	}
+	return count;
+}
+
 enum ARMVER {
 	INVALID = 0,
         ARMALL,

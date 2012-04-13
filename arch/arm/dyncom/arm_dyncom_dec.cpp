@@ -108,35 +108,51 @@ using namespace llvm;
 /* store a word to memory */
 void StoreWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
 	if(RD == 15)
-		arch_write_memory(cpu, bb, addr, STORE_CHECK_RD_PC, 32);
+		arch_write_memory(cpu, bb, phys_addr, STORE_CHECK_RD_PC, 32);
 	else
-		arch_write_memory(cpu, bb, addr, R(RD), 32);
+		arch_write_memory(cpu, bb, phys_addr, R(RD), 32);
 }
 
 /* store a half word to memory */
 void StoreHWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	arch_write_memory(cpu, bb, addr, R(RD), 16);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	arch_write_memory(cpu, bb, phys_addr, R(RD), 16);
 }
 
 /* store a byte word to memory */
 void StoreByte(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	arch_write_memory(cpu, bb, addr, R(RD), 8);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	arch_write_memory(cpu, bb, phys_addr, R(RD), 8);
 }
 
 /* store a double word to memory */
 void StoreDWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	arch_write_memory(cpu, bb, addr, R(RD), 32);
-	arch_write_memory(cpu, bb, ADD(addr,CONST(4)), R(RD + 1),32);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	arch_write_memory(cpu, bb, phys_addr, R(RD), 32);
+
+	phys_addr = get_phys_addr(cpu, bb, ADD(addr, CONST(4)), 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	arch_write_memory(cpu, bb, phys_addr, R(RD + 1),32);
 }
 
 /* load a word from memory */
 void LoadWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	Value *ret = arch_read_memory(cpu, bb, addr, 0, 32);
+	//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(23));
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
+	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(24));
 	if(RD == 15){
 		STORE(TRUNC1(AND(ret, CONST(1))), ptr_T);
 		LET(RD,AND(ret, CONST(0xFFFFFFFE)));
@@ -154,37 +170,49 @@ void LoadWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 /* load a half word from memory */
 void LoadHWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	Value *ret = arch_read_memory(cpu, bb, addr, 0, 16);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 16);
 	LET(RD,ret);
 }
 
 /* load a signed half word from memory */
 void LoadSHWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	Value *ret = arch_read_memory(cpu, bb, addr, 1, 16);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	Value *ret = arch_read_memory(cpu, bb, phys_addr, 1, 16);
 	LET(RD,ret);
 }
 
 /* load a byte from memory */
 void LoadByte(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	Value *ret = arch_read_memory(cpu, bb, addr, 0, 8);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 8);
 	LET(RD,ret);
 }
 
 /* load a signed byte from memory */
 void LoadSByte(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	Value *ret = arch_read_memory(cpu, bb, addr, 1, 8);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	Value *ret = arch_read_memory(cpu, bb, phys_addr, 1, 8);
 	LET(RD,ret);
 }
 
 /* load a double word from memory */
 void LoadDWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
-	Value *ret = arch_read_memory(cpu, bb, addr, 0, 32);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 	LET(RD,ret);
-	ret = arch_read_memory(cpu, bb, ADD(addr,CONST(4)), 0, 32);
+	phys_addr = get_phys_addr(cpu, bb, ADD(addr, CONST(4)), 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 	LET(RD+1,ret);
 }
 
@@ -273,23 +301,50 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 	int i;
 	Value *ret;
 	Value *Addr = addr;
+	Value* phys_addr;
+	Value* phys_addr1;
+	Value* phys_addr2;
+	int count = get_reg_count(instr);
+	assert(count > 0);	
+	count -= 1;
+
+	Value* start_phys_page = get_phys_addr(cpu, bb, addr, 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	start_phys_page = AND(start_phys_page, CONST(0xFFFFF000));
+	/* possible maximum address for memory access */
+	Value* end_phys_page = get_phys_addr(cpu, bb, ADD(addr, CONST(count * 4)), 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	end_phys_page = AND(end_phys_page, CONST(0xFFFFF000));
+
+	Value* start_virt_page = AND(addr, CONST(0xFFFFF000));
 	if (BITS(25, 27) == 4 && BIT(22) && BIT(20) && !BIT(15)) {
 		/* LDM (2) user */
 		for (i = 0; i < 13; i++) {
 			if(BIT(i)){
-				ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+				ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 				//LOG("In %s, i=0x%x\n", __FUNCTION__, i);
 				LET(i, ret);
 				Addr = ADD(Addr, CONST(4));
 			}
 		}
 		if (BIT(13)) {
-			ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+
+			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 			LET(R13_USR, ret);
 			Addr = ADD(Addr, CONST(4));
 		}
 		if (BIT(14)) {
-			ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+
+			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 			LET(R14_USR, ret);
 			Addr = ADD(Addr, CONST(4));
 		}
@@ -297,7 +352,10 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 	}
 	for( i = 0; i < 16; i ++ ){
 		if(BIT(i)){
-			ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 			//LOG("In %s, i=0x%x\n", __FUNCTION__, i);
 			if(i == R15){
 				STORE(TRUNC1(AND(ret, CONST(1))), ptr_T);
@@ -318,43 +376,85 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 {
 	int i;
 	Value *Addr = addr;
+	Value* phys_addr;
+	Value* phys_addr1;
+	Value* phys_addr2;
+
+	int count = get_reg_count(instr);
+	assert(count > 0);
+	count -= 1;
+	
+	//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(50));
+	Value* start_phys_page = get_phys_addr(cpu, bb, addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	start_phys_page = AND(start_phys_page, CONST(0xFFFFF000));
+	//arch_arm_debug_print(cpu, bb, ZEXT64(start_phys_page), R(15), CONST(50));
+	/* possible maximum address for memory access */
+	Value* end_phys_page = get_phys_addr(cpu, bb, ADD(addr, CONST(count * 4)), 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	end_phys_page = AND(end_phys_page, CONST(0xFFFFF000));
+
+	arch_arm_debug_print(cpu, bb, ZEXT64(end_phys_page), R(15), CONST(50));
+	Value* start_virt_page = AND(addr, CONST(0xFFFFF000));
 	/* Check if base register is in register list */
 	if (BITS(25, 27) == 4 && BITS(20, 22) == 4) {
 		for (i = 0; i < 13; i++) {
 			if(BIT(i)){
-				arch_write_memory(cpu, bb, Addr, R(i), 32);
+				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+				arch_write_memory(cpu, bb, phys_addr, R(i), 32);
 				Addr = ADD(Addr, CONST(4));
 			}
 		}
 		if (BIT(13)) {
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 			if(RN == 13)
-				arch_write_memory(cpu, bb, Addr, Rn, 32);
+				arch_write_memory(cpu, bb, phys_addr, Rn, 32);
 			else
-				arch_write_memory(cpu, bb, Addr, R(R13_USR), 32);
+				arch_write_memory(cpu, bb, phys_addr, R(R13_USR), 32);
+			
 			Addr = ADD(Addr, CONST(4));
 		}
 		if (BIT(14)) {
-			arch_write_memory(cpu, bb, Addr, R(R14_USR), 32);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			arch_write_memory(cpu, bb, phys_addr, R(R14_USR), 32);
 			Addr = ADD(Addr, CONST(4));
 		}
 		if(BIT(15)){
-			arch_write_memory(cpu, bb, Addr, STOREM_CHECK_PC, 32);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			arch_write_memory(cpu, bb, phys_addr, STOREM_CHECK_PC, 32);
 		}
 		return;
 	}
 	for( i = 0; i < 15; i ++ ){
 		if(BIT(i)){
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+
 			if(i == RN)
-				arch_write_memory(cpu, bb, Addr, Rn, 32);
+				arch_write_memory(cpu, bb, phys_addr, Rn, 32);
 			else
-				arch_write_memory(cpu, bb, Addr, R(i), 32);
+				arch_write_memory(cpu, bb, phys_addr, R(i), 32);
+			
 			Addr = ADD(Addr, CONST(4));
 		}
 	}
 
 	/* check pc reg*/
 	if(BIT(i)){
-		arch_write_memory(cpu, bb, Addr, STOREM_CHECK_PC, 32);
+		phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+		phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+		phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+
+		arch_write_memory(cpu, bb, phys_addr, STOREM_CHECK_PC, 32);
 	}
 }
 
@@ -479,8 +579,9 @@ Value *WOrUBGetAddrScaledRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 Value *WOrUBGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = WOrUBGetAddrImmOffset(cpu, instr, bb);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN, Addr);
+	//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN, Addr);
+	RECORD_WB(Addr, 1);
 	return Addr;
 }
 
@@ -488,8 +589,10 @@ Value *WOrUBGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *WOrUBGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = WOrUBGetAddrRegOffset(cpu, instr, bb);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN, Addr);
+	//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN, Addr);
+	RECORD_WB(Addr, 1);
+	
 	return Addr;
 }
 
@@ -497,8 +600,9 @@ Value *WOrUBGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *WOrUBGetAddrScaledRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 {
 	Value *Addr = WOrUBGetAddrScaledRegOffset(cpu, instr, bb);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN, Addr);
+	//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN, Addr);
+	RECORD_WB(Addr, 1);
 	return Addr;
 }
 
@@ -506,8 +610,9 @@ Value *WOrUBGetAddrScaledRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int r
 Value *WOrUBGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 {
 	Value *Addr = R(RN);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN,WOrUBGetAddrImmOffset(cpu, instr, bb));
+	//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN,WOrUBGetAddrImmOffset(cpu, instr, bb));
+	RECORD_WB(WOrUBGetAddrImmOffset(cpu, instr, bb), 1);
 	return Addr;
 }
 
@@ -515,8 +620,9 @@ Value *WOrUBGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 Value *WOrUBGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = R(RN);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN,WOrUBGetAddrRegOffset(cpu, instr, bb));
+	//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN,WOrUBGetAddrRegOffset(cpu, instr, bb));
+	RECORD_WB(WOrUBGetAddrRegOffset(cpu, instr, bb), 1);
 	return Addr;
 }
 
@@ -524,8 +630,9 @@ Value *WOrUBGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *WOrUBGetAddrScaledRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = R(RN);
-	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN,WOrUBGetAddrScaledRegOffset(cpu, instr, bb));
+	//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN,WOrUBGetAddrScaledRegOffset(cpu, instr, bb));
+	RECORD_WB(WOrUBGetAddrScaledRegOffset(cpu, instr, bb), 1);
 	return Addr;
 }
 
@@ -536,7 +643,7 @@ Value *WOrUBGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 		if(!BIT(21)){
 		/* ImmOff */
 			Value* Addr= WOrUBGetAddrImmOffset(cpu, instr, bb);
-			bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+			//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 			return Addr;
 		}else{
 		/* ImmPre */
@@ -560,12 +667,12 @@ Value *WOrUBGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 		/* Reg off */
 			if(!BITS(4,11)){
 				Value* Addr = WOrUBGetAddrRegOffset(cpu, instr, bb);
-				bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+				//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 				return Addr;
 			}else{
 			/* scaled reg */
 				Value* Addr = WOrUBGetAddrScaledRegOffset(cpu, instr, bb);
-				bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+				//bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 				return Addr;
 			}
 		} else {
@@ -589,7 +696,7 @@ Value *WOrUBGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 		}
 	} else if (BITS(24, 27) == 0x5 && BIT(21) == 0) {
 		Value* Addr = WOrUBGetAddrImmOffset(cpu, instr, bb);
-		arch_check_mm(cpu, bb, Addr, read, 4, cpu->dyncom_engine->bb_trap);
+		//arch_check_mm(cpu, bb, Addr, read, 4, cpu->dyncom_engine->bb_trap);
 		return Addr;
 	}
 	printf(" Error in WOrUB Get Reg Addr inst is %x\n", instr);
@@ -639,11 +746,13 @@ Value *MisGetAddrRegOffset(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 Value *MisGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = MisGetAddrImmOffset(cpu, instr, bb);
-	if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
-		bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
-	else
-		bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN, Addr);
+	
+	//if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+	//	bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+	//else
+	//	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN, Addr);
+	RECORD_WB(Addr, 1);
 
 	return Addr;
 }
@@ -652,12 +761,12 @@ Value *MisGetAddrImmPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *MisGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = MisGetAddrRegOffset(cpu, instr, bb);
-	if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
-		bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
-	else
-		bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN, Addr);
-
+	//if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+	//	bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+	//else
+	//	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN, Addr);
+	RECORD_WB(Addr, 1);
 	return Addr;
 }
 
@@ -665,12 +774,12 @@ Value *MisGetAddrRegPre(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *MisGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = CHECK_READ_REG15_WA(RN);
-	if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
-		bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
-	else
-		bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN, MisGetAddrImmOffset(cpu, instr, bb));
-
+	//if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+	//	bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+	//else
+	//	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN, MisGetAddrImmOffset(cpu, instr, bb));
+	RECORD_WB(MisGetAddrImmOffset(cpu, instr, bb), 1);
 	return Addr;
 }
 
@@ -678,12 +787,12 @@ Value *MisGetAddrImmPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 Value *MisGetAddrRegPost(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 {
 	Value *Addr = CHECK_READ_REG15_WA(RN);
-	if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
-		bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
-	else
-		bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
-	LET(RN, MisGetAddrRegOffset(cpu, instr, bb));
-
+	//if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+	//	bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+	//else
+	//	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+	//LET(RN, MisGetAddrRegOffset(cpu, instr, bb));
+	RECORD_WB(MisGetAddrRegOffset(cpu, instr, bb), 1);
 	return Addr;
 }
 
@@ -699,10 +808,10 @@ Value *MisGetAddrImm(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 		if(BITS(21,22) == 0x2){
 		/* Imm Offset */
 			Value* Addr = MisGetAddrImmOffset(cpu, instr, bb);
-			if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
-				bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
-			else
-				bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+			//if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+			//	bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+			//else
+			//	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 			return Addr;
 		}else if(BITS(21,22) == 0x3){
 		/* Imm pre */
@@ -726,10 +835,10 @@ Value *MisGetAddrReg(cpu_t *cpu, uint32_t instr, BasicBlock *bb,int read)
 		/* Reg offset */
 			Value* Addr = MisGetAddrRegOffset(cpu, instr, bb);
 			/* ldrd and strd */
-			if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
-				bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
-			else
-				bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
+			//if((BIT(20) == 0 && (BITS(4, 7) == 0xF)) || (BIT(20) == 0 && (BITS(4, 7) == 0xd)))
+			//	bb = arch_check_mm(cpu, bb, Addr, 8, read, cpu->dyncom_engine->bb_trap);
+			//else
+			//	bb = arch_check_mm(cpu, bb, Addr, 4, read, cpu->dyncom_engine->bb_trap);
 			return Addr;
 		}else if(BITS(21,22) == 0x1){
 		/* Reg pre */
@@ -767,10 +876,11 @@ Value *LSMGetAddrIA(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 
 	Addr = CHECK_READ_REG15_WA(RN);
 
-	bb = arch_check_mm(cpu, bb, Addr, count * 4 , read, cpu->dyncom_engine->bb_trap);
-	if(LSWBIT)
-		LET(RN, ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
-
+	//bb = arch_check_mm(cpu, bb, Addr, count * 4 , read, cpu->dyncom_engine->bb_trap);
+	if(LSWBIT){
+		//LET(RN, ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
+		RECORD_WB(ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)), 1);
+	}
 	return  Addr;
 }
 
@@ -787,9 +897,11 @@ Value *LSMGetAddrIB(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 	}
 	assert(count != 0);
 	Addr = ADD(CHECK_READ_REG15_WA(RN), CONST(4));
-	bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
-	if(LSWBIT)
-		LET(RN, ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
+	//bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
+	if(LSWBIT){
+		//LET(RN, ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
+		RECORD_WB(ADD(CHECK_READ_REG15_WA(RN), CONST(count * 4)), 1);
+	}
 
 	return  Addr;
 }
@@ -807,10 +919,11 @@ Value *LSMGetAddrDA(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 	}
 
 	Addr = ADD(SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)), CONST(4));
-	bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
-	if(LSWBIT)
-		LET(RN, SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
-
+	//bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
+	if(LSWBIT){
+		//LET(RN, SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
+		RECORD_WB(SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)), 1);
+	}
 	return  Addr;
 }
 
@@ -827,10 +940,11 @@ Value *LSMGetAddrDB(cpu_t *cpu, uint32_t instr, BasicBlock *bb, int read)
 	}
 
 	Addr = SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4));
-	bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
-	if(LSWBIT)
-		LET(RN, SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
-
+	//bb = arch_check_mm(cpu, bb, Addr, count * 4, read, cpu->dyncom_engine->bb_trap);
+	if(LSWBIT){
+		//LET(RN, SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)));
+		RECORD_WB(SUB(CHECK_READ_REG15_WA(RN), CONST(count * 4)), 1);
+	}
 	return  Addr;
 }
 

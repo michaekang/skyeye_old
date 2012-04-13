@@ -39,6 +39,7 @@ int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type)
 	tlb_item *tlb_entry = (tlb_item *)&tlb_cache[access_type][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE];
 	if (va == tlb_entry->va) {
 		pa = tlb_entry->pa;
+		//printf("get pa 0x%x for va 0x%x in %s\n", va, pa, __FUNCTION__);
 		return 0;
 	} else {
 		return -1;
