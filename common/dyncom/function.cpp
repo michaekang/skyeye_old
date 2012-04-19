@@ -21,6 +21,8 @@
 #include "dyncom/frontend.h" // XXX for arch_flags_encode() / arch_flags_decode()
 #include "dyncom/defines.h"
 
+#include "function.h"
+
 //////////////////////////////////////////////////////////////////////
 // function
 //////////////////////////////////////////////////////////////////////
@@ -121,7 +123,7 @@ emit_decode_reg_helper(cpu_t *cpu, uint32_t count, uint32_t width,
 	uint32_t offset, Value *rf, Value **in_ptr_r, Value **ptr_r,
 	char const *rcname, BasicBlock *bb)
 {
-#ifdef OPT_LOCAL_REGISTERS
+#if OPT_LOCAL_REGISTERS
 	// decode struct reg and copy the registers into local variables
 	for (uint32_t i = 0; i < count; i++) {
 		char reg_name[16];
@@ -193,7 +195,7 @@ static void
 emit_decode_fp_reg_helper(cpu_t *cpu, uint32_t count, uint32_t width,
 	Value **in_ptr_r, Value **ptr_r, BasicBlock *bb)
 {
-#ifdef OPT_LOCAL_REGISTERS
+#if OPT_LOCAL_REGISTERS_FP
 	// decode struct reg and copy the registers into local variables
 	for (uint32_t i = 0; i < count; i++) {
 		char reg_name[16];
@@ -286,7 +288,8 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 		// declare flags
 		cpu_flags_layout_t const *flags_layout = cpu->info.flags_layout;
 		for (size_t i = 0; i < cpu->info.flags_count; i++) {
-			#if OPT_LOCAL_REGISTERS
+			//#if OPT_LOCAL_REGISTERS
+			#if 0
 			Value *f = new AllocaInst(getIntegerType(1), flags_layout[i].name,
 					bb);
 			#else
@@ -331,7 +334,7 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 		cpu->f.emit_decode_reg(cpu, bb);
 }
 
-static void
+void
 spill_reg_state_helper(uint32_t count, Value **in_ptr_r, Value **ptr_r,
 	BasicBlock *bb)
 {
@@ -359,7 +362,7 @@ static void
 spill_fp_reg_state_helper(cpu_t *cpu, uint32_t count, uint32_t width,
 	Value **in_ptr_r, Value **ptr_r, BasicBlock *bb)
 {
-#if OPT_LOCAL_REGISTERS
+#if OPT_LOCAL_REGISTERS_FP
 	for (uint32_t i = 0; i < count; i++) {
 		if ((width == 80 && (cpu->dyncom_engine->flags & CPU_FLAG_FP80) == 0) ||
 			(width == 128 && (cpu->dyncom_engine->flags & CPU_FLAG_FP128) == 0)) {

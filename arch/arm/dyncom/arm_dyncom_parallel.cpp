@@ -341,7 +341,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		{
 			core->phys_pc = core->Reg[15];
 			if(handle_fp_insn(core) == 0){
-		#ifdef OPT_LOCAL_REGISTERS
+		#if OPT_LOCAL_REGISTERS
 			uint32_t instr;
 			bus_read(32, core->Reg[15], &instr);
 			ARMul_OSHandleSWI(core, BITS(0,19));

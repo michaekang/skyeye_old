@@ -43,7 +43,7 @@
 #if USER_MODE_OPT
 #define LIMIT_TAGGING_DFS 2
 #else
-#define LIMIT_TAGGING_DFS 1
+#define LIMIT_TAGGING_DFS 2
 #endif
 /* FAST_MEMORY is only used in user mode simulation */
 //#if USER_MODE_OPT

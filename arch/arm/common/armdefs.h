@@ -235,6 +235,8 @@ struct ARMul_State
 	ARMword Reg_firq[7];  /* R8---R14 FIRQ */
 	ARMword Spsr[7];	/* the exception psr's */
 	ARMword Mode;		/* the current mode */
+	ARMword exclusive_tag;
+	ARMword exclusive_state;
 	ARMword CP15[VFP_BASE - CP15_BASE];
 	ARMword VFP[3]; /* FPSID, FPSCR, and FPEXC */
 	/* VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).

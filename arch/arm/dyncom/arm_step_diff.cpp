@@ -44,8 +44,8 @@ int diff_single_step(cpu_t *cpu){
 	int i;
 
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	//core->debug_icounter = 10000000;
-	core->debug_icounter = 310008252;
+	core->debug_icounter = 0;
+	//core->debug_icounter = 310008252;
 	if(core->icounter % 10000000 == 0)
 		printf("ICOUNTER=%lld\n", core->icounter);
 	#if 0
@@ -85,7 +85,10 @@ int diff_single_step(cpu_t *cpu){
 		//}
 	}
 	#endif
-	core->last_pc = core->Reg[15];
+	if(core->last_pc == core->Reg[15])
+                return 0;
+        core->last_pc = core->Reg[15];
+
 	if(core->Reg[15] == 0xa134 && core->Reg[14] == 0)
 		exit(-1);
 	if(core->icounter < core->debug_icounter)
@@ -219,7 +222,7 @@ int diff_single_step(cpu_t *cpu){
 		skyeye_printf_in_color(BLUE, "\norginal CPSR=0x%x, wrong value 0x%x\n", arm_run->get_regval_by_id(arm11_core_obj, CPSR_REG), core->Cpsr);
 		printf("#######################3\n");
 		printf("spsr_copy change from 0x%x to 0x%x at 0x%x\n", spsr_copy_1, spsr_copy_2, spsr_copy_pc);
-		exit(0);
+		//exit(0);
 	}
 #if 0
 	if(core->TFlag || state->TFlag){
@@ -229,7 +232,7 @@ int diff_single_step(cpu_t *cpu){
 	}
 #endif
 	if(core->Reg[15] == 0xffff0214 
-#if 1 /* android testcase */
+#if 0 /* android testcase */
 		|| core->Reg[15] == 0xffff020c /* irq */
 		|| core->Reg[15] == 0xffff0018 /* irq */
 		|| core->Reg[15] == 0xc002dba0 /* irq_svc */
@@ -248,6 +251,7 @@ int diff_single_step(cpu_t *cpu){
 		|| core->Reg[15] == 0xffff0310 /* irq */
 		|| core->Reg[15] == 0xffff0314 /* irq */
 		|| core->Reg[15] == 0xffff0318 /* irq */
+
 		|| core->Reg[15] == 0xffff0288 /* irq */
 		|| core->Reg[15] == 0xc002da80 /* irq */
 		|| core->Reg[15] == 0xc002db20 /* irq */
@@ -297,6 +301,7 @@ int diff_single_step(cpu_t *cpu){
 		|| core->Reg[15] == 0xc0039ae4 /* serial */
 		|| core->Reg[15] == 0xc0039ae8 /* serial */
 		|| core->Reg[15] == 0xc0039af8 /* serial */
+		|| core->Reg[15] == 0xffff0018 /* irq */
 #endif
 		)
 	goto SYNC;
@@ -411,10 +416,10 @@ int diff_single_step(cpu_t *cpu){
 
 	}
 	#endif
-	if((state->exclusive_access_state != core->exclusive_access_state) || (state->exclusive_tag_array[0] != core->exclusive_tag_array[0])){
-		skyeye_printf_in_color(RED, "ICOUNTER=%lld(0x%x), last_pc=0x%x, last_instr=0x%x, instr=0x%x, diff Fail, access_state[%d:0x%x], tag_array[0x%x:0x%x]\n",core->icounter, core->Reg[15], state->last_pc, state->last_instr, instr, state->exclusive_access_state, core->exclusive_access_state, state->exclusive_tag_array[0], core->exclusive_tag_array[0]);
-		state->exclusive_access_state = core->exclusive_access_state;
-		state->exclusive_tag_array[0] = core->exclusive_tag_array[0];
+	if((state->exclusive_access_state != core->exclusive_state) || (state->exclusive_tag_array[0] != core->exclusive_tag)){
+		skyeye_printf_in_color(RED, "ICOUNTER=%lld(0x%x), last_pc=0x%x, last_instr=0x%x, instr=0x%x, diff Fail, access_state[%d:0x%x], tag_array[0x%x:0x%x]\n",core->icounter, core->Reg[15], state->last_pc, state->last_instr, instr, state->exclusive_access_state, core->exclusive_state, state->exclusive_tag_array[0], core->exclusive_tag);
+		state->exclusive_access_state = core->exclusive_state;
+		state->exclusive_tag_array[0] = core->exclusive_tag;
 	}
 
 	/* Comparing the VFP register */

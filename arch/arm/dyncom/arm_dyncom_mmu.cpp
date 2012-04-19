@@ -455,15 +455,16 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 	}
 	#endif
 	phys_addr = virt_addr;
+	#if MMU_DEBUG
+	printf("bus read at %x, pc=0x%x\n", phys_addr, core->Reg[15]);
+	#endif
+
 #ifdef FAST_MEMORY
         phys_addr = phys_addr | (virt_addr & 3);
         if(mem_read_directly(cpu, phys_addr, value, size) == 0){
 		goto skip_read;
         }
 #endif
-	#if MMU_DEBUG
-	printf("bus read at %x\n", phys_addr);
-	#endif
 	if (size == 8) {
 		bus_read(8, phys_addr | (virt_addr & 3), &value);
 	} else if (size == 16) {
@@ -480,6 +481,7 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 skip_read:
 	//printf("read:pc=0x%x, virt_addr=0x%x, addr=0x%x, data=0x%x\n\n", core->Reg[15], virt_addr,  phys_addr | (virt_addr & 3), value);
 	/* ldrex or ldrexb */
+#if 0
 	uint32 instr;
 	if(!((core->Cpsr & (1 << THUMB_BIT)) | core->TFlag)){
 		bus_read(32, core->phys_pc, &instr);
@@ -490,7 +492,7 @@ skip_read:
 			core->exclusive_access_state = 1;
 		}
 	}
-
+#endif
 	return value;
 }
 #define LOG_IN_CLR	skyeye_printf_in_color
@@ -525,6 +527,7 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 		exit(-1);
 	}
 #endif
+#if 0
 	/* strex, strexb*/
 	uint32 instr;
 	if(!((core->Cpsr & (1 << THUMB_BIT)) || core->TFlag)){
@@ -545,6 +548,7 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 			}
 		}
 	}
+#endif
 #if DIFF_WRITE
 	if(core->icounter > core->debug_icounter){
 		/* out of the array */

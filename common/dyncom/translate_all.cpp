@@ -54,7 +54,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 	BasicBlock* bb_dispatch = BasicBlock::Create(_CTX(), "dispatch", cpu->dyncom_engine->cur_func, 0);
 	SwitchInst* sw;
 	if(is_user_mode(cpu)){
-		#ifdef OPT_LOCAL_REGISTERS
+		#if OPT_LOCAL_REGISTERS
 		Value *v_pc;
 		/* Now only for arm platform */
 		if(cpu->info.pc_index_in_gpr != -1)

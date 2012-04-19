@@ -956,7 +956,29 @@ int DYNCOM_TRANS(ldrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 //	Value *addr = GetAddr(cpu, instr, bb);
 	Value *addr = R(RN);
 	//bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
-	LoadStore(cpu,instr,bb,addr, Rn);
+	//LoadStore(cpu,instr,bb,addr, Rn);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
+	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
+
+	if(!is_user_mode(cpu))
+		bb = cpu->dyncom_engine->bb_load_store;
+	LET(EXCLUSIVE_TAG, phys_addr);
+	LET(EXCLUSIVE_STATE, CONST(1));
+	Value *val = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+
+        if(RD == 15){
+                STORE(TRUNC1(AND(val, CONST(1))), ptr_T);
+                LET(RD,AND(val, CONST(0xFFFFFFFE)));
+                /* SET_NEW_PAGE here */
+                if (!cpu->is_user_mode) {
+                        Value *new_page_effec = AND(R(15), CONST(0xfffff000));
+                        new StoreInst(new_page_effec, cpu->ptr_CURRENT_PAGE_EFFEC, bb);
+                };
+                LET(PHYS_PC, R(15));
+        }
+        else
+                LET(RD, val);
+
 	return No_exp;
 }
 int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -966,6 +988,28 @@ int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = R(RN);
 	//bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
 	LoadStore(cpu,instr,bb,addr, Rn);
+	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
+	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
+
+	if(!is_user_mode(cpu))
+		bb = cpu->dyncom_engine->bb_load_store;
+	LET(EXCLUSIVE_TAG, phys_addr);
+	LET(EXCLUSIVE_STATE, CONST(1));
+	Value *val = arch_read_memory(cpu, bb, phys_addr, 0, 8);
+
+        if(RD == 15){
+                STORE(TRUNC1(AND(val, CONST(1))), ptr_T);
+                LET(RD,AND(val, CONST(0xFFFFFFFE)));
+                /* SET_NEW_PAGE here */
+                if (!cpu->is_user_mode) {
+                        Value *new_page_effec = AND(R(15), CONST(0xfffff000));
+                        new StoreInst(new_page_effec, cpu->ptr_CURRENT_PAGE_EFFEC, bb);
+                };
+                LET(PHYS_PC, R(15));
+        }
+        else
+                LET(RD, val);
+
 	return No_exp;
 }
 int DYNCOM_TRANS(ldrh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1869,8 +1913,17 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = R(RN);
 	Value *val = R(RM);
 	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
+	//LET(RD, CONST(1));
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
 	bb = cpu->dyncom_engine->bb_load_store;
+
+	Value* cond = AND(ICMP_EQ(R(EXCLUSIVE_TAG), phys_addr), ICMP_EQ(R(EXCLUSIVE_STATE), CONST(1)));
+	LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
+	LET(EXCLUSIVE_STATE, SELECT(cond, CONST(0), R(EXCLUSIVE_STATE)));
+	LET(RD, SELECT(cond, CONST(0), CONST(1)));
+	Value* data = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	val = SELECT(cond, val, data);
+
 	arch_write_memory(cpu, bb, phys_addr, val, 32);
 	return 0;
 }
@@ -1883,6 +1936,14 @@ int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
 	bb = cpu->dyncom_engine->bb_load_store;
+
+	Value* cond = AND(ICMP_EQ(R(EXCLUSIVE_TAG), phys_addr), ICMP_EQ(R(EXCLUSIVE_STATE), CONST(1)));
+	LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
+	LET(EXCLUSIVE_STATE, SELECT(cond, CONST(0), R(EXCLUSIVE_STATE)));
+	LET(RD, SELECT(cond, CONST(0), CONST(1)));
+	Value* data = arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	val = SELECT(cond, val, data);
+
 	arch_write_memory(cpu, bb, phys_addr, val, 8);
 	return No_exp;
 }
@@ -1941,9 +2002,11 @@ int DYNCOM_TRANS(sub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 }
 int DYNCOM_TRANS(swi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
-#ifdef OPT_LOCAL_REGISTERS
+#if OPT_LOCAL_REGISTERS
 	/* Do nothing, we will finish syscall in trap */
 	//LOG("OPT_LOCAL_REGISTERS swi inst\n");
+	printf("In swi\n");
+	arch_syscall(cpu, bb, BITS(0,19));
 #else
 	arch_syscall(cpu, bb, BITS(0,19));
 #endif

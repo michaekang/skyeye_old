@@ -1170,7 +1170,7 @@ Value *operand(cpu_t *cpu,  uint32_t instr, BasicBlock *bb, Value *sco)
 			}
 			/* No changes in C flag else */
 		}
-		
+		//printf("instr=0x%x, immediate=0x%x\n", instr, immediate);	
 		return CONST(immediate);
 	} else if (BITS(4, 11) == 0x6 && BITS(25, 27) == 0) {
 		/*  Rotate right with extend  */

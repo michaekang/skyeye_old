@@ -23,6 +23,8 @@
 #include "dyncom/defines.h"
 #include "skyeye_exec_info.h"
 
+#include "function.h"
+
 //////////////////////////////////////////////////////////////////////
 // GENERIC: register access
 //////////////////////////////////////////////////////////////////////
@@ -669,6 +671,13 @@ void arch_inc_icounter(cpu_t *cpu, BasicBlock *bb)
 BasicBlock *
 arch_debug_me(cpu_t *cpu, BasicBlock *bb, BasicBlock *exit_bb)
 {
+#if OPT_LOCAL_REGISTERS
+        /* if OPT_LOCAL enabled, we need to write back the register value
+         * for debug purpose
+         */
+        spill_reg_state_helper(cpu->info.register_count[CPU_REG_GPR],
+                cpu->in_ptr_gpr, cpu->ptr_gpr, bb);
+#endif
 	if (cpu->dyncom_engine->ptr_arch_func[0] == NULL)
 		return bb;
 	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
