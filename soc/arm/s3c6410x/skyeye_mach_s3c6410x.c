@@ -451,9 +451,14 @@ s3c6410x_timer_read (u32 offset, u32 *data)
 	case TCNTO4:
 		*data = io.timer.tcnt[4];
 		break;
+	/* shenoubang 2012-4-19 */
+	case TINT_CSTAT:
+		*data = io.timer.tint_cstat;
+		break;
 	default:
 		break;
 	}
+	return;
 }
 
 static void
@@ -495,6 +500,22 @@ s3c6410x_timer_write (generic_arch_t *state, u32 offset, u32 data)
 			int n = (offset - 0x10) / 0xC;
 			io.timer.tcmpb[n] = data;
 		}
+		break;
+	/* shenoubang 2012-4-19 */
+	case TCNTO0:
+	case TCNTO1:
+	case TCNTO2:
+	case TCNTO3:
+		{
+			int n = (offset - 0x14) / 0xc;
+			io.timer.tcnto[n] = data;
+		}
+		break;
+	case TCNTO4:
+			io.timer.tcnto[4] = data;
+		break;
+	case TINT_CSTAT:
+		io.timer.tint_cstat = data;
 		break;
 	default:
 		break;

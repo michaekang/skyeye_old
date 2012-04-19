@@ -733,6 +733,8 @@ struct s3c6410x_timer_io{
 	int tcntb[S3C6410_TIMER_NUM];
 	u32 tcmpb[S3C6410_TIMER_NUM];
 	u32 tcnto[S3C6410_TIMER_NUM];
+	/* shenoubang 2012-4-19 */
+	u32 tint_cstat;
 };
 
 struct s3c6410x_uart_io{
