@@ -452,7 +452,7 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 		   we remove instr dependant tags. They will be set again anyway */
 		selective_clear_tag(cpu, pc, TAG_BRANCH | TAG_CONDITIONAL | TAG_RET | TAG_STOP | TAG_CONTINUE | TAG_TRAP | TAG_MEMORY | TAG_END_PAGE);
 		or_tag(cpu, pc, tag | TAG_CODE);
-#ifdef OPT_LOCAL_REGISTERS
+#if OPT_LOCAL_REGISTERS
 #if 0
 		if (is_inside_code_area(cpu, next_pc)){
 			tag_t tmp_tag;

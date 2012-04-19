@@ -139,7 +139,7 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 		BranchInst::Create(bb_next, cur_bb);
 	}
 
-#ifdef OPT_LOCAL_REGISTERS
+#if OPT_LOCAL_REGISTERS
 	if (tag & TAG_BEFORE_SYSCALL) {//bb_instr needs a terminator inst.
 		/* the branch instruction before syscall */
 		if((tag & TAG_BRANCH)){ 

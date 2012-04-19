@@ -46,9 +46,9 @@
 #define LIMIT_TAGGING_DFS 1
 #endif
 /* FAST_MEMORY is only used in user mode simulation */
-#if USER_MODE_OPT
-#define OPT_LOCAL_REGISTERS
-#endif
+//#if USER_MODE_OPT
+#define OPT_LOCAL_REGISTERS 1
+//#endif
 
 #define FAST_MEMORY 1
 

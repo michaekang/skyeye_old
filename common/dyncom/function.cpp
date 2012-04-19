@@ -284,7 +284,7 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 		// declare flags
 		cpu_flags_layout_t const *flags_layout = cpu->info.flags_layout;
 		for (size_t i = 0; i < cpu->info.flags_count; i++) {
-			#ifdef OPT_LOCAL_REGISTERS
+			#if OPT_LOCAL_REGISTERS
 			Value *f = new AllocaInst(getIntegerType(1), flags_layout[i].name,
 					bb);
 			#else
@@ -333,7 +333,7 @@ static void
 spill_reg_state_helper(uint32_t count, Value **in_ptr_r, Value **ptr_r,
 	BasicBlock *bb)
 {
-#ifdef OPT_LOCAL_REGISTERS
+#if OPT_LOCAL_REGISTERS
 	for (uint32_t i = 0; i < count; i++) {
 		LoadInst* v = new LoadInst(ptr_r[i], "", false, bb);
 		new StoreInst(v, in_ptr_r[i], false, bb);
@@ -357,7 +357,7 @@ static void
 spill_fp_reg_state_helper(cpu_t *cpu, uint32_t count, uint32_t width,
 	Value **in_ptr_r, Value **ptr_r, BasicBlock *bb)
 {
-#ifdef OPT_LOCAL_REGISTERS
+#if OPT_LOCAL_REGISTERS
 	for (uint32_t i = 0; i < count; i++) {
 		if ((width == 80 && (cpu->dyncom_engine->flags & CPU_FLAG_FP80) == 0) ||
 			(width == 128 && (cpu->dyncom_engine->flags & CPU_FLAG_FP128) == 0)) {
