@@ -426,13 +426,17 @@ static int opc_bcx_translate(cpu_t* cpu, uint32_t instr, BasicBlock* bb)
 			LETS(LR_REGNUM, ADD(RSPR(PC_REGNUM), CONST(4)));
 	}
 	if (!(instr & PPC_OPC_AA)) {
-		arch_store(ADD(CONST(BD), RSPR(PHYS_PC_REGNUM)), cpu->ptr_PHYS_PC, bb);
+		//arch_store(ADD(CONST(BD), RSPR(PHYS_PC_REGNUM)), cpu->ptr_PHYS_PC, bb);
+		LETS(PHYS_PC_REGNUM, ADD(CONST(BD), RSPR(PHYS_PC_REGNUM)));
 		if(!is_user_mode(cpu))
-			arch_store(ADD(CONST(BD), RSPR(PC_REGNUM)), cpu->ptr_PC, bb);
+			//arch_store(ADD(CONST(BD), RSPR(PC_REGNUM)), cpu->ptr_PC, bb);
+			LETS(PC_REGNUM, ADD(CONST(BD), RSPR(PC_REGNUM)));
 	}else{
-		arch_store(CONST(BD), cpu->ptr_PHYS_PC, bb);
+		//arch_store(CONST(BD), cpu->ptr_PHYS_PC, bb);
+		LETS(PHYS_PC_REGNUM, CONST(BD));
 		if(!is_user_mode(cpu))
-			arch_store(CONST(BD), cpu->ptr_PC, bb);
+			//arch_store(CONST(BD), cpu->ptr_PC, bb);
+			LETS(PC_REGNUM, CONST(BD));
 	}
 	return 0;
 }

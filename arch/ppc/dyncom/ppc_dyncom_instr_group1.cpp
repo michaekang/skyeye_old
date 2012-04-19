@@ -77,9 +77,11 @@ static int opc_bcctrx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 		else
 			LETS(LR_REGNUM, ADD(RSPR(PC_REGNUM), CONST(4)));
 	}
-	arch_store(AND(RSPR(CTR_REGNUM), CONST(0xfffffffc)), cpu->ptr_PHYS_PC, bb);
+	//arch_store(AND(RSPR(CTR_REGNUM), CONST(0xfffffffc)), cpu->ptr_PHYS_PC, bb);
+	LETS(PHYS_PC_REGNUM, AND(RSPR(CTR_REGNUM), CONST(0xfffffffc)));
 	if(!is_user_mode(cpu))
-		arch_store(AND(RSPR(CTR_REGNUM), CONST(0xfffffffc)), cpu->ptr_PC, bb);
+		//arch_store(AND(RSPR(CTR_REGNUM), CONST(0xfffffffc)), cpu->ptr_PC, bb);
+		LETS(PC_REGNUM, AND(RSPR(CTR_REGNUM), CONST(0xfffffffc)));
 
 	return No_exp;
 }
@@ -124,9 +126,11 @@ static int opc_bclrx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb){
 		else
 			LETS(LR_REGNUM, ADD(RSPR(PC_REGNUM), CONST(4)));
 	}
-	arch_store(tmp, cpu->ptr_PHYS_PC, bb);
+	//arch_store(tmp, cpu->ptr_PHYS_PC, bb);
+	LETS(PHYS_PC_REGNUM, tmp);
 	if(!is_user_mode(cpu))
-		arch_store(tmp, cpu->ptr_PC, bb);
+		//arch_store(tmp, cpu->ptr_PC, bb);
+		LETS(PC_REGNUM, tmp);
 
 	return No_exp;
 }
