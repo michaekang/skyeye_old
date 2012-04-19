@@ -478,8 +478,8 @@ typedef struct cpu {
 
 	bool redirection;
 
-	Value *ptr_PC;
-	Value *ptr_PHYS_PC; /* The physical pc */
+	//Value *ptr_PC;
+	//Value *ptr_PHYS_PC; /* The physical pc */
 	Value **ptr_gpr; // GPRs
 	Value **in_ptr_gpr;
 	Value **ptr_xr; // XRs

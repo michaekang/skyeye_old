@@ -253,6 +253,7 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 
 	// PC pointer.
 	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+#if 0
 	Constant *v_pc = ConstantInt::get(intptr_type, (uintptr_t)cpu->rf.pc);
 	cpu->ptr_PC = ConstantExpr::getIntToPtr(v_pc, PointerType::getUnqual(getIntegerType(cpu->info.address_size)));
 	cpu->ptr_PC->setName("pc");
@@ -261,6 +262,7 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 	Constant *v_phys_pc = ConstantInt::get(intptr_type, (uintptr_t)cpu->rf.phys_pc);
 	cpu->ptr_PHYS_PC = ConstantExpr::getIntToPtr(v_phys_pc, PointerType::getUnqual(getIntegerType(cpu->info.address_size)));
 	cpu->ptr_PHYS_PC->setName("phys_pc");
+#endif
 	/* Physical page base */
 	Constant *v_page_phys = ConstantInt::get(intptr_type, (uintptr_t)&cpu->current_page_phys);
 	cpu->ptr_CURRENT_PAGE_PHYS = ConstantExpr::getIntToPtr(v_page_phys, PointerType::getUnqual(getIntegerType(cpu->info.address_size)));

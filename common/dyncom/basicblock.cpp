@@ -48,20 +48,20 @@ arm_emit_store_pc(cpu_t *cpu, BasicBlock *bb_branch, addr_t new_pc)
 {
 	if(is_user_mode(cpu)){
 		Value *v_pc = ConstantInt::get(getIntegerType(cpu->info.address_size), new_pc);
-		new StoreInst(v_pc, cpu->ptr_PHYS_PC, bb_branch);
+		new StoreInst(v_pc, cpu->ptr_gpr[18], bb_branch);
 	}else{
 #if 0
 		Value *v_phys_pc = ConstantInt::get(getIntegerType(cpu->info.address_size), new_pc);
 		Value *v_offset = BinaryOperator::Create(Instruction::And, v_phys_pc, CONST(0xfff), "", bb_branch);
 		Value *v_page_effec = new LoadInst(cpu->ptr_CURRENT_PAGE_EFFEC, "", false, bb_branch);
 		Value *v_effec_pc = BinaryOperator::Create(Instruction::Or, v_offset, v_page_effec, "", bb_branch); 
-		new SoreInst(v_phys_pc, cpu->ptr_PHYS_PC, bb_branch);
+		new SoreInst(v_phys_pc, cpu->ptr_gpr[18], bb_branch);
 #endif
-		new StoreInst(CONST(new_pc), cpu->ptr_PC, bb_branch);
-		new StoreInst(CONST(new_pc), cpu->ptr_PHYS_PC, bb_branch);
+		new StoreInst(CONST(new_pc), cpu->ptr_gpr[15], bb_branch);
+		new StoreInst(CONST(new_pc), cpu->ptr_gpr[18], bb_branch);
 		//Value **regs = cpu->ptr_gpr;
 		//new StoreInst(CONST(new_pc), regs[15], bb_branch);
-		//new StoreInst(CONST(new_pc), cpu->ptr_PC, bb_branch);
+		//new StoreInst(CONST(new_pc), cpu->ptr_gpr[15], bb_branch);
 		//LET(15, CONST(new_pc));
 		//arch_put_reg(cpu, 15, CONST(new_pc), 0, false, bb_branch);
 	}
@@ -85,21 +85,21 @@ emit_store_pc(cpu_t *cpu, BasicBlock *bb_branch, addr_t new_pc)
 		if(cpu->info.pc_index_in_gpr != -1)
 			arch_put_reg(cpu, cpu->info.pc_index_in_gpr, v_pc, 32, 0, bb_branch);
 		else
-			new StoreInst(v_pc, cpu->ptr_PHYS_PC, bb_branch);
+			new StoreInst(v_pc, cpu->ptr_gpr[18], bb_branch);
 		#else
-		new StoreInst(v_pc, cpu->ptr_PHYS_PC, bb_branch);
+		new StoreInst(v_pc, cpu->ptr_gpr[18], bb_branch);
 		#endif
-		//new StoreInst(v_pc, cpu->ptr_PC, bb_branch);
+		//new StoreInst(v_pc, cpu->ptr_gpr[15], bb_branch);
 	}else{
 		Value *v_phys_pc = ConstantInt::get(getIntegerType(cpu->info.address_size), new_pc);
 		Value *v_offset = BinaryOperator::Create(Instruction::And, v_phys_pc, CONST(0xfff), "", bb_branch);
 		Value *v_page_effec = new LoadInst(cpu->ptr_CURRENT_PAGE_EFFEC, "", false, bb_branch);
 		Value *v_effec_pc = BinaryOperator::Create(Instruction::Or, v_offset, v_page_effec, "", bb_branch); 
-		new StoreInst(v_phys_pc, cpu->ptr_PHYS_PC, bb_branch);
-		new StoreInst(v_effec_pc, cpu->ptr_PC, bb_branch);
+		new StoreInst(v_phys_pc, cpu->ptr_gpr[18], bb_branch);
+		new StoreInst(v_effec_pc, cpu->ptr_gpr[15], bb_branch);
 		//Value **regs = cpu->ptr_gpr;
 		//new StoreInst(CONST(new_pc), regs[15], bb_branch);
-		//new StoreInst(CONST(new_pc), cpu->ptr_PC, bb_branch);
+		//new StoreInst(CONST(new_pc), cpu->ptr_gpr[15], bb_branch);
 		//LET(15, CONST(new_pc));
 		//arch_put_reg(cpu, 15, CONST(new_pc), 0, false, bb_branch);
 	}
@@ -139,28 +139,28 @@ emit_store_pc_end_page(cpu_t *cpu, tag_t tag, BasicBlock *bb, addr_t new_pc)
 		Value *v_page_effec = new LoadInst(cpu->ptr_CURRENT_PAGE_EFFEC, "", false, bb);
 		Value *next_page_effec = BinaryOperator::Create(Instruction::Add, CONST(0x1000), v_page_effec, "", bb);
 		Value *v_effec_pc = BinaryOperator::Create(Instruction::Or, v_offset, next_page_effec, "", bb); 
-		new StoreInst(v_phys_pc, cpu->ptr_PHYS_PC, bb);
-		new StoreInst(v_effec_pc, cpu->ptr_PC, bb);
+		new StoreInst(v_phys_pc, cpu->ptr_gpr[18], bb);
+		new StoreInst(v_effec_pc, cpu->ptr_gpr[15], bb);
 #else
-		//new StoreInst(v_phys_pc, cpu->ptr_PHYS_PC, bb);
-		//new StoreInst(CONST(new_pc), cpu->ptr_PC, bb);
+		//new StoreInst(v_phys_pc, cpu->ptr_gpr[18], bb);
+		//new StoreInst(CONST(new_pc), cpu->ptr_gpr[15], bb);
 		if(save_pc_before_exec(cpu)){ /* for powerpc case */
 			Value *v_phys_pc = ConstantInt::get(getIntegerType(cpu->info.address_size), new_pc);
 			Value *v_offset = BinaryOperator::Create(Instruction::And, v_phys_pc, CONST(0xfff), "", bb);
 			Value *v_page_effec = new LoadInst(cpu->ptr_CURRENT_PAGE_EFFEC, "", false, bb);
 			Value *next_page_effec = BinaryOperator::Create(Instruction::Add, CONST(0x1000), v_page_effec, "", bb);
 			Value *v_effec_pc = BinaryOperator::Create(Instruction::Or, v_offset, next_page_effec, "", bb); 
-			new StoreInst(v_phys_pc, cpu->ptr_PHYS_PC, bb);
-			new StoreInst(v_effec_pc, cpu->ptr_PC, bb);
+			new StoreInst(v_phys_pc, cpu->ptr_gpr[18], bb);
+			new StoreInst(v_effec_pc, cpu->ptr_gpr[15], bb);
 		}
 		else{
-			Value *pc = new LoadInst(cpu->ptr_PC, "", false, bb);
+			Value *pc = new LoadInst(cpu->ptr_gpr[15], "", false, bb);
 			if (!(tag & TAG_NEED_PC)) {
-				new StoreInst(ADD(pc, CONST(instr_length)), cpu->ptr_PC, bb);
+				new StoreInst(ADD(pc, CONST(instr_length)), cpu->ptr_gpr[15], bb);
 			}
 			Value *new_page_effec = AND(ADD(pc, CONST(instr_length)), CONST(0xfffff000));
 			new StoreInst(new_page_effec, cpu->ptr_CURRENT_PAGE_EFFEC, bb);
-			//new StoreInst(CONST(new_pc), cpu->ptr_PHYS_PC, bb);
+			//new StoreInst(CONST(new_pc), cpu->ptr_gpr[18], bb);
 		}
 #endif
 	}
@@ -179,17 +179,17 @@ emit_store_pc_cond(cpu_t *cpu, tag_t tag, Value *cond, BasicBlock *bb, addr_t ne
 		next_page_effec = BinaryOperator::Create(Instruction::Add, CONST(0), v_page_effec, "", bb);
 	}
 	Value *v_effec_pc = BinaryOperator::Create(Instruction::Or, v_offset, next_page_effec, "", bb); 
-	Value *orig_phys_pc = new LoadInst(cpu->ptr_PHYS_PC, "", false, bb);
-	Value *orig_pc = new LoadInst(cpu->ptr_PC, "", false, bb);
-	new StoreInst(SELECT(cond, orig_phys_pc, v_phys_pc), cpu->ptr_PHYS_PC, bb);
-	new StoreInst(SELECT(cond, orig_pc, v_effec_pc), cpu->ptr_PC, bb);
+	Value *orig_phys_pc = new LoadInst(cpu->ptr_gpr[18], "", false, bb);
+	Value *orig_pc = new LoadInst(cpu->ptr_gpr[15], "", false, bb);
+	new StoreInst(SELECT(cond, orig_phys_pc, v_phys_pc), cpu->ptr_gpr[18], bb);
+	new StoreInst(SELECT(cond, orig_pc, v_effec_pc), cpu->ptr_gpr[15], bb);
 #if 0
 	Value *v_phys_pc = ConstantInt::get(getIntegerType(cpu->info.address_size), new_pc);
 	Value *v_offset = BinaryOperator::Create(Instruction::And, v_phys_pc, CONST(0xfff), "", bb_branch);
 	Value *v_page_effec = new LoadInst(cpu->ptr_CURRENT_PAGE_EFFEC, "", false, bb_branch);
 	Value *v_effec_pc = BinaryOperator::Create(Instruction::Or, v_offset, v_page_effec, "", bb_branch); 
-	new StoreInst(v_phys_pc, cpu->ptr_PHYS_PC, bb_branch);
-	new StoreInst(v_effec_pc, cpu->ptr_PC, bb_branch);
+	new StoreInst(v_phys_pc, cpu->ptr_gpr[18], bb_branch);
+	new StoreInst(v_effec_pc, cpu->ptr_gpr[15], bb_branch);
 #endif
 }
 /**

@@ -60,10 +60,10 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 		if(cpu->info.pc_index_in_gpr != -1)
 			v_pc = arch_get_reg(cpu, cpu->info.pc_index_in_gpr, 32, bb_dispatch);
 		else
-			v_pc = new LoadInst(cpu->ptr_PHYS_PC, "", false, bb_dispatch);
+			v_pc = new LoadInst(cpu->ptr_gpr[18], "", false, bb_dispatch);
 
 #else
-		Value *v_pc = new LoadInst(cpu->ptr_PHYS_PC, "", false, bb_dispatch);
+		Value *v_pc = new LoadInst(cpu->ptr_gpr[18], "", false, bb_dispatch);
 #endif
 		sw = SwitchInst::Create(v_pc, bb_ret, bbs, bb_dispatch);
 	} else {
@@ -74,7 +74,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 		Value *gout = new ICmpInst(*bb_dispatch, ICmpInst::ICMP_UGT, cycles, CONST(TIMEOUT_THRESHOLD), "");
 		BranchInst::Create(bb_timeout, bb_real_dispatch, gout, bb_dispatch);
 		// create dispatch basicblock
-		Value *v_pc = new LoadInst(cpu->ptr_PHYS_PC, "", false, bb_real_dispatch);
+		Value *v_pc = new LoadInst(cpu->ptr_gpr[18], "", false, bb_real_dispatch);
 		sw = SwitchInst::Create(v_pc, bb_ret, bbs, bb_real_dispatch);
 	}
 

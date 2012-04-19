@@ -122,8 +122,8 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 	}
 	if ((tag & TAG_NEED_PC) && !is_user_mode(cpu)) {
 		BasicBlock *bb = cur_bb;
-		Value *vpc = new LoadInst(cpu->ptr_PC, "", false, bb);
-		new StoreInst(ADD(vpc, CONST(instr_length)), cpu->ptr_PC, bb);
+		Value *vpc = new LoadInst(cpu->ptr_gpr[15], "", false, bb);
+		new StoreInst(ADD(vpc, CONST(instr_length)), cpu->ptr_gpr[15], bb);
 	}
 	if (tag & TAG_POSTCOND) {
 		Value *c = cpu->f.translate_cond(cpu, pc, cur_bb);
