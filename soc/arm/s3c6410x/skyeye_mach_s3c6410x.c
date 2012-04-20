@@ -36,6 +36,7 @@
 #include "skyeye_internal.h"
 #include <skyeye_interface.h>
 #include <skyeye_lcd_intf.h>
+#include <skyeye_keypad_intf.h>
 #include <skyeye_log.h>
 #include <skyeye_uart.h>
 #include <skyeye_mm.h>
@@ -1040,6 +1041,15 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	/* Register vic_signal for touchscreen */
 	SKY_register_interface(vic_signal, touchscreen->objname, GENERAL_SIGNAL_INTF_NAME);
 
+        conf_object_t* keypad = pre_conf_obj("s3c6410_keypad_0", "s3c6410_keypad");
+        memory_space_intf* keypad_io_memory = (memory_space_intf*)SKY_get_interface(keypad, MEMORY_SPACE_INTF_NAME);
+        lcd_keypad_t* lcd_keypad = (lcd_control_intf*)SKY_get_interface(keypad, LCD_KEYPAD_INTF_NAME);
+        DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, keypad_io_memory);
+        ret = add_map(phys_mem, 0x7E00A000, 0x1000, 0x0, keypad_io_memory, 1, 1);
+        if(ret != No_exp){
+                skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for keypad\n");
+        }
+
 	conf_object_t* spi = pre_conf_obj("s3c6410_spi_0", "s3c6410_spi");
 	memory_space_intf* spi_io_memory = (memory_space_intf*)SKY_get_interface(spi, MEMORY_SPACE_INTF_NAME);
 	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, spi_io_memory);
@@ -1095,9 +1105,13 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 #endif
 		/* set the lcd_ctrl_0 attribute for lcd */
 		conf_object_t* sdl_painter = pre_conf_obj("lcd_sdl_0", "lcd_sdl");
-		/* register touchscreen for lcd_gtk */
 
+		/* register touchscreen for lcd_gtk */
 		SKY_register_interface(lcd_ts, sdl_painter->objname, LCD_TS_INTF_NAME);
+
+		/* register keypad for lcd_gtk */
+		SKY_register_interface(lcd_keypad, sdl_painter->objname, LCD_KEYPAD_INTF_NAME);
+
 		lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(sdl_painter, LCD_CTRL_INTF_NAME);
 		attr_value_t* attr = make_new_attr(Val_ptr);
 		attr->u.ptr = lcd_ctrl;
@@ -1113,27 +1127,16 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		refresh_signal->trigger = slave_signal->trigger;
 		conf_object_t* android = pre_conf_obj("android_0", "android");
 
-#if 0
-		conf_object_t* goldfish_events = pre_conf_obj("goldfish_events_0", "goldfish_events");
-		memory_space_intf* goldfish_events_io_memory = (memory_space_intf*)SKY_get_interface(goldfish_events, MEMORY_SPACE_INTF_NAME);
-		DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, goldfish_events_io_memory);
-		ret = add_map(phys_mem, 0x7f00d000, 0x1000, 0x0, goldfish_events_io_memory, 1, 1);
-		if(ret != No_exp){
-			skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for ac97\n");
-		}
-#endif
-
 
 		general_signal_intf* lcd_intr_signal = (lcd_control_intf*)SKY_get_interface(lcd, GENERAL_SIGNAL_INTF_NAME);
 		lcd_intr_signal->conf_obj = vic_signal->conf_obj;
 		lcd_intr_signal->raise_signal = vic_signal->raise_signal;
 		lcd_intr_signal->lower_signal = vic_signal->lower_signal;
-#if 0
-		general_signal_intf* events_intr_signal = (lcd_control_intf*)SKY_get_interface(goldfish_events, GENERAL_SIGNAL_INTF_NAME);
-		events_intr_signal->conf_obj = vic_signal->conf_obj;
-		events_intr_signal->raise_signal = vic_signal->raise_signal;
-		events_intr_signal->lower_signal = vic_signal->lower_signal;
-#endif
+
+		general_signal_intf* keypad_intr_signal = (lcd_control_intf*)SKY_get_interface(keypad, GENERAL_SIGNAL_INTF_NAME);
+		keypad_intr_signal->conf_obj = vic_signal->conf_obj;
+		keypad_intr_signal->raise_signal = vic_signal->raise_signal;
+		keypad_intr_signal->lower_signal = vic_signal->lower_signal;
 
 	}
 	else{
