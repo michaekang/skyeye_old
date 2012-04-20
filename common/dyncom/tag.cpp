@@ -313,6 +313,35 @@ void clear_tag_table(cpu_t *cpu)
 						cpu->dyncom_engine->tag_table[i][j][k + TAG_LEVEL3_TABLE_SIZE] = 0;
 					}
 }
+
+
+/**
+* @brief Profiling function for BB
+*
+* @param cpu
+* @param a
+* @param inc the increasement for bb profiling counter
+*
+* @return 
+*/
+int
+get_bb_prof(cpu_t *cpu, addr_t a, int inc)
+{
+        int counter;
+        /* NEW_PC_NONE is not a real address. Some branch/call address could not be known at translate-time*/
+        if (a == NEW_PC_NONE) {
+                return TAG_UNKNOWN;
+        }
+        check_tag_memory_integrity(cpu, a);
+        uint32_t level1_offset = TAG_LEVEL1_OFFSET(a);
+        uint32_t level2_offset = TAG_LEVEL2_OFFSET(a);
+        uint32_t level3_offset = TAG_LEVEL3_OFFSET(a);
+        uint32_t tag = cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset];
+        counter = cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset + TAG_LEVEL3_TABLE_SIZE] + inc;
+        cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset + TAG_LEVEL3_TABLE_SIZE] = counter;
+        return counter;
+}
+
 /* access functions */
 /**
  * @brief Get the tag of an address 
