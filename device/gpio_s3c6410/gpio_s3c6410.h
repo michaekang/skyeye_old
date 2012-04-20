@@ -28,20 +28,41 @@
 
 typedef struct gpio_reg{
 	uint32_t gpbcon; // 0x7E00_B000
-	uint32 gpncon;
 	uint32 eint0mask;
 	uint32 eint0pend;
 	uint32 eint0con0;
 	uint32 gpfcon;
 	uint32 gpfdat;
 	uint32 gpfpud;
+
+	uint32 gphcon0;
+	uint32 gphcon1;
+	uint32 gphdat;
+
 	uint32 gpicon;
 	uint32 gpjcon;
+
+	uint32 gpkcon0;
+	uint32 gpkcon1;
+	uint32 gpkdat;
+	uint32 gpkpud;
+
+	uint32 gplcon0;
+	uint32 gplcon1;
+	uint32 gpldat;
+	uint32 gplpud;
+
+	uint32 gpncon;
+	uint32 gpndat;
+
 }gpio_reg_t; 
 
 typedef struct s3c6410_gpio_device{
 	conf_object_t* obj;
 	gpio_reg_t* regs;
+	int line_no;
+	conf_object_t* signal_target;
+	general_signal_intf* master;
 }s3c6410_gpio_device;
 
 #endif

@@ -54,15 +54,53 @@ static exception_t s3c6410_gpio_read(conf_object_t *opaque, generic_address_t of
 		case 0xa8:
 			*(uint32_t*)buf = regs->gpfpud;
 			break;
+
+		case 0xe0:
+			*(uint32_t*)buf = regs->gphcon0;
+			break;
+
+		case 0xe4:
+			*(uint32_t*)buf = regs->gphcon1;
+			break;
+
+		case 0xe8:
+			*(uint32_t*)buf = regs->gphdat;
+			break;
 		case 0x100:
 			*(uint32_t*)buf = regs->gpicon;
 			break;
 		case 0x120:
 			*(uint32_t*)buf = regs->gpjcon;
 			break;
-
+		case 0x800:
+			*(uint32_t*)buf = regs->gpkcon0;
+			break;
+		case 0x804:
+			*(uint32_t*)buf = regs->gpkcon1;
+			break;
+		case 0x808:
+			*(uint32_t*)buf = regs->gpkdat;
+			break;
+		case 0x80c:
+			*(uint32_t*)buf = regs->gpkpud;
+			break;
+		case 0x810:
+			*(uint32_t*)buf = regs->gplcon1;
+			break;
+		case 0x814:
+			*(uint32_t*)buf = regs->gplcon1;
+			break;
+		case 0x818:
+			*(uint32_t*)buf = regs->gpldat;
+			break;
+		case 0x81c:
+			*(uint32_t*)buf = regs->gplpud;
+			break;
 		case 0x830:
 			*(uint32_t*)buf = regs->gpncon;
+			break;
+		case 0x834:
+			*(uint32_t*)buf = regs->gpndat;
 			break;
 		case 0x900:
 			*(uint32_t*)buf = regs->eint0con0;
@@ -99,15 +137,54 @@ static exception_t s3c6410_gpio_write(conf_object_t *opaque, generic_address_t o
 		case 0xa8:
 			regs->gpfpud = val;
 			break;
+		case 0xe0:
+			regs->gphcon0 = val;
+			break;
+
+		case 0xe4:
+			regs->gphcon1 = val;
+			break;
+
+		case 0xe8:
+			regs->gphdat = val;
+			break;
+
 		case 0x100:
 			regs->gpicon = val;
 			break;
 		case 0x120:
 			regs->gpjcon = val;
 			break;
+		case 0x800:
+			regs->gpkcon0 = val;
+			break;
+		case 0x804:
+			regs->gpkcon1 = val;
+			break;
+		case 0x808:
+			regs->gpkdat = val;
+			break;
+		case 0x80c:
+			regs->gpkpud = val;
+			break;
+		case 0x810:
+			regs->gplcon1 = val;
+			break;
+		case 0x814:
+			regs->gplcon1 = val;
+			break;
+		case 0x818:
+			regs->gpldat = val;
+			break;
+		case 0x81c:
+			regs->gplpud = val;
+			break;
 
 		case 0x830:
 			regs->gpncon = val;
+			break;
+		case 0x834:
+			regs->gpndat = val;
 			break;
 		case 0x900:
 			regs->eint0con0 = val;
@@ -132,6 +209,15 @@ static conf_object_t* new_s3c6410_gpio(char* obj_name){
 	regs->gpbcon = 0x40000;
 	regs->eint0mask = 0x0FFFFFFF;
 	regs->gpfpud = 0x55555555;
+
+	regs->gpkcon0 = 0x22222222;
+	regs->gpkcon1 = 0x22222222;
+	regs->gpkpud = 0x55555555;
+
+	regs->gplcon0 = 0x22222222;
+	regs->gplcon1 = 0x02222222;
+	regs->gplpud = 0x15555555;
+
 	dev->regs = regs;
 
 	/* Register io function to the object */
