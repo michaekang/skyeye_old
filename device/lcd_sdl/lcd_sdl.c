@@ -31,6 +31,7 @@
 #include <skyeye_signal.h>
 #include <skyeye_class.h>
 #include <skyeye_lcd_intf.h>
+#include <skyeye_keypad_intf.h>
 #include <skyeye_interface.h>
 #include <skyeye_obj.h>
 #include <skyeye_mm.h> 
@@ -41,6 +42,7 @@
 #include <skyeye_log.h>
 
 #include "lcd_sdl.h"
+
 /* These values *must* match the platform definitions found under
  * hardware/libhardware/include/hardware/hardware.h
  */
@@ -515,6 +517,15 @@ void lcd_sdl_close()
 	return NULL;
 }
 
+static void events_put_keycode(void *x, int keycode)
+{
+	conf_object_t* obj = get_conf_obj("lcd_sdl_0");
+	struct lcd_sdl_device *lcd_dev = (lcd_sdl_device *)obj->obj;
+
+	lcd_keypad_t* lcd_keypad = SKY_get_interface(obj, LCD_KEYPAD_INTF_NAME);
+	lcd_keypad->keypad_update_status(lcd_keypad->obj, keycode);
+}
+
 static void skPenEvent(int *buffer, int eventType, int stateType, int x, int y)
 {
 //      printf("\nSkyEye: skPenEvent():event type=%d\n(x=%d,y=%d)\n",down,x,y);
@@ -526,11 +537,6 @@ static void skPenEvent(int *buffer, int eventType, int stateType, int x, int y)
 	buffer[5] = stateType;	// state of pen (DOWN,UP,ERROR)
 	buffer[6] = 1;		// no of the event
 	buffer[7] = 0;		// time of the event (ms) since ts_open
-}
-
-static void events_put_keycode(void *x, int keycode)
-{
-    printf("[skyeye key] in %s \n",__func__);
 }
 
 static void events_put_mouse(void *opaque, int dx, int dy, int dz, int buttons_state)
