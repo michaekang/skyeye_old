@@ -134,3 +134,7 @@ liblcd_la_SOURCES += lcd/skyeye_lcd_win32.c
 endif # WIN32_LCD
 INCLUDES += -I../android/
 INCLUDES += -I../android/skyeye/
+dev_s3c6410_keypad = s3c6410_keypad/s3c6410_keypad.c s3c6410_keypad/s3c6410_keypad_module.c
+libs3c6410_keypad_la_SOURCES = $(dev_s3c6410_keypad)
+libs3c6410_keypad_la_LDFLAGS = -module
+pkglib_LTLIBRARIES += libs3c6410_keypad.la
