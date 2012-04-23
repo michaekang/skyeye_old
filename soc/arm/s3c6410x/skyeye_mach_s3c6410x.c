@@ -1041,16 +1041,7 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	/* Register vic_signal for touchscreen */
 	SKY_register_interface(vic_signal, touchscreen->objname, GENERAL_SIGNAL_INTF_NAME);
 
-        conf_object_t* keypad = pre_conf_obj("s3c6410_keypad_0", "s3c6410_keypad");
-        memory_space_intf* keypad_io_memory = (memory_space_intf*)SKY_get_interface(keypad, MEMORY_SPACE_INTF_NAME);
-        lcd_keypad_t* lcd_keypad = (lcd_control_intf*)SKY_get_interface(keypad, LCD_KEYPAD_INTF_NAME);
-        DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, keypad_io_memory);
-        ret = add_map(phys_mem, 0x7E00A000, 0x1000, 0x0, keypad_io_memory, 1, 1);
-        if(ret != No_exp){
-                skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for keypad\n");
-        }
-
-	conf_object_t* spi = pre_conf_obj("s3c6410_spi_0", "s3c6410_spi");
+       	conf_object_t* spi = pre_conf_obj("s3c6410_spi_0", "s3c6410_spi");
 	memory_space_intf* spi_io_memory = (memory_space_intf*)SKY_get_interface(spi, MEMORY_SPACE_INTF_NAME);
 	DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, spi_io_memory);
 	ret = add_map(phys_mem, 0x7F00B000, 0x1000, 0x0, spi_io_memory, 1, 1);
@@ -1081,62 +1072,75 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 		DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, lcd_io_memory);
 		exception_t ret;
         	ret = add_map(phys_mem, 0x77100000, 0x100000, 0x0, lcd_io_memory, 1, 1);
-        	//ret = add_map(phys_mem, 0x77600000, 0x100000, 0x0, lcd_io_memory, 1, 1);
-//#ifdef GTK_LCD
-#if 0
-		/* set the lcd_ctrl_0 attribute for lcd */
-		conf_object_t* gtk_painter = pre_conf_obj("gtk_lcd_0", "gtk_lcd");
-		/* register touchscreen for lcd_gtk */
-		SKY_register_interface(lcd_ts, gtk_painter->objname, LCD_TS_INTF_NAME);
 
-		lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(gtk_painter, LCD_CTRL_INTF_NAME);
-		attr_value_t* attr = make_new_attr(Val_ptr);
-		attr->u.ptr = lcd_ctrl;
+		if (getenv("ANDROID") != NULL)
+		{
+			conf_object_t* keypad = pre_conf_obj("s3c6410_keypad_0", "s3c6410_keypad");
+			memory_space_intf* keypad_io_memory = (memory_space_intf*)SKY_get_interface(keypad, MEMORY_SPACE_INTF_NAME);
+			lcd_keypad_t* lcd_keypad = (lcd_control_intf*)SKY_get_interface(keypad, LCD_KEYPAD_INTF_NAME);
+			DBG("In %s, get the interface instance 0x%x\n", __FUNCTION__, keypad_io_memory);
+			ret = add_map(phys_mem, 0x7E00A000, 0x1000, 0x0, keypad_io_memory, 1, 1);
+			if(ret != No_exp){
+				skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for keypad\n");
+			}
 
-		mach_lcd_ctrl = lcd_ctrl;
-		/* set the attribute of lcd */
-		SKY_set_attr(lcd, "lcd_ctrl_0", attr);
 
-		simple_signal_intf* refresh_signal = (simple_signal_intf*)SKY_get_interface(gtk_painter, SIMPLE_SIGNAL_INTF_NAME);
-		simple_signal_intf* slave_signal = (simple_signal_intf*)SKY_get_interface(lcd, SIMPLE_SIGNAL_INTF_NAME);
-		/* connect the signal line, so lcd get notified when gtk finished refresh */
-		refresh_signal->conf_obj = slave_signal->conf_obj;
-		refresh_signal->trigger = slave_signal->trigger;
+			conf_object_t* sdl_painter = pre_conf_obj("lcd_sdl_0", "lcd_sdl");
+
+			/* register touchscreen for lcd_gtk */
+			SKY_register_interface(lcd_ts, sdl_painter->objname, LCD_TS_INTF_NAME);
+
+			/* register keypad for lcd_gtk */
+			SKY_register_interface(lcd_keypad, sdl_painter->objname, LCD_KEYPAD_INTF_NAME);
+
+			lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(sdl_painter, LCD_CTRL_INTF_NAME);
+			attr_value_t* attr = make_new_attr(Val_ptr);
+			attr->u.ptr = lcd_ctrl;
+
+			mach_lcd_ctrl = lcd_ctrl;
+			/* set the attribute of lcd */
+			SKY_set_attr(lcd, "lcd_ctrl_0", attr);
+
+			simple_signal_intf* refresh_signal = (simple_signal_intf*)SKY_get_interface(sdl_painter, SIMPLE_SIGNAL_INTF_NAME);
+			simple_signal_intf* slave_signal = (simple_signal_intf*)SKY_get_interface(lcd, SIMPLE_SIGNAL_INTF_NAME);
+			/* connect the signal line, so lcd get notified when gtk finished refresh */
+			refresh_signal->conf_obj = slave_signal->conf_obj;
+			refresh_signal->trigger = slave_signal->trigger;
+			conf_object_t* android = pre_conf_obj("android_0", "android");
+
+			general_signal_intf* keypad_intr_signal = (lcd_control_intf*)SKY_get_interface(keypad, GENERAL_SIGNAL_INTF_NAME);
+			keypad_intr_signal->conf_obj = vic_signal->conf_obj;
+			keypad_intr_signal->raise_signal = vic_signal->raise_signal;
+			keypad_intr_signal->lower_signal = vic_signal->lower_signal;
+		}
+		else{
+#ifdef GTK_LCD
+			/* set the lcd_ctrl_0 attribute for lcd */
+			conf_object_t* gtk_painter = pre_conf_obj("gtk_lcd_0", "gtk_lcd");
+			/* register touchscreen for lcd_gtk */
+			SKY_register_interface(lcd_ts, gtk_painter->objname, LCD_TS_INTF_NAME);
+
+			lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(gtk_painter, LCD_CTRL_INTF_NAME);
+			attr_value_t* attr = make_new_attr(Val_ptr);
+			attr->u.ptr = lcd_ctrl;
+
+			mach_lcd_ctrl = lcd_ctrl;
+			/* set the attribute of lcd */
+			SKY_set_attr(lcd, "lcd_ctrl_0", attr);
+
+			simple_signal_intf* refresh_signal = (simple_signal_intf*)SKY_get_interface(gtk_painter, SIMPLE_SIGNAL_INTF_NAME);
+			simple_signal_intf* slave_signal = (simple_signal_intf*)SKY_get_interface(lcd, SIMPLE_SIGNAL_INTF_NAME);
+			/* connect the signal line, so lcd get notified when gtk finished refresh */
+			refresh_signal->conf_obj = slave_signal->conf_obj;
+			refresh_signal->trigger = slave_signal->trigger;
 #endif
-		/* set the lcd_ctrl_0 attribute for lcd */
-		conf_object_t* sdl_painter = pre_conf_obj("lcd_sdl_0", "lcd_sdl");
-
-		/* register touchscreen for lcd_gtk */
-		SKY_register_interface(lcd_ts, sdl_painter->objname, LCD_TS_INTF_NAME);
-
-		/* register keypad for lcd_gtk */
-		SKY_register_interface(lcd_keypad, sdl_painter->objname, LCD_KEYPAD_INTF_NAME);
-
-		lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(sdl_painter, LCD_CTRL_INTF_NAME);
-		attr_value_t* attr = make_new_attr(Val_ptr);
-		attr->u.ptr = lcd_ctrl;
-
-		mach_lcd_ctrl = lcd_ctrl;
-		/* set the attribute of lcd */
-		SKY_set_attr(lcd, "lcd_ctrl_0", attr);
-
-		simple_signal_intf* refresh_signal = (simple_signal_intf*)SKY_get_interface(sdl_painter, SIMPLE_SIGNAL_INTF_NAME);
-		simple_signal_intf* slave_signal = (simple_signal_intf*)SKY_get_interface(lcd, SIMPLE_SIGNAL_INTF_NAME);
-		/* connect the signal line, so lcd get notified when gtk finished refresh */
-		refresh_signal->conf_obj = slave_signal->conf_obj;
-		refresh_signal->trigger = slave_signal->trigger;
-		conf_object_t* android = pre_conf_obj("android_0", "android");
-
+		}
 
 		general_signal_intf* lcd_intr_signal = (lcd_control_intf*)SKY_get_interface(lcd, GENERAL_SIGNAL_INTF_NAME);
 		lcd_intr_signal->conf_obj = vic_signal->conf_obj;
 		lcd_intr_signal->raise_signal = vic_signal->raise_signal;
 		lcd_intr_signal->lower_signal = vic_signal->lower_signal;
 
-		general_signal_intf* keypad_intr_signal = (lcd_control_intf*)SKY_get_interface(keypad, GENERAL_SIGNAL_INTF_NAME);
-		keypad_intr_signal->conf_obj = vic_signal->conf_obj;
-		keypad_intr_signal->raise_signal = vic_signal->raise_signal;
-		keypad_intr_signal->lower_signal = vic_signal->lower_signal;
 
 	}
 	else{
