@@ -104,7 +104,7 @@ static void nandflash_sb_doread(struct nandflash_device *dev,struct nandflash_sb
 	}
 	else
 	{
-		NANDFLASH_DBG("nandflash read outof bound!\n");
+		NANDFLASH_DBG("nandflash read outof bound! nf->address 0x%x,dev->devicesize 0x%x\n",nf->address,dev->devicesize);
 	}
 }
 static void nandflash_sb_doreadid(struct nandflash_device *dev,struct nandflash_sb_status *nf)
@@ -124,6 +124,11 @@ static void nandflash_sb_doreadid(struct nandflash_device *dev,struct nandflash_
 		break;
 	case NF_readID_4th:
 		nf->IOPIN=dev->ID[3];
+		nf->cmdstatus=NF_readID_5th;
+		//nf->iostatus=NF_NONE;
+		break;
+	case NF_readID_5th:
+		nf->IOPIN=dev->ID[4];
 		nf->cmdstatus=NF_NOSTATUS;
 		nf->iostatus=NF_NONE;
 		break;
@@ -146,15 +151,28 @@ static void nandflash_sb_docmd(struct nandflash_device *dev,struct nandflash_sb_
 	case NAND_CMD_READ1:
 		nf->cmd=NAND_CMD_READ1;
   		nf->cmdstatus=NF_addr_1st;
-  		nf->pageoffset=256;
+  		//nf->pageoffset=256;
+  		nf->pageoffset=1024;
 		nf->address=0;
 		nf->iostatus=NF_ADDR;;
+		break;
+	case NAND_CMD_READSTART:
+		nf->cmd=NAND_CMD_READSTART;
+		//nf->cmdstatus=NF_addr_1st;
+  		//nf->address=0;
+		nf->iostatus=NF_DATAREAD;
+        //nf->pageoffset=2048;
+  		nf->pageoffset=0;
+		break;
+	case NAND_CMD_NONE:
+		nf->cmd=NAND_CMD_NONE;
 		break;
 	case NAND_CMD_READOOB:
 	  	nf->cmd=NAND_CMD_READOOB;
   		nf->cmdstatus=NF_addr_1st;
 		nf->address=0;
-  		nf->pageoffset=512;
+  		//nf->pageoffset=512;
+  		nf->pageoffset=2048;
 		nf->iostatus=NF_ADDR;
 		break;
 	case NAND_CMD_RESET:
@@ -176,6 +194,7 @@ static void nandflash_sb_docmd(struct nandflash_device *dev,struct nandflash_sb_
   		nf->address=0;
 		break;
 	case NAND_CMD_ERASE2:
+	    	skyeye_exit(3);
 		if ((nf->cmd==NAND_CMD_ERASE1)&&(nf->cmdstatus==NF_addr_finish))
 		{
 			
@@ -215,6 +234,8 @@ static void nandflash_sb_docmd(struct nandflash_device *dev,struct nandflash_sb_
 		break;
 	}
 }
+
+int use = 0;
 static void nandflash_sb_doaddr(struct nandflash_device *dev,struct nandflash_sb_status *nf)
 {
 	uint32 offset,rows,tmp;
@@ -222,24 +243,30 @@ static void nandflash_sb_doaddr(struct nandflash_device *dev,struct nandflash_sb
 	//printf("tmp:%02x\n",tmp);
 	switch (nf->cmdstatus) {
 	case NF_addr_1st:
-		nf->address=0;
-		nf->pageoffset=nf->IOPIN+nf->pageoffset;
+		nf->address=tmp;
+		//offset=nf->IOPIN;
+		//nf->pageoffset=nf->IOPIN+nf->pageoffset;
 		nf->cmdstatus=NF_addr_2nd;
 		break;
 	case NF_addr_2nd:
-		nf->address=(nf->address |(tmp<<9));
+		nf->address=(nf->address |((tmp& 0xf)<<8));
+		//offset =(offset |(tmp<<8));
+		//nf->pageoffset=offset + nf->pageoffset;
 		nf->cmdstatus=NF_addr_3rd;
 		break;
 	case NF_addr_3rd:
-		nf->address=(nf->address |(tmp<<17));
+		nf->address=(nf->address |(tmp<< 16));
+        	//nf->address=tmp;
 		nf->cmdstatus=NF_addr_4th;
 		break;
 	case NF_addr_4th:
-		nf->address=(nf->address |(tmp<<25));
-		rows=nf->address>>9;
-		nf->address=rows*528+nf->pageoffset;
+		nf->address=(nf->address |(tmp<< 24));
+		//nf->address=(nf->address |(tmp<<8));
+		rows=nf->address >> 16;
+		//rows=nf->address;
+		nf->address=rows*2112 + (nf->address & ((1 << 12) - 1));
 		//NANDFLASH_DBG("set addr:%08x\n",nf->address);
-		if ((nf->cmd==NAND_CMD_READ0)||(nf->cmd==NAND_CMD_READ1)||(nf->cmd==NAND_CMD_READOOB))
+		if ((nf->cmd==NAND_CMD_READ0)||(nf->cmd==NAND_CMD_READ1)||(nf->cmd==NAND_CMD_READOOB) || nf->cmd == NAND_CMD_READSTART)
 		{
 			nf->iostatus=NF_DATAREAD;
 			#ifdef POSIX_SHARE_MEMORY_BROKEN
@@ -319,11 +346,22 @@ void nandflash_sb_writeio(struct nandflash_device *dev,uint8 iodata)
 void nandflash_sb_setCE(struct nandflash_device *dev,NFCE_STATE state)
 {
 	struct nandflash_sb_status *nf=(struct nandflash_sb_status*)dev->priv;
+	char *ss;
+	if(nf->CE == NF_HIGH){
+		ss = "high";
+	}else
+		ss = "low";
 	nf->CE=state;
 	if ((state==NF_HIGH) &(nf->iostatus==NF_DATAREAD))
 	{
 		nf->iostatus=NF_NONE;
 	}
+	char *s;
+	if(state == NF_HIGH)
+		s = "high";
+	else
+		s = "low";
+	//printf("CE old state %s, new %s\n",ss,s);
 }
 void nandflash_sb_setCLE(struct nandflash_device *dev,NFCE_STATE state)
 {
@@ -368,7 +406,7 @@ void nandflash_sb_setWE(struct nandflash_device *dev,NFCE_STATE state)
 			//nf->iostatus=NF_NONE;
 			break;
 		default:
-			NANDFLASH_DBG("warning when WE raising,do nothing\n "); 
+			NANDFLASH_DBG("In state %d,warning when WE raising,do nothing\n ",nf->iostatus); 
 			break;
 		}
 	}
@@ -392,7 +430,7 @@ void nandflash_sb_setRE(struct nandflash_device *dev,NFCE_STATE state)
 			nf->iostatus=NF_NONE;
 			break;
 		default:
-			NANDFLASH_DBG("warning when RE  falling,do nothing\n "); 
+			printf("In state 0x%x,warning when RE  falling,do nothing\n ",nf->iostatus); 
 			break;
 		}
 	}
@@ -422,6 +460,7 @@ void nandflash_sb_sendcmd(struct nandflash_device *dev,uint8 cmd)               
 	nandflash_sb_writeio(dev,cmd);
 	nandflash_sb_setWE(dev,NF_HIGH);
 	nandflash_sb_setCLE(dev,NF_LOW);
+//	printf("cmd 0x%x\n",cmd);
 }
 
 void nandflash_sb_senddata(struct nandflash_device *dev,uint8 data)
@@ -429,6 +468,7 @@ void nandflash_sb_senddata(struct nandflash_device *dev,uint8 data)
 	nandflash_sb_setWE(dev,NF_LOW);
 	nandflash_sb_writeio(dev,data);
 	nandflash_sb_setWE(dev,NF_HIGH);
+//	printf("send data 0x%x\n",data);
 }
 void nandflash_sb_sendaddr(struct nandflash_device *dev,uint8 data)
 {
@@ -437,6 +477,7 @@ void nandflash_sb_sendaddr(struct nandflash_device *dev,uint8 data)
 	nandflash_sb_writeio(dev,data);
 	nandflash_sb_setWE(dev,NF_HIGH);
 	nandflash_sb_setALE(dev,NF_LOW);
+//	printf("send addr 0x%x\n",data);
 }
 uint8 nandflash_sb_readdata(struct nandflash_device *dev)
 {
@@ -444,6 +485,7 @@ uint8 nandflash_sb_readdata(struct nandflash_device *dev)
 	nandflash_sb_setRE(dev,NF_LOW);
 	data=nandflash_sb_readio(dev);
 	nandflash_sb_setRE(dev,NF_HIGH);
+//	printf("read data 0x%x\n",data);
 	return data;
 }
 void nandflash_sb_poweron(struct nandflash_device *dev)
@@ -470,7 +512,7 @@ void nandflash_sb_reset(struct nandflash_device *dev)
       struct nandflash_sb_status *nf=(struct nandflash_sb_status*)dev->priv;
 	nf->ALE=NF_LOW;
 	nf->CLE=NF_LOW;
-	//nf->CE=NF_HIGH;
+//	nf->CE=NF_HIGH;
 	nf->iostatus=NF_NONE;
 	nf->IOPIN=0;
 	nf->RB=1;
