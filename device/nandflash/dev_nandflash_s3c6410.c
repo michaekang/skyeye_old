@@ -21,7 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "skyeye_nandflash.h"
 #include "dev_nandflash_s3c6410.h"
 #include "nandflash_smallblock.h"
-
+#include <stdlib.h>
 static void
 nandflash_s3c6410_fini (struct device_desc *dev)
 {
@@ -201,7 +201,7 @@ nandflash_s3c6410_read_word (struct device_desc *dev, uint32 addr, uint32 * data
 int
 nandflash_s3c6410_read_byte(struct device_desc *dev, uint32 addr, uint8 * data)
 {
-	nandflash_s3c6410_read_word(dev,addr,(uint32*)data);
+	return nandflash_s3c6410_read_word(dev,addr,(uint32*)data);
 }
 
 
@@ -286,7 +286,7 @@ nandflash_s3c6410_write_word (struct device_desc *dev, uint32 addr, uint32 data)
 int
 nandflash_s3c6410_write_byte (struct device_desc *dev, uint32 addr, uint8 data)
 {
-	nandflash_s3c6410_write_word(dev,addr,(uint32)data);
+	return nandflash_s3c6410_write_word(dev,addr,(uint32)data);
 }
 
 static int
