@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "portable/mman.h"
 #include "skyeye_nandflash.h"
 #include "nandflash_smallblock.h"
+#include "skyeye.h"
 void nandflash_sb_reset(struct nandflash_device *dev);
 static void nandflash_sb_doerase(struct nandflash_device *dev,struct nandflash_sb_status *nf)
 {
@@ -124,14 +125,14 @@ static void nandflash_sb_doreadid(struct nandflash_device *dev,struct nandflash_
 		break;
 	case NF_readID_4th:
 		nf->IOPIN=dev->ID[3];
-		nf->cmdstatus=NF_readID_5th;
-		//nf->iostatus=NF_NONE;
-		break;
-	case NF_readID_5th:
-		nf->IOPIN=dev->ID[4];
 		nf->cmdstatus=NF_NOSTATUS;
 		nf->iostatus=NF_NONE;
 		break;
+	/*case NF_readID_5th:
+		nf->IOPIN=dev->ID[4];
+		nf->cmdstatus=NF_NOSTATUS;
+		nf->iostatus=NF_NONE;
+		break;*/
 	default:
 	 	NANDFLASH_DBG("Nandflash readID Error!");
 		break;
