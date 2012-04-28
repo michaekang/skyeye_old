@@ -181,6 +181,45 @@ s3c6410x_io_reset (generic_arch_t *arch_instance)
 	arch_instance->set_regval_by_id(2, 0x50000100);
 }
 
+RWLOCK_T lock;
+
+int flag = 0;
+unsigned long long start_usec, start_sec, current_utime, last_utime, passed_utime;
+static uint64_t now_us = 0, now_sec = 0;
+
+static int s3c6410x_scheduler_id = -1;
+static void s3c6410x_timer_callback(generic_arch_t* state)
+{
+	RW_WRLOCK(lock);
+	struct timeval tv;
+
+	if ((io.timer.tcon & 0x100000) != 0) {
+		/*tcntx is the orignal value we set, it equals tcntbx firstly*/
+		//io.timer.tcnt[4] = io.timer.tcnt[4] - 100;
+		io.timer.tcnt[4] -= ((io.timer.tcntb[4] / 10) + 1);
+
+		if (io.timer.tcnt[4] <= 0) {
+			/* whe the tcntx is 0, reset the timer tcntx as the value of
+			 * tcntb
+			 */
+			io.timer.tcnt[4] = io.timer.tcntb[4];
+			/*timer 4 hasn't tcmp */
+			io.timer.tcnto[4] = io.timer.tcntb[4];
+			/* Timer4 request status*/
+
+			/* set timer4 interrupt */
+			io.vic0rawintr |= 1 << INT_TIMER4;
+			io.vic0irqstatus |=  ((1 << INT_TIMER4) & ~(io.vic0intselect) & io.vic0intenable);
+			io.vic0fiqstatus |=  ((1 << INT_TIMER4) & io.vic0intselect & io.vic0intenable);
+
+			s3c6410x_update_int (state);
+			return;
+		}
+	}
+
+	RW_UNLOCK(lock);
+}
+
 /* s3c6410x io_do_cycle */
 static void
 s3c6410x_io_do_cycle (generic_arch_t *state)
@@ -188,6 +227,7 @@ s3c6410x_io_do_cycle (generic_arch_t *state)
 	int i;
 	io.tc_prescale --;
 	if (io.tc_prescale < 0) {
+#if 0
 		io.tc_prescale = 1;
 		/* 0x100000 equals [bit:20] = 1 start timer 4*/
 		if ((io.timer.tcon & 0x100000) != 0) {
@@ -233,6 +273,7 @@ s3c6410x_io_do_cycle (generic_arch_t *state)
 				return;
 			}
 		}
+#endif
 
 	
 		for (i = 0; i < 3; i++) {
@@ -474,9 +515,116 @@ s3c6410x_timer_write (generic_arch_t *state, u32 offset, u32 data)
 	case TCON:
 		{
 			io.timer.tcon = data;
-			if (io.timer.tcon) {
+
+			/* 2010-07-27 added by Jeff.Du. Used timer scheduler */
+			/* timer4 */
+			/* timer4  update*/
+			if ((io.timer.tcon & 0x200000) != 0) {
+
+				/* if timer4 is started */
+				if(s3c6410x_scheduler_id != -1 ){
+					/* prescaler for timer4 */
+					int scaler = ((io.timer.tcfg0 & 0xff00) >> 8);
+				
+					/* divider selection for timer4 frequency */
+					int div = ((io.timer.tcfg1 & 0xf0000) >> 16);
+
+					/* get the divider */
+					int mux = 1;		/* divider for timer4 */
+					switch(div){
+						case 0x0:
+							mux=1;
+							break;
+						case 0x1:
+							mux=2;
+							break;
+						case 0x2:
+							mux=4;
+							break;
+						case 0x3:
+							mux=8;
+							break;
+						case 0x4:
+							mux=16;
+							break;
+						default:
+							mux=1;
+							break;
+					}
+
+					/* timer4 frequency */
+					long long freq = ((66500000/(scaler + 1))/mux);
+					/* get timer4 occur time */	
+					unsigned int us = (int)(io.timer.tcntb[4] / (freq));		
+					/* get timer4 mode */
+					int mode = (io.timer.tcon & 0x400000)?Periodic_sched:Oneshot_sched;
+					/* check if a proper value */
+					if (us == 0 && io.timer.tcntb[4])
+						us = 1000;
+					/* update timer4 */
+					mod_thread_scheduler(s3c6410x_scheduler_id,(unsigned int)us,mode);
+				}
 			}
+	
+			/* timer4 start or stop */	
+			if ((io.timer.tcon & 0x100000) != 0) {
+				/* set internal timer */
+				if(s3c6410x_scheduler_id == -1 ){
+					/* prescaler for timer4 */
+					int scaler = ((io.timer.tcfg0 & 0xffff00) >> 8);
+					/* divider selection for timer4 frequency */
+					int div = ((io.timer.tcfg1 & 0x30000) >> 16);
+
+					int mux = 1;		/* divider for timer4 */
+					/* get the divider */
+					switch(div){
+						case 0x0:  /* 1/2 */
+							mux=1;
+							break;
+						case 0x1:  /* 1/4 */
+							mux=2;
+							break;
+						case 0x2:  /* 1/8 */
+							mux=4;
+							break;
+						case 0x3:  /* 1/16 */
+							mux=8;
+							break;
+						case 0x4:  /* Extern FCLK0 */
+							mux=16;
+							break;
+						default:
+							mux=1;
+							break;
+					}
+
+					/* timer4 frequency */
+					long long freq = ((66500000/(scaler + 1))/mux);
+					/* get timer4 occur time */	
+					unsigned int us = (int)(io.timer.tcntb[4] / (freq));		
+					printf("[skyeye] tcntb[4] = %ld,freq = %ld\n",io.timer.tcntb[4],freq);
+					/* get timer4 mode */
+					int mode = (io.timer.tcon & 0x400000)?Periodic_sched:Oneshot_sched;
+					/* check if a proper value */
+					if (us == 0 && io.timer.tcntb[4])
+						us = 1000;
+
+					RWLOCK_INIT(lock);
+					/* create a timer scheduler */
+					create_thread_scheduler((unsigned int)us,mode, s3c6410x_timer_callback, (void*)state, &s3c6410x_scheduler_id);
+					//create_timer_scheduler((unsigned int)ms,mode, s3c6410x_timer_callback, (void*)state, &s3c6410x_scheduler_id);
+				}
+			} else {
+				if (s3c6410x_scheduler_id != -1) {
+					del_thread_scheduler(s3c6410x_scheduler_id);
+					//del_timer_scheduler(s3c6410x_scheduler_id);
+					s3c6410x_scheduler_id = -1;
+					RWLOCK_DESTROY(lock);
+				}
+			}
+			/* timer4 end */	
 		}
+
 		break;
 	case TCNTB0:
 	case TCNTB1:
@@ -485,9 +633,13 @@ s3c6410x_timer_write (generic_arch_t *state, u32 offset, u32 data)
 	case TCNTB4:
 		{
 			int n = (offset - 0xC) / 0xC;
+			printf("write tcntb4[%d] %ld\n",n,data);
+			io.timer.tcntb[n] = data;
+			#if 0
 			/* io.timer.tcntb[n] = data; */
 			/* temp data taken from linux source */
 			io.timer.tcntb[n] = 25350 / 20;
+			#endif 
 		}
 		break;
 	case TCMPB0:
