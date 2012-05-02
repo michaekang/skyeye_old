@@ -24,6 +24,7 @@
 #include "skyeye_config.h"
 #include "skyeye_options.h"
 #include "sparc_regformat.h"
+#include "skyeye_exec.h"
 
 #include "types.h"
 #include "traps.h"
@@ -31,6 +32,7 @@
 #include "iu.h"
 #include "stat.h"
 
+extern void sparc_step_once(void);
 extern void leon2_mach_init(void * state, machine_config_t * mach);
 static iu_config_t *iu;
 
@@ -51,6 +53,20 @@ machine_config_t sparc_machines[] = {
  *  Description:  This function initializes the architecture.
  * =====================================================================================
  */
+int init_sparc_exec(void)
+{
+	skyeye_exec_t* exec = create_exec();
+	sparc_state_t *state = &sparc_state;
+	exec->priv_data = get_conf_obj_by_cast(state, "sparc_core_t");
+
+	exec->run = sparc_step_once;
+	exec->stop = NULL;
+	DBG("In %s(): Add iu_cycle_step into exec\n", __func__);        // Added by yukewei
+	add_to_default_cell(exec);
+
+	return 0;
+}
+
 void sparc_init_state(void)
 {
     static int done = 0, i;
@@ -93,6 +109,7 @@ void sparc_init_state(void)
             skyeye_exit(-1);
         }
 #endif
+	init_sparc_exec();
 	printf("In %s, the above code not finished porting.\n", __FUNCTION__);
     }
 }
