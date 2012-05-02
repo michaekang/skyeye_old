@@ -107,7 +107,7 @@ int instr_log_parse(struct skyeye_option_t *option, int num_params, const char *
 
 /* callback function for step exeuction. Will record pc here. */
 static void log_pc_callback(generic_arch_t* arch_instance){
-	if(SIM_is_running() != True)
+	if(SIM_is_running() != True || arch_instance->get_regnum == NULL)
 		return;
 	assert(arch_instance->get_regnum);
 	uint32 regnum = arch_instance->get_regnum();
