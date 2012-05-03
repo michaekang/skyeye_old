@@ -403,8 +403,34 @@ static char* sparc_get_regname_by_id(int id){
         return sparc_regstr[id];
 }
 static uint32 sparc_get_regval_by_id(int id){
+	if(id < 32)
+		return REG(id);
+	else if (id < 64)
+		return FPREG(id - 32);
+	switch(id - 64){
+	case 0:
+		return YREG;
+	case 1:
+		return PSRREG;
+	case 2:
+		return WIMREG;
+	case 3:
+		return TBRREG;
+	case 4:
+		return PCREG;
+	case 5:
+		return NPCREG;
+	case 6:
+		return FPSRREG;
+	case 7:
+		return CPSRREG;
+	case 8:
+		return CWP;
+	default:
+		printf("have not register id %d\n", id);
 	return 0;
 }       
+}
 
 /* 
  * ===  FUNCTION  ======================================================================
