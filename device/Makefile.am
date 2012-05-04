@@ -21,7 +21,7 @@ dev_camif_s3c6410 = camif_s3c6410/camif_s3c6410.c camif_s3c6410/camif_s3c6410_mo
 dev_flash = flash/dev_flash_sst39lvf160.c flash/flash_module.c\
 flash/dev_flash_am29.c  flash/dev_flash_intel.c  flash/skyeye_flash.c
 
-dev_nandflash = nandflash/dev_nandflash_s3c2410.c  nandflash/nandflash_smallblock.c  nandflash/skyeye_nandflash.c nandflash/nandflash_module.c
+dev_nandflash = nandflash/dev_nandflash_s3c2410.c  nandflash/nandflash_smallblock.c  nandflash/skyeye_nandflash.c nandflash/nandflash_module.c nandflash/dev_nandflash_s3c6410.c
 
 #dev_sound = sound/dev_sound_s3c44b0x.c  sound/skyeye_sound.c  sound/skyeye_sound_pcm.c sound/sound_module.c
 dev_sound = sound/skyeye_sound.c  sound/skyeye_sound_pcm.c sound/sound_module.c
