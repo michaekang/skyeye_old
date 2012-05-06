@@ -27,10 +27,13 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <config.h>
-#include <execinfo.h>
 #include "skyeye_options.h"
 #include "skyeye_config.h"
 #include "skyeye_log.h"
+/* shenoubang */
+#ifndef __WIN32__
+#include <execinfo.h>
+#endif
 
 /**
 * @brief the welcome message of cli
@@ -194,6 +197,8 @@ void skyeye_log(log_level_t log_level,const char* func_name, char* format, ...){
       	   	void *buffer[100];
 		char **strings;
 
+#ifndef __WIN32__
+		/* shenoubang */
 		nptrs = backtrace(buffer, SIZE);
 
            /* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
@@ -208,6 +213,9 @@ void skyeye_log(log_level_t log_level,const char* func_name, char* format, ...){
 		for (j = 0; j < nptrs; j++)
 			fprintf(stderr, "%s\n", strings[j]);
 		free(strings);
+#else
+		// FIXME: function to handle stack in windows not implemented
+#endif
 	}
 	else{
 		if(current_log_level == Quiet_log){

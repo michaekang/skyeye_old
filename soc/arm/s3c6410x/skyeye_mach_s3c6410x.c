@@ -32,6 +32,7 @@
 #include <skyeye_lock.h>
 #include <skyeye_class.h>
 #include <skyeye_addr_space.h>
+#include <skyeye_android_intf.h>
 #include "s3c6410x.h"
 #include "skyeye_internal.h"
 #include <skyeye_interface.h>
@@ -42,7 +43,6 @@
 #include <skyeye_uart.h>
 #include <skyeye_mm.h>
 #include <skyeye_signal.h>
-#include <skyeye_android_intf.h>
 
 #ifdef __CYGWIN__
 #include <time.h>

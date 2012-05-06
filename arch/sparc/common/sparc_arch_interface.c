@@ -32,6 +32,8 @@
 #include "sparc.h"
 #include "iu.h"
 #include "stat.h"
+/* shenoubang 2012-5-4 */
+#include "bits.h"
 
 extern void sparc_step_once(void);
 extern void leon2_mach_init(void * state, machine_config_t * mach);
