@@ -110,10 +110,10 @@ cpu_new(uint32_t flags, uint32_t arch_flags, arch_func_t arch_func)
 #ifdef HASH_FAST_MAP
 #if L3_HASHMAP
 	cpu->dyncom_engine->fmap = (fast_map)malloc(sizeof(void***) * HASH_MAP_SIZE_L1);
-	memset(cpu->dyncom_engine->fmap, NULL, sizeof(addr_t) * HASH_MAP_SIZE_L1);
+	memset(cpu->dyncom_engine->fmap, NULL, sizeof(void***) * HASH_MAP_SIZE_L1);
 #else
 	cpu->dyncom_engine->fmap = (fast_map)malloc(sizeof(void*) * HASH_FAST_MAP_SIZE);
-	memset(cpu->dyncom_engine->fmap, 0, sizeof(addr_t) * HASH_FAST_MAP_SIZE);
+	memset(cpu->dyncom_engine->fmap, 0, sizeof(void*) * HASH_FAST_MAP_SIZE);
 #endif /* #if L3_HASHMAP */
 
 #endif
