@@ -52,11 +52,11 @@ case $host in
     ;;
   *-*-mingw32*)
     CFLAGS="$CFLAGS -mms-bitfields"
-    LIBS="$LIBS -lmsvcrt -lws2_32 -lwinmm -ladvapi32"
+    LIBS="$LIBS -Xlinker -lmsvcrt -Xlinker -lws2_32 -Xlinker -lwinmm -Xlinker -ladvapi32"
     #dbct=true
     ;;
   *-*-cygwin*)
-    LIBS="$LIBS -L/usr/lib/w32api -lwinmm -ladvapi32"
+    LIBS="$LIBS -L/usr/lib/w32api -Xlinker -lwinmm -Xlinker -ladvapi32"
     #dbct=true
     ;;
   *-*-beos*|*-*-haiku*)

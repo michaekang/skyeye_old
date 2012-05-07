@@ -15,9 +15,15 @@ sparc_insn = instructions/i_add.c instructions/i_addcc.c instructions/i_addx.c i
 			 instructions/i_xnor.c instructions/i_xor.c
 
 libsparc_la_SOURCES = $(sparc_mach) $(sparc_comm) $(sparc_insn)
-pkglib_LTLIBRARIES = libsparc.la
+
 # we will link the common module with main
 libsparc_la_LDFLAGS = -module
+
+pkglib_LTLIBRARIES = libsparc.la
+
+if WIN32
+libsparc_la_LDFLAGS += -no-undefined -shared -module -Xlinker -L../../common/.libs/ -Xlinker -lcommon -Xlinker -lmsvcrt -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lkernel32 -Xlinker -lgdi32 -Xlinker -luuid -Xlinker -luser32  -Xlinker -lshell32 -Xlinker --export-all-symbol
+endif
 
 #DEFS = -g -O2 -D_FILE_OFFSET_BITS=64 -DSTANDALONE -DDEFAULT_INLINE=0
 #DEFS = -g -O2 -DSPARC_DEBUG -DSPARC_ENABLE_STAT
