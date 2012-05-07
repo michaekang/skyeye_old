@@ -3,7 +3,7 @@ common_checkpoint = checkpoint/check.c
 common_breakpoint = breakpoint/breakpoint.c
 common_misc = misc/support.c misc/exec_info.c
 common_module = module/skyeye_module.c
-common_ctrl = ctrl/thread_ctrl.c ctrl/sim_ctrl.c ctrl/step.c ctrl/scheduler.c ctrl/skyeye_thread.c ctrl/skyeye_cell.c ctrl/skyeye_exec.c
+common_ctrl = ctrl/thread_ctrl.c ctrl/sim_ctrl.c ctrl/step.c ctrl/scheduler.c ctrl/skyeye_thread.c ctrl/skyeye_cell.c ctrl/skyeye_exec.c ctrl/skyeye_io.c
 common_conf_parser = conf_parser/skyeye_options.c conf_parser/skyeye_config.c conf_parser/misc_options.c conf_parser/conf_obj.c conf_parser/skyeye_class.c conf_parser/skyeye_interface.c conf_parser/skyeye_attr.c conf_parser/skyeye_conf_map.cpp
 common_log = log/skyeye_log.c
 common_loader = loader/loader_elf.c loader/loader_file.c
@@ -31,7 +31,8 @@ include_HEADERS = ./include/sim_control.h ./include/skyeye_callback.h \
 ./include/skyeye_options.h ./include/skyeye_mach.h ./include/skyeye_pref.h \
 ./include/portable/mman.h ./include/portable/usleep.h ./include/skyeye_ram.h \
 ./include/skyeye_queue.h ./include/skyeye_signal.h ./include/skyeye_lock.h\
-./include/skyeye_sched.h ./include/skyeye_addr_space.h ./include/bank_defs.h 
+./include/skyeye_sched.h ./include/skyeye_addr_space.h ./include/bank_defs.h \
+./include/skyeye_io.h
 
 libcommon_la_SOURCES = $(common_module) $(common_misc) $(common_breakpoint) $(common_ctrl) $(common_portable) $(common_preference) $(common_core) $(common_conf_parser) $(common_log) $(common_cli) $(common_mm) $(common_mach) $(common_device) $(common_memory) $(common_loader) $(common_callback) $(common_profile) $(common_checkpoint)
 
