@@ -25,6 +25,7 @@
 #include "skyeye_options.h"
 #include "sparc_regformat.h"
 #include "skyeye_exec.h"
+#include "skyeye_arch.h"
 
 #include "types.h"
 #include "traps.h"
@@ -99,6 +100,9 @@ void sparc_init_state(void)
 
         if( status != SPARC_SUCCESS )
             SKYEYE_ERR("%s(): ISA init error\n", __func__);
+	generic_arch_t *arch_instance = get_arch_instance(NULL);
+	arch_instance->alignment = UnAlign;
+	arch_instance->endianess = Big_endian;
 #if 0
         // Machine initialization
         if( skyeye_config.mach->mach_init )
