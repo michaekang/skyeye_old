@@ -222,7 +222,7 @@ static void per_cpu_step(conf_object_t * running_core){
 			arm_dyncom_abort(core, ARMul_IRQV);
 		}
 	}
-	mach->mach_io_do_cycle(cpu);
+	//mach->mach_io_do_cycle(cpu);
 	return;
 }
 

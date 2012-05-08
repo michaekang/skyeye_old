@@ -3601,7 +3601,7 @@ void InterpreterMainLoop(cpu_t *core)
 	#define SHIFTER_OPERAND			inst_cream->shtop_func(cpu, inst_cream->shifter_operand)
 
 	#define INC_ICOUNTER			cpu->icounter++;                                                   \
-						if(cpu->Reg[15] < 0xc0000000) 					\
+						if(cpu->Reg[15] > 0xc0000000) 					\
 							cpu->kernel_icounter++;
 						//if (debug_function(core))                                          \
 							if (core->check_int_flag)                                  \
@@ -3680,7 +3680,6 @@ void InterpreterMainLoop(cpu_t *core)
 	unsigned int phys_addr;
 	unsigned int last_pc = 0;
 	fault_t fault;
-	int counter = 10;
 	static unsigned int last_physical_base = 0, last_logical_base = 0;
 	#if 0
 	if (use == 1)
@@ -3690,6 +3689,12 @@ void InterpreterMainLoop(cpu_t *core)
 	LOAD_NZCVT;
 	DISPATCH:
 	{
+		if (!cpu->NirqSig) {
+                	if (!(cpu->Cpsr & 0x80)) {
+				goto END;
+			}
+		}
+
 		if (cpu->TFlag) {
 			cpu->Reg[15] &= 0xfffffffe;
 		} else
@@ -3700,11 +3705,6 @@ void InterpreterMainLoop(cpu_t *core)
 		phys_addr = cpu->Reg[15];
 #else
 		{
-			counter --;
-			if (counter == 0) {
-				goto END;
-			}
-
 			if (last_logical_base == (cpu->Reg[15] & 0xfffff000))
 			       phys_addr = last_physical_base + (cpu->Reg[15] & 0xfff);
 			else {
