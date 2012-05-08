@@ -366,6 +366,11 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		if (core->abortSig) {
 			return 1;
 		}
+		if (!core->NirqSig) {
+			if (!(core->Cpsr & 0x80)) {
+				return 1;
+			}
+		}
 			
 		/* if regular trap */
 		core->Reg[15] += get_instr_size(cpu);

@@ -67,15 +67,17 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 #endif
 		sw = SwitchInst::Create(v_pc, bb_ret, bbs, bb_dispatch);
 	} else {
+	
 		BasicBlock* bb_real_dispatch = BasicBlock::Create(_CTX(), "real_dispatch", cpu->dyncom_engine->cur_func, 0);
-		LoadInst* v_icount = new LoadInst(cpu->ptr_ICOUNTER, "", false, bb_dispatch);
-		LoadInst* v_old_icount = new LoadInst(cpu->ptr_OLD_ICOUNTER, "", false, bb_dispatch);
-		Value *cycles =	BinaryOperator::Create(Instruction::Sub, v_icount, v_old_icount, "", bb_dispatch);
-		Value *gout = new ICmpInst(*bb_dispatch, ICmpInst::ICMP_UGT, cycles, CONST(TIMEOUT_THRESHOLD), "");
-		BranchInst::Create(bb_timeout, bb_real_dispatch, gout, bb_dispatch);
-		// create dispatch basicblock
-		Value *v_pc = new LoadInst(cpu->ptr_gpr[18], "", false, bb_real_dispatch);
-		sw = SwitchInst::Create(v_pc, bb_ret, bbs, bb_real_dispatch);
+                LoadInst* v_cpsr = new LoadInst(cpu->ptr_gpr[16], "", false, bb_dispatch);
+                LoadInst* v_nirq_sig = new LoadInst(cpu->ptr_OLD_ICOUNTER, "", false, bb_dispatch);
+                Value *int_enable =     BinaryOperator::Create(Instruction::And, v_cpsr, CONST(0x80), "", bb_dispatch);
+                Value *irq_pending =    BinaryOperator::Create(Instruction::Or, int_enable, v_nirq_sig, "", bb_dispatch);
+                Value *gout = new ICmpInst(*bb_dispatch, ICmpInst::ICMP_EQ, irq_pending, CONST(0), "");
+                BranchInst::Create(bb_trap, bb_real_dispatch, gout, bb_dispatch);
+                // create dispatch basicblock
+                Value *v_pc = new LoadInst(cpu->ptr_gpr[18], "", false, bb_real_dispatch);
+                sw = SwitchInst::Create(v_pc, bb_ret, bbs, bb_real_dispatch);
 	}
 
 	// translate basic blocks

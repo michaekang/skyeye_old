@@ -1084,6 +1084,12 @@ void arm_dyncom_init(arm_core_t* core){
 	arch_arm_invalidate_by_mva_init(cpu);
 	arch_arm_invalidate_by_all_init(cpu);
 	arch_arm_debug_print_init(cpu);
+
+        /* normal irq flag */
+        Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+        Constant *v_old_icounter = ConstantInt::get(intptr_type, (uintptr_t)&(core->NirqSig));
+        cpu->ptr_OLD_ICOUNTER = ConstantExpr::getIntToPtr(v_old_icounter, PointerType::getUnqual(getIntegerType(cpu->info.address_size)));
+        cpu->ptr_OLD_ICOUNTER->setName("old_icounter");
 	
 	init_compiled_queue(cpu);
 	//if(running_mode == HYBRID || running_mode == PURE_DYNCOM){

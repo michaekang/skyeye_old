@@ -278,11 +278,12 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 	Constant *v_icounter = ConstantInt::get(intptr_type, (uintptr_t)&cpu->icounter);
 	cpu->ptr_ICOUNTER = ConstantExpr::getIntToPtr(v_icounter, PointerType::getUnqual(getIntegerType(cpu->info.address_size)));
 	cpu->ptr_ICOUNTER->setName("icounter");
+#if 0
 	/* old_icounter */
 	Constant *v_old_icounter = ConstantInt::get(intptr_type, (uintptr_t)&cpu->old_icounter);
 	cpu->ptr_OLD_ICOUNTER = ConstantExpr::getIntToPtr(v_old_icounter, PointerType::getUnqual(getIntegerType(cpu->info.address_size)));
 	cpu->ptr_OLD_ICOUNTER->setName("old_icounter");
-
+#endif
 	// flags
 	if (cpu->info.psr_size != 0) {
 		// declare flags
