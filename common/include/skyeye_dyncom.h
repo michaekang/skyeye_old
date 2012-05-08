@@ -464,7 +464,7 @@ typedef struct cpu {
 	uint64_t icounter;/* instruction counter */
 	uint64_t old_icounter;/* old instruction counter */
 	Value *ptr_ICOUNTER;
-	Value *ptr_OLD_ICOUNTER;
+	Value *ptr_Nirq;
 
 	uint32_t is_user_mode;
 	/**

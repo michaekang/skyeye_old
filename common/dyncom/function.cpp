@@ -582,12 +582,8 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	// return
 	BranchInst::Create(bb_ret, bb_trap);
 
-	BasicBlock *bb_timeout = BasicBlock::Create(_CTX(), "timeout", func, 0);
-	new StoreInst(ConstantInt::get(XgetType(Int32Ty), JIT_RETURN_TIMEOUT), exit_code, false, 0, bb_timeout);
-	BranchInst::Create(bb_ret, bb_timeout);
 	*p_bb_ret = bb_ret;
 	*p_bb_trap = bb_trap;
-	*p_bb_timeout = bb_timeout;
 	*p_label_entry = label_entry;
 	return func;
 }

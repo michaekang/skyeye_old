@@ -567,8 +567,6 @@ cpu_run(cpu_t *cpu)
 		UPDATE_TIMING(cpu, TIMER_RUN, false);
 		if (ret != JIT_RETURN_FUNCNOTFOUND)
 			return ret;
-		if((cpu->icounter - cpu->old_icounter) >= (TIMEOUT_THRESHOLD * 10))
-			return JIT_RETURN_TIMEOUT;
 	}
 }
 /**
