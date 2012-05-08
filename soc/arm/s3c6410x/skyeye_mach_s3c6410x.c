@@ -37,6 +37,7 @@
 #include <skyeye_interface.h>
 #include <skyeye_lcd_intf.h>
 #include <skyeye_keypad_intf.h>
+#include <skyeye_io.h>
 #include <skyeye_log.h>
 #include <skyeye_uart.h>
 #include <skyeye_mm.h>
@@ -223,6 +224,12 @@ static void s3c6410x_timer_callback(generic_arch_t* state)
 /* s3c6410x io_do_cycle */
 static void
 s3c6410x_io_do_cycle (generic_arch_t *state)
+{
+}
+
+/* s3c6410x io_do_cycle */
+static void
+io_do_cycle (generic_arch_t *state)
 {
 	int i;
 	io.tc_prescale --;
@@ -1319,4 +1326,5 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 	else{
 		printf("can not initlize the lcd, maybe the module not exist\n");
 	}
+	register_io_cycle(io_do_cycle,arch_instance);
 }
