@@ -986,8 +986,14 @@ arch_arm_invalidate_by_all_init(cpu_t *cpu){
 * @param cpu
 */
 static void recycle_bb(void* priv_data){
+	static uint64_t last_icounter = 0;
 	cpu_t* cpu = (cpu_t*)priv_data;
-	printf("\ncurrent funcions is %d\n", cpu->dyncom_engine->functions);
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	
+        printf("\ncurrent funcions is %d, cpu->icounter=%lld, cpu->kernel_icouner=%lld, passed_icounter=%lld\n", cpu->dyncom_engine->functions, core->icounter, core->kernel_icounter, core->icounter - last_icounter);
+        printf("current sec=%d, usec=%lld\n", get_clock_sec(), get_clock_us());
+        last_icounter = core->icounter;
+
 }
 void arm_dyncom_init(arm_core_t* core){
 	cpu_t* cpu = cpu_new(0, 0, arm_arch_func);
@@ -1080,10 +1086,10 @@ void arm_dyncom_init(arm_core_t* core){
 	arch_arm_debug_print_init(cpu);
 	
 	init_compiled_queue(cpu);
-	if(running_mode == HYBRID || running_mode == PURE_DYNCOM){
+	//if(running_mode == HYBRID || running_mode == PURE_DYNCOM){
 		int timer_id;
-		//create_thread_scheduler(1000000, Periodic_sched, recycle_bb, (void *)cpu, &timer_id);
-	}
+		create_thread_scheduler(1000000, Periodic_sched, recycle_bb, (void *)cpu, &timer_id);
+	//}
 	return;
 }
 

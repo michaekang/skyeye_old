@@ -250,7 +250,7 @@ struct ARMul_State
 	ARMdword Accumulator;
 
 	ARMword NFlag, ZFlag, CFlag, VFlag, IFFlags;	/* dummy flags for speed */
-        unsigned long long int icounter, debug_icounter;
+        unsigned long long int icounter, debug_icounter, kernel_icounter;
         unsigned int shifter_carry_out;
         ARMword translate_pc;
 

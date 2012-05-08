@@ -60,8 +60,8 @@ int fill_tlb(arm_core_t* core);
 extern arch_mem_ops_t arm_dyncom_mem_ops;
 /* FIXME, the physical address for s3c6410, should get 
 these value from skyeye.conf */
-#define BANK0_START 0x50000000
-#define BANK0_SIZE 0x20000000
+#define BANK0_START 0x40000000
+#define BANK0_SIZE 0x30000000
 #define BANK0_END (BANK0_START + BANK0_SIZE)
 
 #endif
