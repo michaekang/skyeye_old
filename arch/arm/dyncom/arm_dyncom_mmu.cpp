@@ -77,8 +77,9 @@ static inline int mem_read_directly(cpu_t* cpu, uint32_t phys_addr, uint32_t &va
 	int ret = -1;
 	uint32_t offset;
 	if (phys_addr >= BANK0_START && phys_addr < BANK0_END) {
-		offset = phys_addr - BANK0_START;
-		mem_read_raw(cpu->dyncom_engine->RAM, offset, value, size);
+		//offset = phys_addr - BANK0_START;
+		//mem_read_raw(cpu->dyncom_engine->RAM, offset, value, size);
+		mem_read_raw(0, phys_addr, value, size);
 		ret = 0;
 	}
 	return ret;
@@ -89,8 +90,8 @@ static inline int mem_write_directly(cpu_t* cpu, uint32_t phys_addr, uint32_t va
 	int ret = -1;
 	uint32_t offset;
 	if (phys_addr >= BANK0_START && phys_addr < BANK0_END) {
-		offset = phys_addr - BANK0_START;
-		mem_write_raw(cpu->dyncom_engine->RAM, offset, value, size);
+		//offset = phys_addr - BANK0_START;
+		mem_write_raw(0, phys_addr, value, size);
 		ret = 0;
 	}
 	return ret;
