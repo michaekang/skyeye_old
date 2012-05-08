@@ -34,6 +34,7 @@
 #include "skyeye_swapendian.h"
 #include "skyeye_mm.h"
 #include "portable/portable.h"
+#include "portable/mman.h"
 #include "skyeye_log.h"
 
 /* All the memory including rom and dram */
@@ -378,12 +379,28 @@ mem_reset ()
 		global_memory.rom_size[bank] = 0;
 		//chy 2003-09-21: if mem type =MEMTYPE_IO, we need not malloc space for it.
 		global_memory.rom_size[bank] = mb[bank].len;
-		global_memory.rom[bank] = skyeye_mm (mb[bank].len);
-		if (!global_memory.rom[bank]) {
-			fprintf (stderr,
-				 "SKYEYE: mem_reset: Error allocating mem for bank number %d.\n", bank);
-			//skyeye_exit (-1);
-			return Malloc_exp;
+
+		/* use direct mmap to simulate memory or use malloc to simulate memory */
+		sky_pref_t *pref = get_skyeye_pref();
+		if(pref->user_mode_sim){
+			global_memory.rom[bank] = skyeye_mm (mb[bank].len);
+			if (!global_memory.rom[bank]) {
+				fprintf (stderr,
+					 "SKYEYE: mem_reset: Error allocating mem for bank number %d.\n", bank);
+				//skyeye_exit (-1);
+				return Malloc_exp;
+			}
+		}
+		else{
+	                global_memory.rom[bank] = mmap (mb[bank].addr, mb[bank].len, PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED, -1, 0);
+                //tlb_cache = (uint32_t***)mmap(NULL, size, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+        	        if(MAP_FAILED == global_memory.rom[bank]){
+                	        perror("mmap failed\n");
+                        	exit(-1);
+	                }
+        	        printf("mmap DRAM, size=0x%x, return 0x%x\n", mb[bank].len, (unsigned long)global_memory.rom[bank]);
+                	/* directly mmap the same address with guest physical memory */
+	                get_skyeye_exec_info()->mmap_access = 1;
 		}
 	#if 1 
 		if (mb[bank].filename

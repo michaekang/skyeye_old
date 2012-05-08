@@ -305,29 +305,32 @@ load_exec (const char *file, addr_type_t addr_type)
 	//big_endian = bfd_big_endian(tmp_bfd);
 
 	skyeye_log(Info_log, __FUNCTION__, "exec file \"%s\"'s format is %s.\n", file, tmp_bfd->xvec->name);
+#if 1
+	sky_pref_t *pref = get_skyeye_pref();
+        if(pref->user_mode_sim){
+		/* trying a direct mmap access, where user application
+		   will be mapped to 0x8000 of skyeye memory space. */
 	
-	/* trying a direct mmap access, where user application
-	   will be mapped to 0x8000 of skyeye memory space. */
-	
-	uint32_t ret_mmap = -1;
-	sky_exec_info_t* info = get_skyeye_exec_info();
-	if (info->mmap_access)
-	{
-		uint32_t prog_top = info->brk;
-		/* For now, the only protection needed is write as we are going to copy data */
-		/* contains text, rodata and bss as well */
-		ret_mmap = (uint32_t) mmap ( (void *) 0x8000, prog_top - 0x4000, 
-		       PROT_WRITE, MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0 );
-		if (ret_mmap == (uint32_t) MAP_FAILED)
+		uint32_t ret_mmap = -1;
+		sky_exec_info_t* info = get_skyeye_exec_info();
+		if (info->mmap_access)
 		{
-#include <errno.h>
-			printf("Direct mmap access failed, mmap error %d\nExecute application without -m argument.\n", errno);
-			exit(-1);
-		} else {
-			printf("Direct mmap access success, at 0x%08x-0x%08x\n", ret_mmap, ret_mmap + prog_top - 0x4000);
+			uint32_t prog_top = info->brk;
+			/* For now, the only protection needed is write as we are going to copy data */
+			/* contains text, rodata and bss as well */
+			ret_mmap = (uint32_t) mmap ( (void *) 0x8000, prog_top - 0x4000, 
+			       PROT_WRITE, MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0 );
+			if (ret_mmap == (uint32_t) MAP_FAILED)
+			{
+				#include <errno.h>
+				printf("Direct mmap access failed, mmap error %d\nExecute application without -m argument.\n", errno);
+				exit(-1);
+			} else {
+				printf("Direct mmap access success, at 0x%08x-0x%08x\n", ret_mmap, ret_mmap + prog_top - 0x4000);
+			}
 		}
-	}
-	
+	} //if(pref->user_mode_sim)
+#endif	
 	/* load the corresponding section to memory */
 	for (s = tmp_bfd->sections; s; s = s->next) {
 		if (bfd_get_section_flags (tmp_bfd, s) & (SEC_LOAD)) {

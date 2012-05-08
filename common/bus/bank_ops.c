@@ -28,6 +28,7 @@
 #include "skyeye_arch.h"
 #include "skyeye_callback.h"
 #include "skyeye_bus.h"
+#include "skyeye_pref.h"
 #include "skyeye_exec_info.h"
 
 /**
@@ -83,8 +84,9 @@ int bus_read(short size, generic_address_t addr, uint32_t * value){
 	generic_arch_t* arch_instance = get_arch_instance("");
 
 	/* bypass the bank check */
+	sky_pref_t *pref = get_skyeye_pref();
 	/* in case of error, a seg fault will happen, I guess */
-	if (get_skyeye_exec_info()->mmap_access) {
+	if (get_skyeye_exec_info()->mmap_access && pref->user_mode_sim) {
 		if (size == 8) {
 			*value = *(uint8_t *)(addr) & 0xff;
 		} else if (size == 16) {
@@ -124,9 +126,10 @@ int bus_write(short size, generic_address_t addr, uint32_t value){
 	mem_bank_t * bank;
 	generic_arch_t* arch_instance = get_arch_instance("");
 
+	sky_pref_t *pref = get_skyeye_pref();
 	/* bypass the bank check */
 	/* in case of error, a seg fault will happen, I guess */
-	if (get_skyeye_exec_info()->mmap_access) {
+	if (get_skyeye_exec_info()->mmap_access && pref->user_mode_sim) {
 		if (size == 8) {
 			*(uint8_t *)(addr) = (value & 0xff);
 		} else if (size == 16) {
