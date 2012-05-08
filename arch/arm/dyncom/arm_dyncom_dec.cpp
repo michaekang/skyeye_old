@@ -304,61 +304,47 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 	Value* phys_addr;
 	Value* phys_addr1;
 	Value* phys_addr2;
-	Value* start_phys_page;
-	Value* end_phys_page;
-	Value* start_virt_page;
 	int count = get_reg_count(instr);
 	assert(count > 0);	
 	count -= 1;
-	if(!is_user_mode(cpu)){
-		start_phys_page = get_phys_addr(cpu, bb, addr, 1);
-		bb = cpu->dyncom_engine->bb_load_store;
-		start_phys_page = AND(start_phys_page, CONST(0xFFFFF000));
-		/* possible maximum address for memory access */
-		Value* end_phys_page = get_phys_addr(cpu, bb, ADD(addr, CONST(count * 4)), 1);
-		bb = cpu->dyncom_engine->bb_load_store;
-		end_phys_page = AND(end_phys_page, CONST(0xFFFFF000));
 
-		start_virt_page = AND(addr, CONST(0xFFFFF000));
-	}
+	Value* start_phys_page = get_phys_addr(cpu, bb, addr, 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	start_phys_page = AND(start_phys_page, CONST(0xFFFFF000));
+	/* possible maximum address for memory access */
+	Value* end_phys_page = get_phys_addr(cpu, bb, ADD(addr, CONST(count * 4)), 1);
+	bb = cpu->dyncom_engine->bb_load_store;
+	end_phys_page = AND(end_phys_page, CONST(0xFFFFF000));
+
+	Value* start_virt_page = AND(addr, CONST(0xFFFFF000));
 	if (BITS(25, 27) == 4 && BIT(22) && BIT(20) && !BIT(15)) {
 		/* LDM (2) user */
 		for (i = 0; i < 13; i++) {
 			if(BIT(i)){
-				if(!is_user_mode(cpu)){
-					phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-					phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-					phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
-					ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
-				}else
-					ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+				ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 				//LOG("In %s, i=0x%x\n", __FUNCTION__, i);
 				LET(i, ret);
 				Addr = ADD(Addr, CONST(4));
 			}
 		}
 		if (BIT(13)) {
-			if(!is_user_mode(cpu)){
-				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 
-				ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
-			}
-			else
-				ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 			LET(R13_USR, ret);
 			Addr = ADD(Addr, CONST(4));
 		}
 		if (BIT(14)) {
-			if(!is_user_mode(cpu)){
-				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 
-				ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
-			}else
-				ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 			LET(R14_USR, ret);
 			Addr = ADD(Addr, CONST(4));
 		}
@@ -366,13 +352,10 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 	}
 	for( i = 0; i < 16; i ++ ){
 		if(BIT(i)){
-			if(!is_user_mode(cpu)){
-				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
-				ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
-			}else
-				ret = arch_read_memory(cpu, bb, Addr, 0, 32);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
 			//LOG("In %s, i=0x%x\n", __FUNCTION__, i);
 			if(i == R15){
 				STORE(TRUNC1(AND(ret, CONST(1))), ptr_T);
@@ -396,114 +379,82 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 	Value* phys_addr;
 	Value* phys_addr1;
 	Value* phys_addr2;
-	Value* start_phys_page;
-	Value* end_phys_page;
-	Value* start_virt_page;
 
 	int count = get_reg_count(instr);
 	assert(count > 0);
 	count -= 1;
-	if(!is_user_mode(cpu)){	
+	
 	//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(50));
-		start_phys_page = get_phys_addr(cpu, bb, addr, 0);
-		bb = cpu->dyncom_engine->bb_load_store;
-		start_phys_page = AND(start_phys_page, CONST(0xFFFFF000));
+	Value* start_phys_page = get_phys_addr(cpu, bb, addr, 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	start_phys_page = AND(start_phys_page, CONST(0xFFFFF000));
 	//arch_arm_debug_print(cpu, bb, ZEXT64(start_phys_page), R(15), CONST(50));
 	/* possible maximum address for memory access */
-		end_phys_page = get_phys_addr(cpu, bb, ADD(addr, CONST(count * 4)), 0);
-		bb = cpu->dyncom_engine->bb_load_store;
-		end_phys_page = AND(end_phys_page, CONST(0xFFFFF000));
+	Value* end_phys_page = get_phys_addr(cpu, bb, ADD(addr, CONST(count * 4)), 0);
+	bb = cpu->dyncom_engine->bb_load_store;
+	end_phys_page = AND(end_phys_page, CONST(0xFFFFF000));
 
-		start_virt_page = AND(addr, CONST(0xFFFFF000));
-	}
+	arch_arm_debug_print(cpu, bb, ZEXT64(end_phys_page), R(15), CONST(50));
+	Value* start_virt_page = AND(addr, CONST(0xFFFFF000));
 	/* Check if base register is in register list */
 	if (BITS(25, 27) == 4 && BITS(20, 22) == 4) {
 		for (i = 0; i < 13; i++) {
 			if(BIT(i)){
-				if(!is_user_mode(cpu)){
-					phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-					phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-					phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
-					arch_write_memory(cpu, bb, phys_addr, R(i), 32);
-				}
-				else
-					arch_write_memory(cpu, bb, Addr, R(i), 32);
+				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+				arch_write_memory(cpu, bb, phys_addr, R(i), 32);
 				Addr = ADD(Addr, CONST(4));
 			}
 		}
 		if (BIT(13)) {
-			if(!is_user_mode(cpu)){
-				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
-				if(RN == 13)
-					arch_write_memory(cpu, bb, phys_addr, Rn, 32);
-				else
-					arch_write_memory(cpu, bb, phys_addr, R(R13_USR), 32);
-			}
-			else{
-				if(RN == 13)
-					arch_write_memory(cpu, bb, Addr, Rn, 32);
-				else
-					arch_write_memory(cpu, bb, Addr, R(R13_USR), 32);
-			}		
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			if(RN == 13)
+				arch_write_memory(cpu, bb, phys_addr, Rn, 32);
+			else
+				arch_write_memory(cpu, bb, phys_addr, R(R13_USR), 32);
+			
 			Addr = ADD(Addr, CONST(4));
 		}
 		if (BIT(14)) {
-			if(!is_user_mode(cpu)){
-				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
-				arch_write_memory(cpu, bb, phys_addr, R(R14_USR), 32);
-			}
-			else
-				arch_write_memory(cpu, bb, Addr, R(R14_USR), 32);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			arch_write_memory(cpu, bb, phys_addr, R(R14_USR), 32);
 			Addr = ADD(Addr, CONST(4));
 		}
 		if(BIT(15)){
-			if(!is_user_mode(cpu)){
-				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
-				arch_write_memory(cpu, bb, phys_addr, STOREM_CHECK_PC, 32);
-			}else
-				arch_write_memory(cpu, bb, Addr, STOREM_CHECK_PC, 32);	
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			arch_write_memory(cpu, bb, phys_addr, STOREM_CHECK_PC, 32);
 		}
 		return;
 	}
 	for( i = 0; i < 15; i ++ ){
 		if(BIT(i)){
-			if(!is_user_mode(cpu)){
-				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 
-				if(i == RN)
-					arch_write_memory(cpu, bb, phys_addr, Rn, 32);
-				else
-					arch_write_memory(cpu, bb, phys_addr, R(i), 32);
-			}else
-			{
-				if(i == RN)
-                                        arch_write_memory(cpu, bb, Addr, Rn, 32);
-                                else
-                                        arch_write_memory(cpu, bb, Addr, R(i), 32);
-			}
+			if(i == RN)
+				arch_write_memory(cpu, bb, phys_addr, Rn, 32);
+			else
+				arch_write_memory(cpu, bb, phys_addr, R(i), 32);
+			
 			Addr = ADD(Addr, CONST(4));
 		}
 	}
 
 	/* check pc reg*/
 	if(BIT(i)){
-		if(!is_user_mode(cpu)){
-			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
-			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
-			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
+		phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
+		phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
+		phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 
-			arch_write_memory(cpu, bb, phys_addr, STOREM_CHECK_PC, 32);
-		}
-		else
-			arch_write_memory(cpu, bb, Addr, STOREM_CHECK_PC, 32);
+		arch_write_memory(cpu, bb, phys_addr, STOREM_CHECK_PC, 32);
 	}
 }
 
