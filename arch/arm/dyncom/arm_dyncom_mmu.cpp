@@ -591,7 +591,7 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 #ifdef FAST_MEMORY
         phys_addr = phys_addr | (virt_addr & 3);
         if(mem_write_directly(cpu, phys_addr, value, size) == 0){
-		goto skip_write;
+		return;
         }
 #endif
 	//bus_write(size, phys_addr, value);
@@ -602,7 +602,8 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	} else {
 		bus_write(32, phys_addr, value);
 	}
-skip_write:
+//skip_write:
+#if 0
 	if (is_translated_code(cpu, phys_addr)) {
 		//clear native code when code section was written.
 		addr_t addr = find_bb_start(cpu, phys_addr);
@@ -613,6 +614,7 @@ skip_write:
 #endif
 	}
 	//bus_write(size, virt_addr, value);
+#endif
 }
 #if 0
 static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t read)

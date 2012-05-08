@@ -18,10 +18,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
  * 10/2011 rewritten by Alexis He <ahe.krosk@gmail.com> 
  */
 #include "armdefs.h"
-//#include "armemu.h"
+#include "armcpu.h"
 #include "arm_dyncom_parallel.h"
 #include "arm_dyncom_mmu.h"
 #include "arm_dyncom_translate.h"
+#include "arm_dyncom_interpreter.h"
 
 #include <pthread.h>
 
@@ -208,6 +209,28 @@ inline int clear_cache(cpu_t *cpu, fast_map hash_map)
 	return No_exp;
 }
 
+void clear_translated_cache(addr_t phys_addr){
+	arm_core_t* core = get_current_core();
+        cpu_t* cpu = (cpu_t *)core->dyncom_cpu->obj;
+        /* flush two pages of code cache for dyncom */
+        for(int i = 0; i < 1024 * 2; i++){
+                //phys_addr = phys_addr + 4;
+                if (is_translated_code(cpu, phys_addr)) {
+                        //clear native code when code section was written.
+                        addr_t addr = find_bb_start(cpu, phys_addr);
+#if L3_HASHMAP
+                        extern pthread_rwlock_t translation_rwlock;
+                        pthread_rwlock_wrlock(&translation_rwlock);
+                        clear_tag(cpu, phys_addr);
+                        clear_cache_item(cpu->dyncom_engine->fmap, addr);
+                        pthread_rwlock_unlock(&translation_rwlock);
+#else
+                fprintf(stderr, "Warnning: not clear the cache");
+#endif
+                }
+                phys_addr = phys_addr + 4;
+        }
+}
 /* Only for HYBRID .
    In HYBRID mode, when encountering a new (untagged) pc, we recursive-tag it so all newly tagged
    instructions belongs to this basic block. A translated address, if it is an entry point,
@@ -454,6 +477,7 @@ static int handle_fp_insn(arm_core_t* core){
 
 /* This function handles tagging */
 static inline void push_compiled_work(cpu_t* cpu, uint32_t pc){
+	protect_code_page(pc);
 	cpu_tag(cpu, pc);
 	cpu->dyncom_engine->cur_tagging_pos ++;
 	cpu_translate(cpu, pc);

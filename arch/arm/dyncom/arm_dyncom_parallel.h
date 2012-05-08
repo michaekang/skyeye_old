@@ -40,6 +40,7 @@ extern running_mode_t running_mode;
 int
 do_mode_option (skyeye_option_t * this_option, int num_params,
 	       const char *params[]);
+void clear_translated_cache(addr_t phys_addr);
 #ifdef __cplusplus
 }
 #endif

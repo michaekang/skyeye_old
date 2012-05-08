@@ -33,6 +33,7 @@ using namespace std;
 #include "stat.h"
 #include "armdefs.h"
 #include "armmmu.h"
+#include "arm_dyncom_parallel.h"
 #include "bank_defs.h"
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_run.h"
@@ -3404,6 +3405,9 @@ static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
 //	printf("[PHYSICAL][ADDR:0x%08llx]\n", phys_addr);
 	flush_bb(phys_addr);
 	flush_bb(phys_addr + 4096);
+
+	/* flush the translated BB of dyncom */
+      	clear_translated_cache(phys_addr); 
 }
 
 void protect_code_page(uint32_t addr)
