@@ -219,7 +219,8 @@ static inline int is_thumb32_inst(uint32 inst){
 #define BIT(n) ((instr >> (n)) & 1)
 #define BITS(a,b) ((instr >> (a)) & ((1 << (1+(b)-(a)))-1))
 int arch_arm_tag_instr(cpu_t *cpu, addr_t pc, tag_t *tag, addr_t *new_pc, addr_t *next_pc) {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
         int instr_size = INSTR_SIZE;
         uint32_t instr;
 	bus_read(32, pc, &instr);
@@ -270,7 +271,8 @@ int arch_arm_translate_instr(cpu_t *cpu, addr_t pc, BasicBlock *bb) {
 		exit(-1);
 	}
 	//printf("In %s, instr=0x%x, pc = 0x%x\n", __FUNCTION__, instr, pc);
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	if(core->Cpsr &  (1 << THUMB_BIT)){
 		uint32 arm_inst;
 		int index;
@@ -344,7 +346,8 @@ void arm_opc_func_init()
 Value *
 thumb_translate_cond(cpu_t *cpu, uint32_t instr, BasicBlock *bb) {
 	/**/
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	uint32_t tinstr;
 	tinstr = instr & 0xFFFF;
 	DBG("In %s, instr=0x%x, tinstr=0x%x,\n", __FUNCTION__, instr, (tinstr));
@@ -1373,7 +1376,8 @@ int DYNCOM_TRANS(msr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	SET_CPSR;
 
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	Value *psr = CONST(0);
 	Value *operand;
 	uint32_t UnallocMask = 0x06f0fc00, UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
