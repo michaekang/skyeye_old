@@ -41,6 +41,8 @@ using namespace std;
 #include "skyeye_ram.h"
 #include "vfp/vfp.h"
 
+#define HYBRID_MODE		1
+
 #define CHECK_RS 	if(RS == 15) rs += 8
 #define CHECK_RM 	if(RM == 15) rm += 8
 
@@ -3405,9 +3407,10 @@ static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
 //	printf("[PHYSICAL][ADDR:0x%08llx]\n", phys_addr);
 	flush_bb(phys_addr);
 	flush_bb(phys_addr + 4096);
-
+#if HYBRID_MODE
 	/* flush the translated BB of dyncom */
       	clear_translated_cache(phys_addr); 
+#endif
 }
 
 void protect_code_page(uint32_t addr)
@@ -3703,14 +3706,22 @@ void InterpreterMainLoop(cpu_t *core)
 			cpu->Reg[15] &= 0xfffffffe;
 		} else
 			cpu->Reg[15] &= 0xfffffffc;
+#ifdef PROFILE
 		/* check next instruction address is valid. */
 		last_pc = cpu->Reg[15];
+#endif
 #if USER_MODE_OPT
 		phys_addr = cpu->Reg[15];
 #else
 		{
 			if (last_logical_base == (cpu->Reg[15] & 0xfffff000))
 			       phys_addr = last_physical_base + (cpu->Reg[15] & 0xfff);
+			else if((!(USER_MODE(cpu) & is_kernel_code(cpu->Reg[15]))) 
+				&& (!get_phys_page((cpu->Reg[15] & 0xfffff000) | (cpu->CP15[CP15(CP15_CONTEXT_ID)] & 0xff), phys_addr, INSN_TLB))){
+				phys_addr = (phys_addr & 0xfffff000) | (cpu->Reg[15] & 0xfff);
+				last_logical_base = cpu->Reg[15] & 0xfffff000;
+				last_physical_base = phys_addr & 0xfffff000;
+			}
 			else {
 			       /* check next instruction address is valid. */
 			       fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);

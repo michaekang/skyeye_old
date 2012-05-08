@@ -58,6 +58,9 @@ void remove_tlb_by_mva(uint32_t mva, tlb_type_t type);
 int fill_tlb(arm_core_t* core);
 
 extern arch_mem_ops_t arm_dyncom_mem_ops;
+
+#define USER_MODE(core) ((core->Mode == USER32MODE) || (core->Mode == USER26MODE) || (core->Mode == SYSTEM32MODE))
+#define is_kernel_code(pc) (pc > 0xc0000000)
 /* FIXME, the physical address for s3c6410, should get 
 these value from skyeye.conf */
 #define BANK0_START 0x40000000
