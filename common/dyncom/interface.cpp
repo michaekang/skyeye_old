@@ -527,10 +527,8 @@ cpu_run(cpu_t *cpu)
 			return JIT_RETURN_TRAP;
 		}
 		*(addr_t*)cpu->rf.phys_pc = phys_pc;
-		if(!is_user_mode(cpu)){
-			cpu->current_page_phys = phys_pc & 0xfffff000;
-			cpu->current_page_effec = pc & 0xfffff000; 
-		}
+		cpu->current_page_phys = phys_pc & 0xfffff000;
+		cpu->current_page_effec = pc & 0xfffff000; 
 #ifdef HASH_FAST_MAP
 #if L3_HASHMAP
 		fast_map hash_map = cpu->dyncom_engine->fmap;
@@ -565,16 +563,12 @@ cpu_run(cpu_t *cpu)
 //			printf("out of jit ret is %d icounter is %lld\n", ret, cpu->icounter);
 //			return ret;
 		}
-		if(!is_user_mode(cpu)){
-			cpu->switch_mode(cpu);
-		}
+		cpu->switch_mode(cpu);
 		UPDATE_TIMING(cpu, TIMER_RUN, false);
 		if (ret != JIT_RETURN_FUNCNOTFOUND)
 			return ret;
-		if(!is_user_mode(cpu)){
-			if((cpu->icounter - cpu->old_icounter) >= (TIMEOUT_THRESHOLD * 10))
-				return JIT_RETURN_TIMEOUT;
-		}
+		if((cpu->icounter - cpu->old_icounter) >= (TIMEOUT_THRESHOLD * 10))
+			return JIT_RETURN_TIMEOUT;
 	}
 }
 /**
