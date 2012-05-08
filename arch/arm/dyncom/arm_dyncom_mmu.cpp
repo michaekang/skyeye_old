@@ -302,7 +302,8 @@ fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
 #if 1
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 
 	fault = check_address_validity(core, virt_addr, &phys_addr, 1, INSN_TLB);
 
