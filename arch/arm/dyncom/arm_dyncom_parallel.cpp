@@ -60,7 +60,7 @@ extern ARMword ARMul_Emulate32 (ARMul_State *);
 #define QUEUE_LENGTH 1024
 /* Monothread: threshold compilation only
    Multithread: threshold compilation or Polling compilation (cpu intensive) */
-#define MULTI_THREAD 1
+#define MULTI_THREAD 0
 #define LIFO 0
 static uint32_t compiled_queue[QUEUE_LENGTH]; /* list of tagged addresses. Note: is not a shared resource */
 static stack<uint32_t> compile_stack; /* stack of untranslated addresses. Note: is a shared resource */
@@ -83,20 +83,6 @@ static char* running_mode_str[] = {
 	NULL
 };
 
-#if L3_HASHMAP
-#define PFUNC(pc)					\
-	if(hash_map[HASH_MAP_INDEX_L1(pc)] == NULL)	\
-		pfunc = NULL;				\
-	else if(hash_map[HASH_MAP_INDEX_L1(pc)][HASH_MAP_INDEX_L2(pc)] == NULL)				\
-		pfunc = NULL;										\
-	else if(hash_map[HASH_MAP_INDEX_L1(pc)][HASH_MAP_INDEX_L2(pc)][HASH_MAP_INDEX_L3(pc)] == NULL)	\
-		pfunc = NULL;										\
-	else												\
-		pfunc = (void *)hash_map[HASH_MAP_INDEX_L1(pc)][HASH_MAP_INDEX_L2(pc)][HASH_MAP_INDEX_L3(pc)];
-#else
-#define PFUNC(pc)					\
-	pfunc = (void*) hash_map[pc & 0x1fffff];
-#endif
 
 /**
 * @brief the handler for log option
@@ -141,17 +127,19 @@ void init_compiled_queue(cpu_t* cpu){
 		running_mode = PURE_INTERPRET;
 	}
 	skyeye_log(Info_log, __FUNCTION__, "Current running mode: %s\n", running_mode_str[running_mode]);
-	if (running_mode == HYBRID){
+	//if (running_mode == HYBRID){
 		if(pthread_rwlock_init(&compile_stack_rwlock, NULL)){
 			fprintf(stderr, "can not initilize the rwlock\n");
 		}
 		if(pthread_rwlock_init(&translation_rwlock, NULL)){
 			fprintf(stderr, "can not initilize the rwlock\n");
 		}
+	#if MULTI_THREAD
 		/* Create a thread to compile IR to native code */
 		pthread_t id;
 		create_thread(compiled_worker, (void*)cpu, &id);
-	}
+	#endif
+	//}
 	cpu->dyncom_engine->cur_tagging_pos = 0;
 }
 
@@ -213,7 +201,7 @@ void clear_translated_cache(addr_t phys_addr){
 	arm_core_t* core = get_current_core();
         cpu_t* cpu = (cpu_t *)core->dyncom_cpu->obj;
         /* flush two pages of code cache for dyncom */
-        for(int i = 0; i < 1024 * 2; i++){
+        for(int i = 0; i < 1024 * 4; i++){
                 //phys_addr = phys_addr + 4;
                 if (is_translated_code(cpu, phys_addr)) {
                         //clear native code when code section was written.
@@ -228,7 +216,7 @@ void clear_translated_cache(addr_t phys_addr){
                 fprintf(stderr, "Warnning: not clear the cache");
 #endif
                 }
-                phys_addr = phys_addr + 4;
+                phys_addr = phys_addr + 2;
         }
 }
 /* Only for HYBRID .
@@ -329,9 +317,8 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 			}
 		}
 		/* keep the tflag same with the bit in CPSR */
-		core->TFlag = core->Cpsr & (1 << THUMB_BIT);
+		core->TFlag = (core->Cpsr & (1 << THUMB_BIT));
 		//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
-		cpu->user_mode = USER_MODE(core);
 		push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
 		return 0;
 	case JIT_RETURN_TRAP:
@@ -482,6 +469,7 @@ static int handle_fp_insn(arm_core_t* core){
 
 /* This function handles tagging */
 static inline void push_compiled_work(cpu_t* cpu, uint32_t pc){
+	//printf("In %s, pc=0x%x\n", __FUNCTION__, pc);
 	protect_code_page(pc);
 	cpu_tag(cpu, pc);
 	cpu->dyncom_engine->cur_tagging_pos ++;
@@ -495,7 +483,7 @@ static void* compiled_worker(void* argp){
 	for(;;){
 		while(1){
 			uint32_t compiled_addr = 0xFFFFFFFF;
-			pthread_rwlock_rdlock(&compile_stack_rwlock);
+			pthread_rwlock_wrlock(&compile_stack_rwlock);
 			if (!compile_stack.empty()) {
 				compiled_addr = compile_stack.top();
 				compile_stack.pop();
@@ -520,4 +508,23 @@ static void* compiled_worker(void* argp){
 		usleep(2);
 	}
 	return NULL;
+}
+
+void push_to_compiled(cpu_t* cpu, addr_t addr){
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	cpu->user_mode = USER_MODE(core);
+	/* we need TFlag to judge the thumb or arm, during translation time */
+	core->Cpsr = (core->Cpsr & 0xffffffdf) | (core->TFlag << 5);
+        #if MULTI_THREAD
+        int ret;
+        if((ret = pthread_rwlock_trywrlock(&compile_stack_rwlock)) == 0){
+                compile_stack.push(addr);
+                pthread_rwlock_unlock(&compile_stack_rwlock);
+        }
+        else{
+                printf("Warning ,can not get the wrlock ,error is %d, %s\n", ret, strerror(ret));
+        }
+        #else
+        push_compiled_work(cpu, addr);
+        #endif
 }

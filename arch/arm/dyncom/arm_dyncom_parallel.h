@@ -41,6 +41,23 @@ int
 do_mode_option (skyeye_option_t * this_option, int num_params,
 	       const char *params[]);
 void clear_translated_cache(addr_t phys_addr);
+void push_to_compiled(cpu_t* cpu, addr_t addr);
+
+#if L3_HASHMAP
+#define PFUNC(pc)					\
+	if(hash_map[HASH_MAP_INDEX_L1(pc)] == NULL)	\
+		pfunc = NULL;				\
+	else if(hash_map[HASH_MAP_INDEX_L1(pc)][HASH_MAP_INDEX_L2(pc)] == NULL)				\
+		pfunc = NULL;										\
+	else if(hash_map[HASH_MAP_INDEX_L1(pc)][HASH_MAP_INDEX_L2(pc)][HASH_MAP_INDEX_L3(pc)] == NULL)	\
+		pfunc = NULL;										\
+	else												\
+		pfunc = (void *)hash_map[HASH_MAP_INDEX_L1(pc)][HASH_MAP_INDEX_L2(pc)][HASH_MAP_INDEX_L3(pc)];
+#else
+#define PFUNC(pc)					\
+	pfunc = (void*) hash_map[pc & 0x1fffff];
+#endif
+
 #ifdef __cplusplus
 }
 #endif

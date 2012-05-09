@@ -38,6 +38,8 @@ using namespace std;
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_run.h"
 #include "arm_dyncom_tlb.h"
+#include "arm_dyncom_translate.h"
+#include "dyncom/tag.h"
 #include "skyeye_ram.h"
 #include "vfp/vfp.h"
 
@@ -3230,7 +3232,8 @@ void insert_bb(unsigned int addr, int start)
 #endif
 }
 
-int find_bb(unsigned int addr, int &start)
+#define TRANS_THRESHOLD                 15000
+int find_bb(cpu_t* cpu, unsigned int addr, int &start)
 {
 	int ret = -1;
 #ifdef USE_DUMMY_CACHE
@@ -3244,6 +3247,12 @@ int find_bb(unsigned int addr, int &start)
 	if (it != CreamCache[HASH(addr)].end()) {
 		start = static_cast<int>(it->second);
 		ret = 0;
+#if HYBRID_MODE
+		/* increase the bb counter */
+		if(get_bb_prof(cpu, addr, 1) == TRANS_THRESHOLD){
+			push_to_compiled(cpu, addr);
+		}
+#endif
 	} else {
 		ret = -1;
 	}
@@ -3473,6 +3482,7 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 
 		/* If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction */
 		if (cpu->TFlag){
+		//if(cpu->Cpsr & (1 << THUMB_BIT)){
 			uint32_t arm_inst;
 			tdstate state;
 			state = decode_thumb_instr(cpu, inst, &arm_inst, &inst_size, &inst_base);
@@ -3487,6 +3497,7 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 		ret = decode_arm_instr(inst, &idx);
 		if (ret == DECODE_FAILURE) {
 			printf("[info] : Decode failure.\tPC : [0x%x]\tInstruction : [%x]\n", cpu->translate_pc, inst);
+			printf("cpsr=0x%x, cpu->TFlag=%d, r15=0x%x\n", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
 			exit(-1);
 		}
 //		printf("PC : [0x%x] INST : %s\n", cpu->translate_pc, arm_instruction[idx].name);
@@ -3572,7 +3583,7 @@ static bool InAPrivilegedMode(arm_core_t *core)
 
 #define THRESHOLD			100
 #define DURATION			25
-#define PROFILE
+//#define PROFILE
 
 void gene_hot_path(uint32_t start_pc, profiling_data *prof, int id)
 {
@@ -3737,8 +3748,103 @@ void InterpreterMainLoop(cpu_t *core)
 			       last_physical_base = phys_addr & 0xfffff000;
 			}
 		}
-#endif
-		if (find_bb(phys_addr, ptr) == -1) {
+#if HYBRID_MODE
+		/* check if the native code of dyncom is available */
+		fast_map hash_map = core->dyncom_engine->fmap;
+		void * pfunc = NULL;
+		PFUNC(phys_addr);
+		if(pfunc){
+			int rc = JIT_RETURN_NOERR;
+			core->current_page_phys = phys_addr & 0xfffff000;
+			core->current_page_effec = cpu->Reg[15] & 0xfffff000;
+			//printf("enter jit icounter is %lld, pc=0x%x\n", core->icounter, cpu->Reg[15]);
+			SAVE_NZCVT;
+			rc = cpu_run(core);
+			LOAD_NZCVT;
+			//printf("out of jit ret is %d icounter is %lld, pc=0x%x\n", rc, core->icounter, cpu->Reg[15]);
+			if(rc == JIT_RETURN_FUNCNOTFOUND){
+				/* keep the tflag same with the bit in CPSR */
+				//cpu->TFlag = cpu->Cpsr & (1 << THUMB_BIT);
+				//cpu->TFlag = cpu->Cpsr & (1 << 5);
+				switch_mode(cpu, cpu->Cpsr & 0x1f);
+				//printf("FUNCTION not found , pc=0x%x\n", cpu->Reg[15]);
+			       fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
+			       if (fault) {
+				       cpu->abortSig = true;
+				       cpu->Aborted = ARMul_PrefetchAbortV;
+				       cpu->AbortAddr = cpu->Reg[15];
+				       cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
+				       cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = cpu->Reg[15];
+				       goto END;
+				}
+				last_logical_base = cpu->Reg[15] & 0xfffff000;
+				last_physical_base = phys_addr & 0xfffff000;
+				core->current_page_phys = last_physical_base;
+				core->current_page_effec = last_logical_base;
+				//push_to_compiled(core, phys_addr);
+			}
+			else{
+				if((cpu->CP15[CP15(CP15_TLB_FAULT_STATUS)] & 0xf0)){
+					//printf("\n\n###############In %s, fsr=0x%x, fault_addr=0x%x, pc=0x%x\n\n", __FUNCTION__, cpu->CP15[CP15(CP15_FAULT_STATUS)], cpu->CP15[CP15(CP15_FAULT_ADDRESS)], cpu->Reg[15]);
+			//core->Reg[15] -= get_instr_size(cpu_dyncom);
+					fill_tlb(cpu);
+					goto END;
+				}
+				if (cpu->syscallSig) {
+					goto END;
+				}
+				if(rc == JIT_RETURN_TIMEOUT){
+					//printf("Timeout - Next handling by DYNCOM %x\n", cpu->Reg[15]);
+					goto END;
+				}
+				if (cpu->abortSig) {
+					goto END;
+				}
+				if (!cpu->NirqSig) {
+					if (!(cpu->Cpsr & 0x80)) {
+						goto END;
+					}
+				}
+			
+				/* if regular trap */
+				cpu->Reg[15] += get_instr_size(core);
+				uint32_t mode = cpu->Cpsr & 0x1f;
+				if ((mode != cpu->Mode) && (!is_user_mode(core))) {
+					switch_mode(cpu, mode);
+					//return 1;
+				}
+
+				goto END;
+			}
+			//phys_addr = cpu->Reg[15];
+		}
+		else{
+			if (last_logical_base == (cpu->Reg[15] & 0xfffff000))
+			       phys_addr = last_physical_base + (cpu->Reg[15] & 0xfff);
+			else if((!(USER_MODE(cpu) & is_kernel_code(cpu->Reg[15]))) 
+				&& (!get_phys_page((cpu->Reg[15] & 0xfffff000) | (cpu->CP15[CP15(CP15_CONTEXT_ID)] & 0xff), phys_addr, INSN_TLB))){
+				phys_addr = (phys_addr & 0xfffff000) | (cpu->Reg[15] & 0xfff);
+				last_logical_base = cpu->Reg[15] & 0xfffff000;
+				last_physical_base = phys_addr & 0xfffff000;
+			}
+			else {
+			       /* check next instruction address is valid. */
+			       fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
+			       if (fault) {
+				       cpu->abortSig = true;
+				       cpu->Aborted = ARMul_PrefetchAbortV;
+				       cpu->AbortAddr = cpu->Reg[15];
+				       cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
+				       cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = cpu->Reg[15];
+				       goto END;
+			       }
+			       last_logical_base = cpu->Reg[15] & 0xfffff000;
+			       last_physical_base = phys_addr & 0xfffff000;
+			}
+		}
+#endif /* #if HYBRID_MODE */
+#endif /* #if USER_MODE_OPT */
+		if (find_bb(core, phys_addr, ptr) == -1){
 			if (InterpreterTranslate(core, ptr, phys_addr) == FETCH_EXCEPTION)
 				goto END;
 		}
