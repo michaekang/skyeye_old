@@ -260,7 +260,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 	if ((CP15REG(CP15_CONTROL) & 1) == 0) {
 		/* MMU or MPU disabled. */
 		*phys_addr = virt_addr;
-		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (0x3 << 2) | 0x1 , access_type);
+		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (0x3), access_type);
 		return NO_FAULT;
 	} else {
 		if (!get_phys_page((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
@@ -291,7 +291,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 			}
 		}
 		//printf("In %s, get phys_addr=0x%x\n", __FUNCTION__, *phys_addr);
-		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (ap << 2) | 0x1 , access_type);
+		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (ap), access_type);
 		//insert_tlb(core, (virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap);
 	}
 	return fault;

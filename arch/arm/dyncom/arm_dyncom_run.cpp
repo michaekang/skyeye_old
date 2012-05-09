@@ -815,7 +815,7 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 		user_mode = CONST1(1);
 	else
 		user_mode = CONST1(0);
-	Value* ap = TRUNC32(LSHR(AND(tlb_entry, CONST64(0xC)), CONST64(2)));
+	Value* ap = TRUNC32(AND(tlb_entry, CONST64(0x3)));
 		/*
 		 * if (result == 0)
 		 *	if(ap == 0)
