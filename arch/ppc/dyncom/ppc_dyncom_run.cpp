@@ -572,7 +572,7 @@ static void ppc_dyncom_profile(e500_core_t* core){
 	cpu_t* cpu = (cpu_t*)get_cast_conf_obj(core->dyncom_cpu, "cpu_t");
 	struct ppc_dyncom_profile profile;
 	memset(&profile, 0, sizeof(struct ppc_dyncom_profile));
-	printf("DFS : %d \n", LIMIT_TAGGING_DFS);
+	//printf("DFS : %d \n", LIMIT_TAGGING_DFS);
 	printf("LLVM OPTIMIZE %s\n",
 			cpu->dyncom_engine->flags_codegen & CPU_CODEGEN_OPTIMIZE ? "on" :"off");
 	printf("Verify Function %s\n",
