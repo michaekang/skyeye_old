@@ -703,33 +703,37 @@ arch_debug_me(cpu_t *cpu, BasicBlock *bb, BasicBlock *exit_bb)
  */
 void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, uint32_t size)
 {
-#if USER_MODE_OPT
-	if(size == 8)
-		STORE8(value, addr);
-	else if(size == 16)
-		STORE16(value, addr);
-	else if(size == 32)
-		STORE32(value, addr);
-	else{
-		printf("in %s, error size\n", __func__);
-		exit(0);
+//#if USER_MODE_OPT
+	if(cpu->user_mode || cpu->is_user_mode){
+		if(size == 8)
+			STORE8(value, addr);
+		else if(size == 16)
+			STORE16(value, addr);
+		else if(size == 32)
+			STORE32(value, addr);
+		else{
+			printf("in %s, error size\n", __func__);
+			exit(0);
+		}
 	}
-#else
+	else{
+//#else
 	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
 	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 0, cpu->dyncom_engine->bb_trap);
-	if (cpu->dyncom_engine->ptr_func_write_memory == NULL) {
-		return;
+		if (cpu->dyncom_engine->ptr_func_write_memory == NULL) {
+			return;
+		}
+		Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+		Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
+		Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
+		std::vector<Value *> params;
+		params.push_back(v_cpu_ptr);
+		params.push_back(addr);
+		params.push_back(value);
+		params.push_back(CONST(size));
+		CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
 	}
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
-	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
-	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
-	std::vector<Value *> params;
-	params.push_back(v_cpu_ptr);
-	params.push_back(addr);
-	params.push_back(value);
-	params.push_back(CONST(size));
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
-#endif
+//#endif
 }
 /**
  * @brief Generate the read memory llvm IR
@@ -744,45 +748,49 @@ void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, ui
  */
 Value *arch_read_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, uint32_t sign, uint32_t size)
 {
-#if USER_MODE_OPT
-	Value* tmp;
-	if(size == 8){
-		tmp = arch_load8(cpu, addr, bb);
-		if(sign)
-			return SEXT32(tmp);
-		else
-			return ZEXT32(tmp); 
+//#if USER_MODE_OPT
+	if(cpu->user_mode || cpu->is_user_mode){
+		Value* tmp;
+		if(size == 8){
+			tmp = arch_load8(cpu, addr, bb);
+			if(sign)
+				return SEXT32(tmp);
+			else
+				return ZEXT32(tmp); 
+		}
+		else if(size == 16){
+			tmp = arch_load16_aligned(cpu, addr, bb);
+			if(sign)
+				return SEXT32(tmp);
+			else
+				return ZEXT32(tmp); 
+		}
+		else if(size == 32)
+			return arch_load32_aligned(cpu, addr, bb);
+		else{
+			printf("in %s, error size\n", __func__);
+			exit(0);
+		}
 	}
-	else if(size == 16){
-		tmp = arch_load16_aligned(cpu, addr, bb);
-		if(sign)
-			return SEXT32(tmp);
-		else
-			return ZEXT32(tmp); 
-	}
-	else if(size == 32)
-		return arch_load32_aligned(cpu, addr, bb);
 	else{
-		printf("in %s, error size\n", __func__);
-		exit(0);
-	}
-#else
-	if (cpu->dyncom_engine->ptr_func_read_memory == NULL) {
-		return NULL;
-	}
+//#else
+		if (cpu->dyncom_engine->ptr_func_read_memory == NULL) {
+			return NULL;
+		}
 
 	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 1, cpu->dyncom_engine->bb_trap);
 
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
-	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
-	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
-	std::vector<Value *> params;
-	params.push_back(v_cpu_ptr);
-	params.push_back(addr);
-	params.push_back(CONST(size));
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
-	return ret;
-#endif
+		Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+		Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
+		Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
+		std::vector<Value *> params;
+		params.push_back(v_cpu_ptr);
+		params.push_back(addr);
+		params.push_back(CONST(size));
+		CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
+		return ret;
+	}
+//#endif
 }
 /**
  * @brief Generate the invoke syscall llvm IR

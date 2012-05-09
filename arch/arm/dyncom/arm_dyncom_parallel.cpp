@@ -331,8 +331,8 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		/* keep the tflag same with the bit in CPSR */
 		core->TFlag = core->Cpsr & (1 << THUMB_BIT);
 		//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
-		if(running_mode != HYBRID)
-			push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
+		cpu->user_mode = USER_MODE(core);
+		push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
 		return 0;
 	case JIT_RETURN_TRAP:
 	{
