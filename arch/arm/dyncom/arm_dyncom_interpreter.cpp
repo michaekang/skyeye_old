@@ -78,7 +78,7 @@ static int exclusive_detect(ARMul_State* state, ARMword addr){
 			return 0;
 	}
 	#endif
-	if(state->exclusive_tag_array[0] == addr)
+	if(state->exclusive_tag == addr)
 		return 0;
 	else
 		return -1;
@@ -96,7 +96,7 @@ static void add_exclusive_addr(ARMul_State* state, ARMword addr){
 	}
 	printf("In %s ,can not monitor the addr, out of array\n", __FUNCTION__);
 	#endif
-	state->exclusive_tag_array[0] = addr;
+	state->exclusive_tag = addr;
 	return;
 }
 
@@ -111,7 +111,7 @@ static void remove_exclusive(ARMul_State* state, ARMword addr){
 		}
 	}
 	#endif
-	state->exclusive_tag_array[0] = 0xFFFFFFFF;
+	state->exclusive_tag = 0xFFFFFFFF;
 }
 
 
@@ -4006,7 +4006,7 @@ void InterpreterMainLoop(cpu_t *core)
 	{
 		INC_ICOUNTER;
 		remove_exclusive(cpu, 0);
-		cpu->exclusive_access_state = 0;
+		cpu->exclusive_state = 0;
 
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(clrex_inst));
@@ -4485,7 +4485,7 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 
 			add_exclusive_addr(cpu, phys_addr);
-			cpu->exclusive_access_state = 1;
+			cpu->exclusive_state = 1;
 
 			//bus_read(32, addr, &value);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
@@ -4512,7 +4512,7 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 			
 			add_exclusive_addr(cpu, phys_addr);
-			cpu->exclusive_access_state = 1;
+			cpu->exclusive_state = 1;
 
 			//bus_read(8, addr, &value);
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
@@ -5661,10 +5661,10 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 
 			int dest_reg = BITS(inst_cream->inst, 12, 15);
-			if((exclusive_detect(cpu, phys_addr) == 0) && (cpu->exclusive_access_state == 1)){
+			if((exclusive_detect(cpu, phys_addr) == 0) && (cpu->exclusive_state == 1)){
 				remove_exclusive(cpu, phys_addr);
 				cpu->Reg[dest_reg] = 0;
-				cpu->exclusive_access_state = 0;
+				cpu->exclusive_state = 0;
 				
 				//			bus_write(32, addr, value);
 				fault = interpreter_write_memory(core, addr, phys_addr, value, 32);
@@ -5691,10 +5691,10 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 			//bus_write(8, addr, value);
 			int dest_reg = BITS(inst_cream->inst, 12, 15);
-			if((exclusive_detect(cpu, phys_addr) == 0) && (cpu->exclusive_access_state == 1)){
+			if((exclusive_detect(cpu, phys_addr) == 0) && (cpu->exclusive_state == 1)){
 				remove_exclusive(cpu, phys_addr);
 				cpu->Reg[dest_reg] = 0;
-				cpu->exclusive_access_state = 0;
+				cpu->exclusive_state = 0;
 				fault = interpreter_write_memory(core, addr, phys_addr, value, 8);
 				if (fault) goto MMU_EXCEPTION;
 

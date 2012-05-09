@@ -113,24 +113,6 @@ static bool_t is_page_end(cpu_t* cpu, addr_t a)
 	uint32 page_end_addr = 0x1000 - cpu->f.get_instr_length(cpu);
 	return ((a & 0x00000fff) == page_end_addr) ? True : False;
 }
-static inline int exclusive_detect(arm_core_t* state, ARMword addr){
-	int i;
-	if(state->exclusive_tag_array[0] == addr)
-		return 0;
-	else
-		return -1;
-}
-
-static inline void add_exclusive_addr(arm_core_t* state, ARMword addr){
-	int i;
-	state->exclusive_tag_array[0] = addr;
-	return;
-}
-
-static inline void remove_exclusive(arm_core_t* state, ARMword addr){
-	state->exclusive_tag_array[0] = 0xFFFFFFFF;
-	return;
-}
 
 int
 dyncom_check_perms (arm_core_t *core, int ap, int read)
@@ -481,18 +463,6 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 skip_read:
 	//printf("read:pc=0x%x, virt_addr=0x%x, addr=0x%x, data=0x%x\n\n", core->Reg[15], virt_addr,  phys_addr | (virt_addr & 3), value);
 	/* ldrex or ldrexb */
-#if 0
-	uint32 instr;
-	if(!((core->Cpsr & (1 << THUMB_BIT)) | core->TFlag)){
-		bus_read(32, core->phys_pc, &instr);
-
-		if(((instr & 0x0FF000F0) == 0x01900090) ||
-			((instr & 0x0FF000F0) == 0x01d00090)){
-			add_exclusive_addr(core, phys_addr | (virt_addr & 3));
-			core->exclusive_access_state = 1;
-		}
-	}
-#endif
 	return value;
 }
 #define LOG_IN_CLR	skyeye_printf_in_color
@@ -525,28 +495,6 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	if (phys_addr == 0x50c27fe4 && cpu->icounter > 248306791) {
 		LOG_IN_CLR(RED, "pc is %x bus write at %x value is %x size is %d\n", ((arm_core_t *)cpu->cpu_data)->Reg[15], phys_addr, value, size);
 		exit(-1);
-	}
-#endif
-#if 0
-	/* strex, strexb*/
-	uint32 instr;
-	if(!((core->Cpsr & (1 << THUMB_BIT)) || core->TFlag)){
-		bus_read(32, core->phys_pc, &instr);
-		if(((instr & 0x0FF000F0) == 0x01800090) ||
-			((instr & 0x0FF000F0) == 0x01c00090)){
-			/* failed , the address is monitord now. */
-			int dest_reg = (instr & 0xF000) >> 12;
-			if(((exclusive_detect(core, phys_addr | (virt_addr & 3))) == 0) && (core->exclusive_access_state == 1)){
-				remove_exclusive(core, phys_addr | (virt_addr & 3));
-				core->Reg[dest_reg] = 0;
-				core->exclusive_access_state = 0;
-			}
-			else{
-				core->Reg[dest_reg] = 1;
-				//printf("In %s, try to strex a monitored address 0x%x\n", __FUNCTION__, pa);
-				return;
-			}
-		}
 	}
 #endif
 #if DIFF_WRITE
