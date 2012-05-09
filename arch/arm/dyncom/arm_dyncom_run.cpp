@@ -810,7 +810,11 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 		 *       10        Read/Write             Read only
 		 *       11        Read/Write             Read/Write
 		 */
-	Value* user_mode = GET_USER_MODE();
+	Value* user_mode;
+	if(cpu->user_mode)
+		user_mode = CONST1(1);
+	else
+		user_mode = CONST1(0);
 	Value* ap = TRUNC32(LSHR(AND(tlb_entry, CONST64(0xC)), CONST64(2)));
 		/*
 		 * if (result == 0)
