@@ -317,7 +317,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 			}
 		}
 		/* keep the tflag same with the bit in CPSR */
-		core->TFlag = (core->Cpsr & (1 << THUMB_BIT));
+		core->TFlag = (core->Cpsr & (1 << THUMB_BIT)) ? 1 : 0;
 		//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
 		push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
 		return 0;
