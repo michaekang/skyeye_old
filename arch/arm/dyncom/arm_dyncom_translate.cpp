@@ -827,11 +827,16 @@ int DYNCOM_TRANS(cpy)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			LET(15, CONST(pc + 8));
 			LET(PHYS_PC, CONST(pc + 8));
 		} else {
-			LET(15, ADD(R(15), CONST(8)));
-			LET(PHYS_PC, R(15));
+			if (((pc & 0xfff) != 0xffc)) {
+				LET(15, ADD(R(15), CONST(8)));
+				LET(PHYS_PC, R(15));
+			}
 		}
 	}
-	Value *op1 = R(RM);
+//	Value *op1 = ((pc & 0xfff) != 0xffc && RM != 15) ? R(RM) : ADD(R(15), CONST(8));
+//	Value *op1 = R(RM);
+	Value *op1;
+	op1 = (RM == 15 && (pc & 0xfff) == 0xffc) ? ADD(R(15), CONST(8)) : R(RM);
 
 	LET(RD, op1);
 	if(RD == 15) {
@@ -2555,6 +2560,9 @@ int DYNCOM_TAG(cpy)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
+	if ((RM == 15) && (cpu->mem_ops.is_page_end(cpu, pc))) {
+		*tag |= TAG_NEED_PC;
+	}
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -2762,6 +2770,7 @@ int DYNCOM_TAG(mov)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
+
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
