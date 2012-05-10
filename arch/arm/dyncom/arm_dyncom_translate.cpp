@@ -112,9 +112,10 @@ static arm_opc_func_t ppc_opc_invalid = {
 	opc_invalid_translate_cond,
 };
 
-inline bool InAPrivilegedMode(arm_core_t *core)
+/* only judge the mode in translation */
+inline bool InAPrivilegedMode(cpu_t *cpu)
 {
-	return (core->Mode != USER32MODE);
+	return (!cpu->user_mode);
 }
 
 //typedef std::map<addr_t, int> decoder_cache;
@@ -1427,7 +1428,7 @@ int DYNCOM_TRANS(msr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	SET_CPSR;
 
 	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
-	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	//arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	Value *psr = CONST(0);
 	Value *operand;
 	uint32_t UnallocMask = 0x06f0fc00, UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
@@ -1442,7 +1443,7 @@ int DYNCOM_TRANS(msr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 				| (BIT(18) ? 0xff0000 : 0) | (BIT(19) ? 0xff000000 : 0);
 	uint32_t mask;
 	if (!BIT(22)) {
-		if (InAPrivilegedMode(core)) {
+		if (InAPrivilegedMode(cpu)) {
 			mask = byte_mask & (UserMask | PrivMask);
 		} else {
 			mask = byte_mask & UserMask;
