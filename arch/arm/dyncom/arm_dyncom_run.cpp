@@ -989,15 +989,17 @@ arch_arm_invalidate_by_all_init(cpu_t *cpu){
 *
 * @param cpu
 */
+const uint32_t passed_sec = 5;
+const uint32_t MILL = 1000 * 1000;
+const uint32_t period_in_usec = MILL * passed_sec;
 static void print_statistics(void* priv_data){
 	static uint64_t last_icounter = 0;
 	cpu_t* cpu = (cpu_t*)priv_data;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	
-        printf("\ncurrent funcions is %d, core->icounter=%lld, cpu->icounter=%lld, core->kernel_icouner=%lld, passed_icounter=%lld\n", cpu->dyncom_engine->functions, core->icounter, cpu->icounter, core->kernel_icounter, core->icounter + cpu->icounter - last_icounter);
-        printf("current sec=%d, usec=%lld\n", get_clock_sec(), get_clock_us());
+	uint64_t total_icounter = core->icounter + cpu->icounter;	
+        skyeye_printf_in_color(BLUE, "\ncurrent translated funcions is %d, current sec=%d, MIPS=%f\n", cpu->dyncom_engine->functions, get_clock_sec(), (float)(total_icounter - last_icounter)/(MILL * passed_sec));
+	printf(" total_icounter=%f Mill fast_interp icounter=%f(%f), dyncom icounter=%f(%f), fast_interp kernel_icouner=%lld(%f), \n", (float)total_icounter / MILL, (float)core->icounter/MILL, (float)core->icounter/total_icounter, (float)cpu->icounter / MILL, (float)cpu->icounter/total_icounter, core->kernel_icounter, (float)core->kernel_icounter/MILL);
         last_icounter = core->icounter + cpu->icounter;
-
 }
 void arm_dyncom_init(arm_core_t* core){
 	cpu_t* cpu = cpu_new(0, 0, arm_arch_func);
@@ -1098,7 +1100,7 @@ void arm_dyncom_init(arm_core_t* core){
 	init_compiled_queue(cpu);
 	//if(running_mode == HYBRID || running_mode == PURE_DYNCOM){
 		int timer_id;
-		create_thread_scheduler(1000000, Periodic_sched, print_statistics, (void *)cpu, &timer_id);
+		create_thread_scheduler(period_in_usec, Periodic_sched, print_statistics, (void *)cpu, &timer_id);
 	//}
 	return;
 }
