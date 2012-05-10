@@ -318,6 +318,8 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		}
 		/* keep the tflag same with the bit in CPSR */
 		core->TFlag = (core->Cpsr & (1 << THUMB_BIT)) ? 1 : 0;
+		cpu->TFlag = core->TFlag;
+		cpu->user_mode = USER_MODE(core);
 		//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
 		push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
 		return 0;
@@ -515,6 +517,7 @@ void push_to_compiled(cpu_t* cpu, addr_t addr){
 	cpu->user_mode = USER_MODE(core);
 	/* we need TFlag to judge the thumb or arm, during translation time */
 	core->Cpsr = (core->Cpsr & 0xffffffdf) | (core->TFlag << 5);
+	cpu->TFlag = core->TFlag;
         #if MULTI_THREAD
         int ret;
         if((ret = pthread_rwlock_trywrlock(&compile_stack_rwlock)) == 0){

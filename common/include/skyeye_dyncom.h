@@ -508,7 +508,8 @@ typedef struct cpu {
 	debug_function_t debug_func;
 	syscall_function_t syscall_func;
 	switch_mode_function_t switch_mode;
-	int user_mode; /* indicate if we are in user mode */
+	int user_mode; /* indicate if the bb is for user mode during translation */
+	int TFlag; /* indicate if the bb is translated for thumb */
 } cpu_t;
 
 enum {

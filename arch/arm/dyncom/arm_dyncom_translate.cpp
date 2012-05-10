@@ -227,7 +227,7 @@ int arch_arm_tag_instr(cpu_t *cpu, addr_t pc, tag_t *tag, addr_t *new_pc, addr_t
 	int index = -1;
 	int ret = DECODE_FAILURE;
 	tdstate current_state = t_undefined;
-	if(core->Cpsr & (1 << THUMB_BIT)){
+	if(cpu->TFlag){
 		/* Get the corresponding arm instruction for thumb instruction */
 		uint32 arm_inst;
 
@@ -273,7 +273,7 @@ int arch_arm_translate_instr(cpu_t *cpu, addr_t pc, BasicBlock *bb) {
 	//printf("In %s, instr=0x%x, pc = 0x%x\n", __FUNCTION__, instr, pc);
 	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	if(core->Cpsr &  (1 << THUMB_BIT)){
+	if(cpu->TFlag){
 		uint32 arm_inst;
 		int index;
 		tdstate current_state = decode_dyncom_thumb_instr(core, instr, &arm_inst, pc, &index);
@@ -695,8 +695,8 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		else
 			LET(14, ADD(R(15),CONST(INSTR_SIZE)));
 		/* if thumb state, we need to Ored with one */
-		arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-		if(core->Cpsr & (1 << THUMB_BIT)){
+		//arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+		if(cpu->TFlag){
 			LET(14, OR(R(14), CONST(0x1)));
 		}
 		LET(15, AND(R(RM), CONST(0xFFFFFFFE)));
@@ -710,10 +710,11 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		else
 			LET(14, ADD(R(15),CONST(INSTR_SIZE)));
 		/* if thumb state, we need to Ored with one */
-		arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-		if(core->Cpsr & (1 << THUMB_BIT)){
+		//arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+		//if(core->Cpsr & (1 << THUMB_BIT)){
+		if(cpu->TFlag)
 			LET(14, OR(R(14), CONST(0x1)));
-		}
+		//}
 		int signed_immed_24 = BITS(0, 23);
 		int signed_int = signed_immed_24;
 		signed_int = (signed_int) & 0x800000 ? (0x3F000000 | signed_int) : signed_int;
