@@ -302,3 +302,4 @@ uint32_t RAM32LE(uint8_t *RAM, addr_t a);
 /* debugging */
 #define DEBUG_ME()   arch_debug_me(cpu, bb)
 //#define WINDOW_CHECK(wr, ws, wt) arch_windowcheck(cpu, bb, wr, ws, wt)
+int func_not_found_func( uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, fp_check_mm_t checkfp, unsigned long TLB);

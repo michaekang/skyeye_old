@@ -3762,7 +3762,7 @@ void InterpreterMainLoop(cpu_t *core)
 			rc = cpu_run(core);
 			LOAD_NZCVT;
 			//printf("out of jit ret is %d icounter is %lld, pc=0x%x\n", rc, core->icounter, cpu->Reg[15]);
-			if(rc == JIT_RETURN_FUNCNOTFOUND){
+			if((rc == JIT_RETURN_FUNCNOTFOUND) || (rc == JIT_RETURN_FUNC_BLANK)){
 				/* keep the tflag same with the bit in CPSR */
 				//cpu->TFlag = cpu->Cpsr & (1 << THUMB_BIT);
 				//cpu->TFlag = cpu->Cpsr & (1 << 5);

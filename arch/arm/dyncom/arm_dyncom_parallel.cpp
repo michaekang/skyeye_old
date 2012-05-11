@@ -219,7 +219,7 @@ void clear_translated_cache(addr_t phys_addr){
                         pthread_rwlock_unlock(&translation_rwlock);
 #else
 			//fprintf(stderr, "Warnning: not clear the cache");
-			cpu->dyncom_engine->fmap[(phys_addr) & (HASH_FAST_MAP_SIZE - 1)] = 0;
+			cpu->dyncom_engine->fmap[(phys_addr) & (HASH_FAST_MAP_SIZE - 1)] = (void *)func_not_found_func;
 #endif
                 }
                 phys_addr = phys_addr + 2;
@@ -313,6 +313,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		return 1;
 	case JIT_RETURN_SINGLESTEP:
 		/* TODO */
+	case JIT_RETURN_FUNC_BLANK:
 	case JIT_RETURN_FUNCNOTFOUND:
 		//printf("pc %x is not found, phys_pc is %p\n", core->Reg[15], core->phys_pc);
 		if (!is_user_mode(cpu))

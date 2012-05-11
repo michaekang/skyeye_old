@@ -444,7 +444,7 @@ static void save_startbb_addr(cpu_t *cpu, addr_t pc){
 	}
 }
 
-#define LIMIT_TAGGING_DFS 2
+#define LIMIT_TAGGING_DFS 4
 static void
 tag_recursive(cpu_t *cpu, addr_t pc, int level)
 {

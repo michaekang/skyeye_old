@@ -346,7 +346,8 @@ inline void clear_cache_item(fast_map fmap, addr_t addr)
 
 #else
 typedef void** fast_map;
-#define HASH_FAST_MAP_SIZE 0x100000
+//#define HASH_FAST_MAP_SIZE 0x100000
+#define HASH_FAST_MAP_SIZE 0x20000000
 
 #endif /* #if L3_HASHMAP */
 #else
@@ -515,6 +516,7 @@ typedef struct cpu {
 enum {
 	JIT_RETURN_NOERR = 0,
 	JIT_RETURN_FUNCNOTFOUND,
+	JIT_RETURN_FUNC_BLANK,
 	JIT_RETURN_SINGLESTEP,
 	JIT_RETURN_TRAP,
 	JIT_RETURN_TIMEOUT

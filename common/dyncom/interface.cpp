@@ -69,6 +69,10 @@ is_valid_vr_size(size_t size)
 	}
 }
 
+int func_not_found_func(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, fp_check_mm_t checkfp, unsigned long TLB){
+        return JIT_RETURN_FUNC_BLANK;
+}
+
 //////////////////////////////////////////////////////////////////////
 // cpu_t
 //////////////////////////////////////////////////////////////////////
@@ -113,7 +117,8 @@ cpu_new(uint32_t flags, uint32_t arch_flags, arch_func_t arch_func)
 	memset(cpu->dyncom_engine->fmap, NULL, sizeof(void***) * HASH_MAP_SIZE_L1);
 #else
 	cpu->dyncom_engine->fmap = (fast_map)malloc(sizeof(void *) * HASH_FAST_MAP_SIZE);
-	memset(cpu->dyncom_engine->fmap, 0, sizeof(void *) * HASH_FAST_MAP_SIZE);
+	for(int i = 0; i < HASH_FAST_MAP_SIZE; i++)
+		cpu->dyncom_engine->fmap[i] = (void *)func_not_found_func;
 #endif /* #if L3_HASHMAP */
 
 #endif
@@ -542,8 +547,8 @@ cpu_run(cpu_t *cpu)
 #else
 		fast_map hash_map = cpu->dyncom_engine->fmap;
 		pfunc = (fp_t)hash_map[phys_pc & (HASH_FAST_MAP_SIZE - 1)];
-		if(pfunc == NULL)
-			return JIT_RETURN_FUNCNOTFOUND;
+		//if(pfunc == NULL)
+		//	return JIT_RETURN_FUNCNOTFOUND;
 #endif
 #else
 		fast_map &func_addr = cpu->dyncom_engine->fmap;
