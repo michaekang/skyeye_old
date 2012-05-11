@@ -139,3 +139,6 @@ INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
 INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
 INCLUDES += -I$(top_srcdir)/soc/arm/goldfish/
 INCLUDES += -I/usr/local/include/
+if WIN32
+INCLUDES += -I/MinGW/GnuWin32/include/
+endif
