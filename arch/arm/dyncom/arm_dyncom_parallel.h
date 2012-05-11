@@ -55,7 +55,7 @@ void push_to_compiled(cpu_t* cpu, addr_t addr);
 		pfunc = (void *)hash_map[HASH_MAP_INDEX_L1(pc)][HASH_MAP_INDEX_L2(pc)][HASH_MAP_INDEX_L3(pc)];
 #else
 #define PFUNC(pc)					\
-	pfunc = (void*) hash_map[pc & 0x1fffff];
+	pfunc = (void*) hash_map[pc & (HASH_FAST_MAP_SIZE - 1)];
 #endif
 
 #ifdef __cplusplus

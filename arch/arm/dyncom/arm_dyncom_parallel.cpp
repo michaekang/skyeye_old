@@ -180,40 +180,46 @@ static int flush_current_page(cpu_t *cpu){
 }
 
 /* This function clears the whole basic block cache (translation and tags), and frees the memory */
+
 inline int clear_cache(cpu_t *cpu, fast_map hash_map)
 {
+#if 0
 	uint32_t index;
 	void* pfunc = NULL;
 	for(index = 0; index <= cpu->dyncom_engine->cur_tagging_pos; index++) {
 		compiled_queue[index] = -1;
 		cpu->dyncom_engine->startbb[index].clear();
 	}
+
 	clear_fmap(hash_map);
 	clear_tag_table(cpu);
 	cpu_flush(cpu);
 	cpu->dyncom_engine->cur_tagging_pos = 0;
 	translated_block = 0;
 	//cpu->dyncom_engine->exec_engine = ExecutionEngine::create(cpu->dyncom_engine->mod);
+#endif
 	return No_exp;
 }
 
 void clear_translated_cache(addr_t phys_addr){
 	arm_core_t* core = get_current_core();
         cpu_t* cpu = (cpu_t *)core->dyncom_cpu->obj;
+	phys_addr = phys_addr & 0xFFFFF000;
         /* flush two pages of code cache for dyncom */
         for(int i = 0; i < 1024 * 4; i++){
                 //phys_addr = phys_addr + 4;
                 if (is_translated_code(cpu, phys_addr)) {
                         //clear native code when code section was written.
                         addr_t addr = find_bb_start(cpu, phys_addr);
+                        clear_tag(cpu, phys_addr);
 #if L3_HASHMAP
                         extern pthread_rwlock_t translation_rwlock;
                         pthread_rwlock_wrlock(&translation_rwlock);
-                        clear_tag(cpu, phys_addr);
                         clear_cache_item(cpu->dyncom_engine->fmap, addr);
                         pthread_rwlock_unlock(&translation_rwlock);
 #else
-                fprintf(stderr, "Warnning: not clear the cache");
+			//fprintf(stderr, "Warnning: not clear the cache");
+			cpu->dyncom_engine->fmap[(phys_addr) & (HASH_FAST_MAP_SIZE - 1)] = 0;
 #endif
                 }
                 phys_addr = phys_addr + 2;
