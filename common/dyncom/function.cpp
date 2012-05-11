@@ -289,8 +289,8 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 		// declare flags
 		cpu_flags_layout_t const *flags_layout = cpu->info.flags_layout;
 		for (size_t i = 0; i < cpu->info.flags_count; i++) {
-			//#if OPT_LOCAL_REGISTERS
-			#if 0
+			#if OPT_LOCAL_REGISTERS
+			//#if 0
 			Value *f = new AllocaInst(getIntegerType(1), flags_layout[i].name,
 					bb);
 			#else
