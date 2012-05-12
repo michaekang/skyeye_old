@@ -697,25 +697,34 @@ static int arch_arm_effective_to_physical(cpu_t *cpu, uint32_t addr, uint32_t *r
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	fault_t fault = NO_FAULT;
 	addr_t phys_addr;
-	if(is_user_mode(cpu)) {
-		*result = addr;
-		return 0;
-	} else {
-		//fault = get_phys_addr(cpu, addr, &phys_addr, 32, 1);
-		fault = check_address_validity(core, addr, &phys_addr, 1, INSN_TLB);
-		if (fault) {
-			LOG("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
-			LOG("fault is %d\n", fault);
-			core->abortSig = true;
-			core->Aborted = ARMul_PrefetchAbortV;
-			core->AbortAddr = addr;
-			core->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
-			core->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
-			return fault;
+	//fault = get_phys_addr(cpu, addr, &phys_addr, 32, 1);
+	if (!get_phys_page((addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), phys_addr, INSN_TLB)) {
+		if((addr > 0xc0000000) && USER_MODE(core)){
+			if (dyncom_check_perms(core, GET_AP(phys_addr), 1)) {
+				*result = (phys_addr & 0xfffff000) | (addr & 0xfff);
+				return 0;
+			}
+			/* go to check_address_validity */	
 		}
-		*result = phys_addr;
-		return 0;
+		else{
+			*result = (phys_addr & 0xfffff000) | (addr & 0xfff);
+			return 0;
+		}
+			
 	}
+	fault = check_address_validity(core, addr, &phys_addr, 1, INSN_TLB);
+	if (fault) {
+		LOG("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
+		LOG("fault is %d\n", fault);
+		core->abortSig = true;
+		core->Aborted = ARMul_PrefetchAbortV;
+		core->AbortAddr = addr;
+		core->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
+		core->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
+		return fault;
+	}
+	*result = phys_addr;
+	return 0;
 }
 
 
