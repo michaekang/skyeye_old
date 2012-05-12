@@ -758,6 +758,14 @@ arch_check_mm(cpu_t *cpu, BasicBlock *bb, Value* addr, int count, int read, Basi
 	return load_store_bb;
 }
 #endif
+static BasicBlock* create_mmu_fault_bb(cpu_t* cpu, Value* result, int fault, Value* fault_addr){
+	BasicBlock *bb = BasicBlock::Create(_CTX(), "mmu_fault", cpu->dyncom_engine->cur_func, 0);		
+	LET(CP15_TLB_FAULT_STATUS, SELECT(result, CONST(fault), R(CP15_TLB_FAULT_STATUS)));
+	LET(CP15_TLB_FAULT_ADDR, SELECT(result, fault_addr, R(CP15_TLB_FAULT_ADDR)));
+	BranchInst::Create(cpu->dyncom_engine->bb_trap, bb);
+	return bb;
+}
+
 Value *
 get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 {
@@ -838,8 +846,6 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 		 */
 	fault_addr = SELECT(result, SELECT(ICMP_EQ(fault_addr, CONST(0xdeadc0de)), addr, fault_addr), CONST(0xDEADC0DE));
 
-	LET(CP15_TLB_FAULT_STATUS, SELECT(result, CONST(fault), R(CP15_TLB_FAULT_STATUS)));
-	LET(CP15_TLB_FAULT_ADDR, SELECT(result, fault_addr, R(CP15_TLB_FAULT_ADDR)));
 
 	/* Get physical address */	
 	Value* phys_page = SELECT(result, CONST(0xdead0000), TRUNC32(AND(tlb_entry, CONST64(0xFFFFF000))));
@@ -863,9 +869,11 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 //    return bb;
 	Value *cond = ICMP_NE(result, CONST1(1));
 	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store", cpu->dyncom_engine->cur_func, 0);
+	BasicBlock* mmu_fault_bb = create_mmu_fault_bb(cpu, result, fault, fault_addr);
+
 	cpu->dyncom_engine->bb_load_store = load_store_bb;
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(15));
-	arch_branch(1, load_store_bb, cpu->dyncom_engine->bb_trap, cond, bb);
+	arch_branch(1, load_store_bb, mmu_fault_bb, cond, bb);
 	return phys_addr;
 }
 
