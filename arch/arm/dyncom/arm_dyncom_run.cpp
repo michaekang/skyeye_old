@@ -786,7 +786,7 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	Value* fault_addr = CONST(0xdeadc0de);
 
 	/* va = (addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff)*/
-	Value* va = OR(AND(R(CP15_CONTEXT_ID), CONST(0xFF)), AND(addr, CONST(0xFFFFF000)));
+	Value* va =  AND(addr, CONST(0xFFFFF000));
 	/* get index , index = tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE]; */
 	//Value* index = ADD(MUL(AND(va, CONST(0xFF)), CONST(TLB_SIZE)), UREM(LSHR(va, CONST(12)), CONST(TLB_SIZE)));
 	//arch_arm_debug_print(cpu, bb, ZEXT64(va), R(15), CONST(2));

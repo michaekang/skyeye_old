@@ -30,8 +30,8 @@
 #define TLB_SIZE 4096
 #define ASID_SIZE 256
 
-int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type);
-void insert(unsigned int va, unsigned int pa, tlb_type_t access_type);
+int get_phys_page(unsigned int va, int context_id, unsigned int &pa, tlb_type_t access_type);
+void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_type);
 uint64_t* new_tlb();
 //inline void insert_tlb(ARMul_State* state, ARMword va, ARMword pa);
 //void invalidate_by_asid(ARMul_State *state, ARMword asid);

@@ -3730,7 +3730,7 @@ void InterpreterMainLoop(cpu_t *core)
 			if (last_logical_base == (cpu->Reg[15] & 0xfffff000))
 			       phys_addr = last_physical_base + (cpu->Reg[15] & 0xfff);
 			else if((!(USER_MODE(cpu) & is_kernel_code(cpu->Reg[15]))) 
-				&& (!get_phys_page((cpu->Reg[15] & 0xfffff000) | (cpu->CP15[CP15(CP15_CONTEXT_ID)] & 0xff), phys_addr, INSN_TLB))){
+				&& (!get_phys_page((cpu->Reg[15] & 0xfffff000), (cpu->CP15[CP15(CP15_CONTEXT_ID)] & 0xff), phys_addr, INSN_TLB))){
 				phys_addr = (phys_addr & 0xfffff000) | (cpu->Reg[15] & 0xfff);
 				last_logical_base = cpu->Reg[15] & 0xfffff000;
 				last_physical_base = phys_addr & 0xfffff000;
@@ -3824,7 +3824,7 @@ void InterpreterMainLoop(cpu_t *core)
 			if (last_logical_base == (cpu->Reg[15] & 0xfffff000))
 			       phys_addr = last_physical_base + (cpu->Reg[15] & 0xfff);
 			else if((!(USER_MODE(cpu) & is_kernel_code(cpu->Reg[15]))) 
-				&& (!get_phys_page((cpu->Reg[15] & 0xfffff000) | (cpu->CP15[CP15(CP15_CONTEXT_ID)] & 0xff), phys_addr, INSN_TLB))){
+				&& (!get_phys_page((cpu->Reg[15] & 0xfffff000), (cpu->CP15[CP15(CP15_CONTEXT_ID)] & 0xff), phys_addr, INSN_TLB))){
 				phys_addr = (phys_addr & 0xfffff000) | (cpu->Reg[15] & 0xfff);
 				last_logical_base = cpu->Reg[15] & 0xfffff000;
 				last_physical_base = phys_addr & 0xfffff000;

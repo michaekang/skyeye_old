@@ -34,9 +34,9 @@ struct tlb_item {
 //static tlb_item* tlb_cache = NULL;
 static uint64_t tlb_cache[TLB_TOTAL][ASID_SIZE][TLB_SIZE];
 //static tlb_table tlb[TLB_TOTAL];
-int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type)
+int get_phys_page(unsigned int va, int context_id, unsigned int &pa, tlb_type_t access_type)
 {
-	tlb_item *tlb_entry = (tlb_item *)&tlb_cache[access_type][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE];
+	tlb_item *tlb_entry = (tlb_item *)&tlb_cache[access_type][context_id][(va >> 12) % TLB_SIZE];
 	if (va == tlb_entry->va) {
 		pa = tlb_entry->pa;
 		//printf("get pa 0x%x for va 0x%x in %s\n", va, pa, __FUNCTION__);
@@ -46,9 +46,9 @@ int get_phys_page(unsigned int va, unsigned int &pa, tlb_type_t access_type)
 	}
 }
 
-void insert(unsigned int va, unsigned int pa, tlb_type_t access_type)
+void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_type)
 {
-	tlb_item* tlb_entry = (tlb_item* )&tlb_cache[access_type][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE];
+	tlb_item* tlb_entry = (tlb_item* )&tlb_cache[access_type][context_id][(va >> 12) % TLB_SIZE];
 	//printf("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
 	tlb_entry->va = va;
 	tlb_entry->pa = pa;

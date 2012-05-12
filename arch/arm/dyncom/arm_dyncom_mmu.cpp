@@ -242,10 +242,10 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 	if ((CP15REG(CP15_CONTROL) & 1) == 0) {
 		/* MMU or MPU disabled. */
 		*phys_addr = virt_addr;
-		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (0x3), access_type);
+		insert((virt_addr & 0xfffff000), (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (0x3), access_type);
 		return NO_FAULT;
 	} else {
-		if (!get_phys_page((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
+		if (!get_phys_page((virt_addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
 			if (dyncom_check_perms(core, GET_AP(p), rw)) {
 				*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
 				return fault;
@@ -273,7 +273,7 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 			}
 		}
 		//printf("In %s, get phys_addr=0x%x\n", __FUNCTION__, *phys_addr);
-		insert((virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (ap), access_type);
+		insert((virt_addr & 0xfffff000), (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (ap), access_type);
 		//insert_tlb(core, (virt_addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | ap);
 	}
 	return fault;
@@ -623,7 +623,7 @@ static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t
 		return 0;
 	}
 	while(count){
-		if (!get_phys_page((addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), p, DATA_TLB)) {
+		if (!get_phys_page((addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, DATA_TLB)) {
 			if (dyncom_check_perms(core, p & 3, read)) {
 				/* TLB hit */
 				//*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
@@ -698,7 +698,7 @@ static int arch_arm_effective_to_physical(cpu_t *cpu, uint32_t addr, uint32_t *r
 	fault_t fault = NO_FAULT;
 	addr_t phys_addr;
 	//fault = get_phys_addr(cpu, addr, &phys_addr, 32, 1);
-	if (!get_phys_page((addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff), phys_addr, INSN_TLB)) {
+	if (!get_phys_page((addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), phys_addr, INSN_TLB)) {
 		if((addr > 0xc0000000) && USER_MODE(core)){
 			if (dyncom_check_perms(core, GET_AP(phys_addr), 1)) {
 				*result = (phys_addr & 0xfffff000) | (addr & 0xfff);
