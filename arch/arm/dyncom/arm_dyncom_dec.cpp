@@ -394,7 +394,7 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 	bb = cpu->dyncom_engine->bb_load_store;
 	end_phys_page = AND(end_phys_page, CONST(0xFFFFF000));
 
-	arch_arm_debug_print(cpu, bb, ZEXT64(end_phys_page), R(15), CONST(50));
+	//arch_arm_debug_print(cpu, bb, ZEXT64(end_phys_page), R(15), CONST(50));
 	Value* start_virt_page = AND(addr, CONST(0xFFFFF000));
 	/* Check if base register is in register list */
 	if (BITS(25, 27) == 4 && BITS(20, 22) == 4) {
