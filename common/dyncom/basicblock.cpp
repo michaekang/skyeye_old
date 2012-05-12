@@ -95,7 +95,7 @@ emit_store_pc(cpu_t *cpu, BasicBlock *bb_branch, addr_t new_pc)
 		Value *v_offset = BinaryOperator::Create(Instruction::And, v_phys_pc, CONST(0xfff), "", bb_branch);
 		Value *v_page_effec = new LoadInst(cpu->ptr_CURRENT_PAGE_EFFEC, "", false, bb_branch);
 		Value *v_effec_pc = BinaryOperator::Create(Instruction::Or, v_offset, v_page_effec, "", bb_branch); 
-		new StoreInst(v_phys_pc, cpu->ptr_gpr[18], bb_branch);
+		//new StoreInst(v_phys_pc, cpu->ptr_gpr[18], bb_branch);
 		new StoreInst(v_effec_pc, cpu->ptr_gpr[15], bb_branch);
 		//Value **regs = cpu->ptr_gpr;
 		//new StoreInst(CONST(new_pc), regs[15], bb_branch);
