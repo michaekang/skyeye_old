@@ -249,6 +249,7 @@ typedef struct cpu_archrf {
 	// @@@BEGIN_DEPRECATION
 	void *pc;  // Program Counter
 	void *phys_pc;  // Physical Program Counter
+	void *context_id;  // process id
 	void *grf; // GP register file
 	void *srf; // SP register file
 	void *frf; // FP register file

@@ -590,12 +590,13 @@ arch_arm_invalidate_by_all(cpu_t *cpu, BasicBlock *bb, tlb_type_t access_type)
 }
 
 void debug_print(cpu_t* cpu, unsigned long arg0, int arg1, int arg2){
-#if 0
+#if 1
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	//if(core->Reg[15] == 0xc00081e4){
 	if(arg2 == 0)
 		printf("\n---------------\n");
-	printf("In %s, arg0=0x%llx, arg1=0x%llx, arg2=0x%llx\n", __FUNCTION__, arg0, arg1, arg2);
+	int context_id = (*(uint32_t *)(cpu->rf.context_id)) & 0xFF;
+	printf("In %s, arg0=0x%llx, arg1=0x%llx, arg2=0x%llx, context_id=%d\n", __FUNCTION__, arg0, arg1, arg2, context_id);
 	if(arg2 == 0xd)
 		printf("------------------\n");
 	//}
@@ -787,19 +788,16 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	/* va = (addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff)*/
 	Value* va = OR(AND(R(CP15_CONTEXT_ID), CONST(0xFF)), AND(addr, CONST(0xFFFFF000)));
 	/* get index , index = tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE]; */
-	Value* index = ADD(MUL(AND(va, CONST(0xFF)), CONST(TLB_SIZE)), UREM(LSHR(va, CONST(12)), CONST(TLB_SIZE)));
-	//arch_arm_debug_print(cpu, bb, ZEXT64(index), R(15), CONST(0));
-	//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(1));
+	//Value* index = ADD(MUL(AND(va, CONST(0xFF)), CONST(TLB_SIZE)), UREM(LSHR(va, CONST(12)), CONST(TLB_SIZE)));
 	//arch_arm_debug_print(cpu, bb, ZEXT64(va), R(15), CONST(2));
-	//Value* a = GetElementPtrInst::Create(cpu->dyncom_engine->ptr_TLB, index, "", bb);
-	//a = new BitCastInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
-	/* address = TLB + index * sizeof(unsigned long) */
-	//Value* a = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
+
+	//Value* a_value = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
+	//arch_arm_debug_print(cpu, bb, cpu->dyncom_engine->ptr_TLB, R(15), CONST(3));
 
 		/*
 		 * FIXME, Not multi-thread safe, we should pass TLB as an argument
 		 */
-	Value* a = ADD(CONST64(cpu->dyncom_engine->TLB), ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
+	Value* a = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(UREM(LSHR(addr, CONST(12)), CONST(TLB_SIZE)), CONST(sizeof(uint64_t)))));
 		//printf("In %s, cpu->dyncom_engine->TLB=0x%llx\n", __FUNCTION__, cpu->dyncom_engine->TLB);
 	//arch_arm_debug_print(cpu, bb, CONST64(cpu->dyncom_engine->TLB), R(15), CONST(10));
 	//arch_arm_debug_print(cpu, bb, a, R(15), CONST(11));
@@ -1046,6 +1044,7 @@ void arm_dyncom_init(arm_core_t* core){
 		cpu->rf.phys_pc = &core->Reg[15];
 	else
 		cpu->rf.phys_pc = &core->phys_pc;
+	cpu->rf.context_id = &(core->CP15[CP15(CP15_CONTEXT_ID)]);
 	cpu->rf.grf = core->Reg;
 	//cpu->rf.srf = core->Spsr;
 	//cpu->rf.srf = &core->phys_pc;
