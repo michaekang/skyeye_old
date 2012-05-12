@@ -3334,7 +3334,8 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *a
 
 int FetchInst(cpu_t *core, unsigned int &inst)
 {
-	arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
+	//arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
+	arm_processor *cpu = (arm_processor *)(core->cpu_data->obj);
 //	fault_t fault = interpreter_read_memory(core, cpu->translate_pc, inst, 32);
 	fault_t fault = interpreter_fetch(core, cpu->translate_pc, inst, 32);
 	if (!core->is_user_mode) {
@@ -3667,7 +3668,8 @@ void InterpreterMainLoop(cpu_t *core)
 	#define PC				(cpu->Reg[15])
 	
 
-	arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
+	//arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
+	arm_processor *cpu = (arm_processor *)(core->cpu_data->obj);
 
 	void *InstLabel[] = {
 		#define VFP_INTERPRETER_LABEL
