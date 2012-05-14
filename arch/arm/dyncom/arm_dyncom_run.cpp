@@ -697,10 +697,10 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 		 *       11        Read/Write             Read/Write
 		 */
 	Value* user_mode;
-	if(cpu->user_mode)
+	if(cpu->user_mode){
 		user_mode = CONST1(1);
-	else
-		user_mode = CONST1(0);
+	//else
+	//	user_mode = CONST1(0);
 	Value* ap = TRUNC32(AND(tlb_entry, CONST64(0x3)));
 		/*
 		 * if (result == 0)
@@ -711,11 +711,12 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 		 * else
 		 *	result = result 
 		 */
-	result = SELECT(result, result, SELECT(ICMP_EQ(ap, CONST(0)), CONST1(1), result));
+	//result = SELECT(result, result, SELECT(ICMP_EQ(ap, CONST(0)), CONST1(1), result));
 	result = SELECT(result, result, SELECT(AND(ICMP_EQ(ap, CONST(1)), ICMP_EQ(user_mode, CONST1(1))),
 				CONST1(1), result));
 	result = SELECT(result, result, SELECT(AND(AND(ICMP_EQ(ap, CONST(2)), ICMP_EQ(user_mode, CONST1(1))), ICMP_EQ(CONST(read), CONST(0))), CONST1(1), result));
 	result = SELECT(ICMP_EQ(ap, CONST(3)), result, result);
+	}
 #endif
 		/*
 		 * if(fault_addr == 0xdeadc0de && result)

@@ -52,6 +52,11 @@ void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_
 	//printf("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
 	tlb_entry->va = va;
 	tlb_entry->pa = pa;
+	if(pa & 0x3 == 0){
+		printf("\n\nap = %d for va=0x%x, we exit here\n\n", pa & 0x3, va);
+		sleep(2);
+		exit(-1);
+	}
 }
 
 void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type)
