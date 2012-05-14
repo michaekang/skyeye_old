@@ -650,115 +650,6 @@ arch_arm_debug_print_init(cpu_t *cpu){
 	cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_DEBUG_PRINT] = func;
 	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_DEBUG_PRINT] = (void*)debug_print;
 }
-#if 0
-BasicBlock *
-arch_check_mm(cpu_t *cpu, BasicBlock *bb, Value* addr, int count, int read, BasicBlock *exit_bb)
-{
-	if(is_user_mode(cpu)){
-		cpu->dyncom_engine->bb_load_store = bb;
-		return bb;
-	}
-	#if 1
-	if (cpu->dyncom_engine->ptr_func_check_mm == NULL) {
-		printf("No check mm\n");
-		return bb;
-	}
-	#endif
-	if(count == 0){
-		printf("count=0\n");
-		abort();	
-		exit(-1);
-	}
-	Value* result = CONST1(0);
-	int fault = read? TLB_READ_MISS:TLB_WRITE_MISS;
-	Value* fault_addr = CONST(0xdeadc0de);
-	while(count){
-		/* va = (addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff)*/
-		Value* va = OR(AND(R(CP15_CONTEXT_ID), CONST(0xFF)), AND(addr, CONST(0xFFFFF000)));
-		/* get index , index = tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE]; */
-		Value* index = ADD(MUL(AND(va, CONST(0xFF)), CONST(TLB_SIZE)), UREM(LSHR(va, CONST(12)), CONST(TLB_SIZE)));
-		//arch_arm_debug_print(cpu, bb, ZEXT64(index), R(15), CONST(0));
-		arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(1));
-		arch_arm_debug_print(cpu, bb, ZEXT64(va), R(15), CONST(2));
-		//Value* a = GetElementPtrInst::Create(cpu->dyncom_engine->ptr_TLB, index, "", bb);
-		//a = new BitCastInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
-		/* address = TLB + index * sizeof(unsigned long) */
-		//Value* a = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
-
-		/*
-		 * FIXME, Not multi-thread safe, we should pass TLB as an argument
-		 */
-		Value* a = ADD(CONST64(cpu->dyncom_engine->TLB), ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
-		//printf("In %s, cpu->dyncom_engine->TLB=0x%llx\n", __FUNCTION__, cpu->dyncom_engine->TLB);
-		arch_arm_debug_print(cpu, bb, CONST64(cpu->dyncom_engine->TLB), R(15), CONST(10));
-		arch_arm_debug_print(cpu, bb, a, R(15), CONST(11));
-		a = new IntToPtrInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
-		Value* tlb_entry = new LoadInst(a, "", false, bb);
-		arch_arm_debug_print(cpu, bb, tlb_entry, R(15), CONST(12));
-		result = OR(result, ICMP_NE(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000)), CONST64(32))), va));
-	
-#if 1
-		//fault_status = SELECT(result, CONST(1), CONST(0));
-
-		/*  
-		 *       AP        Priv Permissions       User Permissions
-		 *	--------------------------------------------------
-		 *       00        No access              No Access
-		 *       01        Read/Write             No Access
-		 *       10        Read/Write             Read only
-		 *       11        Read/Write             Read/Write
-		 */
-		Value* user_mode = GET_USER_MODE();
-		Value* ap = TRUNC32(LSHR(AND(tlb_entry, CONST64(0xC)), CONST64(2)));
-		/*
-		 * if (result == 0)
-		 *	if(ap == 0)
-		 *		result = 1 ; permission fault happened
-		 *	else
-		 *		result = 0
-		 * else
-		 *	result = result 
-		 */
-		result = SELECT(result, result, SELECT(ICMP_EQ(ap, CONST(0)), CONST1(1), result));
-		result = SELECT(result, result, SELECT(AND(ICMP_EQ(ap, CONST(1)), ICMP_EQ(user_mode, CONST1(1))),
-				CONST1(1), result));
-		result = SELECT(result, result, SELECT(AND(AND(ICMP_EQ(ap, CONST(2)), ICMP_EQ(user_mode, CONST1(1))), ICMP_EQ(CONST(read), CONST(0))), CONST1(1), result));
-		result = SELECT(ICMP_EQ(ap, CONST(3)), result, result);
-#endif
-		arch_arm_debug_print(cpu, bb, ZEXT64(result), R(15), CONST(13));
-		/*
-		 * if(fault_addr == 0xdeadc0de && result)
-		 *	fault_addr = addr;
-		 */
-		fault_addr = SELECT(result, SELECT(ICMP_EQ(fault_addr, CONST(0xdeadc0de)), addr, fault_addr), CONST(0xDEADC0DE));
-
-		count -= 4;
-		addr = ADD(addr, CONST(4));
-	}
-	LET(CP15_TLB_FAULT_STATUS, SELECT(result, CONST(fault), R(CP15_TLB_FAULT_STATUS)));
-	LET(CP15_TLB_FAULT_ADDR, SELECT(result, fault_addr, R(CP15_TLB_FAULT_ADDR)));
-	/*if result is zero, so all the address can be found in TLB */
-	//exit_val = result;
-#if 0
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
-	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
-	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
-	std::vector<Value *> params;
-	params.push_back(v_cpu_ptr);
-	params.push_back(addr);
-	params.push_back(CONST(count));
-	params.push_back(CONST(read));
-	// XXX synchronize cpu context!
-	Value *exit_val = CallInst::Create(cpu->dyncom_engine->ptr_func_check_mm, params.begin(), params.end(), "", bb);
-#endif
-//    return bb;
-	Value *cond = ICMP_NE(result, CONST1(1));
-	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store", cpu->dyncom_engine->cur_func, 0);
-	cpu->dyncom_engine->bb_load_store = load_store_bb;
-	arch_branch(1, load_store_bb, exit_bb, cond, bb);
-	return load_store_bb;
-}
-#endif
 static BasicBlock* create_mmu_fault_bb(cpu_t* cpu, Value* result, int fault, Value* fault_addr){
 	BasicBlock *bb = BasicBlock::Create(_CTX(), "mmu_fault", cpu->dyncom_engine->cur_func, 0);		
 	LET(CP15_TLB_FAULT_STATUS, SELECT(result, CONST(fault), R(CP15_TLB_FAULT_STATUS)));
@@ -788,22 +679,11 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	/* va = (addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff)*/
 	Value* va =  AND(addr, CONST(0xFFFFF000));
 	/* get index , index = tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE]; */
-	//Value* index = ADD(MUL(AND(va, CONST(0xFF)), CONST(TLB_SIZE)), UREM(LSHR(va, CONST(12)), CONST(TLB_SIZE)));
-	//arch_arm_debug_print(cpu, bb, ZEXT64(va), R(15), CONST(2));
-
-	//Value* a_value = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
-	//arch_arm_debug_print(cpu, bb, cpu->dyncom_engine->ptr_TLB, R(15), CONST(3));
-
-		/*
-		 * FIXME, Not multi-thread safe, we should pass TLB as an argument
-		 */
 	Value* a = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(UREM(LSHR(addr, CONST(12)), CONST(TLB_SIZE)), CONST(sizeof(uint64_t)))));
-		//printf("In %s, cpu->dyncom_engine->TLB=0x%llx\n", __FUNCTION__, cpu->dyncom_engine->TLB);
 	//arch_arm_debug_print(cpu, bb, CONST64(cpu->dyncom_engine->TLB), R(15), CONST(10));
 	//arch_arm_debug_print(cpu, bb, a, R(15), CONST(11));
 	a = new IntToPtrInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
 	Value* tlb_entry = new LoadInst(a, "", false, bb);
-	//arch_arm_debug_print(cpu, bb, tlb_entry, R(15), CONST(12));
 	result = OR(result, ICMP_NE(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000)), CONST64(32))), va));
 #if 1
 		//fault_status = SELECT(result, CONST(1), CONST(0));
@@ -837,7 +717,6 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	result = SELECT(result, result, SELECT(AND(AND(ICMP_EQ(ap, CONST(2)), ICMP_EQ(user_mode, CONST1(1))), ICMP_EQ(CONST(read), CONST(0))), CONST1(1), result));
 	result = SELECT(ICMP_EQ(ap, CONST(3)), result, result);
 #endif
-	//arch_arm_debug_print(cpu, bb, ZEXT64(result), R(15), CONST(13));
 		/*
 		 * if(fault_addr == 0xdeadc0de && result)
 		 *	fault_addr = addr;
@@ -849,22 +728,6 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	Value* phys_page = SELECT(result, CONST(0xdead0000), TRUNC32(AND(tlb_entry, CONST64(0xFFFFF000))));
 	Value* phys_addr = SELECT(result, CONST(0xdeadc0de), OR(phys_page, AND(CONST(0xFFF), addr)));
 
-	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(14));
-	/*if result is zero, so all the address can be found in TLB */
-	//exit_val = result;
-#if 0
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
-	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
-	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
-	std::vector<Value *> params;
-	params.push_back(v_cpu_ptr);
-	params.push_back(addr);
-	params.push_back(CONST(count));
-	params.push_back(CONST(read));
-	// XXX synchronize cpu context!
-	Value *exit_val = CallInst::Create(cpu->dyncom_engine->ptr_func_check_mm, params.begin(), params.end(), "", bb);
-#endif
-//    return bb;
 	Value *cond = ICMP_NE(result, CONST1(1));
 	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store", cpu->dyncom_engine->cur_func, 0);
 	BasicBlock* mmu_fault_bb = create_mmu_fault_bb(cpu, result, fault, fault_addr);
@@ -875,96 +738,6 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	return phys_addr;
 }
 
-#if 0
-Value* get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr)
-{
-
-	/* va = (addr & 0xfffff000) | (CP15REG(CP15_CONTEXT_ID) & 0xff)*/
-	Value* va = OR(AND(R(CP15_CONTEXT_ID), CONST(0xFF)), AND(addr, CONST(0xFFFFF000)));
-	/* get index , index = tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE]; */
-	Value* index = ADD(MUL(AND(va, CONST(0xFF)), CONST(TLB_SIZE)), UREM(LSHR(va, CONST(12)), CONST(TLB_SIZE)));
-	//arch_arm_debug_print(cpu, bb, ZEXT64(index), R(15), CONST(0));
-	//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(1));
-	//arch_arm_debug_print(cpu, bb, ZEXT64(va), R(15), CONST(2));
-	//Value* a = GetElementPtrInst::Create(cpu->dyncom_engine->ptr_TLB, index, "", bb);
-	//a = new BitCastInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
-	/* address = TLB + index * sizeof(unsigned long) */
-	//Value* a = ADD(cpu->dyncom_engine->ptr_TLB, ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
-
-	/*
-	 * FIXME, Not multi-thread safe, we should pass TLB as an argument
-	 */
-	Value* a = ADD(CONST64(cpu->dyncom_engine->TLB), ZEXT64(MUL(index, CONST(sizeof(unsigned long)))));
-	//printf("In %s, cpu->dyncom_engine->TLB=0x%llx\n", __FUNCTION__, cpu->dyncom_engine->TLB);
-	//arch_arm_debug_print(cpu, bb, CONST64(cpu->dyncom_engine->TLB), R(15), CONST(10));
-	//arch_arm_debug_print(cpu, bb, a, R(15), CONST(11));
-	a = new IntToPtrInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
-	Value* tlb_entry = new LoadInst(a, "", false, bb);
-	arch_arm_debug_print(cpu, bb, tlb_entry, R(15), CONST(22));
-	//result = OR(result, ICMP_NE(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000)), CONST64(32))), va));
-	Value* phys_page = TRUNC32(AND(tlb_entry, CONST64(0xFFFFF000)));
-	Value* phys_addr = OR(phys_page, AND(CONST(0xFFF), addr));
-
-	return phys_addr;
-#if 0
-	//fault_status = SELECT(result, CONST(1), CONST(0));
-
-		/*  
-		 *       AP        Priv Permissions       User Permissions
-		 *	--------------------------------------------------
-		 *       00        No access              No Access
-		 *       01        Read/Write             No Access
-		 *       10        Read/Write             Read only
-		 *       11        Read/Write             Read/Write
-		 */
-	Value* user_mode = GET_USER_MODE();
-	Value* ap = TRUNC32(LSHR(AND(tlb_entry, CONST64(0xC)), CONST64(2)));
-		/*
-		 * if (result == 0)
-		 *	if(ap == 0)
-		 *		result = 1 ; permission fault happened
-		 *	else
-		 *		result = 0
-		 * else
-		 *	result = result 
-		 */
-	result = SELECT(result, result, SELECT(ICMP_EQ(ap, CONST(0)), CONST1(1), result));
-	result = SELECT(result, result, SELECT(AND(ICMP_EQ(ap, CONST(1)), ICMP_EQ(user_mode, CONST1(1))),
-				CONST1(1), result));
-	result = SELECT(result, result, SELECT(AND(AND(ICMP_EQ(ap, CONST(2)), ICMP_EQ(user_mode, CONST1(1))), ICMP_EQ(CONST(read), CONST(0))), CONST1(1), result));
-	result = SELECT(ICMP_EQ(ap, CONST(3)), result, result);
-	//arch_arm_debug_print(cpu, bb, ZEXT64(result), R(15), CONST(13));
-	/*
-	 * if(fault_addr == 0xdeadc0de && result)
-	 *	fault_addr = addr;
-	 */
-	Value *cond = ICMP_NE(result, CONST1(1));
-	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store", cpu->dyncom_engine->cur_func, 0);
-	cpu->dyncom_engine->bb_load_store = load_store_bb;
-	arch_branch(1, load_store_bb, exit_bb, cond, bb);
-	bb = load_store_bb;
-	fault_addr = SELECT(result, SELECT(ICMP_EQ(fault_addr, CONST(0xdeadc0de)), addr, fault_addr), CONST(0xDEADC0DE));
-
-	LET(CP15_TLB_FAULT_STATUS, SELECT(result, CONST(fault), R(CP15_TLB_FAULT_STATUS)));
-	LET(CP15_TLB_FAULT_ADDR, SELECT(result, fault_addr, R(CP15_TLB_FAULT_ADDR)));
-	/*if result is zero, so all the address can be found in TLB */
-	//exit_val = result;
-#if 0
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
-	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
-	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
-	std::vector<Value *> params;
-	params.push_back(v_cpu_ptr);
-	params.push_back(addr);
-	params.push_back(CONST(count));
-	params.push_back(CONST(read));
-	// XXX synchronize cpu context!
-	Value *exit_val = CallInst::Create(cpu->dyncom_engine->ptr_func_check_mm, params.begin(), params.end(), "", bb);
-#endif
-	return bb;
-#endif
-}
-#endif
 static void 
 arch_arm_invalidate_by_all_init(cpu_t *cpu){
 	//types
