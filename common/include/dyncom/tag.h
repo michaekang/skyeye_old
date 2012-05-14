@@ -25,6 +25,7 @@
 #define TAG_AFTER_EXCEPTION (1 << 27)
 #define TAG_MEMORY		(1 << 28) /* load store instruction */
 #define TAG_NEED_PC		(1 << 29) /**/
+#define TAG_AFTER_MEMORY		(1 << 30) /**/
 
 /* flags internal to libcpu */
 #define TAG_CODE		(1<<7)	/* there is a reachable executable instruction here */

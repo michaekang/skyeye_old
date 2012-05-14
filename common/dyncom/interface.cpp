@@ -28,6 +28,7 @@
 #include "function.h"
 #include "optimize.h"
 #include "stat.h"
+#include "dyncom/basicblock.h"
 
 #include "skyeye_log.h"
 #include "skyeye.h"
@@ -340,6 +341,9 @@ void save_addr_in_func(cpu_t *cpu, void *native_code_func)
 	pthread_rwlock_wrlock(&(cpu->dyncom_engine->rwlock));
 #endif
 	for (; i != bb_addr.end(); i++){
+		if((get_tag(cpu, i->first) & TAG_AFTER_MEMORY) && !is_start_of_basicblock(cpu, i->first)){
+			continue;
+		}
 		if(cpu->dyncom_engine->fmap[HASH_MAP_INDEX_L1(i->first)] == NULL)
 			init_fmap_l2(cpu->dyncom_engine->fmap, i->first);
 		if(cpu->dyncom_engine->fmap[HASH_MAP_INDEX_L1(i->first)][HASH_MAP_INDEX_L2(i->first)] == NULL)
@@ -402,7 +406,7 @@ cpu_translate_function(cpu_t *cpu, addr_t addr)
 
 	jit_num++;
 	if (cpu->dyncom_engine->flags_debug & CPU_DEBUG_PRINT_IR)
-		cpu->dyncom_engine->mod->dump();
+		cpu->dyncom_engine->cur_func->dump();
 
 	/* make sure everything is OK */
 	if (cpu->dyncom_engine->flags_codegen & CPU_CODEGEN_VERIFY)

@@ -429,7 +429,7 @@ is_translated(cpu_t *cpu, addr_t a)
 extern void disasm_instr(cpu_t *cpu, addr_t pc);
 
 static void save_startbb_addr(cpu_t *cpu, addr_t pc){
-	if (is_start_of_basicblock(cpu, pc)){
+	if (is_start_of_basicblock(cpu, pc) || (get_tag(cpu, pc) & TAG_AFTER_MEMORY)){
 		int cur_pos;
 		cur_pos = cpu->dyncom_engine->cur_tagging_pos;
 		vector<addr_t>::iterator i = cpu->dyncom_engine->startbb[cur_pos].begin();
@@ -500,7 +500,7 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 #endif
 		LOG("In %s, pc=0x%x, tag=0x%x\n", __FUNCTION__, pc, tag);
 		if ((tag & TAG_MEMORY) && !is_user_mode(cpu)) {
-			or_tag(cpu, next_pc, TAG_AFTER_COND);
+			or_tag(cpu, next_pc, TAG_AFTER_MEMORY);
 		}
 		if (tag & (TAG_CONDITIONAL))
 			or_tag(cpu, next_pc, TAG_AFTER_COND);

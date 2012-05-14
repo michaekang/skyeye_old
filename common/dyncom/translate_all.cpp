@@ -97,7 +97,11 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 
 		// Add dispatch switch case for basic block.
 		ConstantInt* c = ConstantInt::get(getIntegerType(cpu->info.address_size), pc);
-		sw->addCase(c, cur_bb);
+		/* we will not add entry of switch for the insn after memory access */
+		if((get_tag(cpu, pc) & TAG_AFTER_MEMORY) && !is_start_of_basicblock(cpu, pc))
+			; /* do nothing */
+		else
+			sw->addCase(c, cur_bb);
 
 		do {
 			tag_t dummy1;
@@ -186,7 +190,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 			pc = next_pc;
 		} while (
 					/* new basic block starts here (and we haven't translated it yet)*/
-					(!is_start_of_basicblock(cpu, pc)) &&
+					(!(is_start_of_basicblock(cpu, pc) || (get_tag(cpu, pc) & TAG_AFTER_MEMORY))) &&
 					/* end of code section */ //XXX no: this is whether it's TAG_CODE
 					is_code(cpu, pc) &&
 					/* last intruction jumped away */
