@@ -222,15 +222,6 @@ dyncom_mmu_translate (arm_core_t *core, ARMword virt_addr, ARMword *phys_addr, i
 				*phys_addr = (l1desc & 0xFFF00000) | (virt_addr & 0x000FFFFF);
 			break;
 		}
-#if 0
-		if (*ap == 1) {
-			printf("virt_addr is %x\n", virt_addr);
-			printf("l1addr is %x l1desc is %x\n", l1addr, l1desc);
-			printf("mmu_control is %x\n", CP15REG(CP15_TRANSLATION_BASE_CONTROL));
-			printf("mmu_table_0 is %x\n", CP15REG(CP15_TRANSLATION_BASE_TABLE_0));
-			printf("mmu_table_1 is %x\n", CP15REG(CP15_TRANSLATION_BASE_TABLE_1));
-		}
-#endif
 	}
 	return NO_FAULT;
 }
@@ -306,23 +297,6 @@ fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_
 		bus_read(16, phys_addr | (virt_addr & 3), &value);
 	else
 		bus_read(32, phys_addr, &value);
-	#if 0
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
-	if (core->Reg[15] == 0xc01225d8) {
-		printf("------------------------------------\n");
-		printf("icounter   is %lld\n", core->icounter);
-		printf("phys_addr  is %x\n", phys_addr);
-		printf("value      is %x\n", value);
-		printf("size       is %d\n", size);
-		printf("pc         is %x\n", core->Reg[15]);
-//		exit(-1);
-	}
-	if (virt_addr == 0xffff0200) {
-		printf("phys_addr : %x\n", phys_addr);
-		printf("value     : %x\n", value);
-		exit(-1);
-	}
-	#endif
 	return fault;
 }
 
@@ -427,15 +401,6 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
-	//fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 1);
-	#if 0
-	fault = check_address_validity(core, virt_addr, &phys_addr, 1);
-	if (NO_FAULT != fault) {
-		printf("icounter=%lld, mmu read fault %d, virt_addr=0x%x, pc=0x%x\n", core->icounter, fault, virt_addr, core->Reg[15]);
-		phys_addr = virt_addr;
-		exit(-1);
-	}
-	#endif
 	phys_addr = virt_addr;
 	#if MMU_DEBUG
 	printf("bus read at %x, pc=0x%x\n", phys_addr, core->Reg[15]);
@@ -461,8 +426,6 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 
 	}
 skip_read:
-	//printf("read:pc=0x%x, virt_addr=0x%x, addr=0x%x, data=0x%x\n\n", core->Reg[15], virt_addr,  phys_addr | (virt_addr & 3), value);
-	/* ldrex or ldrexb */
 	return value;
 }
 #define LOG_IN_CLR	skyeye_printf_in_color
@@ -471,22 +434,6 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	//fault = get_phys_addr(cpu, virt_addr, &phys_addr, size, 0);
-#if 0
-	fault = check_address_validity(core, virt_addr, &phys_addr, 0);
-//	if (phys_addr >= 0x71200000 && phys_addr <= 0x71200003) {
-#if 0
-	if (cpu->icounter > 248319240) {
-		LOG_IN_CLR(LIGHT_GREEN, "WRITE virt_addr is %x phys_addr is %x value is %x\n", virt_addr, phys_addr, value);
-		LOG_IN_CLR(LIGHT_GREEN, "icounter is %x\n", cpu->icounter);
-	}
-#endif
-	if (NO_FAULT != fault) {
-		printf("In %s, virt_addr=0x%x, pc=0x%x\n", __FUNCTION__, virt_addr, core->Reg[15]);
-		printf("mmu write fault %d\n", fault);
-		exit(-1);
-	}
-#endif
 	phys_addr = virt_addr;
 	#if MMU_DEBUG
 	printf("bus write at %x pc=0x%x\n", phys_addr, core->Reg[15]);
@@ -554,102 +501,9 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	} else {
 		bus_write(32, phys_addr, value);
 	}
-//skip_write:
-#if 0
-	if (is_translated_code(cpu, phys_addr)) {
-		//clear native code when code section was written.
-		addr_t addr = find_bb_start(cpu, phys_addr);
-#if L3_HASHMAP
-		clear_cache_item(cpu->dyncom_engine->fmap, addr);
-#else
-		fprintf(stderr, "Warnning: not clear the cache");
-#endif
-	}
-	//bus_write(size, virt_addr, value);
-#endif
 }
-#if 0
 static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t read)
 {
-	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
-	uint32_t phys_addr;
-	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	fault_t fault = NO_FAULT;
-	#if 0
-	if(core->Reg[15] == 0xade76ae0){
-		printf("In %s , icounter=%lld, pc=0x%x, addr=0x%x, count=0x%x, fault=0x%x\n", __FUNCTION__, core->icounter, core->Reg[15], addr, count, fault);
-	}
-	#endif
-	while(count){
-		//fault = get_phys_addr(cpu, addr, &phys_addr, 32, read);
-		fault = check_address_validity(core, addr, &phys_addr, read, DATA_TLB);
-		if(fault)
-			break;
-		addr += 4;
-		count -= 4;
-        }
-	#if 0
-	if(core->Reg[15] == 0xade76ae0){
-		printf("In %s , pc=0x%x, addr=0x%x, count=0x%x, fault=0x%x\n", __FUNCTION__, core->Reg[15], addr, count, fault);
-	}
-	#endif
-	//fault = get_phys_addr(cpu, addr, &phys_addr, 32, read);
-	if (fault) {
-		#if 0
-		printf("pc is %x addr is %x count is %x\n", core->Reg[15], addr, count);
-		printf("mmu fault in %s addr is %x\n", __FUNCTION__, addr);
-		printf("fault is %d\n", fault);
-		#endif
-		core->abortSig = true;
-		core->Aborted = ARMul_DataAbortV;
-		core->AbortAddr = addr;
-		core->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
-		core->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
-		return 1;
-	}
-	return 0;
-}
-#endif
-static uint32_t arch_arm_check_mm(cpu_t *cpu, uint32_t addr, int count, uint32_t read)
-{
-	uint32_t phys_addr;
-	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	fault_t fault = NO_FAULT;
-	int ap, sop;
-	uint32_t p;
-	if ((CP15REG(CP15_CONTROL) & 1) == 0) {
-		/* MMU or MPU disabled. */
-		//*phys_addr = virt_addr;
-		return 0;
-	}
-	while(count){
-		if (!get_phys_page((addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, DATA_TLB)) {
-			if (dyncom_check_perms(core, p & 3, read)) {
-				/* TLB hit */
-				//*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
-				//return 0;
-			}
-			else
-				break;
-		}
-		else
-			break;
-		count -= 4;
-		addr += 4; 
-	}
-	if(count == 0){
-		/* No fault */
-		return 0;
-	}
-	//printf("In %s, tlb miss for addr 0x%x, fault=0x%x\n", __FUNCTION__, addr, core->CP15[CP15(CP15_FAULT_STATUS)]);
-	/* TLB miss */
-	fault = read? TLB_READ_MISS:TLB_WRITE_MISS;
-	core->abortSig = true;
-	core->Aborted = ARMul_DataAbortV;
-	core->AbortAddr = addr;
-	core->CP15[CP15(CP15_FAULT_STATUS)] |= fault; /* two kind of fault possible exist at the same time , tlb fault and other data fault */
-	//core->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
-	//printf("In %s, after tlb miss for addr 0x%x, fault=0x%x, fault addr=0x%x\n", __FUNCTION__, addr, core->CP15[CP15(CP15_FAULT_STATUS)], core->CP15[CP15(CP15_FAULT_ADDRESS)]);
 	return 1;
 }
 
