@@ -230,22 +230,19 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 	fault_t fault = NO_FAULT;
 	int ap, sop;
 	uint32_t p;
+	if (!get_phys_page((virt_addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
+		if (dyncom_check_perms(core, GET_AP(p), rw)) {
+			*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
+			return fault;
+		}
+	}
 	if ((CP15REG(CP15_CONTROL) & 1) == 0) {
 		/* MMU or MPU disabled. */
 		*phys_addr = virt_addr;
 		insert((virt_addr & 0xfffff000), (CP15REG(CP15_CONTEXT_ID) & 0xff), ((*phys_addr) & 0xfffff000) | (0x3), access_type);
 		return NO_FAULT;
 	} else {
-		if (!get_phys_page((virt_addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
-			if (dyncom_check_perms(core, GET_AP(p), rw)) {
-				*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
-				return fault;
-			}
-			else{
-				//printf("In %s, virt_addr=0x%x, check_perm failed\n", __FUNCTION__, virt_addr);
-			}
-		}
-
+	
 		fault = dyncom_mmu_translate(core, virt_addr, phys_addr, &ap, &sop);
 		if (fault) {
 		#if MMU_DEBUG
