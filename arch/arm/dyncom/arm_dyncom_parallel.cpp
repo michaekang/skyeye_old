@@ -60,15 +60,16 @@ extern ARMword ARMul_Emulate32 (ARMul_State *);
 #define QUEUE_LENGTH 1024
 /* Monothread: threshold compilation only
    Multithread: threshold compilation or Polling compilation (cpu intensive) */
-#define MULTI_THREAD 0
+#define MULTI_THREAD 1
 #define LIFO 0
 static uint32_t compiled_queue[QUEUE_LENGTH]; /* list of tagged addresses. Note: is not a shared resource */
 static stack<uint32_t> compile_stack; /* stack of untranslated addresses. Note: is a shared resource */
+static stack<uint8_t> func_attr_stack; /* record the attribute for untranslated function . Note: is a shared resource */
 static pthread_rwlock_t compile_stack_rwlock;
 static pthread_rwlock_t translation_rwlock;
 static uint32_t translated_block = 0; /* translated block count, for block threshold */
 static void* compiled_worker(void* cpu);
-static void push_compiled_work(cpu_t* cpu, uint32_t pc);
+static void push_compiled_work(cpu_t* cpu, uint32_t pc, uint8_t func_attr);
 /*
  * Three running mode: PURE_INTERPRET, PURE_DYNCOM, HYBRID
  */
@@ -315,6 +316,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		/* TODO */
 	case JIT_RETURN_FUNC_BLANK:
 	case JIT_RETURN_FUNCNOTFOUND:
+	{
 		//printf("pc %x is not found, phys_pc is %p\n", core->Reg[15], core->phys_pc);
 		if (!is_user_mode(cpu))
 		{
@@ -326,10 +328,16 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		/* keep the tflag same with the bit in CPSR */
 		core->TFlag = (core->Cpsr & (1 << THUMB_BIT)) ? 1 : 0;
 		//cpu->TFlag = core->TFlag;
-		cpu->user_mode = USER_MODE(core);
+		//cpu->user_mode = USER_MODE(core);
 		//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
-		push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
+		uint8_t func_attr = FUNC_ATTR_NONE;
+		if(core->TFlag)
+                	func_attr |= FUNC_ATTR_THUMB;
+		if(core->Reg[15] < 0xc0000000)
+                	func_attr |= FUNC_ATTR_USERMODE;
+		push_compiled_work(cpu, core->phys_pc, func_attr); // in usermode, it might be more accurate to translate reg[15] instead
 		return 0;
+	}
 	case JIT_RETURN_TRAP:
 	{
 		/* user mode handling */
@@ -477,10 +485,9 @@ static int handle_fp_insn(arm_core_t* core){
 }
 
 /* This function handles tagging */
-static inline void push_compiled_work(cpu_t* cpu, uint32_t pc){
+static inline void push_compiled_work(cpu_t* cpu, uint32_t pc, uint8_t func_attr){
 	//printf("In %s, pc=0x%x\n", __FUNCTION__, pc);
-	cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] |= (pc & FUNC_ATTR_THUMB);
-	pc &= 0xFFFFFFFE;
+	cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] = func_attr;
 	protect_code_page(pc);
 	cpu_tag(cpu, pc);
 	cpu->dyncom_engine->cur_tagging_pos ++;
@@ -494,14 +501,18 @@ static void* compiled_worker(void* argp){
 	for(;;){
 		while(1){
 			uint32_t compiled_addr = 0xFFFFFFFF;
+			uint8_t func_attr;
 			pthread_rwlock_wrlock(&compile_stack_rwlock);
 			if (!compile_stack.empty()) {
 				compiled_addr = compile_stack.top();
 				compile_stack.pop();
+
+				func_attr = func_attr_stack.top();
+				func_attr_stack.pop();
 			}
 			else{
-				/* All the code is translated, we need to out for a rest */
 				pthread_rwlock_unlock(&compile_stack_rwlock);
+				/* All the code is translated, we need to out for a rest */
 				break;
 			}
 			pthread_rwlock_unlock(&compile_stack_rwlock);
@@ -510,36 +521,40 @@ static void* compiled_worker(void* argp){
 			fast_map hash_map = cpu->dyncom_engine->fmap;
 			void* pfunc;
 
-			PFUNC(compiled_addr & 0xFFFFFFFE);
+			PFUNC(compiled_addr);
 			if(pfunc == NULL){
-				push_compiled_work(cpu, compiled_addr);
+				push_compiled_work(cpu, compiled_addr, func_attr);
 			}
 			pthread_rwlock_unlock(&translation_rwlock);
 		}
-		usleep(2);
+		//usleep(2);
 	}
 	return NULL;
 }
 
 void push_to_compiled(cpu_t* cpu, addr_t addr){
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	cpu->user_mode = USER_MODE(core);
+	//cpu->user_mode = USER_MODE(core);
 	/* we need TFlag to judge the thumb or arm, during translation time */
 	core->Cpsr = (core->Cpsr & 0xffffffdf) | (core->TFlag << 5);
 	//cpu->TFlag = core->TFlag;
-	assert((addr & 0x1) == 0);
+	//assert((addr & 0x1) == 0);
+	uint8_t func_attr = FUNC_ATTR_NONE;
 	if(core->TFlag)
-		addr = addr | 0x1;
+		func_attr |= FUNC_ATTR_THUMB;
+	if(core->Reg[15] < 0xc0000000)
+		func_attr |= FUNC_ATTR_USERMODE;
         #if MULTI_THREAD
         int ret;
         if((ret = pthread_rwlock_trywrlock(&compile_stack_rwlock)) == 0){
                 compile_stack.push(addr);
+		func_attr_stack.push (func_attr);
                 pthread_rwlock_unlock(&compile_stack_rwlock);
         }
         else{
                 printf("Warning ,can not get the wrlock ,error is %d, %s\n", ret, strerror(ret));
         }
         #else
-        push_compiled_work(cpu, addr);
+        push_compiled_work(cpu, addr, func_attr);
         #endif
 }

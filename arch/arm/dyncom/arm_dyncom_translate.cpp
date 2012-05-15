@@ -113,9 +113,9 @@ static arm_opc_func_t ppc_opc_invalid = {
 };
 
 /* only judge the mode in translation */
-inline bool InAPrivilegedMode(cpu_t *cpu)
+inline int InAPrivilegedMode(cpu_t *cpu)
 {
-	return (!cpu->user_mode);
+	return (!is_usermode_func(cpu));
 }
 
 //typedef std::map<addr_t, int> decoder_cache;
@@ -1447,7 +1447,7 @@ int DYNCOM_TRANS(msr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 				| (BIT(18) ? 0xff0000 : 0) | (BIT(19) ? 0xff000000 : 0);
 	uint32_t mask;
 	if (!BIT(22)) {
-		if (InAPrivilegedMode(cpu)) {
+		if (!is_usermode_func(cpu)) {
 			mask = byte_mask & (UserMask | PrivMask);
 		} else {
 			mask = byte_mask & UserMask;

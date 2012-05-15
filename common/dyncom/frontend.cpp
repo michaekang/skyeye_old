@@ -704,7 +704,7 @@ arch_debug_me(cpu_t *cpu, BasicBlock *bb, BasicBlock *exit_bb)
 void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, uint32_t size)
 {
 //#if USER_MODE_OPT
-	if(cpu->user_mode || cpu->is_user_mode){
+	if(is_usermode_func(cpu) || cpu->is_user_mode){
 		if(size == 8)
 			STORE8(value, addr);
 		else if(size == 16)
@@ -749,7 +749,7 @@ void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, ui
 Value *arch_read_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, uint32_t sign, uint32_t size)
 {
 //#if USER_MODE_OPT
-	if(cpu->user_mode || cpu->is_user_mode){
+	if(is_usermode_func(cpu) || cpu->is_user_mode){
 		Value* tmp;
 		if(size == 8){
 			tmp = arch_load8(cpu, addr, bb);

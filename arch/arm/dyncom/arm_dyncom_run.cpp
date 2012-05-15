@@ -566,8 +566,10 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 		 *       11        Read/Write             Read/Write
 		 */
 	Value* user_mode;
-	if(cpu->user_mode){
-		user_mode = CONST1(1);
+	//if(cpu->user_mode){
+	if(is_usermode_func(cpu)){
+		//user_mode = CONST1(1);
+		user_mode = GET_USER_MODE();
 	//else
 	//	user_mode = CONST1(0);
 	Value* ap = TRUNC32(AND(tlb_entry, CONST64(0x3)));

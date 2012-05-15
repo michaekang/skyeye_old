@@ -122,7 +122,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 				else {
 					bb_target = (BasicBlock*)lookup_basicblock(cpu, cpu->dyncom_engine->cur_func, new_pc, bb_ret, BB_TYPE_NORMAL);
 					/* Avoid dead loop in a process */
-					if(!(is_user_mode(cpu) || cpu->user_mode)){
+					if(!is_user_mode(cpu)){
 						dummy1 = get_tag(cpu, new_pc);
 						if (dummy1 & TAG_TRANSLATED)
 							bb_target = bb_dispatch;

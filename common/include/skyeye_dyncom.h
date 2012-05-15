@@ -511,7 +511,7 @@ typedef struct cpu {
 	debug_function_t debug_func;
 	syscall_function_t syscall_func;
 	switch_mode_function_t switch_mode;
-	int user_mode; /* indicate if the bb is for user mode during translation */
+	//int user_mode; /* indicate if the bb is for user mode during translation */
 	//int TFlag; /* indicate if the bb is translated for thumb */
 } cpu_t;
 
@@ -603,9 +603,16 @@ static inline int save_pc_before_exec(cpu_t* cpu){
 	return ((cpu)->info.common_flags & CPU_FLAG_SAVE_PC_BEFORE_EXEC);
 }
 
+#define FUNC_ATTR_NONE (0 << 0)
 #define FUNC_ATTR_THUMB (1 << 0)
+#define FUNC_ATTR_USERMODE (1 << 1)
 
 static inline int is_thumb_func(cpu_t* cpu){
 	return (cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] & FUNC_ATTR_THUMB);
 }
+
+static inline int is_usermode_func(cpu_t* cpu){
+	return (cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] & FUNC_ATTR_USERMODE);
+}
+
 #endif
