@@ -44,13 +44,11 @@ existing ARM simulator.  */
    held in the high 16-bits.  Passing in two Thumb instructions allows
    easier simulation of the special dual BL instruction.  */
 
-tdstate thumb_translate (arm_core_t* core, uint32_t instr, uint32_t* ainstr, uint32_t* inst_size)
+tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t* inst_size)
 {
 	tdstate valid;
 	ARMword next_instr;
 	ARMword tinstr;
-	ARMul_State* state;
-	state = core;
 	tinstr = instr;
 	/* The endian should be judge here */
 	#if 0
@@ -63,7 +61,7 @@ tdstate thumb_translate (arm_core_t* core, uint32_t instr, uint32_t* ainstr, uin
 		tinstr &= 0xFFFF;
 	}
 	#endif
-	if((core->translate_pc & 0x3) != 0)
+	if((addr & 0x3) != 0)
 		tinstr = instr >> 16;
 	else
 		tinstr &= 0xFFFF;
@@ -237,7 +235,8 @@ tdstate thumb_translate (arm_core_t* core, uint32_t instr, uint32_t* ainstr, uin
 			case 0xE:	/* BLX */
 			case 0xF:	/* BLX */
 				
-				if (state->is_v5) {
+				//if (state->is_v5) {
+				if(1){
 					//valid = t_branch;
 					#if 1
 					*ainstr = 0xE1200030	/* base */
@@ -404,6 +403,7 @@ tdstate thumb_translate (arm_core_t* core, uint32_t instr, uint32_t* ainstr, uin
 		}
 		else if ((tinstr & 0x0F00) != 0x0E00) {
 			/* Format 16 */
+			#if 0
 			int doit = FALSE;
 			/* TODO: Since we are doing a switch here, we could just add
 			   the SWI and undefined instruction checks into this
@@ -456,7 +456,6 @@ tdstate thumb_translate (arm_core_t* core, uint32_t instr, uint32_t* ainstr, uin
 					|| (!NFLAG && VFLAG)) || ZFLAG;
 				break;
 			}
-			#if 0
 			if (doit) {
 				state->Reg[15] = (pc + 4
 						  + (((tinstr & 0x7F) << 1)

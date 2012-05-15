@@ -325,7 +325,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		}
 		/* keep the tflag same with the bit in CPSR */
 		core->TFlag = (core->Cpsr & (1 << THUMB_BIT)) ? 1 : 0;
-		cpu->TFlag = core->TFlag;
+		//cpu->TFlag = core->TFlag;
 		cpu->user_mode = USER_MODE(core);
 		//clear_tag_page(cpu, core->phys_pc); /* do it or not ? */
 		push_compiled_work(cpu, core->phys_pc); // in usermode, it might be more accurate to translate reg[15] instead
@@ -479,6 +479,8 @@ static int handle_fp_insn(arm_core_t* core){
 /* This function handles tagging */
 static inline void push_compiled_work(cpu_t* cpu, uint32_t pc){
 	//printf("In %s, pc=0x%x\n", __FUNCTION__, pc);
+	cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] |= (pc & FUNC_ATTR_THUMB);
+	pc &= 0xFFFFFFFE;
 	protect_code_page(pc);
 	cpu_tag(cpu, pc);
 	cpu->dyncom_engine->cur_tagging_pos ++;
@@ -508,7 +510,7 @@ static void* compiled_worker(void* argp){
 			fast_map hash_map = cpu->dyncom_engine->fmap;
 			void* pfunc;
 
-			PFUNC(compiled_addr);
+			PFUNC(compiled_addr & 0xFFFFFFFE);
 			if(pfunc == NULL){
 				push_compiled_work(cpu, compiled_addr);
 			}
@@ -524,7 +526,10 @@ void push_to_compiled(cpu_t* cpu, addr_t addr){
 	cpu->user_mode = USER_MODE(core);
 	/* we need TFlag to judge the thumb or arm, during translation time */
 	core->Cpsr = (core->Cpsr & 0xffffffdf) | (core->TFlag << 5);
-	cpu->TFlag = core->TFlag;
+	//cpu->TFlag = core->TFlag;
+	assert((addr & 0x1) == 0);
+	if(core->TFlag)
+		addr = addr | 0x1;
         #if MULTI_THREAD
         int ret;
         if((ret = pthread_rwlock_trywrlock(&compile_stack_rwlock)) == 0){

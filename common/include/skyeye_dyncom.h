@@ -397,6 +397,7 @@ typedef struct dyncom_engine{
 	bool tags_dirty;
 	Module *mod;
 	void *fp[JIT_NUM];
+	uint8_t func_attr[JIT_NUM];
 	Function *func[JIT_NUM];
 	Function *cur_func;
 	fast_map fmap;
@@ -511,7 +512,7 @@ typedef struct cpu {
 	syscall_function_t syscall_func;
 	switch_mode_function_t switch_mode;
 	int user_mode; /* indicate if the bb is for user mode during translation */
-	int TFlag; /* indicate if the bb is translated for thumb */
+	//int TFlag; /* indicate if the bb is translated for thumb */
 } cpu_t;
 
 enum {
@@ -602,4 +603,9 @@ static inline int save_pc_before_exec(cpu_t* cpu){
 	return ((cpu)->info.common_flags & CPU_FLAG_SAVE_PC_BEFORE_EXEC);
 }
 
+#define FUNC_ATTR_THUMB (1 << 0)
+
+static inline int is_thumb_func(cpu_t* cpu){
+	return (cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] & FUNC_ATTR_THUMB);
+}
 #endif

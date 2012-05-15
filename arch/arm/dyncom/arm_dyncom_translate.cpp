@@ -228,7 +228,8 @@ int arch_arm_tag_instr(cpu_t *cpu, addr_t pc, tag_t *tag, addr_t *new_pc, addr_t
 	int index = -1;
 	int ret = DECODE_FAILURE;
 	tdstate current_state = t_undefined;
-	if(cpu->TFlag){
+	//if(cpu->TFlag){
+	if(is_thumb_func(cpu)){
 		/* Get the corresponding arm instruction for thumb instruction */
 		uint32 arm_inst;
 
@@ -274,7 +275,8 @@ int arch_arm_translate_instr(cpu_t *cpu, addr_t pc, BasicBlock *bb) {
 	//printf("In %s, instr=0x%x, pc = 0x%x\n", __FUNCTION__, instr, pc);
 	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	if(cpu->TFlag){
+	//if(cpu->TFlag){
+	if(is_thumb_func(cpu)){
 		uint32 arm_inst;
 		int index;
 		tdstate current_state = decode_dyncom_thumb_instr(core, instr, &arm_inst, pc, &index);
@@ -348,7 +350,7 @@ Value *
 thumb_translate_cond(cpu_t *cpu, uint32_t instr, BasicBlock *bb) {
 	/**/
 	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
-	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	//arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	uint32_t tinstr;
 	tinstr = instr & 0xFFFF;
 	DBG("In %s, instr=0x%x, tinstr=0x%x,\n", __FUNCTION__, instr, (tinstr));
@@ -697,7 +699,8 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			LET(14, ADD(R(15),CONST(INSTR_SIZE)));
 		/* if thumb state, we need to Ored with one */
 		//arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-		if(cpu->TFlag){
+		//if(cpu->TFlag){
+		if(is_thumb_func(cpu)){
 			LET(14, OR(R(14), CONST(0x1)));
 		}
 		LET(15, AND(R(RM), CONST(0xFFFFFFFE)));
@@ -713,7 +716,8 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		/* if thumb state, we need to Ored with one */
 		//arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 		//if(core->Cpsr & (1 << THUMB_BIT)){
-		if(cpu->TFlag)
+		//if(cpu->TFlag)
+		if(is_thumb_func(cpu))
 			LET(14, OR(R(14), CONST(0x1)));
 		//}
 		int signed_immed_24 = BITS(0, 23);
@@ -3547,8 +3551,8 @@ static tdstate decode_dyncom_thumb_instr(arm_core_t *core, uint32_t inst, uint32
 	tdstate ret;
 	uint32 inst_size;
 	/* set translate_pc for thumb_translate function */
-	core->translate_pc = pc;
-	ret = thumb_translate (core, inst, arm_inst, &inst_size);
+	//core->translate_pc = pc;
+	ret = thumb_translate (pc, inst, arm_inst, &inst_size);
 	/* For BL thumb instruction, should set its index directly */
 	if(ret == t_branch){
 		/* FIXME, endian should be judged */

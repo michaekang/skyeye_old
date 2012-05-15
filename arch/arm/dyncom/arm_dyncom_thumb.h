@@ -38,7 +38,7 @@ typedef enum
 }tdstate;
 
 tdstate
-thumb_translate (arm_core_t *cpu, uint32_t instr, uint32_t* ainstr, uint32_t* inst_size);
+thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t* inst_size);
 static inline uint32 get_thumb_instr(uint32 instr, addr_t pc){
 	uint32 tinstr;
 	if((pc & 0x3) != 0)

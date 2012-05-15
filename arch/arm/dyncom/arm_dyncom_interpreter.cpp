@@ -3268,7 +3268,7 @@ enum {
 static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *arm_inst, uint32_t* inst_size, ARM_INST_PTR* ptr_inst_base){
 	/* Check if in Thumb mode.  */
 	tdstate ret;
-	ret = thumb_translate (cpu, inst, arm_inst, inst_size);
+	ret = thumb_translate (cpu->translate_pc, inst, arm_inst, inst_size);
 	if(ret == t_branch){
 		/* FIXME, endian should be judged */
 		uint32 tinstr;
@@ -3809,7 +3809,7 @@ void InterpreterMainLoop(cpu_t *core)
 				}
 			
 				/* if regular trap */
-				cpu->Reg[15] += get_instr_size(core);
+				cpu->Reg[15] += GET_INST_SIZE(cpu);
 				uint32_t mode = cpu->Cpsr & 0x1f;
 				if ((mode != cpu->Mode) && (!is_user_mode(core))) {
 					switch_mode(cpu, mode);
