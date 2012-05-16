@@ -69,6 +69,8 @@ void skyeye_info(char* format, ...);
 void skyeye_debug(char* format, ...);
 void skyeye_error(char* format, ...);
 
+void skyeye_backtrace();
+
 int
 do_log_option (skyeye_option_t * this_option, int num_params,
 	       const char *params[]);
