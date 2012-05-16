@@ -129,8 +129,10 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 	}
 	if ((tag & (TAG_END_PAGE | TAG_EXCEPTION)) && !is_user_mode(cpu))
 		BranchInst::Create(bb_ret, cur_bb);
-	else if (tag & (TAG_BRANCH | TAG_CALL | TAG_RET))
+	else if (tag & TAG_BRANCH)
 		check_intr(cpu,cur_bb,bb_trap,bb_target);
+	else if (tag & (TAG_CALL | TAG_RET))
+		BranchInst::Create(bb_target,cur_bb);
 	else if (tag & TAG_TRAP)
 		BranchInst::Create(bb_trap, cur_bb);
 	else if (tag & TAG_CONDITIONAL) {/* Add terminator instruction 'br' for conditional instruction */
