@@ -237,7 +237,6 @@ static exception_t s3c6410_keypad_read(conf_object_t *opaque, generic_address_t 
 		case 0xc:
 			regs->keyifrow = read_gpio(GPIOK);
 			*(uint32_t*)buf = regs->keyifrow;
-			printf("[skyeye] in %s,regs->keyifrow 0x%x\n",__func__,regs->keyifrow);
 			break;
 		case 0x10:
 			*(uint32_t*)buf = regs->keyiffc;
@@ -263,7 +262,6 @@ static exception_t s3c6410_keypad_write(conf_object_t *opaque, generic_address_t
 			regs->keyifstsclr &= 1 << SAMSUNG_KEYIFSTSCLR_R_INT_OFFSET;
 			break;
 		case 0x8:
-			printf("in %s,write keyifcol 0x%x\n",__func__,val);
 			regs->keyifcol = val;
 			write_gpio(regs->keyifcol,GPIOL);
 			break;

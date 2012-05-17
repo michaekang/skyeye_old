@@ -1608,7 +1608,6 @@ skin_window_process_event( SkinWindow*  window, SDL_Event*  ev )
 #endif
         if (window->finger.inside) {
             window->finger.tracking = 1;
-	    printf("[skyeye]mouse button down\n");
             add_finger_event(window->finger.pos.x, window->finger.pos.y, 1);
         } else {
             window->button.pressed = NULL;
@@ -1618,7 +1617,6 @@ skin_window_process_event( SkinWindow*  window, SDL_Event*  ev )
                 skin_window_redraw( window, &button->rect );
                 window->button.pressed = button;
                 if(button->keycode) {
-		    printf("[skyeye]mouse button down (button->keycode)\n");
                     user_event_key(button->keycode, 1);
                 }
             }
@@ -1639,7 +1637,6 @@ skin_window_process_event( SkinWindow*  window, SDL_Event*  ev )
             button->down = 0;
             skin_window_redraw( window, &button->rect );
             if(button->keycode) {
-		    printf("[skyeye]mouse button up (button->keycode)\n");
                 user_event_key(button->keycode, 0);
             }
             window->button.pressed = NULL;
@@ -1650,7 +1647,6 @@ skin_window_process_event( SkinWindow*  window, SDL_Event*  ev )
         {
             skin_window_move_mouse( window, mx, my );
             window->finger.tracking = 0;
-	    printf("[skyeye]mouse button up\n");
             add_finger_event( window->finger.pos.x, window->finger.pos.y, 0);
         }
         break;
@@ -1667,7 +1663,6 @@ skin_window_process_event( SkinWindow*  window, SDL_Event*  ev )
         {
             skin_window_move_mouse( window, mx, my );
             if ( window->finger.tracking ) {
-	    printf("[skyeye]mouse motion\n");
                 //add_finger_event( window->finger.pos.x, window->finger.pos.y, 1 );
                 add_finger_event( window->finger.pos.x, window->finger.pos.y, 2 );//modified by xiaoqiao
             }
