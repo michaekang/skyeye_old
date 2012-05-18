@@ -559,8 +559,10 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	BasicBlock *label_entry = BasicBlock::Create(_CTX(), "entry", func, 0);
 	emit_decode_reg(cpu, label_entry);
 
+	/**/
 	// create exit code
 	Value *exit_code = new AllocaInst(getIntegerType(32), "exit_code", label_entry);
+	cpu->dyncom_engine->read_value = new AllocaInst(getIntegerType(32), "exit_code", label_entry);
 	// assume JIT_RETURN_FUNCNOTFOUND or JIT_RETURN_SINGLESTEP if in in single step.
 	new StoreInst(ConstantInt::get(XgetType(Int32Ty),
 					(cpu->dyncom_engine->flags_debug & (CPU_DEBUG_SINGLESTEP | CPU_DEBUG_SINGLESTEP_BB)) ? JIT_RETURN_SINGLESTEP :

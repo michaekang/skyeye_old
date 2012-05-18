@@ -430,9 +430,12 @@ typedef struct dyncom_engine{
 	/* Temp variable for address translation */
 	BasicBlock* bb_trap;
 	BasicBlock* bb_load_store;
+	BasicBlock* bb_load_store_end;
 	/* Temp variable for arm write back decoder */
 	Value* wb_value;
 	int wb_flag;
+	Value* io_flag;
+	Value* read_value;
 	/* arch functions are for each architecture to declare it's own functions
 	   which can be invoked in llvm IR.Usually,the functions to be invoked are
 	   C functions which are complex to be implemented by llvm IR.

@@ -138,6 +138,7 @@ void StoreDWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
 	bb = cpu->dyncom_engine->bb_load_store;
 	arch_write_memory(cpu, bb, phys_addr, R(RD), 32);
+	bb = cpu->dyncom_engine->bb_load_store_end;
 
 	phys_addr = get_phys_addr(cpu, bb, ADD(addr, CONST(4)), 0);
 	bb = cpu->dyncom_engine->bb_load_store;
@@ -151,7 +152,9 @@ void LoadWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	bb = cpu->dyncom_engine->bb_load_store;
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
-	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(24));
 	if(RD == 15){
 		STORE(TRUNC1(AND(ret, CONST(1))), ptr_T);
@@ -172,7 +175,9 @@ void LoadHWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	bb = cpu->dyncom_engine->bb_load_store;
-	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 16);
+	arch_read_memory(cpu, bb, phys_addr, 0, 16);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD,ret);
 }
 
@@ -181,7 +186,9 @@ void LoadSHWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	bb = cpu->dyncom_engine->bb_load_store;
-	Value *ret = arch_read_memory(cpu, bb, phys_addr, 1, 16);
+	arch_read_memory(cpu, bb, phys_addr, 1, 16);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD,ret);
 }
 
@@ -190,7 +197,9 @@ void LoadByte(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	bb = cpu->dyncom_engine->bb_load_store;
-	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD,ret);
 }
 
@@ -199,7 +208,9 @@ void LoadSByte(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	bb = cpu->dyncom_engine->bb_load_store;
-	Value *ret = arch_read_memory(cpu, bb, phys_addr, 1, 8);
+	arch_read_memory(cpu, bb, phys_addr, 1, 8);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD,ret);
 }
 
@@ -208,11 +219,15 @@ void LoadDWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 {
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	bb = cpu->dyncom_engine->bb_load_store;
-	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD,ret);
 	phys_addr = get_phys_addr(cpu, bb, ADD(addr, CONST(4)), 1);
 	bb = cpu->dyncom_engine->bb_load_store;
-	ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD+1,ret);
 }
 
@@ -324,7 +339,9 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 				phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
 				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
 				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
-				ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+				arch_read_memory(cpu, bb, phys_addr, 0, 32);
+				bb = cpu->dyncom_engine->bb_load_store_end;
+				ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 				//LOG("In %s, i=0x%x\n", __FUNCTION__, i);
 				LET(i, ret);
 				Addr = ADD(Addr, CONST(4));
@@ -335,7 +352,9 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
 			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 
-			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+			arch_read_memory(cpu, bb, phys_addr, 0, 32);
+			bb = cpu->dyncom_engine->bb_load_store_end;
+			ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LET(R13_USR, ret);
 			Addr = ADD(Addr, CONST(4));
 		}
@@ -344,7 +363,9 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
 			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 
-			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+			arch_read_memory(cpu, bb, phys_addr, 0, 32);
+			bb = cpu->dyncom_engine->bb_load_store_end;
+			ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LET(R14_USR, ret);
 			Addr = ADD(Addr, CONST(4));
 		}
@@ -355,11 +376,13 @@ void LoadM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 			phys_addr1 = OR(start_phys_page, AND(Addr, CONST(0xFFF)));
 			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
 			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
-			ret = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+			arch_read_memory(cpu, bb, phys_addr, 0, 32);
+			bb = cpu->dyncom_engine->bb_load_store_end;
+			ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			//LOG("In %s, i=0x%x\n", __FUNCTION__, i);
 			if(i == R15){
 				STORE(TRUNC1(AND(ret, CONST(1))), ptr_T);
-				LET(i, AND(ret, CONST(~0x1)));
+				LET(i, AND(ret, CONST(0xFFFFFFFE)));
 			}
 			else
 				LET(i, ret);
@@ -404,6 +427,7 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 				phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
 				phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 				arch_write_memory(cpu, bb, phys_addr, R(i), 32);
+				bb = cpu->dyncom_engine->bb_load_store_end;
 				Addr = ADD(Addr, CONST(4));
 			}
 		}
@@ -416,6 +440,7 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 			else
 				arch_write_memory(cpu, bb, phys_addr, R(R13_USR), 32);
 			
+			bb = cpu->dyncom_engine->bb_load_store_end;
 			Addr = ADD(Addr, CONST(4));
 		}
 		if (BIT(14)) {
@@ -423,6 +448,7 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
 			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 			arch_write_memory(cpu, bb, phys_addr, R(R14_USR), 32);
+			bb = cpu->dyncom_engine->bb_load_store_end;
 			Addr = ADD(Addr, CONST(4));
 		}
 		if(BIT(15)){
@@ -430,6 +456,7 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 			phys_addr2 = OR(end_phys_page, AND(Addr, CONST(0xFFF)));
 			phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 			arch_write_memory(cpu, bb, phys_addr, STOREM_CHECK_PC, 32);
+			bb = cpu->dyncom_engine->bb_load_store_end;
 		}
 		return;
 	}
@@ -443,7 +470,8 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 				arch_write_memory(cpu, bb, phys_addr, Rn, 32);
 			else
 				arch_write_memory(cpu, bb, phys_addr, R(i), 32);
-			
+				
+			bb = cpu->dyncom_engine->bb_load_store_end;
 			Addr = ADD(Addr, CONST(4));
 		}
 	}
@@ -455,6 +483,7 @@ void StoreM(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr, Value* Rn)
 		phys_addr = SELECT(ICMP_EQ(AND(Addr, CONST(0xFFFFF000)), start_virt_page), phys_addr1, phys_addr2);
 
 		arch_write_memory(cpu, bb, phys_addr, STOREM_CHECK_PC, 32);
+		bb = cpu->dyncom_engine->bb_load_store_end;
 	}
 }
 

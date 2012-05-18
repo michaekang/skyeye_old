@@ -880,7 +880,7 @@ int DYNCOM_TRANS(ldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	if (BIT(15)) {
 		SET_NEW_PAGE;
@@ -900,7 +900,7 @@ int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	#if 0
 	if (RD == 15) {
@@ -930,7 +930,7 @@ int DYNCOM_TRANS(ldrb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -942,7 +942,7 @@ int DYNCOM_TRANS(ldrbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -955,7 +955,7 @@ int DYNCOM_TRANS(ldrd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -975,7 +975,10 @@ int DYNCOM_TRANS(ldrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		bb = cpu->dyncom_engine->bb_load_store;
 	LET(EXCLUSIVE_TAG, phys_addr);
 	LET(EXCLUSIVE_STATE, CONST(1));
-	Value *val = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
         if(RD == 15){
                 STORE(TRUNC1(AND(val, CONST(1))), ptr_T);
@@ -998,7 +1001,7 @@ int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value* Rn;
 	Value *addr = R(RN);
 	//bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
-	LoadStore(cpu,instr,bb,addr, Rn);
+	//LoadStore(cpu,instr,bb,addr, Rn);
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
 
@@ -1006,7 +1009,9 @@ int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		bb = cpu->dyncom_engine->bb_load_store;
 	LET(EXCLUSIVE_TAG, phys_addr);
 	LET(EXCLUSIVE_STATE, CONST(1));
-	Value *val = arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
         if(RD == 15){
                 STORE(TRUNC1(AND(val, CONST(1))), ptr_T);
@@ -1031,7 +1036,7 @@ int DYNCOM_TRANS(ldrh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -1047,7 +1052,9 @@ int DYNCOM_TRANS(ldrsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
 
-	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x80)), CONST(0)), ret, OR(CONST(0xffffff00), ret)));
 	EXECUTE_WB(RN);
 
@@ -1058,12 +1065,13 @@ int DYNCOM_TRANS(ldrsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* LDRSH P=1 U=1 W=0 */
 	/* should check if RN == RD for writeback case */
 	Value *addr = GetAddr(cpu, instr, bb, 1);
-	//LoadStore(cpu,instr,bb,addr);	
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb_load_store;
 
-	Value *ret = arch_read_memory(cpu, bb, phys_addr, 0, 16);
+	arch_read_memory(cpu, bb, phys_addr, 0, 16);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x8000)), CONST(0)), ret, OR(CONST(0xffff0000), ret)));
 	EXECUTE_WB(RN);
 
@@ -1075,7 +1083,7 @@ int DYNCOM_TRANS(ldrt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -1854,7 +1862,7 @@ int DYNCOM_TRANS(stm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -1869,7 +1877,7 @@ int DYNCOM_TRANS(str)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	//StoreWord(cpu, instr, bb, addr);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -1886,7 +1894,7 @@ int DYNCOM_TRANS(strb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -1898,7 +1906,7 @@ int DYNCOM_TRANS(strbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -1911,7 +1919,7 @@ int DYNCOM_TRANS(strd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -1932,7 +1940,10 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
 	LET(EXCLUSIVE_STATE, SELECT(cond, CONST(0), R(EXCLUSIVE_STATE)));
 	LET(RD, SELECT(cond, CONST(0), CONST(1)));
-	Value* data = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	arch_read_memory(cpu, bb, phys_addr, 0, 32);
+
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *data = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	val = SELECT(cond, val, data);
 
 	arch_write_memory(cpu, bb, phys_addr, val, 32);
@@ -1941,7 +1952,6 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 //	Value *addr = GetAddr(cpu, instr, bb);
-//	LoadStore(cpu,instr,bb,addr);
 	Value *addr = R(RN);
 	Value *val = AND(R(RM), CONST(0xff));
 	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
@@ -1952,7 +1962,9 @@ int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
 	LET(EXCLUSIVE_STATE, SELECT(cond, CONST(0), R(EXCLUSIVE_STATE)));
 	LET(RD, SELECT(cond, CONST(0), CONST(1)));
-	Value* data = arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	bb = cpu->dyncom_engine->bb_load_store_end;
+	Value *data = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	val = SELECT(cond, val, data);
 
 	arch_write_memory(cpu, bb, phys_addr, val, 8);
@@ -1966,7 +1978,7 @@ int DYNCOM_TRANS(strh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -1978,7 +1990,7 @@ int DYNCOM_TRANS(strt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb_load_store_end;
 
 	EXECUTE_WB(RN);
 
@@ -2028,8 +2040,12 @@ int DYNCOM_TRANS(swp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	//bb = arch_check_mm(cpu, bb, Addr, 4, 0, cpu->dyncom_engine->bb_trap);
 	Value* phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 	bb = cpu->dyncom_engine->bb_load_store;
-	Value *Val = arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	bb = cpu->dyncom_engine->bb_load_store_end; 
+	Value *Val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
+
 	arch_write_memory(cpu, bb, phys_addr, Val, 32);
+	bb = cpu->dyncom_engine->bb_load_store_end;
 	LET(RD, Val);
 	return No_exp;
 }

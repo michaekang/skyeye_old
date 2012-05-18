@@ -691,7 +691,37 @@ arch_debug_me(cpu_t *cpu, BasicBlock *bb, BasicBlock *exit_bb)
 	return next_bb;
 }
 
+static void io_write_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock* load_store_end, Value* addr, Value* value, uint32_t size){
+	if (cpu->dyncom_engine->ptr_func_write_memory == NULL) {
+		return;
+	}
+	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
+	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
+	std::vector<Value *> params;
+	params.push_back(v_cpu_ptr);
+	params.push_back(addr);
+	params.push_back(value);
+	params.push_back(CONST(size));
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
+	BranchInst::Create(load_store_end, bb);
+	return;
+}
 
+static void mem_write_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock* load_store_end, Value* addr, Value* value, uint32_t size){
+	if(size == 8)
+		STORE8(value, addr);
+	else if(size == 16)
+		STORE16(value, addr);
+	else if(size == 32)
+		STORE32(value, addr);
+	else{
+		printf("in %s, error size\n", __func__);
+		exit(0);
+	}
+	BranchInst::Create(load_store_end, bb);
+	return;
+}
 /**
  * @brief Generate the write memory llvm IR 
  *
@@ -703,38 +733,66 @@ arch_debug_me(cpu_t *cpu, BasicBlock *bb, BasicBlock *exit_bb)
  */
 void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, uint32_t size)
 {
-//#if USER_MODE_OPT
-	if(is_usermode_func(cpu) || cpu->is_user_mode){
-		if(size == 8)
-			STORE8(value, addr);
-		else if(size == 16)
-			STORE16(value, addr);
-		else if(size == 32)
-			STORE32(value, addr);
-		else{
-			printf("in %s, error size\n", __func__);
-			exit(0);
-		}
-	}
-	else{
-//#else
-	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
-	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 0, cpu->dyncom_engine->bb_trap);
-		if (cpu->dyncom_engine->ptr_func_write_memory == NULL) {
-			return;
-		}
-		Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
-		Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
-		Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
-		std::vector<Value *> params;
-		params.push_back(v_cpu_ptr);
-		params.push_back(addr);
-		params.push_back(value);
-		params.push_back(CONST(size));
-		CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
-	}
-//#endif
+	BasicBlock* load_store_end = BasicBlock::Create(_CTX(), "load_store_end", cpu->dyncom_engine->cur_func, 0);
+
+	BasicBlock* mem_store_bb = BasicBlock::Create(_CTX(), "mem_store", cpu->dyncom_engine->cur_func, 0);
+	mem_write_bb(cpu, mem_store_bb, load_store_end, addr, value, size);
+
+	BasicBlock* io_store_bb = BasicBlock::Create(_CTX(), "io_store", cpu->dyncom_engine->cur_func, 0);
+	io_write_bb(cpu, io_store_bb, load_store_end, addr, value, size);
+
+	Value *cond = ICMP_EQ(cpu->dyncom_engine->io_flag, CONST(0));
+	arch_branch(1, mem_store_bb, io_store_bb, cond, bb);
+	cpu->dyncom_engine->bb_load_store_end = load_store_end;
+	return;
 }
+static Value* io_read_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock *load_store_end, Value *addr, uint32_t sign, uint32_t size){
+	if (cpu->dyncom_engine->ptr_func_read_memory == NULL) {
+		return NULL;
+	}
+
+	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 1, cpu->dyncom_engine->bb_trap);
+
+	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
+	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
+	std::vector<Value *> params;
+	params.push_back(v_cpu_ptr);
+	params.push_back(addr);
+	params.push_back(CONST(size));
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
+	new StoreInst(ret, cpu->dyncom_engine->read_value, false, 0, bb);
+	BranchInst::Create(load_store_end, bb);
+	return NULL;
+}
+
+static Value* mem_read_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock *load_store_end, Value *addr, uint32_t sign, uint32_t size){
+	Value* tmp;
+	if(size == 8){
+		tmp = arch_load8(cpu, addr, bb);
+		if(sign)
+			tmp = SEXT32(tmp);
+		else
+			tmp = ZEXT32(tmp); 
+	}
+	else if(size == 16){
+		tmp = arch_load16_aligned(cpu, addr, bb);
+		if(sign)
+			tmp = SEXT32(tmp);
+		else
+			tmp = ZEXT32(tmp); 
+	}
+	else if(size == 32)
+		tmp = arch_load32_aligned(cpu, addr, bb);
+	else{
+		printf("in %s, error size\n", __func__);
+		exit(0);
+	}
+	new StoreInst(tmp, cpu->dyncom_engine->read_value, false, 0, bb);
+	BranchInst::Create(load_store_end, bb);
+	return NULL;
+}
+
 /**
  * @brief Generate the read memory llvm IR
  *
@@ -749,48 +807,19 @@ void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, ui
 Value *arch_read_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, uint32_t sign, uint32_t size)
 {
 //#if USER_MODE_OPT
-	if(is_usermode_func(cpu) || cpu->is_user_mode){
-		Value* tmp;
-		if(size == 8){
-			tmp = arch_load8(cpu, addr, bb);
-			if(sign)
-				return SEXT32(tmp);
-			else
-				return ZEXT32(tmp); 
-		}
-		else if(size == 16){
-			tmp = arch_load16_aligned(cpu, addr, bb);
-			if(sign)
-				return SEXT32(tmp);
-			else
-				return ZEXT32(tmp); 
-		}
-		else if(size == 32)
-			return arch_load32_aligned(cpu, addr, bb);
-		else{
-			printf("in %s, error size\n", __func__);
-			exit(0);
-		}
-	}
-	else{
-//#else
-		if (cpu->dyncom_engine->ptr_func_read_memory == NULL) {
-			return NULL;
-		}
+	Value* v;
+	BasicBlock* load_store_end = BasicBlock::Create(_CTX(), "load_store_end", cpu->dyncom_engine->cur_func, 0);
 
-	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 1, cpu->dyncom_engine->bb_trap);
+	BasicBlock* mem_load_bb = BasicBlock::Create(_CTX(), "mem_load", cpu->dyncom_engine->cur_func, 0);
+	mem_read_bb(cpu, mem_load_bb, load_store_end, addr, sign, size);
 
-		Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
-		Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
-		Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
-		std::vector<Value *> params;
-		params.push_back(v_cpu_ptr);
-		params.push_back(addr);
-		params.push_back(CONST(size));
-		CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
-		return ret;
-	}
-//#endif
+	BasicBlock* io_load_bb = BasicBlock::Create(_CTX(), "io_load", cpu->dyncom_engine->cur_func, 0);
+	io_read_bb(cpu, io_load_bb, load_store_end, addr, sign, size);
+
+	Value *cond = ICMP_EQ(cpu->dyncom_engine->io_flag, CONST(0));
+	arch_branch(1, mem_load_bb, io_load_bb, cond, bb);
+	cpu->dyncom_engine->bb_load_store_end = load_store_end;
+	return v;
 }
 /**
  * @brief Generate the invoke syscall llvm IR

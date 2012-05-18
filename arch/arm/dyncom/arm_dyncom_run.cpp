@@ -601,12 +601,14 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	Value* phys_addr = SELECT(result, CONST(0xdeadc0de), OR(phys_page, AND(CONST(0xFFF), addr)));
 
 	Value *cond = ICMP_NE(result, CONST1(1));
-	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store", cpu->dyncom_engine->cur_func, 0);
+	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store_begin", cpu->dyncom_engine->cur_func, 0);
 	BasicBlock* mmu_fault_bb = create_mmu_fault_bb(cpu, result, fault, fault_addr);
 
 	cpu->dyncom_engine->bb_load_store = load_store_bb;
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(15));
 	arch_branch(1, load_store_bb, mmu_fault_bb, cond, bb);
+	bb = load_store_bb;
+	cpu->dyncom_engine->io_flag = TRUNC32(AND(tlb_entry, CONST64(IO_FLAG_MASK)));
 	return phys_addr;
 }
 

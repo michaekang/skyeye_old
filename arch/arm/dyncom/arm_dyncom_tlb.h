@@ -41,5 +41,7 @@ void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type);
 void erase_all(cpu_t* cpu, tlb_type_t access_type);
 
 #define GET_AP(phys_page) (phys_page & 0x3)
-#define VALID_PHYS_PAGE(p) (p & 0x1)
+
+#define IO_FLAG_MASK 0x4
+#define GET_IO_FLAG(p) ((p >> 2) & 0x1)
 #endif
