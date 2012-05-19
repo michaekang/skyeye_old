@@ -3364,7 +3364,7 @@ extern const ISEITEM arm_instruction[];
 
 vector<uint64_t> code_page_set;
 
-static void flush_bb(uint32_t addr)
+void flush_bb(uint32_t addr)
 {
 	bb_map::iterator it;
 	uint32_t start;
@@ -3477,6 +3477,8 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 	bb_start = top;
 	while(ret == NON_BRANCH) {
 		ret = FetchInst(core, inst);
+		or_tag(core, (phys_addr & 0xFFFFF000)|(cpu->translate_pc & 0xFFF), TAG_FAST_INTERP);
+
 		if (ret == FETCH_FAILURE) {
 			return FETCH_EXCEPTION;
 		}
@@ -3517,7 +3519,7 @@ translated:
 	pc_start = phys_addr;
 	if (!core->is_user_mode) {
 		//printf("before protect_code_page, pc_start=0x%x\n", pc_start);
-		protect_code_page(pc_start);
+		//protect_code_page(pc_start);
 	}
 	//printf("In %s,insert_bb pc=0x%x, TFlag=0x%x\n", __FUNCTION__, pc_start, cpu->TFlag);
 	insert_bb(pc_start, bb_start);

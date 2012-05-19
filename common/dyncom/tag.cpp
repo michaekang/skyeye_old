@@ -180,6 +180,29 @@ is_translated_code(cpu_t *cpu, addr_t addr)
 		return false;
 }
 
+/* check instruction at the address is translated or not. */
+bool
+is_fast_interp_code(cpu_t *cpu, addr_t addr)
+{
+	if (!is_tag_level2_table_allocated(cpu, addr)) {
+//		init_tag_level2_table(cpu, addr);
+		return false;
+	}
+	if (!is_tag_level3_table_allocated(cpu, addr)) {
+//		init_tag_level3_table(cpu, addr);
+		return false;
+	}
+	uint32_t level1_offset = TAG_LEVEL1_OFFSET(addr);
+	uint32_t level2_offset = TAG_LEVEL2_OFFSET(addr);
+	uint32_t level3_offset = TAG_LEVEL3_OFFSET(addr);
+	tag_t tag = cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset];
+	if (tag & TAG_FAST_INTERP) {
+		return true;
+	} else
+		return false;
+}
+
+
 /* In os simulation ,tag depth is 1, so we can find out the first instruction of jit function
    by checking tag attribute backward in tag table. If tag has TAG_ENTRY, it is start of jit.*/
 addr_t find_bb_start(cpu_t *cpu, addr_t addr)
@@ -297,8 +320,8 @@ void clear_tag_page(cpu_t *cpu, addr_t a)
 	uint32_t level1_offset = TAG_LEVEL1_OFFSET(a);
 	uint32_t level2_offset = TAG_LEVEL2_OFFSET(a);
 	for (i = 0; i < TAG_LEVEL3_TABLE_SIZE; i++) {
-		/* clear all instructions tag except TAG_ENTRY & TAG_TRANSLATED */
-		cpu->dyncom_engine->tag_table[level1_offset][level2_offset][i] &= TAG_TRANSLATED | TAG_ENTRY;
+		//cpu->dyncom_engine->tag_table[level1_offset][level2_offset][i] &= TAG_TRANSLATED | TAG_ENTRY;
+		cpu->dyncom_engine->tag_table[level1_offset][level2_offset][i] = TAG_UNKNOWN;
 	}
 }
 void clear_tag_table(cpu_t *cpu)

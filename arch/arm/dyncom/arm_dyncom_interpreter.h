@@ -26,4 +26,5 @@
 #ifndef __ARM_DYNCOM_INTERPRETER_H__
 #define __ARM_DYNCOM_INTERPRETER_H__
 void protect_code_page(uint32_t addr);
+void flush_bb(uint32_t addr);
 #endif

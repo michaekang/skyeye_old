@@ -27,6 +27,7 @@
 #include "arm_dyncom_tlb.h"
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_translate.h"
+#include "arm_dyncom_interpreter.h"
 #include "skyeye_dyncom.h"
 #include <skyeye_log.h>
 #include "skyeye_obj.h"
@@ -370,6 +371,13 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 	#endif
 	}
 #endif
+	if(is_fast_interp_code(cpu, phys_addr)){
+		printf("In %s, fast interp page 0x%x is written\n", __FUNCTION__, phys_addr & 0xFFFFF000);
+		flush_bb(phys_addr);
+		//printf("In %s, end fast interp page 0x%x is written\n", __FUNCTION__, phys_addr & 0xFFFFF000);
+                clear_tag_page(cpu, phys_addr);
+	}
+
 #if FAST_MEMORY
 	phys_addr = phys_addr | (virt_addr & 3);
 	if(mem_write_directly(cpu, phys_addr, value, size) == 0){
