@@ -212,7 +212,6 @@ int setup_netlink(char * hostp, char * portp)
 {
 	int	port;
 	struct	sockaddr_in target;
-	struct  hostent * addr;
 	int	num;
 	int	skt;
 
@@ -222,7 +221,7 @@ int setup_netlink(char * hostp, char * portp)
 		fprintf(stderr, "Connection port must be a number from 1 to 65535");
 		EXIT(1);
 	}
-
+#if 0
 	addr = gethostbyname(hostp);
 	if (addr == (struct hostent*)0) {
 		fprintf(stderr,"Unknown host machine %s",hostp);
@@ -230,6 +229,8 @@ int setup_netlink(char * hostp, char * portp)
 	}
 
 	memcpy((void*)&target.sin_addr, (void*)addr->h_addr, addr->h_length);
+#endif
+	target.sin_addr.s_addr = INADDR_ANY;
 	target.sin_family = AF_INET;
 	target.sin_port = htons(port);
 
