@@ -24,7 +24,7 @@
 */
 //#include "lru_tlb.h"
 #include "arm_dyncom_mmu.h"
-#include "arm_dyncom_tlb.h"
+#include "dyncom/tlb.h"
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_translate.h"
 #include "arm_dyncom_interpreter.h"

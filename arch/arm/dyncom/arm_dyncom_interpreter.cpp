@@ -37,7 +37,7 @@ using namespace std;
 #include "bank_defs.h"
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_run.h"
-#include "arm_dyncom_tlb.h"
+#include "dyncom/tlb.h"
 #include "arm_dyncom_translate.h"
 #include "dyncom/tag.h"
 #include "skyeye_ram.h"

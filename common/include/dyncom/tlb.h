@@ -26,10 +26,20 @@
 #ifndef __ARM_DYNCOM_TLB_H__
 #define __ARM_DYNCOM_TLB_H__
 #include <skyeye_dyncom.h>
-#include "arm_dyncom_mmu.h"
 #define TLB_SIZE 4096
 #define ASID_SIZE 256
+typedef enum _tlb_type {
+	DATA_TLB = 0,
+	INSN_TLB,
+	TLB_TOTAL
+} tlb_type_t;
 
+struct tlb_item {
+	uint32_t pa;
+	uint32_t va;
+};
+
+#define TLB_ENTRY_SIZE sizeof(struct tlb_item)
 int get_phys_page(unsigned int va, int context_id, unsigned int &pa, tlb_type_t access_type);
 void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_type);
 uint64_t* new_tlb();

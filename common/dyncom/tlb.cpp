@@ -26,11 +26,8 @@
 #include <string.h>
 #include <stdlib.h>
 //typedef tlb_item 
-#include "arm_dyncom_tlb.h"
-struct tlb_item {
-	uint32_t pa;
-	uint32_t va;
-};
+#include "dyncom/tlb.h"
+
 //static tlb_item* tlb_cache = NULL;
 static uint64_t tlb_cache[TLB_TOTAL][ASID_SIZE][TLB_SIZE];
 //static tlb_table tlb[TLB_TOTAL];

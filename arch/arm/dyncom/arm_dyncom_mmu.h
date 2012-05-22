@@ -40,17 +40,13 @@
 
 
 #include "dyncom/frontend.h"
+#include "dyncom/tlb.h"
 
 #define CP15(idx)	(idx - CP15_BASE)
 #define CP15REG(idx)	(core->CP15[CP15(idx)])
 #define MMU_ENABLED	core->CP15[CP15(CP15_CONTROL)]
 
 #define MMU_DEBUG	0
-typedef enum _tlb_type {
-	DATA_TLB = 0,
-	INSN_TLB,
-	TLB_TOTAL
-} tlb_type_t;
 void remove_tlb_by_asid(uint32_t asid, tlb_type_t type);
 void remove_tlb(tlb_type_t type);
 void remove_tlb_by_mva(uint32_t mva, tlb_type_t type);

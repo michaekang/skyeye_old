@@ -41,7 +41,7 @@
 #include "arm_dyncom_run.h"
 //#include "armemu.h"
 #include "arm_dyncom_thumb.h"
-#include "arm_dyncom_tlb.h"
+#include "dyncom/tlb.h"
 #include "vfp/vfp.h"
 #include "skyeye_instr_length.h"
 #define DEBUG

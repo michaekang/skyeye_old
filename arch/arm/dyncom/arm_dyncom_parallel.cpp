@@ -60,7 +60,7 @@ extern ARMword ARMul_Emulate32 (ARMul_State *);
 #define QUEUE_LENGTH 1024
 /* Monothread: threshold compilation only
    Multithread: threshold compilation or Polling compilation (cpu intensive) */
-#define MULTI_THREAD 1
+#define MULTI_THREAD 0
 #define LIFO 0
 static uint32_t compiled_queue[QUEUE_LENGTH]; /* list of tagged addresses. Note: is not a shared resource */
 static stack<uint32_t> compile_stack; /* stack of untranslated addresses. Note: is a shared resource */

@@ -56,7 +56,7 @@
 #include "dyncom/frontend.h"
 #include "arm_dyncom_translate.h"
 #include "arm_dyncom_parallel.h"
-#include "arm_dyncom_tlb.h"
+#include "dyncom/tlb.h"
 #include "dyncom/defines.h"
 #include "common/mmu/arm1176jzf_s_mmu.h"
 #include "armmmu.h"
