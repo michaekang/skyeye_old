@@ -112,6 +112,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 			/* get address of the following instruction */
 			addr_t new_pc, next_pc;
 			cpu->f.tag_instr(cpu, pc, &dummy1, &new_pc, &next_pc);
+			or_tag(cpu, pc, TAG_TRANSLATED);
 
 			/* get target basic block */
 			if (tag & TAG_RET)

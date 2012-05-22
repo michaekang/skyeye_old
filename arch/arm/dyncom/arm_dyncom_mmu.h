@@ -67,4 +67,5 @@ these value from skyeye.conf */
 #define BANK0_SIZE 0x30000000
 #define BANK0_END (BANK0_START + BANK0_SIZE)
 
+#define CHECK_IN_WRITE 1
 #endif

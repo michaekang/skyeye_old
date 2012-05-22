@@ -3519,7 +3519,10 @@ translated:
 	pc_start = phys_addr;
 	if (!core->is_user_mode) {
 		//printf("before protect_code_page, pc_start=0x%x\n", pc_start);
-		//protect_code_page(pc_start);
+#if CHECK_IN_WRITE
+#else
+		protect_code_page(pc_start);
+#endif
 	}
 	//printf("In %s,insert_bb pc=0x%x, TFlag=0x%x\n", __FUNCTION__, pc_start, cpu->TFlag);
 	insert_bb(pc_start, bb_start);

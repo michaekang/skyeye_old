@@ -371,13 +371,44 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 	#endif
 	}
 #endif
-	if(is_fast_interp_code(cpu, phys_addr)){
-		printf("In %s, fast interp page 0x%x is written\n", __FUNCTION__, phys_addr & 0xFFFFF000);
+
+#if CHECK_IN_WRITE
+	if(phys_addr > 0x50012000 && phys_addr < 0x50013000){
+		//printf("In %s, written addr is 0x%x, tag=0x%x\n", __FUNCTION__, get_tag(phys_addr));
+	}
+	if(phys_addr >= 0x6ffff000 && phys_addr <= 0x6fffffff){
+		if(phys_addr != 0x6ffffff0)
+			printf("\n\nIn %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
+
+#if L3_HASHMAP
+                clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
+#else
+		//fprintf(stderr, "Warnning: not clear the cache");
+#endif
 		flush_bb(phys_addr);
-		//printf("In %s, end fast interp page 0x%x is written\n", __FUNCTION__, phys_addr & 0xFFFFF000);
                 clear_tag_page(cpu, phys_addr);
 	}
 
+	if(is_fast_interp_code(cpu, phys_addr) || is_translated_code(cpu, phys_addr)){
+		printf("In %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
+		//if(is_fast_interp_code(cpu, phys_addr)){
+		//printf("In %s, fast interp page 0x%x is written, at 0x%x\n", __FUNCTION__, phys_addr & 0xFFFFF000, core->Reg[15]);
+		flush_bb(phys_addr);
+		//}
+		//printf("In %s, end fast interp page 0x%x is written\n", __FUNCTION__, phys_addr & 0xFFFFF000);
+
+		//addr_t addr = find_bb_start(cpu, phys_addr);
+		//if(is_translated_code(cpu, phys_addr)){
+		//printf("clear code cache 0x%x in %s\n", phys_addr, __FUNCTION__);
+#if L3_HASHMAP
+                clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
+#else
+               	fprintf(stderr, "Warnning: not clear the cache");
+#endif
+		//}
+                clear_tag_page(cpu, phys_addr);
+	}
+#endif
 #if FAST_MEMORY
 	phys_addr = phys_addr | (virt_addr & 3);
 	if(mem_write_directly(cpu, phys_addr, value, size) == 0){
@@ -411,7 +442,7 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 	printf("bus read at %x, pc=0x%x\n", phys_addr, core->Reg[15]);
 	#endif
 
-#ifdef FAST_MEMORY
+#if FAST_MEMORY
         phys_addr = phys_addr | (virt_addr & 3);
         if(mem_read_directly(cpu, phys_addr, value, size) == 0){
 		goto skip_read;
@@ -492,7 +523,41 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	}
 #endif
 	//printf("pc=0x%x, addr=0x%x, data=0x%x\n", core->Reg[15],  phys_addr | (virt_addr & 3), value);
-#ifdef FAST_MEMORY
+#if CHECK_IN_WRITE 
+	if(phys_addr >= 0x6ffff000 && phys_addr <= 0x6fffffff){
+		if(phys_addr != 0x6ffffff0){
+			printf("\n\nIn %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
+		}
+
+#if L3_HASHMAP
+                clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
+#else
+		//fprintf(stderr, "Warnning: not clear the cache");
+#endif
+		flush_bb(phys_addr);
+                clear_tag_page(cpu, phys_addr);
+
+	}
+        if (is_translated_code(cpu, phys_addr) || is_fast_interp_code(cpu, phys_addr)) {
+		//printf("In %s, selfmodified code is 0x%x\n", __FUNCTION__, phys_addr);
+		printf("In %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
+		//if(is_translated_code(cpu, phys_addr)){
+	                //clear native code when code section was written.
+		//printf("clear code cache 0x%x in %s\n", phys_addr, __FUNCTION__);
+#if L3_HASHMAP
+                clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
+#else
+		//fprintf(stderr, "Warnning: not clear the cache");
+#endif
+		//}
+		//if(is_fast_interp_code(cpu, phys_addr)){
+		flush_bb(phys_addr);
+		//printf("In %s, end fast interp page 0x%x is written at 0x%x\n", __FUNCTION__, phys_addr & 0xFFFFF000, core->Reg[15]);
+		//}
+                clear_tag_page(cpu, phys_addr);
+        }
+#endif
+#if FAST_MEMORY
         phys_addr = phys_addr | (virt_addr & 3);
         if(mem_write_directly(cpu, phys_addr, value, size) == 0){
 		return;

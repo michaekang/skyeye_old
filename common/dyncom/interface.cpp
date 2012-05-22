@@ -381,7 +381,8 @@ cpu_translate_function(cpu_t *cpu, addr_t addr)
 	static int jit_num = 0;
 	//addr_t start_addr = cpu->f.get_pc(cpu, cpu->rf.grf);
 	addr_t start_addr = addr;
-
+	
+	//printf("In %s, addr=0x%x\n", __FUNCTION__, addr);
 	/* create function and fill it with std basic blocks */
 	cpu->dyncom_engine->cur_func = cpu_create_function(cpu, "jitmain", &bb_ret, &bb_trap, &bb_timeout, &label_entry);
 

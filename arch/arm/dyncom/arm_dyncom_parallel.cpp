@@ -205,14 +205,17 @@ inline int clear_cache(cpu_t *cpu, fast_map hash_map)
 void clear_translated_cache(addr_t phys_addr){
 	arm_core_t* core = get_current_core();
         cpu_t* cpu = (cpu_t *)core->dyncom_cpu->obj;
+	clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
+	clear_tag_page(cpu, phys_addr);
+#if 0
 	phys_addr = phys_addr & 0xFFFFF000;
         /* flush two pages of code cache for dyncom */
-        for(int i = 0; i < 1024 * 4; i++){
+        for(int i = 0; i < 1024 * 2; i++){
                 //phys_addr = phys_addr + 4;
                 if (is_translated_code(cpu, phys_addr)) {
                         //clear native code when code section was written.
                         addr_t addr = find_bb_start(cpu, phys_addr);
-                        clear_tag(cpu, phys_addr);
+                        //clear_tag(cpu, phys_addr);
 #if L3_HASHMAP
                         extern pthread_rwlock_t translation_rwlock;
                         pthread_rwlock_wrlock(&translation_rwlock);
@@ -225,6 +228,7 @@ void clear_translated_cache(addr_t phys_addr){
                 }
                 phys_addr = phys_addr + 2;
         }
+#endif
 }
 /* Only for HYBRID .
    In HYBRID mode, when encountering a new (untagged) pc, we recursive-tag it so all newly tagged
@@ -488,7 +492,10 @@ static int handle_fp_insn(arm_core_t* core){
 static inline void push_compiled_work(cpu_t* cpu, uint32_t pc, uint8_t func_attr){
 	//printf("In %s, pc=0x%x\n", __FUNCTION__, pc);
 	cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] = func_attr;
+#if CHECK_IN_WRITE
+#else
 	protect_code_page(pc);
+#endif
 	cpu_tag(cpu, pc);
 	cpu->dyncom_engine->cur_tagging_pos ++;
 	cpu_translate(cpu, pc);

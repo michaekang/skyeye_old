@@ -340,7 +340,14 @@ static inline void clear_fmap(fast_map fmap)
 
 inline void clear_cache_item(fast_map fmap, addr_t addr)
 {
+	//printf("In %s, addr=0x%x\n", __FUNCTION__, addr);
 	for (int i = 0; i < HASH_MAP_SIZE_L3 * 2; i ++) {
+		if(fmap[HASH_MAP_INDEX_L1(addr)] == NULL)
+			init_fmap_l2(fmap, addr);
+		if(fmap[HASH_MAP_INDEX_L1(addr)][HASH_MAP_INDEX_L2(addr)] == NULL)
+			init_fmap_l3(fmap, addr);
+		//if(fmap[HASH_MAP_INDEX_L1(addr)][HASH_MAP_INDEX_L2(addr)][HASH_MAP_INDEX_L3(addr)] == NULL)
+		//	continue;
 		fmap[HASH_MAP_INDEX_L1(addr)][HASH_MAP_INDEX_L2(addr)][i] = 0;
 	}
 }
