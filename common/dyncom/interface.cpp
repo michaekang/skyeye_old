@@ -71,7 +71,7 @@ is_valid_vr_size(size_t size)
 	}
 }
 
-int func_not_found_func(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, fp_check_mm_t checkfp, unsigned long TLB){
+int func_not_found_func(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, unsigned long TLB){
         return JIT_RETURN_FUNC_BLANK;
 }
 
@@ -452,7 +452,7 @@ cpu_translate(cpu_t *cpu, addr_t addr)
 }
 
 //typedef int (*fp_t)(uint8_t *RAM, void *grf, void *frf, read_memory_t readfp, write_memory_t writefp);
-typedef int (*fp_t)(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, fp_check_mm_t checkfp, unsigned long tlb_index);
+typedef int (*fp_t)(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, unsigned long tlb_index);
 /* cpu run for user mode application */
 int
 um_cpu_run(cpu_t *cpu){
@@ -571,7 +571,7 @@ cpu_run(cpu_t *cpu)
 		LOG("******Run jit 0x%x\n", pc);
 		int context_id = (*(uint32_t *)(cpu->rf.context_id)) & 0xFF;
 		unsigned long offset = context_id * TLB_SIZE * TLB_ENTRY_SIZE;
-		ret = pfunc(cpu->dyncom_engine->RAM, cpu->rf.grf, cpu->rf.srf, cpu->rf.frf, cpu->mem_ops.read_memory, cpu->mem_ops.write_memory, cpu->mem_ops.check_mm, (cpu->dyncom_engine->TLB + offset));
+		ret = pfunc(cpu->dyncom_engine->RAM, cpu->rf.grf, cpu->rf.srf, cpu->rf.frf, cpu->mem_ops.read_memory, cpu->mem_ops.write_memory, (cpu->dyncom_engine->TLB + offset));
 		if (cpu->icounter > 248765780) {
 //			printf("out of jit ret is %d icounter is %lld\n", ret, cpu->icounter);
 //			return ret;

@@ -489,17 +489,6 @@ cpu_create_function(cpu_t *cpu, const char *name,
 		false);		      	/* isVarArg */
 	cpu->dyncom_engine->type_pwrite_memory = PointerType::get(type_func_write_memory_callout, 0);
 
-	std::vector<const Type*> type_func_check_mm_args;
-	type_func_check_mm_args.push_back(type_intptr);	/* intptr *cpu */
-	type_func_check_mm_args.push_back(type_i32); /* virtual address */
-	type_func_check_mm_args.push_back(type_i32); /* count */
-	type_func_check_mm_args.push_back(type_i32); /* read flag */
-	FunctionType *type_func_check_mm_callout = FunctionType::get(
-		getIntegerType(32),	/* Result */
-		type_func_check_mm_args,	/* Params */
-		false);		      	/* isVarArg */
-	cpu->dyncom_engine->type_check_mm = PointerType::get(type_func_check_mm_callout, 0);
-
 	// - (*f)(uint8_t *, reg_t *, fp_reg_t *, (*)(...)) [jitmain() function pointer)
 	std::vector<const Type*>type_func_args;
 	type_func_args.push_back(type_pi8);				/* uint8_t *RAM */
@@ -508,7 +497,6 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	type_func_args.push_back(type_pstruct_fp_reg_t);	/* fp_reg_t *fp_reg */
 	type_func_args.push_back(cpu->dyncom_engine->type_pread_memory);
 	type_func_args.push_back(cpu->dyncom_engine->type_pwrite_memory);
-	type_func_args.push_back(cpu->dyncom_engine->type_check_mm);
 	type_func_args.push_back(type_i64);				/* uint64_t *TLB */
 	FunctionType* type_func = FunctionType::get(
 		getIntegerType(32),		/* Result */
@@ -548,8 +536,6 @@ cpu_create_function(cpu_t *cpu, const char *name,
 		cpu->dyncom_engine->ptr_func_read_memory->setName("readmemory");
 		cpu->dyncom_engine->ptr_func_write_memory = args++;
 		cpu->dyncom_engine->ptr_func_write_memory->setName("writememory");
-		cpu->dyncom_engine->ptr_func_check_mm = args++;
-		cpu->dyncom_engine->ptr_func_check_mm->setName("checkmm");
 		cpu->dyncom_engine->ptr_TLB = args++;
 		cpu->dyncom_engine->ptr_TLB->setName("TLB");
 
