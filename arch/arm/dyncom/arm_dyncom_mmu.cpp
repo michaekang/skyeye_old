@@ -400,11 +400,15 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 		//addr_t addr = find_bb_start(cpu, phys_addr);
 		//if(is_translated_code(cpu, phys_addr)){
 		//printf("clear code cache 0x%x in %s\n", phys_addr, __FUNCTION__);
+		pthread_rwlock_wrlock(&(cpu->dyncom_engine->rwlock));
 #if L3_HASHMAP
                 clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
 #else
                	fprintf(stderr, "Warnning: not clear the cache");
 #endif
+		if(pthread_rwlock_unlock(&(cpu->dyncom_engine->rwlock))){
+			fprintf(stderr, "unlock error\n");
+		}
 		//}
                 clear_tag_page(cpu, phys_addr);
 	}
@@ -529,11 +533,16 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 			printf("\n\nIn %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
 		}
 
+		pthread_rwlock_wrlock(&(cpu->dyncom_engine->rwlock));
 #if L3_HASHMAP
                 clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
 #else
 		//fprintf(stderr, "Warnning: not clear the cache");
 #endif
+		if(pthread_rwlock_unlock(&(cpu->dyncom_engine->rwlock))){
+			fprintf(stderr, "unlock error\n");
+		}
+
 		flush_bb(phys_addr);
                 clear_tag_page(cpu, phys_addr);
 
