@@ -567,9 +567,9 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 		 */
 	Value* user_mode;
 	//if(cpu->user_mode){
-	if(is_usermode_func(cpu)){
+	//if(is_usermode_func(cpu)){
 		//user_mode = CONST1(1);
-		user_mode = GET_USER_MODE();
+	user_mode = TRUNC1(cpu->dyncom_engine->ptr_user_mode);
 	//else
 	//	user_mode = CONST1(0);
 	Value* ap = TRUNC32(AND(tlb_entry, CONST64(0x3)));
@@ -587,7 +587,7 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 				CONST1(1), result));
 	result = SELECT(result, result, SELECT(AND(AND(ICMP_EQ(ap, CONST(2)), ICMP_EQ(user_mode, CONST1(1))), ICMP_EQ(CONST(read), CONST(0))), CONST1(1), result));
 	result = SELECT(ICMP_EQ(ap, CONST(3)), result, result);
-	}
+	//}
 #endif
 		/*
 		 * if(fault_addr == 0xdeadc0de && result)
@@ -692,6 +692,7 @@ void arm_dyncom_init(arm_core_t* core){
 	else
 		cpu->rf.phys_pc = &core->phys_pc;
 	cpu->rf.context_id = &(core->CP15[CP15(CP15_CONTEXT_ID)]);
+	cpu->rf.cpsr = &core->Cpsr;
 	cpu->rf.grf = core->Reg;
 	//cpu->rf.srf = core->Spsr;
 	//cpu->rf.srf = &core->phys_pc;

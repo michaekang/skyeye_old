@@ -249,7 +249,8 @@ typedef struct cpu_archrf {
 	// @@@BEGIN_DEPRECATION
 	void *pc;  // Program Counter
 	void *phys_pc;  // Physical Program Counter
-	void *context_id;  // process id
+	void *context_id;  // process id of arm processor
+	void *cpsr; // the state status of arm processor
 	void *grf; // GP register file
 	void *srf; // SP register file
 	void *frf; // FP register file
@@ -427,6 +428,7 @@ typedef struct dyncom_engine{
 
 	Value *ptr_RAM;
 	Value *ptr_TLB;
+	Value *ptr_user_mode;
 	Value *ptr_grf; // gpr register file
 	Value *ptr_srf; // gpr register file
 	Value *ptr_frf; // fp register file

@@ -498,6 +498,7 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	type_func_args.push_back(cpu->dyncom_engine->type_pread_memory);
 	type_func_args.push_back(cpu->dyncom_engine->type_pwrite_memory);
 	type_func_args.push_back(type_i64);				/* uint64_t *TLB */
+	type_func_args.push_back(type_i32);				/* uint32_t user_mode */
 	FunctionType* type_func = FunctionType::get(
 		getIntegerType(32),		/* Result */
 		type_func_args,		/* Params */
@@ -538,7 +539,8 @@ cpu_create_function(cpu_t *cpu, const char *name,
 		cpu->dyncom_engine->ptr_func_write_memory->setName("writememory");
 		cpu->dyncom_engine->ptr_TLB = args++;
 		cpu->dyncom_engine->ptr_TLB->setName("TLB");
-
+		cpu->dyncom_engine->ptr_user_mode = args++;
+		cpu->dyncom_engine->ptr_user_mode->setName("user_mode");
 	}
 
 	// entry basicblock
