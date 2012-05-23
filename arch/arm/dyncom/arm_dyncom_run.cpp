@@ -535,12 +535,6 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 		return addr;
 	}
 	BasicBlock* exit_bb = cpu->dyncom_engine->bb_trap;
-	#if 1
-	if (cpu->dyncom_engine->ptr_func_check_mm == NULL) {
-		printf("No check mm\n");
-		return bb;
-	}
-	#endif
 	Value* result = CONST1(0);
 	int fault = read? TLB_READ_MISS:TLB_WRITE_MISS;
 	Value* fault_addr = CONST(0xdeadc0de);
