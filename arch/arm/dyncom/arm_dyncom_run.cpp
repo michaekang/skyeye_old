@@ -75,6 +75,7 @@ enum{
 	ARM_DYNCOM_CALLOUT_INV_ASID,
 	ARM_DYNCOM_CALLOUT_INV_ALL,
 	ARM_DYNCOM_CALLOUT_DEBUG_PRINT,
+	ARM_DYNCOM_CALLOUT_EXIT,
 	ARM_DYNCOM_MAX_CALLOUT
 };
 
@@ -217,11 +218,13 @@ static void arch_arm_emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 	Value *c = TRUNC1(AND(LSHR(nzcv, CONST(1)), CONST(1)));
 	Value *v = TRUNC1(AND(LSHR(nzcv, CONST(0)), CONST(1)));
 	Value *t = TRUNC1(LSHR(AND(LOAD(cpu->ptr_gpr[16]), CONST(1 << THUMB_BIT)), CONST(THUMB_BIT)));
+	Value *mode = AND(LOAD(cpu->ptr_gpr[16]),CONST(0x1f));
 	new StoreInst(n, ptr_N, false, bb);
 	new StoreInst(z, ptr_Z, false, bb);
 	new StoreInst(c, ptr_C, false, bb);
 	new StoreInst(v, ptr_V, false, bb);
 	new StoreInst(t, ptr_T, false, bb);
+	LET(MODE_REG,mode);
 }
 
 static void arch_arm_spill_reg_state(cpu_t *cpu, BasicBlock *bb)
@@ -233,7 +236,8 @@ static void arch_arm_spill_reg_state(cpu_t *cpu, BasicBlock *bb)
 	Value *v = SHL(ZEXT32(LOAD(ptr_V)), CONST(28));
 	Value *t = SHL(ZEXT32(LOAD(ptr_T)), CONST(THUMB_BIT));
 	Value *nzcv = OR(OR(OR(z, n), c), v);
-	Value *cpsr = OR(AND(LOAD(cpu->ptr_gpr[16]), CONST(0x0fffffff)), nzcv);
+	Value *mode = R(MODE_REG);
+	Value *cpsr = OR(OR(AND(LOAD(cpu->ptr_gpr[16]), CONST(0x0ffffffe0)), nzcv),mode);
 	/* restore the T bit for arm */
 
 	cpsr = OR(AND(cpsr, CONST(~(1 <<THUMB_BIT))), t);
@@ -519,6 +523,47 @@ arch_arm_debug_print_init(cpu_t *cpu){
 	cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_DEBUG_PRINT] = func;
 	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_DEBUG_PRINT] = (void*)debug_print;
 }
+static void go_exit(cpu_t *cpu,uint32_t num){
+	printf("skyeye exit,exit_code:0x%x",num);
+	skyeye_exit(num);
+}
+void arch_arm_exit(cpu_t *cpu, BasicBlock *bb, Value* arg0){
+	if (cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_EXIT] == NULL) {
+		printf("in %s Could not find callout\n", __FUNCTION__);
+		return;
+	}
+	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
+	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
+	std::vector<Value *> params;
+	params.push_back(v_cpu_ptr);
+	/* When using a custom callout, must put the callout index as argument for dyncom_callout */
+	params.push_back(CONST(ARM_DYNCOM_CALLOUT_EXIT));
+	params.push_back(arg0);
+	//params.push_back(CONST(instr)); // no need for now, the callout func takes no argument
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_EXIT], params.begin(), params.end(), "", bb);
+}
+static void arch_arm_exit_init(cpu_t *cpu){
+	std::vector<const Type*> type_func_args;
+	PointerType *type_intptr = PointerType::get(cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX()), 0);
+	const IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
+	type_func_args.push_back(type_intptr);	/* intptr *cpu */
+	type_func_args.push_back(type_i32);	/* unsinged int */
+	type_func_args.push_back(type_i32);	/* unsinged int */
+	FunctionType *type_func_callout = FunctionType::get(
+		Type::getInt32Ty(cpu->dyncom_engine->mod->getContext()),	//return
+		type_func_args,	/* Params */
+		false);		      	/* isVarArg */
+	/* For a custom callout, the dyncom_calloutX functions should be used */
+	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout1",	//function name
+		type_func_callout);	//return
+	if(func_const == NULL)
+		fprintf(stderr, "Error:cannot insert function:undefined_instr_callout.\n");
+	Function *func = cast<Function>(func_const);
+	func->setCallingConv(CallingConv::C);
+	cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_EXIT] = func;
+	cpu->dyncom_engine->arch_func[ARM_DYNCOM_CALLOUT_EXIT] = (void*)go_exit;
+}
 static BasicBlock* create_mmu_fault_bb(cpu_t* cpu, Value* result, int fault, Value* fault_addr){
 	BasicBlock *bb = BasicBlock::Create(_CTX(), "mmu_fault", cpu->dyncom_engine->cur_func, 0);		
 	LET(CP15_TLB_FAULT_STATUS, SELECT(result, CONST(fault), R(CP15_TLB_FAULT_STATUS)));
@@ -531,7 +576,7 @@ Value *
 get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 {
 	if(is_user_mode(cpu)){
-		cpu->dyncom_engine->bb_load_store = bb;
+		cpu->dyncom_engine->bb = bb;
 		return addr;
 	}
 	BasicBlock* exit_bb = cpu->dyncom_engine->bb_trap;
@@ -598,7 +643,7 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	BasicBlock *load_store_bb = BasicBlock::Create(_CTX(), "load_store_begin", cpu->dyncom_engine->cur_func, 0);
 	BasicBlock* mmu_fault_bb = create_mmu_fault_bb(cpu, result, fault, fault_addr);
 
-	cpu->dyncom_engine->bb_load_store = load_store_bb;
+	cpu->dyncom_engine->bb = load_store_bb;
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(15));
 	arch_branch(1, load_store_bb, mmu_fault_bb, cond, bb);
 	bb = load_store_bb;
@@ -675,7 +720,7 @@ void arm_dyncom_init(arm_core_t* core){
 	cpu->switch_mode = arm_switch_mode;
 		
 	cpu->mem_ops = arm_dyncom_mem_ops;
-	//cpu->cpu_data = (conf_object_t*)core;
+	//cpu->cpu_edata = (conf_object_t*)core;
 	cpu->cpu_data = get_conf_obj_by_cast(core, "arm_core_t");
 	
 	/* init the reg structure */
@@ -739,7 +784,7 @@ void arm_dyncom_init(arm_core_t* core){
 	arch_arm_invalidate_by_mva_init(cpu);
 	arch_arm_invalidate_by_all_init(cpu);
 	arch_arm_debug_print_init(cpu);
-
+	arch_arm_exit_init(cpu);
         /* normal irq flag */
         Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
         Constant *v_Nirq = ConstantInt::get(intptr_type, (uintptr_t)&(core->NirqSig));
@@ -845,6 +890,117 @@ void switch_mode(arm_core_t *core, uint32_t mode)
 	}
 }
 
+void switch_mode_IR(cpu_t *cpu,Value* mode,BasicBlock *bb_cur){
+	BasicBlock* bb = bb_cur;
+	Value* mode_diff = new ICmpInst(*bb_cur,ICmpInst::ICMP_NE,R(MODE_REG),mode,"");
+	BasicBlock* bb_switch_mode = BasicBlock::Create(_CTX(),"switch_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_normal = BasicBlock::Create(_CTX(),"normal_not_switch_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_old_user32 = BasicBlock::Create(_CTX(),"old_user32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_old_irq32 = BasicBlock::Create(_CTX(),"old_irq32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_old_svc32 = BasicBlock::Create(_CTX(),"old_svc32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_old_abort32 = BasicBlock::Create(_CTX(),"old_abort32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_old_undef32 = BasicBlock::Create(_CTX(),"old_undef32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_old_fiq32 = BasicBlock::Create(_CTX(),"old_fiq32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_new_user32 = BasicBlock::Create(_CTX(),"new_user32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_new_irq32 = BasicBlock::Create(_CTX(),"new_irq32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_new_svc32 = BasicBlock::Create(_CTX(),"new_svc32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_new_abort32 = BasicBlock::Create(_CTX(),"new_abort32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_new_undef32 = BasicBlock::Create(_CTX(),"new_undef32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_new_fiq32 = BasicBlock::Create(_CTX(),"new_fiq32_mode",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_label1 = BasicBlock::Create(_CTX(),"label1",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_label2 = BasicBlock::Create(_CTX(),"label2",cpu->dyncom_engine->cur_func,0);
+	BasicBlock* bb_exit = BasicBlock::Create(_CTX(),"exit",cpu->dyncom_engine->cur_func,0);
+	cpu->dyncom_engine->bb = bb_normal;
+	BasicBlock* bb_switch_mode_real = BasicBlock::Create(_CTX(),"switch_mode_real",cpu->dyncom_engine->cur_func,0);
+	bb = bb_switch_mode_real;
+	Value* cpu_mode = R(MODE_REG);
+	SwitchInst* sw_old = SwitchInst::Create(cpu_mode,NULL,6,bb_switch_mode_real);
+	sw_old->addCase(CONST(USER32MODE),bb_old_user32);
+	sw_old->addCase(CONST(IRQ32MODE),bb_old_irq32);
+	sw_old->addCase(CONST(SVC32MODE),bb_old_svc32);
+	sw_old->addCase(CONST(ABORT32MODE),bb_old_abort32);
+	sw_old->addCase(CONST(UNDEF32MODE),bb_old_undef32);
+	sw_old->addCase(CONST(FIQ32MODE),bb_old_fiq32);
+	SwitchInst* sw_new = SwitchInst::Create(mode,NULL,6,bb_label1);
+	sw_new->addCase(CONST(USER32MODE),bb_new_user32);
+	sw_new->addCase(CONST(IRQ32MODE),bb_new_irq32);
+	sw_new->addCase(CONST(SVC32MODE),bb_new_svc32);
+	sw_new->addCase(CONST(ABORT32MODE),bb_new_abort32);
+	sw_new->addCase(CONST(UNDEF32MODE),bb_new_undef32);
+	sw_new->addCase(CONST(FIQ32MODE),bb_new_fiq32);
+	BranchInst::Create(bb_switch_mode,bb_normal,mode_diff,bb_cur);
+	mode_diff = new ICmpInst(*bb_switch_mode,ICmpInst::ICMP_NE,mode,CONST(USERBANK),"");
+	BranchInst::Create(bb_switch_mode_real,bb_exit,mode_diff,bb_switch_mode);
+	bb = bb_old_user32;
+	LET(R13_USR,R(R13));
+	LET(R14_USR,R(LR));	
+	BranchInst::Create(bb_label1,bb);
+	bb = bb_old_irq32;
+	LET(R13_IRQ,R(R13));
+	LET(R14_IRQ,R(LR));
+	LET(SPSR_IRQ,R(SPSR_REG));
+	BranchInst::Create(bb_label1,bb);
+	bb = bb_old_svc32;
+	LET(R13_SVC,R(R13));
+	LET(R14_SVC,R(LR));
+	LET(SPSR_SVC,R(SPSR_REG));
+	BranchInst::Create(bb_label1,bb);
+	bb = bb_old_abort32;
+	LET(R13_ABORT,R(R13));
+	LET(R14_ABORT,R(LR));
+	LET(SPSR_ABORT,R(SPSR_REG));
+	BranchInst::Create(bb_label1,bb);
+	bb = bb_old_undef32;
+	LET(R13_UNDEF,R(R13));
+	LET(R14_UNDEF,R(LR));
+	LET(SPSR_UNDEF,R(SPSR_REG));
+	BranchInst::Create(bb_label1,bb);
+	bb = bb_old_fiq32;
+	LET(R13_FIRQ,R(R13));
+	LET(R14_FIRQ,R(LR));
+	LET(SPSR_FIRQ,R(SPSR_REG));
+	BranchInst::Create(bb_label1,bb);
+	bb = bb_new_user32;
+	LET(R13,R(R13_USR));
+	LET(LR,R(R14_USR));	
+	LET(BANK_REG,CONST(USERBANK));
+	BranchInst::Create(bb_label2,bb);
+	bb = bb_new_irq32;
+	LET(R13,R(R13_IRQ));
+	LET(LR,R(R14_IRQ));
+	LET(SPSR_REG,R(SPSR_IRQ));	
+	LET(BANK_REG,CONST(IRQBANK));
+	BranchInst::Create(bb_label2,bb);
+	bb = bb_new_svc32;
+	LET(R13,R(R13_SVC));
+	LET(LR,R(R14_SVC));
+	LET(SPSR_REG,R(SPSR_SVC));	
+	LET(BANK_REG,CONST(SVCBANK));
+	BranchInst::Create(bb_label2,bb);
+	bb = bb_new_abort32;
+	LET(R13,R(R13_ABORT));
+	LET(LR,R(R14_ABORT));
+	LET(SPSR_REG,R(SPSR_ABORT));	
+	LET(BANK_REG,CONST(ABORTBANK));
+	BranchInst::Create(bb_label2,bb);
+	bb = bb_new_undef32;
+	LET(R13,R(R13_UNDEF));
+	LET(LR,R(R14_UNDEF));
+	LET(SPSR_REG,R(SPSR_UNDEF));	
+	LET(BANK_REG,CONST(UNDEFBANK));
+	BranchInst::Create(bb_label2,bb);
+	bb = bb_new_fiq32;
+	LET(R13,R(R13_FIRQ));
+	LET(LR,R(R14_FIRQ));
+	LET(SPSR_REG,R(SPSR_FIRQ));	
+	LET(BANK_REG,CONST(FIQBANK));
+	BranchInst::Create(bb_label2,bb);
+	bb = bb_label2;
+	LET(MODE_REG,mode);
+	BranchInst::Create(bb_normal,bb);
+	//generate exit code
+	arch_arm_exit(cpu,bb_exit,CONST(-2));
+}
 void arm_switch_mode(cpu_t *cpu)
 {
 	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
