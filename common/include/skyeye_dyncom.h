@@ -438,8 +438,7 @@ typedef struct dyncom_engine{
 
 	/* Temp variable for address translation */
 	BasicBlock* bb_trap;
-	BasicBlock* bb_load_store;
-	BasicBlock* bb_load_store_end;
+	BasicBlock* bb;
 	/* Temp variable for arm write back decoder */
 	Value* wb_value;
 	int wb_flag;
