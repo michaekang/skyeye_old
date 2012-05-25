@@ -23,9 +23,9 @@
 #define TAG_END_PAGE (1 << 25)	/* The last instruction of a page */
 #define TAG_EXCEPTION (1 << 26)	/* instruction may occur exception(next instruction is exception handler) */
 #define TAG_AFTER_EXCEPTION (1 << 27)
-#define TAG_MEMORY		(1 << 28) /* load store instruction */
+#define TAG_NEW_BB		(1 << 28) /* load store instruction */
 #define TAG_NEED_PC		(1 << 29) /**/
-#define TAG_AFTER_MEMORY		(1 << 30) /**/
+#define TAG_AFTER_NEW_BB		(1 << 30) /**/
 #define TAG_FAST_INTERP		(1 << 31) /**/
 
 /* flags internal to libcpu */
