@@ -452,7 +452,7 @@ is_translated(cpu_t *cpu, addr_t a)
 extern void disasm_instr(cpu_t *cpu, addr_t pc);
 
 static void save_startbb_addr(cpu_t *cpu, addr_t pc){
-	if (is_start_of_basicblock(cpu, pc) || (get_tag(cpu, pc) & TAG_AFTER_MEMORY)){
+	if (is_start_of_basicblock(cpu, pc) || (get_tag(cpu, pc) & TAG_AFTER_NEW_BB)){
 		int cur_pos;
 		cur_pos = cpu->dyncom_engine->cur_tagging_pos;
 		vector<addr_t>::iterator i = cpu->dyncom_engine->startbb[cur_pos].begin();
@@ -504,7 +504,7 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 		bytes = cpu->f.tag_instr(cpu, pc, &tag, &new_pc, &next_pc);
 		/* temporary fix: in case the previous instr at pc had changed,
 		   we remove instr dependant tags. They will be set again anyway */
-		selective_clear_tag(cpu, pc, TAG_BRANCH | TAG_CONDITIONAL | TAG_RET | TAG_STOP | TAG_CONTINUE | TAG_TRAP | TAG_MEMORY | TAG_END_PAGE);
+		selective_clear_tag(cpu, pc, TAG_BRANCH | TAG_CONDITIONAL | TAG_RET | TAG_STOP | TAG_CONTINUE | TAG_TRAP | TAG_NEW_BB | TAG_END_PAGE);
 		or_tag(cpu, pc, tag | TAG_CODE);
 #if OPT_LOCAL_REGISTERS
 #if 0
@@ -522,8 +522,8 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 #endif
 #endif
 		LOG("In %s, pc=0x%x, tag=0x%x\n", __FUNCTION__, pc, tag);
-		if ((tag & TAG_MEMORY) && !is_user_mode(cpu)) {
-			or_tag(cpu, next_pc, TAG_AFTER_MEMORY);
+		if ((tag & TAG_NEW_BB) && !is_user_mode(cpu)) {
+			or_tag(cpu, next_pc, TAG_AFTER_NEW_BB);
 		}
 		if (tag & (TAG_CONDITIONAL))
 			or_tag(cpu, next_pc, TAG_AFTER_COND);
@@ -586,7 +586,7 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 			xor_tag(cpu, pc, TAG_CONTINUE);
 			/* if the memory related insn is located at the end of page,
 				check_mm needs PC to parse the instruction */
-			if(tag & TAG_MEMORY){
+			if(tag & TAG_NEW_BB){
 				LOG("In %s. TAG_NEED_PC for pc=0x%x\n", __FUNCTION__, pc);
 				or_tag(cpu, pc, tag | TAG_NEED_PC);
 			}
