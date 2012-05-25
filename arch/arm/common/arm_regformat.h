@@ -47,6 +47,7 @@ enum arm_regno{
 	SPSR_IRQ,
 	SPSR_FIRQ,
 	MODE_REG, /* That is the cpsr[4 : 0], just for calculation easily */
+	BANK_REG,
 	EXCLUSIVE_TAG,
 	EXCLUSIVE_STATE,
 	CP15_BASE,
