@@ -237,7 +237,9 @@ static void arch_arm_spill_reg_state(cpu_t *cpu, BasicBlock *bb)
 	Value *t = SHL(ZEXT32(LOAD(ptr_T)), CONST(THUMB_BIT));
 	Value *nzcv = OR(OR(OR(z, n), c), v);
 	Value *mode = R(MODE_REG);
-	Value *cpsr = OR(OR(AND(LOAD(cpu->ptr_gpr[16]), CONST(0x0ffffffe0)), nzcv),mode);
+	Value *cpsr = OR(AND(LOAD(cpu->ptr_gpr[16]), CONST(0x0fffffe0)), nzcv);
+	cpsr = OR(cpsr,mode);
+	/* restore the T bit for arm */
 	/* restore the T bit for arm */
 
 	cpsr = OR(AND(cpsr, CONST(~(1 <<THUMB_BIT))), t);
