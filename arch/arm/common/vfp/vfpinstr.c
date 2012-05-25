@@ -3076,7 +3076,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 
@@ -3101,16 +3101,18 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	Value* phys_addr;
 	if(single){
 		phys_addr = get_phys_addr(cpu, bb, Addr, 0);
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d), 32);
+		bb = cpu->dyncom_engine->bb;
 	}
 	else{
 		phys_addr = get_phys_addr(cpu, bb, Addr, 0);
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d * 2), 32);
+		bb = cpu->dyncom_engine->bb;
 
 		phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d * 2 + 1), 32);
 	}
 	return No_exp;
@@ -3285,7 +3287,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 
@@ -3313,21 +3315,22 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		{
 			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
-			bb = cpu->dyncom_engine->bb_load_store;
+			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR(d + i), 32);
-
+			bb = cpu->dyncom_engine->bb;
 			Addr = ADD(Addr, CONST(4));
 		}
 		else
 		{
 			/* Careful of endianness, little by default */
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
-			bb = cpu->dyncom_engine->bb_load_store;
+			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2), 32);
-
+			bb = cpu->dyncom_engine->bb;
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
-			bb = cpu->dyncom_engine->bb_load_store;
+			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2 + 1), 32);
+			bb = cpu->dyncom_engine->bb;
 
 			Addr = ADD(Addr, CONST(8));
 		}
@@ -3522,7 +3525,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 
@@ -3557,8 +3560,9 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 			/* if R(i) is R15? */
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
-			bb = cpu->dyncom_engine->bb_load_store;
+			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR(d + i), 32);
+			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
 			Addr = ADD(Addr, CONST(4));
@@ -3568,14 +3572,16 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		
 			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
-			bb = cpu->dyncom_engine->bb_load_store;
+			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2), 32);
+			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 
 			//fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
-			bb = cpu->dyncom_engine->bb_load_store;
+			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2 + 1), 32);
+			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
 			//addr += 8;
@@ -3774,7 +3780,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 	/* Should check if PC is destination register */
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 
@@ -3796,6 +3802,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	DBG("VPOP :\n");
 		
 	Value* Addr = R(13);
+	Value* val;
 	//if(single)
 	//	bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
 	//else
@@ -3806,20 +3813,26 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		if (single)
 		{
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
-			bb = cpu->dyncom_engine->bb_load_store;
-			LETS(d + i, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+			bb = cpu->dyncom_engine->bb;
+			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			bb = cpu->dyncom_engine->bb;
+			LETS(d + i, val);
 			Addr = ADD(Addr, CONST(4));
 		}
 		else
 		{
 			/* Careful of endianness, little by default */
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
-			bb = cpu->dyncom_engine->bb_load_store;
-			LETS((d + i) * 2, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+			bb = cpu->dyncom_engine->bb;
+			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			bb = cpu->dyncom_engine->bb;
+			LETS((d + i) * 2, val);
 
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
-			bb = cpu->dyncom_engine->bb_load_store;
-			LETS((d + i) * 2 + 1, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+			bb = cpu->dyncom_engine->bb;
+			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			bb = cpu->dyncom_engine->bb;
+			LETS((d + i) * 2 + 1, val);
 
 			Addr = ADD(Addr, CONST(8));
 		}
@@ -3997,7 +4010,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 	/* Should check if PC is destination register */
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 
@@ -4024,19 +4037,26 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	//else
 	//	bb = arch_check_mm(cpu, bb, Addr, 8, 1, cpu->dyncom_engine->bb_trap);
 	Value* phys_addr;
+	Value* val;
 	if(single){
 		phys_addr = get_phys_addr(cpu, bb, Addr, 1);
-		bb = cpu->dyncom_engine->bb_load_store;
-		LETS(d, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+		bb = cpu->dyncom_engine->bb;
+		val = arch_read_memory(cpu,bb,phys_addr,0,32);
+		bb = cpu->dyncom_engine->bb;
+		LETS(d, val);
 	}
 	else{
 		phys_addr = get_phys_addr(cpu, bb, Addr, 1);
-		bb = cpu->dyncom_engine->bb_load_store;
-		LETS(d * 2, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+		bb = cpu->dyncom_engine->bb;
+		val = arch_read_memory(cpu,bb,phys_addr,0,32);
+		bb = cpu->dyncom_engine->bb;
+		LETS(d * 2, val);
 
 		phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
-		bb = cpu->dyncom_engine->bb_load_store;
-		LETS(d * 2 + 1, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+		bb = cpu->dyncom_engine->bb;
+		val = arch_read_memory(cpu,bb,phys_addr,0,32);
+		bb = cpu->dyncom_engine->bb;
+		LETS(d * 2 + 1, val);
 	}
 
 	return No_exp;
@@ -4222,7 +4242,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	DBG("In %s, pc=0x%x, next_pc=0x%x\n", __FUNCTION__, pc, *next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 
@@ -4248,6 +4268,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	DBG("VLDM \n");
 	int i;	
 	Value* phys_addr;
+	Value* val;
 	for (i = 0; i < regs; i++)
 	{
 		if (single)
@@ -4256,8 +4277,10 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 			/* if R(i) is R15? */
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
-			bb = cpu->dyncom_engine->bb_load_store;
-			LETS(d + i, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+			bb = cpu->dyncom_engine->bb;
+			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			bb = cpu->dyncom_engine->bb;
+			LETS(d + i, val);
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
 			Addr = ADD(Addr, CONST(4));
@@ -4266,12 +4289,16 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		{
 		
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
-			bb = cpu->dyncom_engine->bb_load_store;
-			LETS((d + i) * 2, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+			bb = cpu->dyncom_engine->bb;
+			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			bb = cpu->dyncom_engine->bb;
+			LETS((d + i) * 2, val);
 
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
-			bb = cpu->dyncom_engine->bb_load_store;
-			LETS((d + i) * 2 + 1, arch_read_memory(cpu, bb, phys_addr, 0, 32));
+			bb = cpu->dyncom_engine->bb;
+			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			bb = cpu->dyncom_engine->bb;
+			LETS((d + i) * 2 + 1, val);
 
 			//fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 			//DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
