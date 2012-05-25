@@ -110,13 +110,13 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 		}
 		cur_bb = bb_cond;
 	}
-	if ((tag & TAG_MEMORY) && !is_user_mode(cpu)) { //&& !(tag & TAG_BRANCH)) {
+	if ((tag & TAG_NEW_BB) && !is_user_mode(cpu)) { //&& !(tag & TAG_BRANCH)) {
 		cpu->dyncom_engine->bb_trap = bb_trap;
 	}
 
 	cpu->f.translate_instr(cpu, pc, cur_bb);
-	if ((tag & TAG_MEMORY) && !is_user_mode(cpu)) { //&& !(tag & TAG_BRANCH)) {
-		cur_bb = cpu->dyncom_engine->bb_load_store_end;
+	if ((tag & TAG_NEW_BB) && !is_user_mode(cpu)) { //&& !(tag & TAG_BRANCH)) {
+		cur_bb = cpu->dyncom_engine->bb;
 	}
 	if ((tag & TAG_NEED_PC) && !is_user_mode(cpu)) {
 		BasicBlock *bb = cur_bb;
