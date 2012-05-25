@@ -42,6 +42,7 @@ static inline uint32 CHECK_READ_REG15(arm_core_t* core, int Rn){
 }
 
 Value* get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read);
+void switch_mode_IR(cpu_t *cpu,BasicBlock* bb);
 void arch_arm_debug_print(cpu_t *cpu, BasicBlock *bb, Value* arg0, Value* arg1, Value* arg2);
 #endif
 
