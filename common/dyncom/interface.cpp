@@ -342,7 +342,7 @@ void save_addr_in_func(cpu_t *cpu, void *native_code_func)
 	pthread_rwlock_wrlock(&(cpu->dyncom_engine->rwlock));
 #endif
 	for (; i != bb_addr.end(); i++){
-		if((get_tag(cpu, i->first) & TAG_AFTER_MEMORY) && !is_start_of_basicblock(cpu, i->first)){
+		if((get_tag(cpu, i->first) & TAG_AFTER_NEW_BB) && !is_start_of_basicblock(cpu, i->first)){
 			continue;
 		}
 		if(cpu->dyncom_engine->fmap[HASH_MAP_INDEX_L1(i->first)] == NULL)
