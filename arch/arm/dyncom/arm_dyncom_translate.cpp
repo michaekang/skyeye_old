@@ -880,7 +880,7 @@ int DYNCOM_TRANS(ldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	if (BIT(15)) {
 		SET_NEW_PAGE;
@@ -900,7 +900,7 @@ int DYNCOM_TRANS(ldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	#if 0
 	if (RD == 15) {
@@ -930,7 +930,7 @@ int DYNCOM_TRANS(ldrb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -942,7 +942,7 @@ int DYNCOM_TRANS(ldrbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -955,7 +955,7 @@ int DYNCOM_TRANS(ldrd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -972,12 +972,12 @@ int DYNCOM_TRANS(ldrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
 
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb;
 	LET(EXCLUSIVE_TAG, phys_addr);
 	LET(EXCLUSIVE_STATE, CONST(1));
 	arch_read_memory(cpu, bb, phys_addr, 0, 32);
 	
-	bb = cpu->dyncom_engine->bb_load_store_end;
+	bb = cpu->dyncom_engine->bb;
 	Value *val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
         if(RD == 15){
@@ -1006,11 +1006,11 @@ int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
 
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb;
 	LET(EXCLUSIVE_TAG, phys_addr);
 	LET(EXCLUSIVE_STATE, CONST(1));
 	arch_read_memory(cpu, bb, phys_addr, 0, 8);
-	bb = cpu->dyncom_engine->bb_load_store_end;
+	bb = cpu->dyncom_engine->bb;
 	Value *val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
         if(RD == 15){
@@ -1036,7 +1036,7 @@ int DYNCOM_TRANS(ldrh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -1050,10 +1050,10 @@ int DYNCOM_TRANS(ldrsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb;
 
 	arch_read_memory(cpu, bb, phys_addr, 0, 8);
-	bb = cpu->dyncom_engine->bb_load_store_end;
+	bb = cpu->dyncom_engine->bb;
 	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x80)), CONST(0)), ret, OR(CONST(0xffffff00), ret)));
 	EXECUTE_WB(RN);
@@ -1067,10 +1067,10 @@ int DYNCOM_TRANS(ldrsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store;
+		bb = cpu->dyncom_engine->bb;
 
 	arch_read_memory(cpu, bb, phys_addr, 0, 16);
-	bb = cpu->dyncom_engine->bb_load_store_end;
+	bb = cpu->dyncom_engine->bb;
 	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x8000)), CONST(0)), ret, OR(CONST(0xffff0000), ret)));
 	EXECUTE_WB(RN);
@@ -1083,7 +1083,7 @@ int DYNCOM_TRANS(ldrt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -1307,6 +1307,9 @@ int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	if(SBIT){
 		if (RD == 15) {
 			LET(CPSR_REG, R(SPSR_REG));
+			/*Value* mode = AND(R(CPSR_REG),CONST(0x1f));
+			switch_mode_IR(cpu,bb,mode);	
+			bb = cpu->dyncom_engine->bb;*/
 			cpu->f.emit_decode_reg(cpu, bb); 
 			#if 0
 			Value *nzcv = LSHR(AND(R(CPSR_REG), CONST(0xf0000000)), CONST(28));
@@ -1862,7 +1865,7 @@ int DYNCOM_TRANS(stm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -1877,7 +1880,7 @@ int DYNCOM_TRANS(str)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	//StoreWord(cpu, instr, bb, addr);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -1894,7 +1897,7 @@ int DYNCOM_TRANS(strb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -1906,7 +1909,7 @@ int DYNCOM_TRANS(strbt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -1919,7 +1922,7 @@ int DYNCOM_TRANS(strd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -1934,7 +1937,7 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
 	//LET(RD, CONST(1));
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
-	bb = cpu->dyncom_engine->bb_load_store;
+	bb = cpu->dyncom_engine->bb;
 
 	Value* cond = AND(ICMP_EQ(R(EXCLUSIVE_TAG), phys_addr), ICMP_EQ(R(EXCLUSIVE_STATE), CONST(1)));
 	LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
@@ -1942,7 +1945,7 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	LET(RD, SELECT(cond, CONST(0), CONST(1)));
 	arch_read_memory(cpu, bb, phys_addr, 0, 32);
 
-	bb = cpu->dyncom_engine->bb_load_store_end;
+	bb = cpu->dyncom_engine->bb;
 	Value *data = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	val = SELECT(cond, val, data);
 
@@ -1956,14 +1959,14 @@ int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *val = AND(R(RM), CONST(0xff));
 	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
-	bb = cpu->dyncom_engine->bb_load_store;
+	bb = cpu->dyncom_engine->bb;
 
 	Value* cond = AND(ICMP_EQ(R(EXCLUSIVE_TAG), phys_addr), ICMP_EQ(R(EXCLUSIVE_STATE), CONST(1)));
 	LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
 	LET(EXCLUSIVE_STATE, SELECT(cond, CONST(0), R(EXCLUSIVE_STATE)));
 	LET(RD, SELECT(cond, CONST(0), CONST(1)));
 	arch_read_memory(cpu, bb, phys_addr, 0, 8);
-	bb = cpu->dyncom_engine->bb_load_store_end;
+	bb = cpu->dyncom_engine->bb;
 	Value *data = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	val = SELECT(cond, val, data);
 
@@ -1978,7 +1981,7 @@ int DYNCOM_TRANS(strh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -1990,7 +1993,7 @@ int DYNCOM_TRANS(strt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = GetAddr(cpu, instr, bb, 0);
 	LoadStore(cpu,instr,bb,addr, Rn);
 	if(!is_user_mode(cpu))
-		bb = cpu->dyncom_engine->bb_load_store_end;
+		bb = cpu->dyncom_engine->bb;
 
 	EXECUTE_WB(RN);
 
@@ -2039,13 +2042,13 @@ int DYNCOM_TRANS(swp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	Value* Addr = R(RN);
 	//bb = arch_check_mm(cpu, bb, Addr, 4, 0, cpu->dyncom_engine->bb_trap);
 	Value* phys_addr = get_phys_addr(cpu, bb, Addr, 0);
-	bb = cpu->dyncom_engine->bb_load_store;
+	bb = cpu->dyncom_engine->bb;
 	arch_read_memory(cpu, bb, phys_addr, 0, 32);
-	bb = cpu->dyncom_engine->bb_load_store_end; 
+	bb = cpu->dyncom_engine->bb; 
 	Value *Val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
 	arch_write_memory(cpu, bb, phys_addr, Val, 32);
-	bb = cpu->dyncom_engine->bb_load_store_end;
+	bb = cpu->dyncom_engine->bb;
 	LET(RD, Val);
 	return No_exp;
 }
@@ -2621,7 +2624,7 @@ int DYNCOM_TAG(ldm)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -2635,7 +2638,7 @@ int DYNCOM_TAG(ldr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if ((cpu->mem_ops.is_page_end(cpu, pc)) && (RD != 15)) {
 		*tag |= TAG_NEED_PC;
 	}
@@ -2652,7 +2655,7 @@ int DYNCOM_TAG(ldrb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -2661,7 +2664,7 @@ int DYNCOM_TAG(ldrbt)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t 
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -2670,7 +2673,7 @@ int DYNCOM_TAG(ldrd)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -2680,7 +2683,7 @@ int DYNCOM_TAG(ldrex)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t 
 	int instr_size = INSTR_SIZE;
 //	printf("in %s instruction is not implementated.\n", __FUNCTION__);
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 //	exit(-1);
@@ -2690,7 +2693,7 @@ int DYNCOM_TAG(ldrexb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -2704,7 +2707,7 @@ int DYNCOM_TAG(ldrh)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -2715,7 +2718,7 @@ int DYNCOM_TAG(ldrsb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t 
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	#if 0
 	printf("in %s instruction is not implementated.\n", __FUNCTION__);
 	printf("icounter is %x\n", cpu->icounter);
@@ -2736,7 +2739,7 @@ int DYNCOM_TAG(ldrsh)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t 
 	}
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 //	exit(-1);
 	return instr_size;
 }
@@ -2744,7 +2747,7 @@ int DYNCOM_TAG(ldrt)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3042,7 +3045,7 @@ int DYNCOM_TAG(stm)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3051,7 +3054,7 @@ int DYNCOM_TAG(str)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3060,7 +3063,7 @@ int DYNCOM_TAG(strb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3069,7 +3072,7 @@ int DYNCOM_TAG(strbt)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t 
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3077,7 +3080,7 @@ int DYNCOM_TAG(strbt)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t 
 int DYNCOM_TAG(strd)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3087,7 +3090,7 @@ int DYNCOM_TAG(strex)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t 
 	int instr_size = INSTR_SIZE;
 //	printf("in %s instruction is not implementated.\n", __FUNCTION__);
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 //	exit(-1);
@@ -3098,7 +3101,7 @@ int DYNCOM_TAG(strexb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t
 	int instr_size = INSTR_SIZE;
 //	exit(-1);
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3107,7 +3110,7 @@ int DYNCOM_TAG(strh)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3116,7 +3119,7 @@ int DYNCOM_TAG(strt)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 {
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_MEMORY;
+	*tag |= TAG_NEW_BB;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
@@ -3147,7 +3150,7 @@ int DYNCOM_TAG(swi)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 int DYNCOM_TAG(swp)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){
 	int instr_size = INSTR_SIZE;
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag = TAG_MEMORY;
+	*tag = TAG_NEW_BB;
 	*tag |= TAG_CONTINUE;
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
