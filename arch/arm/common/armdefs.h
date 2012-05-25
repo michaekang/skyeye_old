@@ -235,6 +235,7 @@ struct ARMul_State
 	ARMword Reg_firq[7];  /* R8---R14 FIRQ */
 	ARMword Spsr[7];	/* the exception psr's */
 	ARMword Mode;		/* the current mode */
+	ARMword Bank;		/* the current register bank */
 	ARMword exclusive_tag;
 	ARMword exclusive_state;
 	ARMword CP15[VFP_BASE - CP15_BASE];
@@ -263,7 +264,6 @@ struct ARMul_State
 #ifdef MODET
 	ARMword TFlag;		/* Thumb state */
 #endif
-	ARMword Bank;		/* the current register bank */
 	ARMword instr, pc, temp;	/* saved register state */
 	ARMword loaded, decoded;	/* saved pipeline state */
 	//chy 2006-04-12 for ICE breakpoint
