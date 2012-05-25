@@ -98,7 +98,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 		// Add dispatch switch case for basic block.
 		ConstantInt* c = ConstantInt::get(getIntegerType(cpu->info.address_size), pc);
 		/* we will not add entry of switch for the insn after memory access */
-		if((get_tag(cpu, pc) & TAG_AFTER_MEMORY) && !is_start_of_basicblock(cpu, pc))
+		if((get_tag(cpu, pc) & TAG_AFTER_NEW_BB) && !is_start_of_basicblock(cpu, pc))
 			; /* do nothing */
 		else
 			sw->addCase(c, cur_bb);
@@ -141,7 +141,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
  						bb_next = (BasicBlock*)lookup_basicblock(cpu, cpu->dyncom_engine->cur_func, next_pc, bb_ret, BB_TYPE_NORMAL);
 			}
 			else{
-				if (tag & (TAG_CONDITIONAL | TAG_POSTCOND | TAG_LAST_INST | (TAG_MEMORY)))
+				if (tag & (TAG_CONDITIONAL | TAG_POSTCOND | TAG_LAST_INST | (TAG_NEW_BB)))
  						bb_next = (BasicBlock*)lookup_basicblock(cpu, cpu->dyncom_engine->cur_func, next_pc, bb_ret, BB_TYPE_NORMAL);
 			}
 //			if (!(tag & TAG_BRANCH)) {
@@ -183,7 +183,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 				emit_store_pc_end_page(cpu, tag, cur_bb, next_pc);
 			}
 			bb_cont = translate_instr(cpu, pc, next_pc, tag, bb_target, bb_trap, bb_next, bb_ret, cur_bb);
-			if (!is_user_mode(cpu) && bb_cont && (tag & TAG_MEMORY) && !(tag & TAG_BRANCH)) {
+			if (!is_user_mode(cpu) && bb_cont && (tag & TAG_NEW_BB) && !(tag & TAG_BRANCH)) {
 				if (!bb_cont->getTerminator()) {
 					BranchInst::Create(bb_next, bb_cont);
 				}
@@ -191,7 +191,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 			pc = next_pc;
 		} while (
 					/* new basic block starts here (and we haven't translated it yet)*/
-					(!(is_start_of_basicblock(cpu, pc) || (get_tag(cpu, pc) & TAG_AFTER_MEMORY))) &&
+					(!(is_start_of_basicblock(cpu, pc) || (get_tag(cpu, pc) & TAG_AFTER_NEW_BB))) &&
 					/* end of code section */ //XXX no: this is whether it's TAG_CODE
 					is_code(cpu, pc) &&
 					/* last intruction jumped away */
