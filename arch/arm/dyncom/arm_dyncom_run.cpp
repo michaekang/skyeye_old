@@ -542,6 +542,8 @@ void arch_arm_exit(cpu_t *cpu, BasicBlock *bb, Value* arg0){
 	params.push_back(arg0);
 	//params.push_back(CONST(instr)); // no need for now, the callout func takes no argument
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[ARM_DYNCOM_CALLOUT_EXIT], params.begin(), params.end(), "", bb);
+	BranchInst::Create(cpu->dyncom_engine->bb_trap,bb);
+	//generate exit code
 }
 static void arch_arm_exit_init(cpu_t *cpu){
 	std::vector<const Type*> type_func_args;
@@ -914,14 +916,14 @@ void switch_mode_IR(cpu_t *cpu,Value* mode,BasicBlock *bb_cur){
 	BasicBlock* bb_switch_mode_real = BasicBlock::Create(_CTX(),"switch_mode_real",cpu->dyncom_engine->cur_func,0);
 	bb = bb_switch_mode_real;
 	Value* cpu_mode = R(MODE_REG);
-	SwitchInst* sw_old = SwitchInst::Create(cpu_mode,NULL,6,bb_switch_mode_real);
+	SwitchInst* sw_old = SwitchInst::Create(cpu_mode,bb_exit,6,bb_switch_mode_real);
 	sw_old->addCase(CONST(USER32MODE),bb_old_user32);
 	sw_old->addCase(CONST(IRQ32MODE),bb_old_irq32);
 	sw_old->addCase(CONST(SVC32MODE),bb_old_svc32);
 	sw_old->addCase(CONST(ABORT32MODE),bb_old_abort32);
 	sw_old->addCase(CONST(UNDEF32MODE),bb_old_undef32);
 	sw_old->addCase(CONST(FIQ32MODE),bb_old_fiq32);
-	SwitchInst* sw_new = SwitchInst::Create(mode,NULL,6,bb_label1);
+	SwitchInst* sw_new = SwitchInst::Create(mode,bb_exit,6,bb_label1);
 	sw_new->addCase(CONST(USER32MODE),bb_new_user32);
 	sw_new->addCase(CONST(IRQ32MODE),bb_new_irq32);
 	sw_new->addCase(CONST(SVC32MODE),bb_new_svc32);
