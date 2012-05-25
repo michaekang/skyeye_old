@@ -743,7 +743,7 @@ void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, ui
 
 	Value *cond = ICMP_EQ(cpu->dyncom_engine->io_flag, CONST(0));
 	arch_branch(1, mem_store_bb, io_store_bb, cond, bb);
-	cpu->dyncom_engine->bb_load_store_end = load_store_end;
+	cpu->dyncom_engine->bb = load_store_end;
 	return;
 }
 static Value* io_read_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock *load_store_end, Value *addr, uint32_t sign, uint32_t size){
@@ -818,7 +818,7 @@ Value *arch_read_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, uint32_t sign, 
 
 	Value *cond = ICMP_EQ(cpu->dyncom_engine->io_flag, CONST(0));
 	arch_branch(1, mem_load_bb, io_load_bb, cond, bb);
-	cpu->dyncom_engine->bb_load_store_end = load_store_end;
+	cpu->dyncom_engine->bb = load_store_end;
 	return v;
 }
 /**
