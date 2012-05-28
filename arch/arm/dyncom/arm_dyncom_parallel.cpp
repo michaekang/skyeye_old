@@ -324,7 +324,7 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 		//printf("pc %x is not found, phys_pc is %p\n", core->Reg[15], core->phys_pc);
 		if (!is_user_mode(cpu))
 		{
-			switch_mode(core, core->Cpsr & 0x1f);
+			//switch_mode(core, core->Cpsr & 0x1f);
 			if (flush_current_page(cpu)) {
 				return 1;
 			}
@@ -382,11 +382,11 @@ int launch_compiled_queue_dyncom(cpu_t* cpu, uint32_t pc) {
 			
 		/* if regular trap */
 		core->Reg[15] += get_instr_size(cpu);
-		uint32_t mode = core->Cpsr & 0x1f;
+		/*uint32_t mode = core->Cpsr & 0x1f;
 		if ((mode != core->Mode) && (!is_user_mode(cpu))) {
 			switch_mode(core, mode);
 			return 1;
-		}
+		}*/
 		/* handle float point instruction */
 		handle_fp_insn(core);
 		return 1;
