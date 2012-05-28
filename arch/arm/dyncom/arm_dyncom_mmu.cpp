@@ -373,22 +373,6 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 #endif
 
 #if CHECK_IN_WRITE
-	if(phys_addr > 0x50012000 && phys_addr < 0x50013000){
-		//printf("In %s, written addr is 0x%x, tag=0x%x\n", __FUNCTION__, get_tag(phys_addr));
-	}
-	if(phys_addr >= 0x6ffff000 && phys_addr <= 0x6fffffff){
-		if(phys_addr != 0x6ffffff0)
-			printf("\n\nIn %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
-
-#if L3_HASHMAP
-                clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
-#else
-		//fprintf(stderr, "Warnning: not clear the cache");
-#endif
-		flush_bb(phys_addr);
-                clear_tag_page(cpu, phys_addr);
-	}
-
 	if(is_fast_interp_code(cpu, phys_addr) || is_translated_code(cpu, phys_addr)){
 		printf("In %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
 		//if(is_fast_interp_code(cpu, phys_addr)){
@@ -528,25 +512,6 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 #endif
 	//printf("pc=0x%x, addr=0x%x, data=0x%x\n", core->Reg[15],  phys_addr | (virt_addr & 3), value);
 #if CHECK_IN_WRITE 
-	if(phys_addr >= 0x6ffff000 && phys_addr <= 0x6fffffff){
-		if(phys_addr != 0x6ffffff0){
-			printf("\n\nIn %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
-		}
-
-		pthread_rwlock_wrlock(&(cpu->dyncom_engine->rwlock));
-#if L3_HASHMAP
-                clear_cache_item(cpu->dyncom_engine->fmap, phys_addr);
-#else
-		//fprintf(stderr, "Warnning: not clear the cache");
-#endif
-		if(pthread_rwlock_unlock(&(cpu->dyncom_engine->rwlock))){
-			fprintf(stderr, "unlock error\n");
-		}
-
-		flush_bb(phys_addr);
-                clear_tag_page(cpu, phys_addr);
-
-	}
         if (is_translated_code(cpu, phys_addr) || is_fast_interp_code(cpu, phys_addr)) {
 		//printf("In %s, selfmodified code is 0x%x\n", __FUNCTION__, phys_addr);
 		printf("In %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
