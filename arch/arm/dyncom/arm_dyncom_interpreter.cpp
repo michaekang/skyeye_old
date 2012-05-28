@@ -3773,7 +3773,7 @@ void InterpreterMainLoop(cpu_t *core)
 				/* keep the tflag same with the bit in CPSR */
 				//cpu->TFlag = cpu->Cpsr & (1 << THUMB_BIT);
 				//cpu->TFlag = cpu->Cpsr & (1 << 5);
-				switch_mode(cpu, cpu->Cpsr & 0x1f);
+				//switch_mode(cpu, cpu->Cpsr & 0x1f);
 				//printf("FUNCTION not found , pc=0x%x\n", cpu->Reg[15]);
 			       fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
 			       if (fault) {
@@ -3815,11 +3815,11 @@ void InterpreterMainLoop(cpu_t *core)
 			
 				/* if regular trap */
 				cpu->Reg[15] += GET_INST_SIZE(cpu);
-				uint32_t mode = cpu->Cpsr & 0x1f;
+				/*uint32_t mode = cpu->Cpsr & 0x1f;
 				if ((mode != cpu->Mode) && (!is_user_mode(core))) {
 					switch_mode(cpu, mode);
-					//return 1;
-				}
+					return 1;
+				}*/
 
 				goto END;
 			}
