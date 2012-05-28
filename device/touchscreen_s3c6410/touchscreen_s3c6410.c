@@ -64,9 +64,36 @@ static void touchscreen_update_status(conf_object_t* object, int *Pen_buffer)
 	s3c6410_touchscreen_device* dev_ts = (s3c6410_touchscreen_device*)object->obj;
 	touchscreen_reg_t* regs = dev_ts->regs;
 	s3c6410_touchscreen_status* status = dev_ts->status;
+
+	/**************************************************************************************
+	The origin of touchscreen coordinates and the LCD coordinate transformation as follows:
+	XT = ((XL * (XTmax - XTmin)) / W + XTmin
+	YT = ((YL * (YTmax - YTmin)) / W + YTmin
+	XT for the origin of touch screen  coordinates.
+	XL for the LCD coordinate.
+	Xtmin, Xtmax, Ytmin, Ytmax:The minimum and maximum values on the Y-axis direction for touchscreen.
+	W for the LCD's width.
+	H for the LCD's height.
+	***************************************************************************************/
+
+	int xmin = 2; //XTmin
+	int xrange = 1023; //XTmax - XTmin
+	int ymin = 2; // YTmin
+	int yrange = 1023;//YTmax - YTmin
+	int lcd_width = 800;//W
+	int lcd_height = 480;// H
+	
+	int lcd_x;// XL
+	int lcd_y;// YL
+
 	int stylus = status->stylus;
-	status->x = Pen_buffer[0];
-	status->y = Pen_buffer[1];
+	lcd_x = Pen_buffer[0];
+	lcd_y = Pen_buffer[1];
+
+	//coordinate transformation
+	status->x = ((lcd_x * xrange) / lcd_width) + xmin;
+	status->y = ((lcd_y * yrange) / lcd_height) + ymin;
+
 	status->event = Pen_buffer[4];
 	status->stylus = Pen_buffer[5];
 	// set touchscreen status in regs
