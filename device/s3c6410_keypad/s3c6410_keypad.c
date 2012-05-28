@@ -97,7 +97,7 @@ static KeypadLayout key_layout[SAMSUNG_MAX_KEY_COUNTS] = {
 	KEY(2, 6, KEY_G), KEY(2, 7, KEY_H),
 
 	KEY(3, 0, KEY_J), KEY(3, 1, KEY_K),
-	KEY(3, 2, KEY_L), KEY(1, 3, KEY_BACKSPACE),
+	KEY(3, 2, KEY_L), KEY(3, 3, KEY_BACKSPACE),
 	KEY(3, 4, KEY_LEFTSHIFT), KEY(3, 5, KEY_Z),
 	KEY(3, 6, KEY_X), KEY(3, 7, KEY_C),
 
@@ -118,7 +118,7 @@ static KeypadLayout key_layout[SAMSUNG_MAX_KEY_COUNTS] = {
 
 	KEY(7, 0, KEY_MENU), KEY(7, 1, KEY_BACK),
 	KEY(7, 2, KEY_SEARCH), KEY(7, 3, KEY_8),
-	KEY(7, 4, KEY_9), KEY(1, 5, KEY_0)
+	KEY(7, 4, KEY_9), KEY(7, 5, KEY_0)
 };
 
 /*We use matrix to scan the key layout.So GPIOL for the matrix col and GPIOK for the matrix row.*/
