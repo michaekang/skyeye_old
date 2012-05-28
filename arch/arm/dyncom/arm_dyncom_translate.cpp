@@ -1307,11 +1307,9 @@ int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	if(SBIT){
 		if (RD == 15) {
 			LET(CPSR_REG, R(SPSR_REG));
-			/*Value* mode = AND(R(CPSR_REG),CONST(0x1f));
-			switch_mode_IR(cpu,bb,mode);	
-			bb = cpu->dyncom_engine->bb;*/
-			cpu->f.emit_decode_reg(cpu, bb); 
-			#if 0
+			Value* mode = AND(R(CPSR_REG),CONST(0x1f));
+			switch_mode_IR(cpu,mode,bb);	
+			bb = cpu->dyncom_engine->bb;
 			Value *nzcv = LSHR(AND(R(CPSR_REG), CONST(0xf0000000)), CONST(28));
 			Value *n = TRUNC1(AND(LSHR(nzcv, CONST(3)), CONST(1)));
 			Value *z = TRUNC1(AND(LSHR(nzcv, CONST(2)), CONST(1)));
@@ -1322,8 +1320,7 @@ int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			new StoreInst(c, ptr_C, false, bb);
 			new StoreInst(v, ptr_V, false, bb);
 			Value *t = TRUNC1(LSHR(AND(R(CPSR_REG), CONST(1 << THUMB_BIT)), CONST(THUMB_BIT)));
-			new StoreInst(v, ptr_T, false, bb);
-			#endif
+			new StoreInst(t, ptr_T, false, bb);
 		} else {
 			GETSIGN(op2,ptr_N);
 			EQZERO(op2,ptr_Z);
@@ -2788,7 +2785,7 @@ int DYNCOM_TAG(mov)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		if (SBIT) {
 			//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 			//*tag |= TAG_STOP;
-			*tag |= TAG_TRAP;
+			*tag |= TAG_NEW_BB;
 		} else
 			*tag |= TAG_STOP;
 		*new_pc = NEW_PC_NONE;
