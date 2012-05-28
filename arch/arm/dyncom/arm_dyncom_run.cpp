@@ -1044,7 +1044,7 @@ void arm_dyncom_run(cpu_t* cpu){
 //			printf("phys_pc is %x\n", core->phys_pc);
 //			printf("out of jit\n");
 			if(!is_user_mode(cpu)){
-				switch_mode(core, core->Cpsr & 0x1f);
+				//switch_mode(core, core->Cpsr & 0x1f);
 				if (flush_current_page(cpu)) {
 					return;
 				}
@@ -1082,11 +1082,11 @@ void arm_dyncom_run(cpu_t* cpu){
 		//printf("icounter is %lld\n", cpu->icounter);
 		//exit(-1);
 		//core->Reg[15] += 4;
-		mode = core->Cpsr & 0x1f;
+		/*mode = core->Cpsr & 0x1f;
 		if ( (mode != core->Mode) && (!is_user_mode(cpu)) ) {
 			switch_mode(core, mode);
 			//exit(-1);
-		}
+		}*/
 		core->Reg[15] += 4;
 		return;
 			break;
