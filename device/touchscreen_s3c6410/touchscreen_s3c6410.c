@@ -80,7 +80,9 @@ static void touchscreen_update_status(conf_object_t* object, int *Pen_buffer)
 	int xrange = 1023; //XTmax - XTmin
 	int ymin = 2; // YTmin
 	int yrange = 1023;//YTmax - YTmin
-	int lcd_width = 800;//W
+	//int lcd_width = 800;//W
+	int lcd_width = 320;//W
+	//int lcd_height = 480;// H
 	int lcd_height = 480;// H
 	
 	int lcd_x;// XL
