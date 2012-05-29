@@ -231,12 +231,54 @@ fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_
 	fault_t fault = NO_FAULT;
 	int ap, sop;
 	uint32_t p;
-	if (!get_phys_page((virt_addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
-		if (dyncom_check_perms(core, GET_AP(p), rw)) {
+
+	int user_mode = USER_MODE(core);
+	if(access_type == DATA_TLB){
+                if(user_mode == 0){
+                        if(rw == 1)
+                                access_type = DATA_KERNEL_READ;
+                        else
+                                access_type = DATA_KERNEL_WRITE;
+                }else{
+                        if(rw == 1)
+                                access_type = DATA_USER_READ;
+                        else
+                                access_type = DATA_USER_WRITE;
+                }
+	
+		if (!get_phys_page((virt_addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
+			*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
+			return fault;
+		}
+		else if(!get_phys_page((virt_addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, IO_TLB)){
+        	        if (dyncom_check_perms(core, GET_AP(p), rw)) {
+                	        *phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
+                        	return fault;
+                	}
+        	}
+		/* also need to check instruction tlb for some insn and data mixed page */
+		else if(!get_phys_page((virt_addr & 0xfffff000), (CP15REG(CP15_CONTEXT_ID) & 0xff), p, MIXED_TLB)){
+                	if (dyncom_check_perms(core, GET_AP(p), rw)){
+				*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
+				return fault;
+			}
+		}
+        }
+        else if(access_type == INSN_TLB){
+                if(user_mode == 1)
+                        access_type = INSN_USER;
+                else
+                        access_type = INSN_KERNEL;
+
+		if (!get_phys_page((virt_addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), p, access_type)) {
 			*phys_addr = (p & 0xfffff000) | (virt_addr & 0xfff);
 			return fault;
 		}
 	}
+	else{
+		skyeye_error("Wrong tlb type\n");
+	}
+
 	if ((CP15REG(CP15_CONTROL) & 1) == 0) {
 		/* MMU or MPU disabled. */
 		*phys_addr = virt_addr;
@@ -596,20 +638,7 @@ static int arch_arm_effective_to_physical(cpu_t *cpu, uint32_t addr, uint32_t *r
 	fault_t fault = NO_FAULT;
 	addr_t phys_addr;
 	//fault = get_phys_addr(cpu, addr, &phys_addr, 32, 1);
-	if (!get_phys_page((addr & 0xfffff000) , (CP15REG(CP15_CONTEXT_ID) & 0xff), phys_addr, INSN_TLB)) {
-		if((addr > 0xc0000000) && USER_MODE(core)){
-			if (dyncom_check_perms(core, GET_AP(phys_addr), 1)) {
-				*result = (phys_addr & 0xfffff000) | (addr & 0xfff);
-				return 0;
-			}
-			/* go to check_address_validity */	
-		}
-		else{
-			*result = (phys_addr & 0xfffff000) | (addr & 0xfff);
-			return 0;
-		}
-			
-	}
+
 	fault = check_address_validity(core, addr, &phys_addr, 1, INSN_TLB);
 	if (fault) {
 		LOG("mmu fault in %s addr is %x\n", __FUNCTION__, addr);

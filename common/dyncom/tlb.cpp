@@ -22,21 +22,26 @@
 * @version 7849
 * @date 2012-03-28
 */
+
 #include <stdint.h> 
 #include <string.h>
 #include <stdlib.h>
-//typedef tlb_item 
-#include "dyncom/tlb.h"
+//#define DEBUG
+#include "skyeye_log.h"
 
+//typedef tlb_item 
+#include "dyncom/phys_page.h"
+#include "dyncom/tlb.h"
 //static tlb_item* tlb_cache = NULL;
 static uint64_t tlb_cache[TLB_TOTAL][ASID_SIZE][TLB_SIZE];
 //static tlb_table tlb[TLB_TOTAL];
 int get_phys_page(unsigned int va, int context_id, unsigned int &pa, tlb_type_t access_type)
 {
+	//DBG("type=%d in %s\n", access_type, __FUNCTION__);	
 	tlb_item *tlb_entry = (tlb_item *)&tlb_cache[access_type][context_id][(va >> 12) % TLB_SIZE];
 	if (va == tlb_entry->va) {
 		pa = tlb_entry->pa;
-		//printf("get pa 0x%x for va 0x%x in %s\n", va, pa, __FUNCTION__);
+		//DBG("get pa 0x%x for va 0x%x in %s\n", va, pa, __FUNCTION__);
 		return 0;
 	} else {
 		return -1;
@@ -45,14 +50,47 @@ int get_phys_page(unsigned int va, int context_id, unsigned int &pa, tlb_type_t 
 
 void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_type)
 {
-	tlb_item* tlb_entry = (tlb_item* )&tlb_cache[access_type][context_id][(va >> 12) % TLB_SIZE];
-	//printf("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
-	tlb_entry->va = va;
+	tlb_item* tlb_entry = NULL;
+	DBG("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
 	/* mark the io page */
-	//if(pa < BANK0_START || pa >= BANK0_END)
-	pa |= IO_FLAG_MASK;
-
+	if((va & 0xFFFFF000) == 0xc03aa000){
+		//printf("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
+	}
+	assert(access_type < TLB_TOTAL && access_type >= 0);
+	#if 1
+	if((access_type == DATA_USER_WRITE) || (access_type == DATA_KERNEL_WRITE)){
+		/* set to MIXED type for the page also contain some translated instructions */
+		if(get_jit_num(pa) != 0)
+			access_type = MIXED_TLB;
+	}
+	if(access_type == INSN_USER || access_type == INSN_KERNEL){
+		/* also need to check if the corresponding page exist at data tlb */
+		tlb_item* kernel_item = (tlb_item* )&tlb_cache[DATA_KERNEL_WRITE][context_id][(va >> 12) % TLB_SIZE];
+		tlb_item* user_item = (tlb_item* )&tlb_cache[DATA_USER_WRITE][context_id][(va >> 12) % TLB_SIZE];
+		if(kernel_item->va == va && kernel_item->pa == pa){
+			kernel_item->va = kernel_item->pa = INVAILAD_ITEM;
+			tlb_entry = (tlb_item* )&tlb_cache[MIXED_TLB][context_id][(va >> 12) % TLB_SIZE];
+			tlb_entry->pa = pa;
+			tlb_entry->va = va;
+			//access_type = MIXED_TLB;
+		}
+		if(user_item->va == va && user_item->pa == pa){
+			user_item->va = user_item->pa = INVAILAD_ITEM;
+			tlb_entry = (tlb_item* )&tlb_cache[MIXED_TLB][context_id][(va >> 12) % TLB_SIZE];
+			tlb_entry->pa = pa;
+			tlb_entry->va = va;
+			//access_type = MIXED_TLB;
+		}
+	}
+	#endif
+	if(IO_BANK(pa)){
+		assert(access_type != MIXED_TLB);
+		access_type = IO_TLB;
+	}
+	tlb_entry = (tlb_item* )&tlb_cache[access_type][context_id][(va >> 12) % TLB_SIZE];
 	tlb_entry->pa = pa;
+	tlb_entry->va = va;
+	//add_virt_addr(pa, va);
 	if(pa & 0x3 == 0){
 		printf("\n\nap = %d for va=0x%x, we exit here\n\n", pa & 0x3, va);
 		sleep(2);
@@ -62,17 +100,59 @@ void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_
 
 void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type)
 {
-	tlb_cache[access_type][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+	if(access_type == DATA_TLB){
+		tlb_cache[DATA_USER_READ][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		tlb_cache[DATA_KERNEL_READ][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		tlb_cache[DATA_USER_WRITE][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		tlb_cache[DATA_KERNEL_WRITE][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		tlb_cache[IO_TLB][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		tlb_cache[MIXED_TLB][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+	}
+	else if(access_type == INSN_TLB){
+		tlb_cache[INSN_USER][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		tlb_cache[INSN_KERNEL][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+	}else{
+		skyeye_error("Wrong tlb type %d\n", access_type);
+	}
 }
 
 void erase_by_asid(cpu_t* cpu, unsigned int asid, tlb_type_t access_type)
 {
-	memset(&tlb_cache[access_type][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+	if(access_type == DATA_TLB){
+		memset(&tlb_cache[DATA_USER_READ][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+		memset(&tlb_cache[DATA_USER_WRITE][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+		memset(&tlb_cache[DATA_KERNEL_READ][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+		memset(&tlb_cache[DATA_KERNEL_WRITE][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+		memset(&tlb_cache[IO_TLB][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+		memset(&tlb_cache[MIXED_TLB][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+	}else if(access_type == INSN_TLB){
+		memset(&tlb_cache[INSN_USER][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+		memset(&tlb_cache[INSN_KERNEL][asid], 0, sizeof(tlb_item) * TLB_SIZE);
+	}
+	else{
+		skyeye_error("Wrong tlb type %d\n", access_type);
+	}
 }
 
 void erase_all(cpu_t* cpu, tlb_type_t access_type)
 {
-	memset(&tlb_cache[access_type], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+	if(access_type == DATA_TLB){
+		memset(&tlb_cache[DATA_USER_READ], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+		memset(&tlb_cache[DATA_USER_WRITE], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+		memset(&tlb_cache[DATA_KERNEL_READ], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+		memset(&tlb_cache[DATA_KERNEL_WRITE], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+		memset(&tlb_cache[IO_TLB], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+		memset(&tlb_cache[MIXED_TLB], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+	}else if(access_type == INSN_TLB){
+		memset(&tlb_cache[INSN_USER], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+		memset(&tlb_cache[INSN_KERNEL], 0, sizeof(tlb_item) * TLB_SIZE * ASID_SIZE);
+	}else{
+		skyeye_error("Wrong tlb type %d\n", access_type);
+	}
+}
+
+uint64_t get_tlb(tlb_type_t access_type){
+	return (unsigned long)&tlb_cache[access_type];
 }
 
 uint64_t* new_tlb(){
@@ -83,6 +163,6 @@ uint64_t* new_tlb(){
 		skyeye_debug("mmap failed errno is %d\n", errno);
 	}
 	#endif
-	printf("In %s, get TLB 0x%llx\n", __FUNCTION__, (unsigned long)tlb_cache);
+	DBG("In %s, get TLB 0x%llx\n", __FUNCTION__, (unsigned long)tlb_cache);
 	return (uint64_t*)tlb_cache;
 }

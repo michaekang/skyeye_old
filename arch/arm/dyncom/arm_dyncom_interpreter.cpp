@@ -40,10 +40,11 @@ using namespace std;
 #include "dyncom/tlb.h"
 #include "arm_dyncom_translate.h"
 #include "dyncom/tag.h"
+#include "dyncom/phys_page.h"
 #include "skyeye_ram.h"
 #include "vfp/vfp.h"
 
-#define HYBRID_MODE		1
+#define HYBRID_MODE		0
 
 #define CHECK_RS 	if(RS == 15) rs += 8
 #define CHECK_RM 	if(RM == 15) rm += 8
@@ -3520,6 +3521,7 @@ translated:
 	if (!core->is_user_mode) {
 		//printf("before protect_code_page, pc_start=0x%x\n", pc_start);
 #if CHECK_IN_WRITE
+		inc_jit_num(pc_start);
 #else
 		protect_code_page(pc_start);
 #endif
@@ -3734,12 +3736,6 @@ void InterpreterMainLoop(cpu_t *core)
 		{
 			if (last_logical_base == (cpu->Reg[15] & 0xfffff000))
 			       phys_addr = last_physical_base + (cpu->Reg[15] & 0xfff);
-			else if((!(USER_MODE(cpu) & is_kernel_code(cpu->Reg[15]))) 
-				&& (!get_phys_page((cpu->Reg[15] & 0xfffff000), (cpu->CP15[CP15(CP15_CONTEXT_ID)] & 0xff), phys_addr, INSN_TLB))){
-				phys_addr = (phys_addr & 0xfffff000) | (cpu->Reg[15] & 0xfff);
-				last_logical_base = cpu->Reg[15] & 0xfffff000;
-				last_physical_base = phys_addr & 0xfffff000;
-			}
 			else {
 			       /* check next instruction address is valid. */
 			       fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
@@ -3828,12 +3824,6 @@ void InterpreterMainLoop(cpu_t *core)
 		else{
 			if (last_logical_base == (cpu->Reg[15] & 0xfffff000))
 			       phys_addr = last_physical_base + (cpu->Reg[15] & 0xfff);
-			else if((!(USER_MODE(cpu) & is_kernel_code(cpu->Reg[15]))) 
-				&& (!get_phys_page((cpu->Reg[15] & 0xfffff000), (cpu->CP15[CP15(CP15_CONTEXT_ID)] & 0xff), phys_addr, INSN_TLB))){
-				phys_addr = (phys_addr & 0xfffff000) | (cpu->Reg[15] & 0xfff);
-				last_logical_base = cpu->Reg[15] & 0xfffff000;
-				last_physical_base = phys_addr & 0xfffff000;
-			}
 			else {
 			       /* check next instruction address is valid. */
 			       fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);

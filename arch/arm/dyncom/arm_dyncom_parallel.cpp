@@ -31,6 +31,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "stat.h"
 #include "dyncom/tag.h"
 #include "dyncom/basicblock.h"
+#include "dyncom/phys_page.h"
 #include "bank_defs.h"
 
 #include <stack>
@@ -493,6 +494,7 @@ static inline void push_compiled_work(cpu_t* cpu, uint32_t pc, uint8_t func_attr
 	//printf("In %s, pc=0x%x\n", __FUNCTION__, pc);
 	cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] = func_attr;
 #if CHECK_IN_WRITE
+	inc_jit_num(pc);
 #else
 	protect_code_page(pc);
 #endif

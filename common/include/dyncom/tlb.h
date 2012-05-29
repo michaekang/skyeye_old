@@ -29,9 +29,18 @@
 #define TLB_SIZE 4096
 #define ASID_SIZE 256
 typedef enum _tlb_type {
-	DATA_TLB = 0,
+	DATA_USER_READ = 0,
+	DATA_USER_WRITE,
+	DATA_KERNEL_READ,
+	DATA_KERNEL_WRITE,
+	IO_TLB,
+	MIXED_TLB,
+	INSN_USER,
+	INSN_KERNEL,
+	TLB_TOTAL,
 	INSN_TLB,
-	TLB_TOTAL
+	DATA_TLB,
+
 } tlb_type_t;
 
 struct tlb_item {
@@ -54,4 +63,5 @@ void erase_all(cpu_t* cpu, tlb_type_t access_type);
 
 #define IO_FLAG_MASK 0x4
 #define GET_IO_FLAG(p) ((p >> 2) & 0x1)
+#define INVAILAD_ITEM 0x0
 #endif
