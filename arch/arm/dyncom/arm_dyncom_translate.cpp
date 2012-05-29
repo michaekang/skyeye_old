@@ -41,6 +41,7 @@
 #include "arm_dyncom_run.h"
 //#include "armemu.h"
 #include "arm_dyncom_thumb.h"
+#include "arm_dyncom_memory.h"
 #include "dyncom/tlb.h"
 #include "vfp/vfp.h"
 #include "skyeye_instr_length.h"
@@ -968,16 +969,13 @@ int DYNCOM_TRANS(ldrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = R(RN);
 	//bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
 	//LoadStore(cpu,instr,bb,addr, Rn);
-	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
+	cpu->dyncom_engine->need_exclusive = 1;
+	memory_read(cpu, bb, addr, 0, 32);
+	cpu->dyncom_engine->need_exclusive = 0;
 
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb;
-	LET(EXCLUSIVE_TAG, phys_addr);
-	LET(EXCLUSIVE_STATE, CONST(1));
-	arch_read_memory(cpu, bb, phys_addr, 0, 32);
-	
-	bb = cpu->dyncom_engine->bb;
 	Value *val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
         if(RD == 15){
@@ -1002,15 +1000,13 @@ int DYNCOM_TRANS(ldrexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = R(RN);
 	//bb = arch_check_mm(cpu, bb, addr, 4, 1, cpu->dyncom_engine->bb_trap);
 	//LoadStore(cpu,instr,bb,addr, Rn);
-	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(23));
+	cpu->dyncom_engine->need_exclusive = 1;
+	memory_read(cpu, bb, addr, 0, 8);
+	cpu->dyncom_engine->need_exclusive = 0;
 
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb;
-	LET(EXCLUSIVE_TAG, phys_addr);
-	LET(EXCLUSIVE_STATE, CONST(1));
-	arch_read_memory(cpu, bb, phys_addr, 0, 8);
-	bb = cpu->dyncom_engine->bb;
 	Value *val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
         if(RD == 15){
@@ -1047,12 +1043,14 @@ int DYNCOM_TRANS(ldrsb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* should check if RN == RD for writeback case */
 	Value *addr = GetAddr(cpu, instr, bb, 1);
 	//LoadStore(cpu,instr,bb,addr);
-	
+	#if 0	
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb;
 
 	arch_read_memory(cpu, bb, phys_addr, 0, 8);
+	#endif
+	memory_read(cpu, bb, addr, 0, 8);
 	bb = cpu->dyncom_engine->bb;
 	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x80)), CONST(0)), ret, OR(CONST(0xffffff00), ret)));
@@ -1065,11 +1063,14 @@ int DYNCOM_TRANS(ldrsh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	/* LDRSH P=1 U=1 W=0 */
 	/* should check if RN == RD for writeback case */
 	Value *addr = GetAddr(cpu, instr, bb, 1);
+	#if 0
 	Value* phys_addr = get_phys_addr(cpu, bb, addr, 1);
 	if(!is_user_mode(cpu))
 		bb = cpu->dyncom_engine->bb;
 
 	arch_read_memory(cpu, bb, phys_addr, 0, 16);
+	#endif
+	memory_read(cpu, bb, addr, 0, 16);
 	bb = cpu->dyncom_engine->bb;
 	Value *ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD, SELECT(ICMP_EQ(AND(ret, CONST(0x8000)), CONST(0)), ret, OR(CONST(0xffff0000), ret)));
@@ -1931,22 +1932,12 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 //	LoadStore(cpu,instr,bb,addr);
 	Value *addr = R(RN);
 	Value *val = R(RM);
-	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
-	//LET(RD, CONST(1));
-	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
-	bb = cpu->dyncom_engine->bb;
+	cpu->dyncom_engine->need_exclusive = 1;
+	cpu->dyncom_engine->exclusive_result_reg = RD;
+	memory_write(cpu, bb, addr, val, 32);
+	cpu->dyncom_engine->need_exclusive = 0;
+	cpu->dyncom_engine->exclusive_result_reg = 0xFFFFFFFF;
 
-	Value* cond = AND(ICMP_EQ(R(EXCLUSIVE_TAG), phys_addr), ICMP_EQ(R(EXCLUSIVE_STATE), CONST(1)));
-	LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
-	LET(EXCLUSIVE_STATE, SELECT(cond, CONST(0), R(EXCLUSIVE_STATE)));
-	LET(RD, SELECT(cond, CONST(0), CONST(1)));
-	arch_read_memory(cpu, bb, phys_addr, 0, 32);
-
-	bb = cpu->dyncom_engine->bb;
-	Value *data = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-	val = SELECT(cond, val, data);
-
-	arch_write_memory(cpu, bb, phys_addr, val, 32);
 	return 0;
 }
 int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1955,19 +1946,13 @@ int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = R(RN);
 	Value *val = AND(R(RM), CONST(0xff));
 	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
-	Value* phys_addr = get_phys_addr(cpu, bb, addr, 0);
-	bb = cpu->dyncom_engine->bb;
+	
+	cpu->dyncom_engine->need_exclusive = 1;
+	cpu->dyncom_engine->exclusive_result_reg = RD;
+	memory_write(cpu, bb, addr, val, 8);
+	cpu->dyncom_engine->need_exclusive = 0;
+	cpu->dyncom_engine->exclusive_result_reg = 0xFFFFFFFF;
 
-	Value* cond = AND(ICMP_EQ(R(EXCLUSIVE_TAG), phys_addr), ICMP_EQ(R(EXCLUSIVE_STATE), CONST(1)));
-	LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
-	LET(EXCLUSIVE_STATE, SELECT(cond, CONST(0), R(EXCLUSIVE_STATE)));
-	LET(RD, SELECT(cond, CONST(0), CONST(1)));
-	arch_read_memory(cpu, bb, phys_addr, 0, 8);
-	bb = cpu->dyncom_engine->bb;
-	Value *data = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-	val = SELECT(cond, val, data);
-
-	arch_write_memory(cpu, bb, phys_addr, val, 8);
 	return No_exp;
 }
 int DYNCOM_TRANS(strh)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -2038,13 +2023,17 @@ int DYNCOM_TRANS(swi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 int DYNCOM_TRANS(swp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	Value* Addr = R(RN);
 	//bb = arch_check_mm(cpu, bb, Addr, 4, 0, cpu->dyncom_engine->bb_trap);
+	#if 0
 	Value* phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 	bb = cpu->dyncom_engine->bb;
 	arch_read_memory(cpu, bb, phys_addr, 0, 32);
+	#endif
+	memory_read(cpu, bb, Addr, 0, 32);
 	bb = cpu->dyncom_engine->bb; 
 	Value *Val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
-	arch_write_memory(cpu, bb, phys_addr, Val, 32);
+	//arch_write_memory(cpu, bb, phys_addr, Val, 32);
+	memory_write(cpu, bb, Addr, 0, 32);
 	bb = cpu->dyncom_engine->bb;
 	LET(RD, Val);
 	return No_exp;
@@ -2760,7 +2749,13 @@ int DYNCOM_TAG(mcr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	exit(-1);
 	#endif
 	//FIXME wfs will be here.
-	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+
+	/* if CP15_CONTEXT_ID is written , we will jump out of jit */
+	if(CRn == MMU_PID)
+		arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	else
+		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+
 	return instr_size;
 }
 int DYNCOM_TAG(mcrr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}

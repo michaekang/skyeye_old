@@ -3098,22 +3098,30 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	//	bb = arch_check_mm(cpu, bb, Addr, 4, 0, cpu->dyncom_engine->bb_trap);
 	//else
 	//	bb = arch_check_mm(cpu, bb, Addr, 8, 0, cpu->dyncom_engine->bb_trap);
-	Value* phys_addr;
+	//Value* phys_addr;
 	if(single){
+		#if 0
 		phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d), 32);
+		#endif
+		memory_write(cpu, bb, Addr, RSPR(d), 32);
 		bb = cpu->dyncom_engine->bb;
 	}
 	else{
+		#if 0
 		phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d * 2), 32);
+		#endif
+		memory_write(cpu, bb, Addr, RSPR(d * 2), 32);
 		bb = cpu->dyncom_engine->bb;
-
+		#if 0
 		phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
 		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d * 2 + 1), 32);
+		#endif
+		memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR(d * 2 + 1), 32);
 	}
 	return No_exp;
 }
@@ -3307,29 +3315,38 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	//	bb = arch_check_mm(cpu, bb, Addr, regs * 4, 0, cpu->dyncom_engine->bb_trap);
 	//else
 	//	bb = arch_check_mm(cpu, bb, Addr, regs * 8, 0, cpu->dyncom_engine->bb_trap);
-	Value* phys_addr;
+	//Value* phys_addr;
 	int i;
 	for (i = 0; i < regs; i++)
 	{
 		if (single)
 		{
 			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR(d + i), 32);
+			#endif
+			memory_write(cpu, bb, Addr, RSPR(d + i), 32);
 			bb = cpu->dyncom_engine->bb;
 			Addr = ADD(Addr, CONST(4));
 		}
 		else
 		{
 			/* Careful of endianness, little by default */
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2), 32);
+			#endif
+			memory_write(cpu, bb, Addr, RSPR((d + i) * 2), 32);
 			bb = cpu->dyncom_engine->bb;
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2 + 1), 32);
+			#endif
+			memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
 			bb = cpu->dyncom_engine->bb;
 
 			Addr = ADD(Addr, CONST(8));
@@ -3559,9 +3576,12 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			
 			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 			/* if R(i) is R15? */
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR(d + i), 32);
+			#endif
+			memory_write(cpu, bb, Addr, RSPR(d + i), 32);
 			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
@@ -3571,16 +3591,22 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		{
 		
 			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2), 32);
+			#endif
+			memory_write(cpu, bb, Addr, RSPR((d + i) * 2), 32);
 			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 
 			//fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2 + 1), 32);
+			#endif
+			memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
 			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
@@ -3807,31 +3833,42 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	//	bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
 	//else
 	//	bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
-	Value* phys_addr;	
+	//Value* phys_addr;	
 	for (i = 0; i < regs; i++)
 	{
 		if (single)
 		{
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
 			bb = cpu->dyncom_engine->bb;
 			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			#endif
+			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
+			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LETS(d + i, val);
 			Addr = ADD(Addr, CONST(4));
 		}
 		else
 		{
 			/* Careful of endianness, little by default */
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
 			bb = cpu->dyncom_engine->bb;
 			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			#endif
+			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
+			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LETS((d + i) * 2, val);
-
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
 			bb = cpu->dyncom_engine->bb;
 			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			#endif
+			memory_read(cpu, bb, ADD(Addr, CONST(4)), 0, 32);
 			bb = cpu->dyncom_engine->bb;
+			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LETS((d + i) * 2 + 1, val);
 
 			Addr = ADD(Addr, CONST(8));
@@ -4036,26 +4073,37 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	//	bb = arch_check_mm(cpu, bb, Addr, 4, 1, cpu->dyncom_engine->bb_trap);
 	//else
 	//	bb = arch_check_mm(cpu, bb, Addr, 8, 1, cpu->dyncom_engine->bb_trap);
-	Value* phys_addr;
+	//Value* phys_addr;
 	Value* val;
 	if(single){
+		#if 0
 		phys_addr = get_phys_addr(cpu, bb, Addr, 1);
 		bb = cpu->dyncom_engine->bb;
 		val = arch_read_memory(cpu,bb,phys_addr,0,32);
+		#endif
+		memory_read(cpu, bb, Addr, 0, 32);
 		bb = cpu->dyncom_engine->bb;
+		val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 		LETS(d, val);
 	}
 	else{
+		#if 0
 		phys_addr = get_phys_addr(cpu, bb, Addr, 1);
 		bb = cpu->dyncom_engine->bb;
 		val = arch_read_memory(cpu,bb,phys_addr,0,32);
+		#endif
+		memory_read(cpu, bb, Addr, 0, 32);
 		bb = cpu->dyncom_engine->bb;
+		val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 		LETS(d * 2, val);
-
+		#if 0
 		phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
 		bb = cpu->dyncom_engine->bb;
 		val = arch_read_memory(cpu,bb,phys_addr,0,32);
+		#endif
+		memory_read(cpu, bb, ADD(Addr, CONST(4)), 0,32);
 		bb = cpu->dyncom_engine->bb;
+		val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 		LETS(d * 2 + 1, val);
 	}
 
@@ -4267,7 +4315,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 
 	DBG("VLDM \n");
 	int i;	
-	Value* phys_addr;
+	//Value* phys_addr;
 	Value* val;
 	for (i = 0; i < regs; i++)
 	{
@@ -4276,10 +4324,14 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			
 			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 			/* if R(i) is R15? */
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
 			bb = cpu->dyncom_engine->bb;
 			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			#endif
+			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
+			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LETS(d + i, val);
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
@@ -4287,17 +4339,23 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		}
 		else
 		{
-		
+			#if 0	
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
 			bb = cpu->dyncom_engine->bb;
 			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			#endif
+			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
+			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LETS((d + i) * 2, val);
-
+			#if 0
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
 			bb = cpu->dyncom_engine->bb;
 			val = arch_read_memory(cpu,bb,phys_addr,0,32);
+			#endif
+			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
+			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LETS((d + i) * 2 + 1, val);
 
 			//fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);

@@ -412,7 +412,7 @@ typedef struct dyncom_engine{
 	uint32_t functions;
 	ExecutionEngine *exec_engine;
 	uint8_t *RAM;
-	unsigned long TLB;
+	//unsigned long TLB;
 //for four memory region
     tag_t *tag_array[4];
     uint32_t code_size[4];
@@ -427,14 +427,17 @@ typedef struct dyncom_engine{
 	PointerType *type_check_mm;
 
 	Value *ptr_RAM;
-	Value *ptr_TLB;
+	Value *ptr_data_read_tlb;
+	Value *ptr_data_write_tlb;
+	Value *ptr_mixed_tlb;
+	Value *ptr_io_tlb;
+
 	Value *ptr_user_mode;
 	Value *ptr_grf; // gpr register file
 	Value *ptr_srf; // gpr register file
 	Value *ptr_frf; // fp register file
 	Value *ptr_func_read_memory;
 	Value *ptr_func_write_memory;
-	Value *ptr_func_check_mm;
 
 	/* Temp variable for address translation */
 	BasicBlock* bb_trap;
@@ -442,7 +445,9 @@ typedef struct dyncom_engine{
 	/* Temp variable for arm write back decoder */
 	Value* wb_value;
 	int wb_flag;
-	Value* io_flag;
+	int need_exclusive;
+	int exclusive_result_reg;
+
 	Value* read_value;
 	/* arch functions are for each architecture to declare it's own functions
 	   which can be invoked in llvm IR.Usually,the functions to be invoked are

@@ -497,7 +497,12 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	type_func_args.push_back(type_pstruct_fp_reg_t);	/* fp_reg_t *fp_reg */
 	type_func_args.push_back(cpu->dyncom_engine->type_pread_memory);
 	type_func_args.push_back(cpu->dyncom_engine->type_pwrite_memory);
-	type_func_args.push_back(type_i64);				/* uint64_t *TLB */
+
+	type_func_args.push_back(type_i64);				/* uint64_t *data_read TLB */
+	type_func_args.push_back(type_i64);				/* uint64_t *data_write TLB */
+	type_func_args.push_back(type_i64);				/* uint64_t *mixed TLB */
+	type_func_args.push_back(type_i64);				/* uint64_t *io TLB */
+
 	type_func_args.push_back(type_i32);				/* uint32_t user_mode */
 	FunctionType* type_func = FunctionType::get(
 		getIntegerType(32),		/* Result */
@@ -537,8 +542,16 @@ cpu_create_function(cpu_t *cpu, const char *name,
 		cpu->dyncom_engine->ptr_func_read_memory->setName("readmemory");
 		cpu->dyncom_engine->ptr_func_write_memory = args++;
 		cpu->dyncom_engine->ptr_func_write_memory->setName("writememory");
-		cpu->dyncom_engine->ptr_TLB = args++;
-		cpu->dyncom_engine->ptr_TLB->setName("TLB");
+
+		cpu->dyncom_engine->ptr_data_read_tlb = args++;
+		cpu->dyncom_engine->ptr_data_read_tlb->setName("data_read_tlb");
+		cpu->dyncom_engine->ptr_data_write_tlb = args++;
+		cpu->dyncom_engine->ptr_data_write_tlb->setName("data_write_tlb");
+		cpu->dyncom_engine->ptr_mixed_tlb = args++;
+		cpu->dyncom_engine->ptr_mixed_tlb->setName("mixed_tlb");
+		cpu->dyncom_engine->ptr_io_tlb = args++;
+		cpu->dyncom_engine->ptr_io_tlb->setName("io_tlb");
+
 		cpu->dyncom_engine->ptr_user_mode = args++;
 		cpu->dyncom_engine->ptr_user_mode->setName("user_mode");
 	}

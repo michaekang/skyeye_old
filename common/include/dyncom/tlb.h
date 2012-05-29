@@ -59,6 +59,7 @@ void erase_by_asid(cpu_t* cpu, unsigned int asid, tlb_type_t access_type);
 void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type);
 void erase_all(cpu_t* cpu, tlb_type_t access_type);
 
+uint64_t get_tlb(tlb_type_t access_type);
 #define GET_AP(phys_page) (phys_page & 0x3)
 
 #define IO_FLAG_MASK 0x4

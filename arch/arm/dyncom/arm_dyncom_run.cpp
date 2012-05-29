@@ -575,7 +575,7 @@ static BasicBlock* create_mmu_fault_bb(cpu_t* cpu, Value* result, int fault, Val
 	BranchInst::Create(cpu->dyncom_engine->bb_trap, bb);
 	return bb;
 }
-
+#if 0
 Value *
 get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 {
@@ -654,7 +654,7 @@ get_phys_addr(cpu_t *cpu, BasicBlock *bb, Value* addr, int read)
 	cpu->dyncom_engine->io_flag = TRUNC32(AND(tlb_entry, CONST64(IO_FLAG_MASK)));
 	return phys_addr;
 }
-
+#endif
 static void 
 arch_arm_invalidate_by_all_init(cpu_t *cpu){
 	//types
@@ -759,14 +759,15 @@ void arm_dyncom_init(arm_core_t* core){
 	core->dyncom_cpu = get_conf_obj_by_cast(cpu, "cpu_t");
 	
 	cpu->dyncom_engine->flags &= ~CPU_FLAG_SWAPMEM;
-
+	cpu->dyncom_engine->need_exclusive = 0;
+	cpu->dyncom_engine->wb_flag = 0;
 #if FAST_MEMORY
 	if (pref->user_mode_sim){
 		cpu->dyncom_engine->RAM = (uint8_t*)get_dma_addr(0);
 	}
 	else{
 		cpu->dyncom_engine->RAM = (uint8_t*)get_dma_addr(BANK0_START);
-		cpu->dyncom_engine->TLB = (unsigned long)new_tlb();
+		//cpu->dyncom_engine->TLB = (unsigned long)new_tlb();
 	}
 #endif
 

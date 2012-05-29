@@ -452,7 +452,7 @@ cpu_translate(cpu_t *cpu, addr_t addr)
 }
 
 //typedef int (*fp_t)(uint8_t *RAM, void *grf, void *frf, read_memory_t readfp, write_memory_t writefp);
-typedef int (*fp_t)(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, unsigned long tlb_index, uint32_t user_mode);
+typedef int (*fp_t)(uint8_t *RAM, void *grf, void *srf, void *frf, fp_read_memory_t readfp, fp_write_memory_t writefp, unsigned long read_tlb_index, unsigned long write_tlb_index, unsigned long mixed_tlb, unsigned long io_tlb, uint32_t user_mode);
 /* cpu run for user mode application */
 int
 um_cpu_run(cpu_t *cpu){
@@ -573,7 +573,11 @@ cpu_run(cpu_t *cpu)
 		#define USER32MODE 16L
 		int user_mode = (((*(uint32_t *)cpu->rf.cpsr) & 0x1F) == USER32MODE);
 		unsigned long offset = context_id * TLB_SIZE * TLB_ENTRY_SIZE;
-		ret = pfunc(cpu->dyncom_engine->RAM, cpu->rf.grf, cpu->rf.srf, cpu->rf.frf, cpu->mem_ops.read_memory, cpu->mem_ops.write_memory, (cpu->dyncom_engine->TLB + offset), user_mode);
+		if(user_mode)
+			ret = pfunc(cpu->dyncom_engine->RAM, cpu->rf.grf, cpu->rf.srf, cpu->rf.frf, cpu->mem_ops.read_memory, cpu->mem_ops.write_memory, (get_tlb(DATA_USER_READ) + offset), (get_tlb(DATA_USER_WRITE) + offset), (get_tlb(MIXED_TLB) + offset), (get_tlb(IO_TLB) + offset), user_mode);
+		else
+			ret = pfunc(cpu->dyncom_engine->RAM, cpu->rf.grf, cpu->rf.srf, cpu->rf.frf, cpu->mem_ops.read_memory, cpu->mem_ops.write_memory, (get_tlb(DATA_KERNEL_READ) + offset), get_tlb(DATA_KERNEL_WRITE) + offset, (get_tlb(MIXED_TLB) + offset), get_tlb(IO_TLB) + offset, user_mode);
+
 		if (cpu->icounter > 248765780) {
 //			printf("out of jit ret is %d icounter is %lld\n", ret, cpu->icounter);
 //			return ret;

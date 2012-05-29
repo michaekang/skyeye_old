@@ -741,29 +741,8 @@ void arch_write_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, Value *value, ui
 	BasicBlock* io_store_bb = BasicBlock::Create(_CTX(), "io_store", cpu->dyncom_engine->cur_func, 0);
 	io_write_bb(cpu, io_store_bb, load_store_end, addr, value, size);
 
-	Value *cond = ICMP_EQ(cpu->dyncom_engine->io_flag, CONST(0));
-	arch_branch(1, mem_store_bb, io_store_bb, cond, bb);
 	cpu->dyncom_engine->bb = load_store_end;
 	return;
-}
-static Value* io_read_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock *load_store_end, Value *addr, uint32_t sign, uint32_t size){
-	if (cpu->dyncom_engine->ptr_func_read_memory == NULL) {
-		return NULL;
-	}
-
-	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 1, cpu->dyncom_engine->bb_trap);
-
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
-	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
-	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
-	std::vector<Value *> params;
-	params.push_back(v_cpu_ptr);
-	params.push_back(addr);
-	params.push_back(CONST(size));
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
-	new StoreInst(ret, cpu->dyncom_engine->read_value, false, 0, bb);
-	BranchInst::Create(load_store_end, bb);
-	return NULL;
 }
 
 static Value* mem_read_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock *load_store_end, Value *addr, uint32_t sign, uint32_t size){
@@ -814,10 +793,8 @@ Value *arch_read_memory(cpu_t *cpu, BasicBlock *bb, Value *addr, uint32_t sign, 
 	mem_read_bb(cpu, mem_load_bb, load_store_end, addr, sign, size);
 
 	BasicBlock* io_load_bb = BasicBlock::Create(_CTX(), "io_load", cpu->dyncom_engine->cur_func, 0);
-	io_read_bb(cpu, io_load_bb, load_store_end, addr, sign, size);
+	//io_read_bb(cpu, io_load_bb, load_store_end, addr, sign, size);
 
-	Value *cond = ICMP_EQ(cpu->dyncom_engine->io_flag, CONST(0));
-	arch_branch(1, mem_load_bb, io_load_bb, cond, bb);
 	cpu->dyncom_engine->bb = load_store_end;
 	return v;
 }
