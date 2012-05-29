@@ -22,7 +22,7 @@
  */
 
 #include <windows.h>
-#include "utils/portable/gettimeofday.h"
+#include "portable/gettimeofday.h"
 
 int gettimeofday(struct timeval *tv, struct timezone *tz)
 {

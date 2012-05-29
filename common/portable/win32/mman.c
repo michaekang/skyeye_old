@@ -21,7 +21,9 @@
  * 04/12/2007   Written by Anthony Lee
  */
 
+#include <stdio.h>
 #include <windows.h>
+#include <Winbase.h>
 #include "portable/mman.h"
 
 
@@ -30,24 +32,32 @@ int getpagesize(void)
 	return 1024;
 }
 
-
 void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
 	HANDLE handle, file;
 	DWORD nRead = 0;
 	void *retVal = NULL;
 
-	if ((flags & (MAP_FIXED | MAP_SHARED)) ||
+	if ((flags & MAP_SHARED) ||
 	    ((prot & PROT_WRITE) && fd != -1) ||
 	    !(fd == -1 || (file = (HANDLE)_get_osfhandle(fd)) != INVALID_HANDLE_VALUE) ||
-	    length == 0) return MAP_FAILED;
+	    length == 0) {
+		return MAP_FAILED;
+	}
 
 	if ((handle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL,
 					PAGE_READWRITE,
 					0, (DWORD)length,
 					NULL)) == NULL) return MAP_FAILED;
 
-	if ((retVal = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, 0)) == NULL) goto exit;
+	//if ((retVal = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, 0)) == NULL) goto exit;
+	/* shenoubang 2012-5-29 */
+	/* FIXME: when length is too large, failed as not enough space*/
+	if ((retVal = (LPTSTR)MapViewOfFileEx(handle, FILE_MAP_ALL_ACCESS,
+			                0, 0, length, addr)) == NULL) {
+		perror("windows mmap failed");
+		return MAP_FAILED;
+	}
 
 	if (fd != -1) {
 		if (SetFilePointer(file, (DWORD)offset,
