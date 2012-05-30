@@ -265,7 +265,7 @@ void LoadDWord(cpu_t *cpu, uint32_t instr, BasicBlock *bb, Value *addr)
 	bb = cpu->dyncom_engine->bb;
 	arch_read_memory(cpu, bb, phys_addr, 0, 32);
 	#endif
-	memory_read(cpu, bb, addr, 0, 32);
+	memory_read(cpu, bb, ADD(addr, CONST(4)), 0, 32);
 	bb = cpu->dyncom_engine->bb;
 	ret = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 	LET(RD+1,ret);
