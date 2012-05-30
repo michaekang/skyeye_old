@@ -94,6 +94,8 @@ static BasicBlock* create_io_read_bb(cpu_t* cpu, Value* addr, int size, BasicBlo
 	params.push_back(v_cpu_ptr);
 	params.push_back(addr);
 	params.push_back(CONST(size));
+	params.push_back(CONST(cpu->dyncom_engine->need_exclusive));
+
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
 	new StoreInst(ret, cpu->dyncom_engine->read_value, false, 0, bb);
 	Value* cond = ICMP_EQ(R(CP15_TLB_FAULT_STATUS), CONST(0));
@@ -142,6 +144,8 @@ static BasicBlock* create_io_write_bb(cpu_t* cpu, Value* addr, Value* value, int
 	params.push_back(addr);
 	params.push_back(value);
 	params.push_back(CONST(size));
+	params.push_back(CONST(cpu->dyncom_engine->need_exclusive));
+
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
 
 	Value* cond = ICMP_EQ(R(CP15_TLB_FAULT_STATUS), CONST(0));
@@ -246,7 +250,7 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
 		Value* cond = AND(ICMP_EQ(R(EXCLUSIVE_TAG), phys_addr), ICMP_EQ(R(EXCLUSIVE_STATE), CONST(1)));
 		LET(EXCLUSIVE_TAG, SELECT(cond, CONST(0xFFFFFFFF), R(EXCLUSIVE_TAG)));
 		LET(EXCLUSIVE_STATE, SELECT(cond, CONST(0), R(EXCLUSIVE_STATE)));
-		LET(cpu->dyncom_engine->exclusive_result_reg, SELECT(cond, CONST(0), CONST(1)));
+		LET(EXCLUSIVE_RESULT, SELECT(cond, CONST(0), CONST(1)));
 		Value* data;
 		
 		if(size == 8){

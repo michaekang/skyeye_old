@@ -472,6 +472,7 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	type_func_read_memory_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_read_memory_args.push_back(type_i32);	/* i32 */
 	type_func_read_memory_args.push_back(type_i32);	/* i32 */
+	type_func_read_memory_args.push_back(type_i32);	/* ex_flag */
 	FunctionType *type_func_read_memory_callout = FunctionType::get(
 		getIntegerType(32),	/* Result */
 		type_func_read_memory_args,	/* Params */
@@ -483,6 +484,7 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	type_func_write_memory_args.push_back(type_i32);	/* i32 */
 	type_func_write_memory_args.push_back(type_i32);	/* i32 */
 	type_func_write_memory_args.push_back(type_i32);	/* i32 */
+	type_func_write_memory_args.push_back(type_i32);	/* ex_flag */
 	FunctionType *type_func_write_memory_callout = FunctionType::get(
 		XgetType(VoidTy),	/* Result */
 		type_func_write_memory_args,	/* Params */

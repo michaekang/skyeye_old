@@ -749,6 +749,8 @@ int DYNCOM_TRANS(cdp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	return No_exp;
 }
 int DYNCOM_TRANS(clrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	LET(EXCLUSIVE_TAG, CONST(0xFFFFFFFF));
+	LET(EXCLUSIVE_STATE, CONST(0x0));
 	return No_exp;
 }
 int DYNCOM_TRANS(clz)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -1933,10 +1935,12 @@ int DYNCOM_TRANS(strex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *addr = R(RN);
 	Value *val = R(RM);
 	cpu->dyncom_engine->need_exclusive = 1;
-	cpu->dyncom_engine->exclusive_result_reg = RD;
+	//cpu->dyncom_engine->exclusive_result_reg = RD;
 	memory_write(cpu, bb, addr, val, 32);
 	cpu->dyncom_engine->need_exclusive = 0;
-	cpu->dyncom_engine->exclusive_result_reg = 0xFFFFFFFF;
+	bb = cpu->dyncom_engine->bb;
+	//cpu->dyncom_engine->exclusive_result_reg = 0xFFFFFFFF;
+	LET(RD, R(EXCLUSIVE_RESULT));
 
 	return 0;
 }
@@ -1948,10 +1952,12 @@ int DYNCOM_TRANS(strexb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	//bb = arch_check_mm(cpu, bb, addr, 4, 0, cpu->dyncom_engine->bb_trap);
 	
 	cpu->dyncom_engine->need_exclusive = 1;
-	cpu->dyncom_engine->exclusive_result_reg = RD;
+	//cpu->dyncom_engine->exclusive_result_reg = RD;
 	memory_write(cpu, bb, addr, val, 8);
 	cpu->dyncom_engine->need_exclusive = 0;
-	cpu->dyncom_engine->exclusive_result_reg = 0xFFFFFFFF;
+	//cpu->dyncom_engine->exclusive_result_reg = 0xFFFFFFFF;
+	bb = cpu->dyncom_engine->bb;
+	LET(RD, R(EXCLUSIVE_RESULT));
 
 	return No_exp;
 }

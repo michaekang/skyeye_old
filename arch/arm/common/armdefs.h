@@ -238,6 +238,7 @@ struct ARMul_State
 	ARMword Bank;		/* the current register bank */
 	ARMword exclusive_tag;
 	ARMword exclusive_state;
+	ARMword exclusive_result;
 	ARMword CP15[VFP_BASE - CP15_BASE];
 	ARMword VFP[3]; /* FPSID, FPSCR, and FPEXC */
 	/* VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).

@@ -107,8 +107,8 @@ typedef struct {
 typedef bool_t			(*fp_is_inside_page)(cpu_t *cpu, addr_t addr);
 typedef bool_t			(*fp_is_page_start)(cpu_t* cpu, addr_t addr);
 typedef bool_t			(*fp_is_page_end)(cpu_t* cpu, addr_t addr);
-typedef uint32_t 		(*fp_read_memory_t)(cpu_t *cpu, addr_t addr, uint32_t size);
-typedef void 			(*fp_write_memory_t)(cpu_t *cpu, addr_t addr, uint32_t value, uint32_t size);
+typedef uint32_t 		(*fp_read_memory_t)(cpu_t *cpu, addr_t addr, uint32_t size, int ex_flag);
+typedef void 			(*fp_write_memory_t)(cpu_t *cpu, addr_t addr, uint32_t value, uint32_t size, int ex_flag);
 typedef uint32_t		(*fp_check_mm_t)(cpu_t *cpu, uint32_t addr, int count, uint32_t read_flag);
 typedef int				(*fp_effective_to_physical)(struct cpu *cpu, uint32_t addr, uint32_t *result);
 typedef struct {
@@ -446,7 +446,7 @@ typedef struct dyncom_engine{
 	Value* wb_value;
 	int wb_flag;
 	int need_exclusive;
-	int exclusive_result_reg;
+	//int exclusive_result_reg;
 
 	Value* read_value;
 	/* arch functions are for each architecture to declare it's own functions

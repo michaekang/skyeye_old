@@ -96,7 +96,7 @@ static bool_t is_page_end(cpu_t* cpu, addr_t a)
 {
 	return ((a & 0x00000fff) == 0xffc) ? True : False;
 }
-static uint32_t ppc_read_memory(cpu_t *cpu, addr_t addr, uint32_t size){
+static uint32_t ppc_read_memory(cpu_t *cpu, addr_t addr, uint32_t size, int ex_flag){
 	uint32_t result, ret;
 	uint8_t result_8;
 	uint16_t result_16;
@@ -118,7 +118,7 @@ static uint32_t ppc_read_memory(cpu_t *cpu, addr_t addr, uint32_t size){
 	}
 	return result;
 }
-static void ppc_write_memory(cpu_t *cpu, addr_t addr, uint32_t value, uint32_t size){
+static void ppc_write_memory(cpu_t *cpu, addr_t addr, uint32_t value, uint32_t size, int ex_flag){
 	if(is_user_mode(cpu)){
 		bus_write(size, addr, value);
 	}else{

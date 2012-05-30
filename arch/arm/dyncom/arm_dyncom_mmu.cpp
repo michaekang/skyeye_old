@@ -461,7 +461,7 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 	#endif
 }
 
-static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size)
+static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size, int need_exclusive)
 {
 	uint32_t value;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
@@ -479,6 +479,10 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 		core->CP15[CP15(CP15_FAULT_ADDRESS)] = virt_addr;
 
 		return 0;
+	}
+	if(need_exclusive){
+		core->exclusive_tag = phys_addr;
+		core->exclusive_state = 1;
 	}
 	//phys_addr = virt_addr;
 	#if MMU_DEBUG
@@ -508,7 +512,7 @@ skip_read:
 	return value;
 }
 #define LOG_IN_CLR	skyeye_printf_in_color
-static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, uint32_t size)
+static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, uint32_t size, int need_exclusive)
 {
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
@@ -524,6 +528,17 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 		core->CP15[CP15(CP15_FAULT_ADDRESS)] = virt_addr;
 
 		return;
+	}
+	if(need_exclusive){
+		if(core->exclusive_state && (core->exclusive_tag == phys_addr)){
+			core->exclusive_tag = 0xFFFFFFFF;
+			core->exclusive_state = 0;
+			core->exclusive_result = 0;
+		}
+		else{
+			core->exclusive_result = 1;
+			return;
+		}
 	}
 	//phys_addr = virt_addr;
 	#if MMU_DEBUG

@@ -53,9 +53,6 @@ void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_
 	tlb_item* tlb_entry = NULL;
 	DBG("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
 	/* mark the io page */
-	if((va & 0xFFFFF000) == 0xc03aa000){
-		//printf("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
-	}
 	assert(access_type < TLB_TOTAL && access_type >= 0);
 	#if 1
 	if((access_type == DATA_USER_WRITE) || (access_type == DATA_KERNEL_WRITE)){
