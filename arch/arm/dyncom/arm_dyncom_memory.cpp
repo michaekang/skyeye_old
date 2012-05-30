@@ -57,6 +57,7 @@ static BasicBlock* create_mmu_fault_bb(cpu_t* cpu, int fault, Value* fault_addr)
 static BasicBlock* create_io_read_bb(cpu_t* cpu, Value* addr, int size, BasicBlock* load_store_end){
 	BasicBlock *check_io_bb = BasicBlock::Create(_CTX(), "check_io_tlb", cpu->dyncom_engine->cur_func, 0);
 	BasicBlock* bb = check_io_bb;
+	#if 0
 	Value* result = CONST1(0);
 
 	Value* va = AND(addr, CONST(0xFFFFF000));
@@ -85,17 +86,19 @@ static BasicBlock* create_io_read_bb(cpu_t* cpu, Value* addr, int size, BasicBlo
 	Value* phys_addr = OR(phys_page, AND(CONST(0xFFF), addr));
 
 	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 1, cpu->dyncom_engine->bb_trap);
-
+	#endif
 	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
 	params.push_back(v_cpu_ptr);
-	params.push_back(phys_addr);
+	params.push_back(addr);
 	params.push_back(CONST(size));
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
 	new StoreInst(ret, cpu->dyncom_engine->read_value, false, 0, bb);
-	BranchInst::Create(load_store_end, bb);
+	Value* cond = ICMP_EQ(R(CP15_TLB_FAULT_STATUS), CONST(0));
+	//BranchInst::Create(load_store_end, bb);
+	arch_branch(1, load_store_end, cpu->dyncom_engine->bb_trap, cond, bb);
 	return check_io_bb;
 	//new StoreInst(tlb_entry, cpu->dyncom_engine->tlb_entry, false, 0, bb);
 }
@@ -103,6 +106,7 @@ static BasicBlock* create_io_read_bb(cpu_t* cpu, Value* addr, int size, BasicBlo
 static BasicBlock* create_io_write_bb(cpu_t* cpu, Value* addr, Value* value, int size, BasicBlock* load_store_end){
 	BasicBlock *check_io_bb = BasicBlock::Create(_CTX(), "check_io_tlb", cpu->dyncom_engine->cur_func, 0);
 	BasicBlock* bb = check_io_bb;
+	#if 0
 	Value* result = CONST1(0);
 	Value* va = AND(addr, CONST(0xFFFFF000));
 	/* get index , index = tlb_cache[access_type][va & 0xff][(va >> 12) % TLB_SIZE]; */
@@ -126,7 +130,7 @@ static BasicBlock* create_io_write_bb(cpu_t* cpu, Value* addr, Value* value, int
 	Value* phys_page = TRUNC32(AND(tlb_entry, CONST64(0xFFFFF000)));
 	Value* phys_addr = OR(phys_page, AND(CONST(0xFFF), addr));
 	//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(18));
-
+	#endif
 	if (cpu->dyncom_engine->ptr_func_write_memory == NULL) {
 		return NULL;
 	}
@@ -135,12 +139,16 @@ static BasicBlock* create_io_write_bb(cpu_t* cpu, Value* addr, Value* value, int
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
 	params.push_back(v_cpu_ptr);
-	params.push_back(phys_addr);
+	params.push_back(addr);
 	params.push_back(value);
 	params.push_back(CONST(size));
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
 
-	BranchInst::Create(load_store_end, bb);
+	Value* cond = ICMP_EQ(R(CP15_TLB_FAULT_STATUS), CONST(0));
+	//BranchInst::Create(load_store_end, bb);
+	arch_branch(1, load_store_end, cpu->dyncom_engine->bb_trap, cond, bb);
+
+	//BranchInst::Create(load_store_end, bb);
 	return check_io_bb;
 }
 

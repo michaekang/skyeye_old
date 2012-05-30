@@ -467,7 +467,20 @@ static uint32_t arch_arm_read_memory(cpu_t *cpu, addr_t virt_addr, uint32_t size
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
-	phys_addr = virt_addr;
+	
+	fault = check_address_validity(core, virt_addr, &phys_addr, 1, DATA_TLB);
+	if(fault != NO_FAULT){
+		core->CP15[CP15_TLB_FAULT_STATUS - CP15_BASE] = 1;
+		//core->CP15[CP15_TLB_FAULT_ADDR - CP15_BASE] = virt_addr;
+		core->abortSig = true;
+		core->Aborted = ARMul_DataAbortV;
+		core->AbortAddr = virt_addr;
+		core->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
+		core->CP15[CP15(CP15_FAULT_ADDRESS)] = virt_addr;
+
+		return 0;
+	}
+	//phys_addr = virt_addr;
 	#if MMU_DEBUG
 	printf("bus read at %x, pc=0x%x\n", phys_addr, core->Reg[15]);
 	#endif
@@ -500,7 +513,19 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 	addr_t phys_addr = 0;
 	fault_t fault = NO_FAULT;
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
-	phys_addr = virt_addr;
+	fault = check_address_validity(core, virt_addr, &phys_addr, 0, DATA_TLB);
+	if(fault != NO_FAULT){
+		core->CP15[CP15_TLB_FAULT_STATUS - CP15_BASE] = 1;
+		//core->CP15[CP15_TLB_FAULT_ADDR - CP15_BASE] = virt_addr;
+		core->abortSig = true;
+		core->Aborted = ARMul_DataAbortV;
+		core->AbortAddr = virt_addr;
+		core->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
+		core->CP15[CP15(CP15_FAULT_ADDRESS)] = virt_addr;
+
+		return;
+	}
+	//phys_addr = virt_addr;
 	#if MMU_DEBUG
 	printf("bus write at %x pc=0x%x\n", phys_addr, core->Reg[15]);
 	#endif

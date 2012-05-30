@@ -3801,6 +3801,7 @@ void InterpreterMainLoop(cpu_t *core)
 					goto END;
 				}
 				if (cpu->abortSig) {
+					cpu->CP15[CP15_TLB_FAULT_STATUS - CP15_BASE] &= 0xFFFFFFF0;
 					goto END;
 				}
 				if (!cpu->NirqSig) {
