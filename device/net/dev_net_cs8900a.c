@@ -27,6 +27,7 @@
 #include <stdlib.h>
 
 #include "skyeye_device.h"
+#include <skyeye_sched.h>
 #include "skyeye_net.h"
 #include "skyeye_config.h"
 #include "dev_net_cs8900a.h"
@@ -530,7 +531,7 @@ cs8900a_input (struct device_desc *dev)
 
 	io->rx_tail = 0;
 
-	//printf("io->rx_head:%d, io->rx_tail:%d, packet_len:%d\n", io->rx_head, io->rx_tail, packet_len);
+	//printf("cs8900 input io->rx_head:%d, io->rx_tail:%d, packet_len:%d\n", io->rx_head, io->rx_tail, packet_len);
 
 #if 0
 	print_packet (bufptr, packet_len);
@@ -596,6 +597,9 @@ net_cs8900a_setup (struct device_desc *dev)
 	/* see if we need to set default values.
 	 * */
 	set_device_default (dev, cs8900a_net_def);
+
+	int id; 
+	create_thread_scheduler(10000,Periodic_sched,net_cs8900a_update, (void*)dev, &id);
 
 	for (i = 0; i < MAX_DEVICE_NUM; i++) {
 		if (cs8900a_devs[i] == NULL) {
