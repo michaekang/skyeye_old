@@ -2039,8 +2039,9 @@ int DYNCOM_TRANS(swp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	Value *Val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 
 	//arch_write_memory(cpu, bb, phys_addr, Val, 32);
-	memory_write(cpu, bb, Addr, 0, 32);
+	memory_write(cpu, bb, Addr, R(RM), 32);
 	bb = cpu->dyncom_engine->bb;
+	/* FIXME,  ROR(data, 8*UInt(address<1:0>)); */
 	LET(RD, Val);
 	return No_exp;
 }

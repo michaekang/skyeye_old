@@ -5914,6 +5914,9 @@ void InterpreterMainLoop(cpu_t *core)
 			if (fault) goto MMU_EXCEPTION;
 			fault = interpreter_write_memory(core, addr, phys_addr, RM, 32);
 			if (fault) goto MMU_EXCEPTION;
+
+			/* ROR(data, 8*UInt(address<1:0>)); */
+			assert((phys_addr & 0x3) == 0);
 			RD = value;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
