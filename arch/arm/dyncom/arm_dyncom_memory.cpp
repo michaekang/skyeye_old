@@ -228,7 +228,11 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
 	a = new IntToPtrInst(a, PointerType::get(XgetType(Int64Ty), 0), "", bb);
 	Value* tlb_entry = new LoadInst(a, "", false, bb);
 	//new StoreInst(tlb_entry, cpu->dyncom_engine->tlb_entry, false, 0, bb);
+#if DIFF_WRITE
+	Value* result = CONST1(0);
+#else
 	Value* result = ICMP_EQ(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000)), CONST64(32))), va);
+#endif
 	//Value *cond = ICMP_NE(result, CONST1(1));
 	//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(15));
 	BasicBlock *memory_write_bb = BasicBlock::Create(_CTX(), "memory_write", cpu->dyncom_engine->cur_func, 0);
