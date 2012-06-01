@@ -28,6 +28,7 @@ typedef struct lcd_surface{
 	int width;
 	int height;
 	int depth;
+	int need_update;
 
 	uint32 lcd_addr_begin;
 	uint32 lcd_addr_end;

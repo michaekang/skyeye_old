@@ -406,6 +406,13 @@ static void lcd_sdl_update_display(conf_object_t *opaque)
         s->fb->need_update = 0;
     }
 #endif
+    if(s->fb->need_update) {
+        full_update = 1;
+        s->fb->need_int = 0;
+        s->fb->need_update = 0;
+        if(s->master != NULL && s->master->trigger != NULL)
+	    s->master->trigger(s->master->conf_obj);
+    }
 
 //modified by xiaoqiao
 //    src_line  = qemu_get_ram_ptr( base );
@@ -473,8 +480,6 @@ static void lcd_sdl_update_display(conf_object_t *opaque)
 
     dpy_update(s->fb->ds, rect.xmin, rect.ymin, rect.xmax-rect.xmin, rect.ymax-rect.ymin);
 
-    if(s->master != NULL && s->master->trigger != NULL)
-	s->master->trigger(s->master->conf_obj);
 }
 
 static void lcd_sdl_invalidate_display(conf_object_t * opaque)
@@ -482,6 +487,15 @@ static void lcd_sdl_invalidate_display(conf_object_t * opaque)
     // is this called?
     struct lcd_sdl_device *dev = (lcd_sdl_device*)(opaque->obj);
     dev->fb->need_update = 1;
+}
+
+static int lcd_sdl_update(conf_object_t *opaque, lcd_surface_t* surface)
+{
+	struct lcd_sdl_device *dev = (lcd_sdl_device*)(opaque->obj);
+        fb_state_t* s = dev->fb;
+	s->fb_base = surface->lcd_addr_begin;
+	s->need_update = 1;
+	return 0; 
 }
 
 static int lcd_sdl_open(conf_object_t *opaque, lcd_surface_t* surface)
@@ -604,7 +618,7 @@ static conf_object_t* new_lcd_sdl(char* obj_name){
 	lcd_ctrl->conf_obj = dev->obj;
 	lcd_ctrl->lcd_open = lcd_sdl_open;
 	lcd_ctrl->lcd_close = lcd_sdl_close;
-	lcd_ctrl->lcd_update = lcd_sdl_update_display;
+	lcd_ctrl->lcd_update = lcd_sdl_update;
 	lcd_ctrl->lcd_filter_read = NULL;
 	lcd_ctrl->lcd_filter_write = NULL;
 	lcd_ctrl->lcd_lookup_color = NULL;

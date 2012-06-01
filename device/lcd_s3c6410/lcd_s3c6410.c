@@ -383,6 +383,8 @@ static exception_t s3c6410_fb_write(conf_object_t *opaque, generic_address_t off
 		DBG("In %s, windows0 buf start=0x%x", __FUNCTION__, data);
 		regs->vidw00add0b0 = data;
 		surface->lcd_addr_begin = data;
+		surface->need_update = 1;
+		lcd_ctrl->lcd_update(lcd_ctrl->conf_obj, surface);	
 		break;
 	case 0xa4:
 		regs->vidw00add0b1 = data;

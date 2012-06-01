@@ -36,7 +36,7 @@ typedef struct lcd_ctrl{
 	conf_object_t* conf_obj;
 	int (*lcd_open) (conf_object_t *lcd_dev, lcd_surface_t* surface);
 	int (*lcd_close) (conf_object_t *lcd_dev);
-	int (*lcd_update) (conf_object_t *lcd_dev);
+	int (*lcd_update) (conf_object_t *lcd_dev, lcd_surface_t* surface);
 	int (*lcd_filter_read) (conf_object_t *lcd_dev, uint32 addr, uint32 *data, size_t count);
 	int (*lcd_filter_write) (conf_object_t *lcd_dev, uint32 addr, uint32 data, size_t count);
 	uint32 (*lcd_lookup_color) (conf_object_t *lcd_dev, uint32 color); /* return RGB32 color. */

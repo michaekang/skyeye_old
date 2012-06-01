@@ -562,7 +562,7 @@ static int gtk_lcd_filter_write(conf_object_t *lcd_dev, uint32 addr, uint32 data
 	return 0;
 }
 
-static int gtk_lcd_update(conf_object_t *lcd_dev)
+static int gtk_lcd_update(conf_object_t *lcd_dev, lcd_surface_t* surface)
 {
 	lcd_gtk_device* dev = lcd_dev->obj;
 	if (dev == NULL || dev->gtk_win == NULL) return -1;
@@ -578,7 +578,7 @@ static int gtk_lcd_update(conf_object_t *lcd_dev)
 }
 
 static void timer_update(conf_object_t *lcd_dev){
-	gtk_lcd_update(lcd_dev);
+	gtk_lcd_update(lcd_dev,NULL);
 }
 
 static conf_object_t* new_gtk_lcd(char* obj_name)
