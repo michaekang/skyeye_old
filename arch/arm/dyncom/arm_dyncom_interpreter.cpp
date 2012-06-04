@@ -977,8 +977,9 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
 			else
 				index = 0;
 		}
-		else
-			index = rm >> shift_imm;
+		else {
+			index = static_cast<int>(rm) >> shift_imm;
+		}
 		break;
 	case 3:
 		DEBUG_MSG;
