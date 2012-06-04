@@ -4303,7 +4303,7 @@ void InterpreterMainLoop(cpu_t *core)
 						cpu->Reg[i] = ret;
 						addr += 4;
 						if ((addr & 0xfff) == 0) {
-							fault = check_address_validity(cpu, addr, &phys_addr, 0);
+							fault = check_address_validity(cpu, addr, &phys_addr, 1);
 						} else {
 							phys_addr += 4;
 						}
@@ -4324,7 +4324,7 @@ void InterpreterMainLoop(cpu_t *core)
 						cpu->Reg_usr[0] = ret;
 					addr += 4;
 					if ((addr & 0xfff) == 0) {
-						fault = check_address_validity(cpu, addr, &phys_addr, 0);
+						fault = check_address_validity(cpu, addr, &phys_addr, 1);
 					} else {
 						phys_addr += 4;
 					}
@@ -4366,7 +4366,7 @@ void InterpreterMainLoop(cpu_t *core)
 						cpu->Reg[i] = ret;
 						addr += 4;
 						if ((addr & 0xfff) == 0) {
-							fault = check_address_validity(cpu, addr, &phys_addr, 0);
+							fault = check_address_validity(cpu, addr, &phys_addr, 1);
 						} else {
 							phys_addr += 4;
 						}
@@ -4386,7 +4386,7 @@ void InterpreterMainLoop(cpu_t *core)
 						cpu->Reg[i] = ret;
 						addr += 4;
 						if ((addr & 0xfff) == 0) {
-							fault = check_address_validity(cpu, addr, &phys_addr, 0);
+							fault = check_address_validity(cpu, addr, &phys_addr, 1);
 						} else {
 							phys_addr += 4;
 						}
