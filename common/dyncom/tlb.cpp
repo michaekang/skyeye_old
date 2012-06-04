@@ -98,16 +98,38 @@ void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_
 void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type)
 {
 	if(access_type == DATA_TLB){
-		tlb_cache[DATA_USER_READ][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
-		tlb_cache[DATA_KERNEL_READ][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
-		tlb_cache[DATA_USER_WRITE][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
-		tlb_cache[DATA_KERNEL_WRITE][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
-		tlb_cache[IO_TLB][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
-		tlb_cache[MIXED_TLB][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		if((va & (ASID_SIZE - 1)) == 0){
+			int i = 0;
+			for(; i < ASID_SIZE; i++){
+				tlb_cache[DATA_USER_READ][i][(va >> 12) % TLB_SIZE] = 0;
+				tlb_cache[DATA_KERNEL_READ][i][(va >> 12) % TLB_SIZE] = 0;
+				tlb_cache[DATA_USER_WRITE][i][(va >> 12) % TLB_SIZE] = 0;
+				tlb_cache[DATA_KERNEL_WRITE][i][(va >> 12) % TLB_SIZE] = 0;
+				tlb_cache[IO_TLB][i][(va >> 12) % TLB_SIZE] = 0;
+				tlb_cache[MIXED_TLB][i][(va >> 12) % TLB_SIZE] = 0;
+			}
+		}
+		else{
+			tlb_cache[DATA_USER_READ][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+			tlb_cache[DATA_KERNEL_READ][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+			tlb_cache[DATA_USER_WRITE][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+			tlb_cache[DATA_KERNEL_WRITE][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+			tlb_cache[IO_TLB][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+			tlb_cache[MIXED_TLB][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		}
 	}
 	else if(access_type == INSN_TLB){
-		tlb_cache[INSN_USER][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
-		tlb_cache[INSN_KERNEL][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		if((va & (ASID_SIZE - 1)) == 0){
+			int i = 0;
+			for(; i < ASID_SIZE; i++){
+				tlb_cache[INSN_USER][i][(va >> 12) % TLB_SIZE] = 0;
+				tlb_cache[INSN_KERNEL][i][(va >> 12) % TLB_SIZE] = 0;
+			}
+		}
+		else{
+			tlb_cache[INSN_USER][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+			tlb_cache[INSN_KERNEL][va & (ASID_SIZE - 1)][(va >> 12) % TLB_SIZE] = 0;
+		}
 	}else{
 		skyeye_error("Wrong tlb type %d\n", access_type);
 	}
