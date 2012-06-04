@@ -2019,7 +2019,6 @@ int DYNCOM_TRANS(swi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 #if OPT_LOCAL_REGISTERS
 	/* Do nothing, we will finish syscall in trap */
 	//LOG("OPT_LOCAL_REGISTERS swi inst\n");
-	printf("In swi\n");
 	arch_syscall(cpu, bb, BITS(0,19));
 #else
 	arch_syscall(cpu, bb, BITS(0,19));

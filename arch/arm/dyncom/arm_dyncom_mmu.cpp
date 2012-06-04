@@ -382,7 +382,7 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 		core->WriteData[core->CurrWrite] = value;
 		core->WritePc[core->CurrWrite] = core->Reg[15];
 		core->CurrWrite++;
-		printf("In %s, pc=0x%x, addr=0x%x, data=0x%x\n", __FUNCTION__, core->Reg[15],  phys_addr | (virt_addr & 3), value);
+		//printf("In %s, pc=0x%x, addr=0x%x, data=0x%x\n", __FUNCTION__, core->Reg[15],  phys_addr | (virt_addr & 3), value);
 		#if 0
 		/* found the instruction of write action */
 		if(value == 0xbee0f770 && core->Reg[15] == 0x400bb584){
@@ -416,7 +416,7 @@ fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr,
 
 #if CHECK_IN_WRITE
 	if(is_fast_interp_code(cpu, phys_addr) || is_translated_code(cpu, phys_addr)){
-		printf("In %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
+		//printf("In %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
 		//if(is_fast_interp_code(cpu, phys_addr)){
 		//printf("In %s, fast interp page 0x%x is written, at 0x%x\n", __FUNCTION__, phys_addr & 0xFFFFF000, core->Reg[15]);
 		flush_bb(phys_addr);
@@ -596,7 +596,7 @@ static void arch_arm_write_memory(cpu_t *cpu, addr_t virt_addr, uint32_t value, 
 #if CHECK_IN_WRITE 
         if (is_translated_code(cpu, phys_addr) || is_fast_interp_code(cpu, phys_addr)) {
 		//printf("In %s, selfmodified code is 0x%x\n", __FUNCTION__, phys_addr);
-		printf("In %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
+		//printf("In %s, selfmodified code is 0x%x, pc=0x%x\n", __FUNCTION__, phys_addr, core->Reg[15]);
 		//if(is_translated_code(cpu, phys_addr)){
 	                //clear native code when code section was written.
 		//printf("clear code cache 0x%x in %s\n", phys_addr, __FUNCTION__);

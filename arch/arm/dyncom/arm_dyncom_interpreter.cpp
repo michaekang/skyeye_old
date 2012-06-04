@@ -44,7 +44,7 @@ using namespace std;
 #include "skyeye_ram.h"
 #include "vfp/vfp.h"
 
-#define HYBRID_MODE		0
+#define HYBRID_MODE		1
 
 #define CHECK_RS 	if(RS == 15) rs += 8
 #define CHECK_RM 	if(RM == 15) rm += 8
