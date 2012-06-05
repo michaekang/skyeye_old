@@ -34,6 +34,7 @@
 #include "dyncom/tlb.h"
 //static tlb_item* tlb_cache = NULL;
 static uint64_t tlb_cache[TLB_TOTAL][ASID_SIZE][TLB_SIZE];
+static int max_context_id = 0;
 //static tlb_table tlb[TLB_TOTAL];
 int get_phys_page(unsigned int va, int context_id, unsigned int &pa, tlb_type_t access_type)
 {
@@ -54,6 +55,8 @@ void insert(unsigned int va, int context_id, unsigned int pa, tlb_type_t access_
 	DBG("In %s, index=0x%x, va=0x%x, pa=0x%x, tlb_entry=0x%llx, access_type=%d\n", __FUNCTION__, ((va & 0xff) * TLB_SIZE) + ((va >> 12) % TLB_SIZE), va, pa, (unsigned long)tlb_entry, access_type);
 	/* mark the io page */
 	assert(access_type < TLB_TOTAL && access_type >= 0);
+	if(context_id > max_context_id)
+		max_context_id = context_id;
 	#if 1
 	if((access_type == DATA_USER_WRITE) || (access_type == DATA_KERNEL_WRITE)){
 		/* set to MIXED type for the page also contain some translated instructions */
@@ -100,7 +103,7 @@ void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type)
 	if(access_type == DATA_TLB){
 		if((va & (ASID_SIZE - 1)) == 0){
 			int i = 0;
-			for(; i < ASID_SIZE; i++){
+			for(; i <= max_context_id; i++){
 				tlb_cache[DATA_USER_READ][i][(va >> 12) % TLB_SIZE] = 0;
 				tlb_cache[DATA_KERNEL_READ][i][(va >> 12) % TLB_SIZE] = 0;
 				tlb_cache[DATA_USER_WRITE][i][(va >> 12) % TLB_SIZE] = 0;
@@ -121,7 +124,7 @@ void erase_by_mva(cpu_t* cpu, unsigned int va, tlb_type_t access_type)
 	else if(access_type == INSN_TLB){
 		if((va & (ASID_SIZE - 1)) == 0){
 			int i = 0;
-			for(; i < ASID_SIZE; i++){
+			for(; i <= max_context_id; i++){
 				tlb_cache[INSN_USER][i][(va >> 12) % TLB_SIZE] = 0;
 				tlb_cache[INSN_KERNEL][i][(va >> 12) % TLB_SIZE] = 0;
 			}
