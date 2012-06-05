@@ -20,6 +20,16 @@
 #include "dyncom/defines.h"
 #include "bank_defs.h"
 #include "portable/portable.h"
+
+static void check_intr(cpu_t *cpu,BasicBlock *bb_cur,BasicBlock *bb_trap,BasicBlock *bb_target){
+	LoadInst *v_cpsr  =  new LoadInst(cpu->ptr_gpr[16],"",false,bb_cur);
+	LoadInst *v_Nirq_sig  =  new LoadInst(cpu->ptr_Nirq,"",false,bb_cur);
+	Value *int_en = BinaryOperator::Create(Instruction::And,v_cpsr,CONST(0x80),"",bb_cur);
+	Value *irq_pending = BinaryOperator::Create(Instruction::Or,int_en,v_Nirq_sig,"",bb_cur);
+	Value *gout = new ICmpInst(*bb_cur,ICmpInst::ICMP_EQ,irq_pending,CONST(0),"");
+	BranchInst::Create(bb_trap,bb_target,gout,bb_cur);
+}
+
 /**
  * @brief translate a single instruction. 
  *
@@ -36,14 +46,6 @@
  *	NULL if the instruction always branches away
  *	(The caller needs this to link the basic block)
  */
-static void check_intr(cpu_t *cpu,BasicBlock *bb_cur,BasicBlock *bb_trap,BasicBlock *bb_target){
-	LoadInst *v_cpsr  =  new LoadInst(cpu->ptr_gpr[16],"",false,bb_cur);
-	LoadInst *v_Nirq_sig  =  new LoadInst(cpu->ptr_Nirq,"",false,bb_cur);
-	Value *int_en = BinaryOperator::Create(Instruction::And,v_cpsr,CONST(0x80),"",bb_cur);
-	Value *irq_pending = BinaryOperator::Create(Instruction::Or,int_en,v_Nirq_sig,"",bb_cur);
-	Value *gout = new ICmpInst(*bb_cur,ICmpInst::ICMP_EQ,irq_pending,CONST(0),"");
-	BranchInst::Create(bb_trap,bb_target,gout,bb_cur);
-}
 BasicBlock *
 translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 	BasicBlock *bb_target,	/* target for branch/call/rey */
@@ -129,8 +131,17 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 	}
 	if ((tag & (TAG_END_PAGE | TAG_EXCEPTION)) && !is_user_mode(cpu))
 		BranchInst::Create(bb_ret, cur_bb);
-	else if (tag & TAG_BRANCH)
-		check_intr(cpu,cur_bb,bb_trap,bb_target);
+	else if (tag & TAG_BRANCH){
+		tag_t dummy1;
+		addr_t new_pc, dummy2;
+		cpu->f.tag_instr(cpu, pc, &dummy1, &new_pc, &dummy2);
+		dummy1 = get_tag(cpu, new_pc);
+		if (dummy1 & TAG_TRANSLATED)
+			check_intr(cpu,cur_bb,bb_trap,bb_target);
+		else
+			BranchInst::Create(bb_target, cur_bb);
+//		check_intr(cpu,cur_bb,bb_trap,bb_target);
+	}
 	else if (tag & (TAG_CALL | TAG_RET))
 		BranchInst::Create(bb_target,cur_bb);
 	else if (tag & TAG_TRAP)
