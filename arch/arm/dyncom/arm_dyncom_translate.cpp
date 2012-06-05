@@ -509,7 +509,7 @@ int arm_tag_branch(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *ne
 //		*new_pc = NEW_PC_NONE;
 	//printf("in %s pc is %x new pc is %x\n", __FUNCTION__, pc, ARM_BRANCH_TARGET);
 //	sleep(1);
-	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
+	//arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	/* If not in the same page, so address maybe invalidate. */
 	if ((pc >> 12) != (*new_pc >> 12))
 		*new_pc = NEW_PC_NONE;
@@ -549,11 +549,21 @@ int arm_tag_branch(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *ne
 			LET(CPSR_REG, cpsr);						\
 		}
 		
-#define SET_NEW_PAGE if (!cpu->is_user_mode) { 				\
+//#define SET_NEW_PAGE(pc) if (!cpu->is_user_mode) { 				\
 	Value *new_page_effec = AND(R(15), CONST(0xfffff000));		\
 	new StoreInst(new_page_effec, cpu->ptr_CURRENT_PAGE_EFFEC, bb);	\
-	}; LET(PHYS_PC, R(15));
-	
+	Value *v_page_effec = new LoadInst(cpu->ptr_CURRENT_PAGE_EFFEC, "", false, bb); \
+	Value *cond = new ICmpInst(*bb, ICmpInst::ICMP_EQ, new_page_effec, v_page_effec, ""); \
+	LET(PHYS_PC, SELECT(cond, CONST(pc), R(15)));					\
+	}; 
+#define SET_NEW_PAGE(pc) if (!cpu->is_user_mode) { 				\
+	Value *new_page_effec = AND(R(15), CONST(0xfffff000));		\
+	new StoreInst(new_page_effec, cpu->ptr_CURRENT_PAGE_EFFEC, bb);	\
+	LET(PHYS_PC, R(15));					\
+	}; 
+
+#define SET_NEW_PAGE_PHYS_PC(pc) LET(PHYS_PC, CONST(pc));
+
 #define SET_NEW_PAGE_PC(pc) if (!cpu->is_user_mode) { 				\
 	Value *new_page_effec = AND(CONST(pc), CONST(0xfffff000));		\
 	new StoreInst(new_page_effec, cpu->ptr_CURRENT_PAGE_EFFEC, bb);	\
@@ -593,7 +603,7 @@ int DYNCOM_TRANS(add)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *ret = ADD(op1, op2);
 	LET(RD, ret);
 	if (RD == 15) {
-		SET_NEW_PAGE;
+		SET_NEW_PAGE(pc);
 		if (SBIT)
 		{
 			INCOMPLETE;
@@ -648,22 +658,32 @@ int DYNCOM_TRANS(bbl)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			SET_NEW_PAGE_PC(pc + 8 + BOPERAND);
 		}
 	} else {
+		addr_t target = 0;
 		if (BIT(24)) {
 			if(BITS(20, 27) >= 0xb8 && BITS(20, 27) <=0xbf) {
 				LET(14, ADD(R(15),CONST(4)));
 				LET(15, SUB(ADD(R(15), CONST(8)), CONST(BOPERAND)));
+				target = pc + 8 - BOPERAND; 
 			} else if (BITS(20, 27) >= 0xb0 && BITS(20, 27) <=0xb7) {
 				LET(14, ADD(R(15),CONST(4)));
 				LET(15, ADD(ADD(R(15), CONST(8)),CONST(BOPERAND))); 
+				target = pc + 8 + BOPERAND;
 			}
 		} else {
 			if(BIT(23)) {
-				LET(15, SUB(ADD(R(15), CONST(8)),CONST(BOPERAND))); 
+				LET(15, SUB(ADD(R(15), CONST(8)),CONST(BOPERAND)));
+				target = pc + 8 - BOPERAND;
 			} else {
-				LET(15, ADD(ADD(R(15), CONST(8)),CONST(BOPERAND))); 
+				LET(15, ADD(ADD(R(15), CONST(8)),CONST(BOPERAND)));
+				target = pc + 8 + BOPERAND;
 			}
 		}
-		SET_NEW_PAGE;
+
+		if((target & 0xFFFFF000) != (pc & 0xFFFFF000)){
+			SET_NEW_PAGE(pc);
+		}
+		else
+			SET_NEW_PAGE_PHYS_PC(pc);
 	}
 	return No_exp;
 }
@@ -708,7 +728,7 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		/* Set thumb bit*/	
 		STORE(TRUNC1(AND(R(RM), CONST(0x1))), ptr_T);	
 
-		SET_NEW_PAGE;
+		SET_NEW_PAGE(pc);
 	} else {
 		if (cpu->is_user_mode)
 			LET(14, CONST(pc + INSTR_SIZE));
@@ -727,7 +747,12 @@ int DYNCOM_TRANS(blx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		signed_int = signed_int << 2;
 		LET(15, ADD(R(15), CONST(8 + signed_int + (BIT(24) << 1))));
 		STORE(TRUNC1(CONST(0x1)), ptr_T);
-		SET_NEW_PAGE;
+		addr_t target = pc + 8 + signed_int + (BIT(24) << 1);
+		if((target & 0xFFFFF000) != (pc & 0xFFFFF000)){
+			SET_NEW_PAGE(pc);
+		}
+		else
+			SET_NEW_PAGE_PHYS_PC(pc);
 	}
 	return No_exp;
 }
@@ -739,7 +764,7 @@ int DYNCOM_TRANS(bx)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *ret = AND(op1, CONST(0xfffffffe));
 
 	LET(15, ret);
-	SET_NEW_PAGE;
+	SET_NEW_PAGE(pc);
 	return No_exp;
 }
 int DYNCOM_TRANS(bxj)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
@@ -886,7 +911,7 @@ int DYNCOM_TRANS(ldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		bb = cpu->dyncom_engine->bb;
 
 	if (BIT(15)) {
-		SET_NEW_PAGE;
+		SET_NEW_PAGE(pc);
 		if (BITS(25, 27) == 4 && BIT(22) == 1 && BIT(20) == 1) {
 			LET(CPSR_REG, R(SPSR_REG));
 			cpu->f.emit_decode_reg(cpu, bb);
@@ -1331,7 +1356,7 @@ int DYNCOM_TRANS(mov)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 		}
 	}
 	if (RD == 15) {
-		SET_NEW_PAGE;
+		SET_NEW_PAGE(pc);
 	}
 	
 	/* Shifter carry out should have been handled in SCO_OPERAND, old code left here in case */
@@ -1999,7 +2024,7 @@ int DYNCOM_TRANS(sub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *ret = SUB(op1, op2);
 	LET(RD, ret);
 	if(RD == 15){
-		SET_NEW_PAGE;
+		SET_NEW_PAGE(pc);
 	}
 
 	if(SBIT) {
@@ -2348,7 +2373,12 @@ int DYNCOM_TRANS(b_2_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t p
 	DBG("In %s, pc=0x%x, imm=0x%x, instr=0x%x, tinstr=0x%x\n", __FUNCTION__, pc, imm, instr, tinstr);
 	//LET(14, ADD(ADD(R(15), CONST(4)), CONST(imm)));
 	LET(15, ADD(R(15), CONST(4 + imm)));
-	SET_NEW_PAGE;
+	if((pc >> 12) != ((pc + 4 + imm) >> 12)){
+		SET_NEW_PAGE(pc);
+	}
+	else
+		SET_NEW_PAGE_PHYS_PC(pc);
+
 	/* return the instruction size */
 	return Byte_2;
 }
@@ -2360,7 +2390,11 @@ int DYNCOM_TRANS(b_cond_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_
 	DBG("In %s, pc=0x%x, imm=0x%x, instr=0x%x, tinstr=0x%x\n", __FUNCTION__, pc, imm, instr, tinstr);
 	//LET(14, ADD(ADD(R(15), CONST(4)), CONST(imm)));
 	LET(15, ADD(R(15), CONST(4 + imm)));
-	SET_NEW_PAGE;
+	if((pc >> 12) != ((pc + 4 + imm) >> 12)){
+		SET_NEW_PAGE(pc);
+	}
+	else
+		SET_NEW_PAGE_PHYS_PC(pc);
 	/* return the instruction size */
 	return Byte_2;
 }
@@ -2379,7 +2413,7 @@ int DYNCOM_TRANS(bl_2_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t 
 	Temp = R(15);
 	LET(15, ADD(R(14), CONST(imm)));
 	LET(14, OR(ADD(Temp, CONST(2)), CONST(1)));
-	SET_NEW_PAGE;
+	SET_NEW_PAGE(pc);
 
 	return Byte_2;
 }
@@ -2392,7 +2426,7 @@ int DYNCOM_TRANS(blx_1_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t
 	LET(14, OR(ADD(Temp, CONST(2)), CONST(1)));
 	/* Clear thumb bit */
 	STORE(CONST1(0), ptr_T);
-	SET_NEW_PAGE;
+	SET_NEW_PAGE(pc);
 	return Byte_2;
 }
 //end of translation
@@ -2447,10 +2481,29 @@ int DYNCOM_TAG(and)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 int DYNCOM_TAG(bbl)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
-//	if(!is_user_mode(cpu))
-//		*new_pc = NEW_PC_NONE;
-	if(instr >> 28 != 0xe)
+
+	*tag = TAG_BRANCH;
+	addr_t target = 0;
+	if (BIT(24)) {
+		if(BITS(20, 27) >= 0xb8 && BITS(20, 27) <=0xbf) {
+			target = pc + 8 - BOPERAND;
+		} else if (BITS(20, 27) >= 0xb0 && BITS(20, 27) <=0xb7) {
+			target = pc + 8 + BOPERAND;
+		}
+	} else {
+		if(BIT(23)) {
+			target = pc + 8 - BOPERAND;
+		} else {
+			target = pc + 8 + BOPERAND;
+		}
+	}
+	*new_pc = target;
+	/* If not in the same page, so address maybe invalidate. */
+	if ((pc >> 12) != (*new_pc >> 12))
+		*new_pc = NEW_PC_NONE;
+	*next_pc = pc + INSTR_SIZE;
+
+	if(instr >> 28 != 0xe && ((instr >> 28) != 0xF))
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
 }
@@ -2472,16 +2525,26 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 {
 	int instr_size = INSTR_SIZE;
 //	printf("pc is %x in %s instruction is not implementated.\n", pc ,__FUNCTION__);
-	arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
-	if(!is_user_mode(cpu))
+        uint32_t opc = instr;
+        *tag = TAG_BRANCH;
+       
+	if (BITS(20, 27) == 0x12 && BITS(4, 7) == 0x3) {
 		*new_pc = NEW_PC_NONE;
-	/* Thumb mode should be enter */
-	*new_pc = NEW_PC_NONE;
+	}
+	else{
+		int signed_immed_24 = BITS(0, 23);
+		int signed_int = signed_immed_24;
+		signed_int = (signed_int) & 0x800000 ? (0x3F000000 | signed_int) : signed_int;
+		signed_int = signed_int << 2;
+		*new_pc = pc + 8 + signed_int + (BIT(24) << 1);
+		/* If not in the same page, so address maybe invalidate. */
+		if ((pc >> 12) != ((*new_pc) >> 12))
+			*new_pc = NEW_PC_NONE;
+	}
+	*next_pc = pc + INSTR_SIZE;
 
 	if(instr >> 28 != 0xe && ((instr >> 28) != 0xF))
 		*tag |= TAG_CONDITIONAL;
-// for kernel
-//	exit(-1);
 	return instr_size;
 }
 int DYNCOM_TAG(bx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
@@ -3314,8 +3377,10 @@ int DYNCOM_TAG(b_2_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, add
 	sint32 imm =((tinstr & 0x3FF) << 1) | ((tinstr & (1 << 10)) ? 0xFFFFF800 : 0);
 	DBG("In %s, tinstr=0x%x, imm=0x%x\n", __FUNCTION__, tinstr, imm);
 	/* FIXME, should optimize a definite address */
-        *new_pc = NEW_PC_NONE;
-	//*new_pc = pc + imm +4;
+	if((pc >> 12) != ((pc + imm + 4) >> 12))
+		*new_pc = NEW_PC_NONE;
+	else
+		*new_pc = pc + imm +4;
 	*next_pc = pc + INSTR_SIZE;
 	DBG("pc is %x in %s instruction, new_pc=0x%x.\n", pc, __FUNCTION__, *new_pc);
 	return instr_size;
@@ -3330,7 +3395,10 @@ int DYNCOM_TAG(b_cond_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, 
 	sint32 imm = (((tinstr & 0x7F) << 1) | ((tinstr & (1 << 7))?0xFFFFFF00 : 0));
 	DBG("In %s, tinstr=0x%x, imm=0x%x\n", __FUNCTION__, tinstr, imm);
 	/* FIXME, should optimize a definite address */
-        *new_pc = NEW_PC_NONE;
+	if((pc >> 12) != ((pc + imm + 4) >> 12))
+		*new_pc = NEW_PC_NONE;
+	else
+		*new_pc = pc + imm + 4;
 	*next_pc = pc + INSTR_SIZE;
 	return instr_size;
 }
