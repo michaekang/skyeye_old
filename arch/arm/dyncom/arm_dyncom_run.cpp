@@ -288,7 +288,8 @@ extern "C" void arm_dyncom_Abort(ARMul_State * state, ARMword vector);
 
 static void arm_dyncom_syscall(cpu_t* cpu, uint32_t num){
 
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	sky_pref_t* pref = get_skyeye_pref();
 	//printf("in %s user_mode_sim %d", __FUNCTION__, pref->user_mode_sim);
 	if(pref->user_mode_sim)
@@ -1008,7 +1009,8 @@ void switch_mode_IR(cpu_t *cpu,Value* mode,BasicBlock *bb_cur){
 }
 void arm_switch_mode(cpu_t *cpu)
 {
-	arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
+	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
 	switch_mode(core, core->Cpsr & 0x1f);
 }
 
