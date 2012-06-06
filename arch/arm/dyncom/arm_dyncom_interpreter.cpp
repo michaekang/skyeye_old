@@ -1945,6 +1945,26 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ldr)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(ldrcond)(unsigned int inst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
+	ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+
+	inst_base->cond = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->inst = inst;
+	inst_cream->get_addr = get_calc_addr_op(inst);
+
+	if (BITS(inst, 12, 15) == 15) {
+		inst_base->br = INDIRECT_BRANCH;
+	}
+	return inst_base;
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(uxth)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(uxth_inst));
@@ -3200,6 +3220,7 @@ const transop_fp_t arm_instruction_trans[] = {
 	INTERPRETER_TRANSLATE(ldrb),
 	INTERPRETER_TRANSLATE(strb),
 	INTERPRETER_TRANSLATE(ldr),
+	INTERPRETER_TRANSLATE(ldrcond),
 	INTERPRETER_TRANSLATE(str),
 	INTERPRETER_TRANSLATE(cdp),
 	INTERPRETER_TRANSLATE(stc),
@@ -3697,7 +3718,7 @@ void InterpreterMainLoop(cpu_t *core)
 		&&MLA_INST,&&SSAT_INST,&&USAT_INST,&&MRS_INST,&&MSR_INST,&&AND_INST,&&BIC_INST,&&LDM_INST,&&EOR_INST,&&ADD_INST,&&RSB_INST,&&RSC_INST,
 		&&SBC_INST,&&ADC_INST,&&SUB_INST,&&ORR_INST,&&MVN_INST,&&MOV_INST,&&STM_INST,&&LDM_INST,&&LDRSH_INST,&&STM_INST,&&LDM_INST,&&LDRSB_INST,
 		&&STRD_INST,&&LDRH_INST,&&STRH_INST,&&LDRD_INST,&&STRT_INST,&&STRBT_INST,&&LDRBT_INST,&&LDRT_INST,&&MRC_INST,&&MCR_INST,&&MSR_INST,
-		&&LDRB_INST,&&STRB_INST,&&LDR_INST,&&STR_INST,&&CDP_INST,&&STC_INST,&&LDC_INST,&&SWI_INST,&&BBL_INST,&&B_2_THUMB, &&B_COND_THUMB, 
+		&&LDRB_INST,&&STRB_INST,&&LDR_INST,&&LDRCOND_INST, &&STR_INST,&&CDP_INST,&&STC_INST,&&LDC_INST,&&SWI_INST,&&BBL_INST,&&B_2_THUMB, &&B_COND_THUMB, 
 		&&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,&&INIT_INST_LENGTH,&&END
 		};
 
@@ -4446,15 +4467,39 @@ void InterpreterMainLoop(cpu_t *core)
 	{
 		INC_ICOUNTER;
 		ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+		//if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
 			if (fault) goto MMU_EXCEPTION;
 			unsigned int value;
 			//bus_read(32, addr, &value);
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
-			if (fault) {
-				goto MMU_EXCEPTION;
+			if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
+				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+			else
+				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = ROTATE_RIGHT_32(value,(8*(addr&0x3))) ;
+			if (BITS(inst_cream->inst, 12, 15) == 15) {
+				/* For armv5t, should enter thumb when bits[0] is non-zero. */
+				cpu->TFlag = value & 0x1;
+				cpu->Reg[15] &= 0xFFFFFFFE;
+				INC_PC(sizeof(ldst_inst));
+				goto PROFILING;
 			}
+		//}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(ldst_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+	LDRCOND_INST:
+	{
+		INC_ICOUNTER;
+		ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+		if (CondPassed(cpu, inst_base->cond)) {
+			fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
+			if (fault) goto MMU_EXCEPTION;
+			unsigned int value;
+			//bus_read(32, addr, &value);
+			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
 			if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
 				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			else
