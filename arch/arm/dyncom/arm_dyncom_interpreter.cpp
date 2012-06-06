@@ -3790,10 +3790,11 @@ void InterpreterMainLoop(cpu_t *core)
 		}
 #if HYBRID_MODE
 		/* check if the native code of dyncom is available */
-		fast_map hash_map = core->dyncom_engine->fmap;
-		void * pfunc = NULL;
-		PFUNC(phys_addr);
-		if(pfunc){
+		//fast_map hash_map = core->dyncom_engine->fmap;
+		//void * pfunc = NULL;
+		//PFUNC(phys_addr);
+		//if(pfunc){
+		if(is_translated_code(core, phys_addr)){
 			int rc = JIT_RETURN_NOERR;
 			core->current_page_phys = phys_addr & 0xfffff000;
 			core->current_page_effec = cpu->Reg[15] & 0xfffff000;
