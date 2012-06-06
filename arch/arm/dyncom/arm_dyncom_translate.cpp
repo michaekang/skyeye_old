@@ -3427,14 +3427,15 @@ int DYNCOM_TAG(bl_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, ad
 	//arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	*tag = TAG_CONTINUE;
 	/* some times bl_1 will be located at the end of page */
-	*tag |= TAG_NEED_PC;
+	if((pc & 0xFFFFFFFE) == 0xFFFFFFFE)
+		*tag |= TAG_NEED_PC;
 	*next_pc = pc + INSTR_SIZE;
 	return instr_size;
 }
 int DYNCOM_TAG(bl_2_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = 2;
-	*tag = TAG_BRANCH;
+	*tag = TAG_CALL;
 	/* FIXME, should optimize a definite address */
 	*new_pc = NEW_PC_NONE;
 	*next_pc = pc + INSTR_SIZE;
@@ -3447,9 +3448,9 @@ int DYNCOM_TAG(blx_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, a
 	/* FIXME, should optimize a definite address */
 	*new_pc = NEW_PC_NONE;
 	*next_pc = pc + INSTR_SIZE;
-	*tag = TAG_BRANCH;
+	*tag = TAG_CALL;
 
-	*tag |= TAG_STOP;
+	//*tag |= TAG_STOP;
 	return instr_size;
 }
 /* Floating point instructions */
