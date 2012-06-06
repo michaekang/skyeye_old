@@ -2500,8 +2500,15 @@ int DYNCOM_TAG(bbl)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	}
 	*new_pc = target;
 	/* If not in the same page, so address maybe invalidate. */
-	if ((pc >> 12) != (*new_pc >> 12))
-		*new_pc = NEW_PC_NONE;
+	if(is_usermode_func(cpu)){
+		if ((pc >> 12) != (*new_pc >> 12))
+			*new_pc = NEW_PC_NONE;
+	}
+	else{
+		/* here we think the kernel tlb is never changed */
+		if ((pc >> 12) != (*new_pc >> 12)){
+		}
+	}
 	*next_pc = pc + INSTR_SIZE;
 
 	if(instr >> 28 != 0xe && ((instr >> 28) != 0xF))
