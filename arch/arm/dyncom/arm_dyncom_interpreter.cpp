@@ -3244,7 +3244,7 @@ bb_map CreamCache[65536];
 unsigned int DummyCache[0x100000];
 #endif
 
-#define HASH(x) ((x + (x << 2) + (x >> 6)) % 65536)
+#define HASH(x) ((x + (x << 3) + (x >> 6)) % 65536)
 void insert_bb(unsigned int addr, int start)
 {
 #ifdef USE_DUMMY_CACHE
@@ -3255,7 +3255,7 @@ void insert_bb(unsigned int addr, int start)
 #endif
 }
 
-#define TRANS_THRESHOLD                 15000
+#define TRANS_THRESHOLD                 35000
 int find_bb(cpu_t* cpu, unsigned int addr, int &start)
 {
 	int ret = -1;
