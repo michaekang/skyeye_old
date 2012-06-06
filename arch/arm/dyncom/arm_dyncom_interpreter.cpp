@@ -3288,14 +3288,14 @@ enum {
 	FETCH_SUCCESS,
 	FETCH_FAILURE
 };
-static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *arm_inst, uint32_t* inst_size, ARM_INST_PTR* ptr_inst_base){
+static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, addr_t addr, uint32_t *arm_inst, uint32_t* inst_size, ARM_INST_PTR* ptr_inst_base){
 	/* Check if in Thumb mode.  */
 	tdstate ret;
-	ret = thumb_translate (cpu->translate_pc, inst, arm_inst, inst_size);
+	ret = thumb_translate (addr, inst, arm_inst, inst_size);
 	if(ret == t_branch){
 		/* FIXME, endian should be judged */
 		uint32 tinstr;
-		if((cpu->translate_pc & 0x3) != 0)
+		if((addr & 0x3) != 0)
 			tinstr = inst >> 16;
 		else
 			tinstr = inst & 0xFFFF;
@@ -3355,6 +3355,7 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, uint32_t *a
 	return ret;
 }
 
+#if 0
 int FetchInst(cpu_t *core, unsigned int &inst)
 {
 	//arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
@@ -3373,6 +3374,7 @@ int FetchInst(cpu_t *core, unsigned int &inst)
 	}
 	return FETCH_SUCCESS;
 }
+#endif
 
 unsigned int *InstLength;
 
@@ -3420,14 +3422,14 @@ static uint32_t get_bank_addr(void *addr)
 
 static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
 {
-//	printf("in %s\n", __FUNCTION__);
+	printf("in %s, addr=0x%llx\n", __FUNCTION__, si->si_addr);
 	uint64_t addr = (uint64_t)si->si_addr;
 	addr = (addr >> 12) << 12;
+	skyeye_backtrace();
 	#if 0
 	if (addr == 0) {
 		return;
 	}
-	#endif
 	const vector<uint64_t>::iterator it = find(code_page_set.begin(), 
 						   code_page_set.end(),
 						   (uint64_t)addr);
@@ -3444,6 +3446,7 @@ static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
 	/* flush the translated BB of dyncom */
       	clear_translated_cache(phys_addr); 
 #endif
+	#endif
 }
 
 void protect_code_page(uint32_t addr)
@@ -3465,7 +3468,7 @@ void protect_code_page(uint32_t addr)
 	sa.sa_sigaction = &flush_code_cache;
 	sigaction(SIGSEGV, &sa, NULL);
 
-	mprotect(mem_ptr, 4096, PROT_READ);
+	//mprotect(mem_ptr, 4096, PROT_READ);
 
 	code_page_set.push_back((uint64_t)mem_ptr);
 }
@@ -3482,7 +3485,7 @@ void alloc_profiling_data()
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(profiling_data));
 }
 
-int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
+int InterpreterTranslate(cpu_t *core, int &bb_start, addr_t addr)
 {
 	/* Decode instruction, get index */
 	/* Allocate memory and init InsCream */
@@ -3495,23 +3498,36 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 	int idx;
 	int ret = NON_BRANCH;
 	/* (R15 - 8) ? */
-	unsigned int pc_start = cpu->Reg[15];
-	cpu->translate_pc = cpu->Reg[15];
+	//cpu->translate_pc = cpu->Reg[15];
 	bb_start = top;
+	addr_t phys_addr;
+	addr_t pc_start;
+	fault_t fault = NO_FAULT;
+	fault = check_address_validity(cpu, addr, &phys_addr, 1, INSN_TLB);
+	if(fault != NO_FAULT){
+		cpu->abortSig = true;
+		cpu->Aborted = ARMul_PrefetchAbortV;
+		cpu->AbortAddr = addr;
+		cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
+		cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
+		return FETCH_EXCEPTION;
+	}
+	pc_start = phys_addr;
+	//phys_addr = get_dma_addr(phys_addr);
 	while(ret == NON_BRANCH) {
-		ret = FetchInst(core, inst);
-		or_tag(core, (phys_addr & 0xFFFFF000)|(cpu->translate_pc & 0xFFF), TAG_FAST_INTERP);
+		inst = *(uint32_t *)(phys_addr & 0xFFFFFFFC);
+		or_tag(core, phys_addr,  TAG_FAST_INTERP);
 
-		if (ret == FETCH_FAILURE) {
+		/*if (ret == FETCH_FAILURE) {
 			return FETCH_EXCEPTION;
-		}
+		}*/
 
 		/* If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction */
 		if (cpu->TFlag){
 		//if(cpu->Cpsr & (1 << THUMB_BIT)){
 			uint32_t arm_inst;
 			tdstate state;
-			state = decode_thumb_instr(cpu, inst, &arm_inst, &inst_size, &inst_base);
+			state = decode_thumb_instr(cpu, inst, phys_addr, &arm_inst, &inst_size, &inst_base);
 			//printf("In thumb state, arm_inst=0x%x, inst_size=0x%x, pc=0x%x\n", arm_inst, inst_size, cpu->translate_pc);
 			/* we have translated the branch instruction of thumb in thumb decoder */
 			if(state == t_branch){
@@ -3522,7 +3538,7 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 
 		ret = decode_arm_instr(inst, &idx);
 		if (ret == DECODE_FAILURE) {
-			printf("[info] : Decode failure.\tPC : [0x%x]\tInstruction : [%x]\n", cpu->translate_pc, inst);
+			printf("[info] : Decode failure.\tPC : [0x%x]\tInstruction : [%x]\n", phys_addr, inst);
 			printf("cpsr=0x%x, cpu->TFlag=%d, r15=0x%x\n", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
 			exit(-1);
 		}
@@ -3531,15 +3547,14 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, uint32_t phys_addr)
 //		printf("translated @ %x INST : %x\n", cpu->translate_pc, inst);
 //		printf("inst size is %d\n", InstLength[idx]);
 translated:
-		cpu->translate_pc += inst_size;
+		phys_addr += inst_size;
 
-		if ((cpu->translate_pc & 0xfff) == 0) {
+		if ((phys_addr & 0xfff) == 0) {
 			inst_base->br = END_OF_PAGE;
 		}
 		ret = inst_base->br;
 	};
 	alloc_profiling_data();
-	pc_start = phys_addr;
 	if (!core->is_user_mode) {
 		//printf("before protect_code_page, pc_start=0x%x\n", pc_start);
 #if CHECK_IN_WRITE
@@ -3865,7 +3880,7 @@ void InterpreterMainLoop(cpu_t *core)
 #endif /* #if HYBRID_MODE */
 #endif /* #if USER_MODE_OPT */
 		if (find_bb(core, phys_addr, ptr) == -1){
-			if (InterpreterTranslate(core, ptr, phys_addr) == FETCH_EXCEPTION)
+			if (InterpreterTranslate(core, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
 				goto END;
 		}
 		inst_base = (arm_inst *)&inst_buf[ptr];

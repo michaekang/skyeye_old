@@ -256,7 +256,7 @@ struct ARMul_State
 	ARMword NFlag, ZFlag, CFlag, VFlag, IFFlags;	/* dummy flags for speed */
         unsigned long long int icounter, debug_icounter, kernel_icounter;
         unsigned int shifter_carry_out;
-        ARMword translate_pc;
+        //ARMword translate_pc;
 
 	/* add armv6 flags dyf:2010-08-09 */
 	ARMword GEFlag, EFlag, AFlag, QFlags;

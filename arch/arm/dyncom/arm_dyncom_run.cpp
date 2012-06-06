@@ -800,7 +800,7 @@ void arm_dyncom_init(arm_core_t* core){
 	init_compiled_queue(cpu);
 	//if(running_mode == HYBRID || running_mode == PURE_DYNCOM){
 		int timer_id;
-		//create_thread_scheduler(period_in_usec, Periodic_sched, print_statistics, (void *)cpu, &timer_id);
+		create_thread_scheduler(period_in_usec, Periodic_sched, print_statistics, (void *)cpu, &timer_id);
 	//}
 	return;
 }
