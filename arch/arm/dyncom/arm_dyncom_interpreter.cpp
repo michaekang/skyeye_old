@@ -3796,8 +3796,6 @@ void InterpreterMainLoop(cpu_t *core)
 		//if(pfunc){
 		if(is_translated_code(core, phys_addr)){
 			int rc = JIT_RETURN_NOERR;
-			core->current_page_phys = phys_addr & 0xfffff000;
-			core->current_page_effec = cpu->Reg[15] & 0xfffff000;
 			//printf("enter jit icounter is %lld, pc=0x%x\n", core->icounter, cpu->Reg[15]);
 			SAVE_NZCVT;
 			rc = cpu_run(core);
@@ -3832,10 +3830,6 @@ void InterpreterMainLoop(cpu_t *core)
 					goto END;
 				}
 				if (cpu->syscallSig) {
-					goto END;
-				}
-				if(rc == JIT_RETURN_TIMEOUT){
-					//printf("Timeout - Next handling by DYNCOM %x\n", cpu->Reg[15]);
 					goto END;
 				}
 				if (cpu->abortSig) {
@@ -3880,7 +3874,12 @@ void InterpreterMainLoop(cpu_t *core)
 		}
 #endif /* #if HYBRID_MODE */
 #endif /* #if USER_MODE_OPT */
-		if (find_bb(core, phys_addr, ptr) == -1){
+		if(is_fast_interp_code(core, phys_addr)){
+			if (find_bb(core, phys_addr, ptr) == -1)
+				if (InterpreterTranslate(core, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
+					goto END;
+		}
+		else{
 			if (InterpreterTranslate(core, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
 				goto END;
 		}
