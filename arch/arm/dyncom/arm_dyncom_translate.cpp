@@ -2490,6 +2490,7 @@ int DYNCOM_TAG(bbl)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		} else if (BITS(20, 27) >= 0xb0 && BITS(20, 27) <=0xb7) {
 			target = pc + 8 + BOPERAND;
 		}
+		*tag = TAG_CALL;
 	} else {
 		if(BIT(23)) {
 			target = pc + 8 - BOPERAND;
