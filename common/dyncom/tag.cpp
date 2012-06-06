@@ -488,6 +488,10 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 	for(;;) {
 		if(!cpu->mem_ops.is_inside_page(cpu, pc) && !is_user_mode(cpu))
 			return;
+		/* the area never be executed */
+		if(!is_fast_interp_code(cpu, pc))
+			return;
+
 		if (!is_inside_code_area(cpu, pc)){
 			LOG("In %s pc = %x start = %x end = %x\n",
 					__FUNCTION__, pc, cpu->dyncom_engine->code_start, cpu->dyncom_engine->code_end);
