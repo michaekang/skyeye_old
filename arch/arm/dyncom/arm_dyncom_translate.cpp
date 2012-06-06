@@ -2827,7 +2827,17 @@ int DYNCOM_TAG(mcr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 
 	return instr_size;
 }
-int DYNCOM_TAG(mcrr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){int instr_size = INSTR_SIZE;printf("in %s instruction is not implementated.\n", __FUNCTION__);exit(-1);return instr_size;}
+int DYNCOM_TAG(mcrr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc){
+	int instr_size = INSTR_SIZE;
+	static int print_once = 0;
+	if(print_once == 0){
+		printf("in %s instruction is not implementated.\n", __FUNCTION__);
+		print_once = 1;
+	}
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	//exit(-1);
+	return instr_size;
+}
 int DYNCOM_TAG(mla)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
