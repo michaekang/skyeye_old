@@ -998,10 +998,13 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
 #define ISPOS(n)	(n >= 0)
 
 enum {
-	NON_BRANCH,
-	DIRECT_BRANCH,
-	INDIRECT_BRANCH,
-	END_OF_PAGE
+	COND = 1,
+	NON_BRANCH = (1 << 1),
+	DIRECT_BRANCH = (1 << 2),
+	INDIRECT_BRANCH = (1 << 3),
+	CALL = (1 << 4),
+	RET = (1 << 5),
+	END_OF_PAGE = (1 << 6)
 };
 
 typedef struct _arm_inst {
@@ -1673,6 +1676,11 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(bbl)(unsigned int inst, int index)
 	inst_base->cond  = BITS(inst, 28, 31);
 	inst_base->idx	 = index;
 	inst_base->br	 = DIRECT_BRANCH;
+
+	if (BIT(inst, 24))
+		inst_base->br = CALL;
+	if (BITS(inst, 28, 31) <= 0xe)
+		inst_base->br |= COND;
 
 	inst_cream->L 	 = BIT(inst, 24);
 	inst_cream->signed_immed_24 = BIT(inst, 23) ? NEGBRANCH : POSBRANCH;
