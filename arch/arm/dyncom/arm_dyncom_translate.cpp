@@ -2563,7 +2563,7 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	int instr_size = INSTR_SIZE;
 //	printf("pc is %x in %s instruction is not implementated.\n", pc ,__FUNCTION__);
         uint32_t opc = instr;
-        *tag = TAG_BRANCH;
+        *tag = TAG_CALL;
        
 	if (BITS(20, 27) == 0x12 && BITS(4, 7) == 0x3) {
 		*new_pc = NEW_PC_NONE;
