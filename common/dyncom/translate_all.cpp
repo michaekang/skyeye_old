@@ -99,9 +99,10 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 		/* we will not add entry of switch for the insn after memory access */
 		if((get_tag(cpu, pc) & TAG_AFTER_NEW_BB) && !is_start_of_basicblock(cpu, pc))
 			; /* do nothing */
-		else
+		else{
 			sw->addCase(c, cur_bb);
-
+			or_tag(cpu, pc, TAG_ENTRY);
+		}
 		do {
 			tag_t dummy1;
 
@@ -136,11 +137,11 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 			/* get not-taken basic block */
 			if(is_user_mode(cpu)){
 				if (tag & (TAG_CONDITIONAL | TAG_POSTCOND | TAG_LAST_INST ))
- 						bb_next = (BasicBlock*)lookup_basicblock(cpu, cpu->dyncom_engine->cur_func, next_pc, bb_ret, BB_TYPE_NORMAL);
+ 					bb_next = (BasicBlock*)lookup_basicblock(cpu, cpu->dyncom_engine->cur_func, next_pc, bb_ret, BB_TYPE_NORMAL);
 			}
 			else{
 				if (tag & (TAG_CONDITIONAL | TAG_POSTCOND | TAG_LAST_INST | (TAG_NEW_BB)))
- 						bb_next = (BasicBlock*)lookup_basicblock(cpu, cpu->dyncom_engine->cur_func, next_pc, bb_ret, BB_TYPE_NORMAL);
+ 					bb_next = (BasicBlock*)lookup_basicblock(cpu, cpu->dyncom_engine->cur_func, next_pc, bb_ret, BB_TYPE_NORMAL);
 			}
 //			if (!(tag & TAG_BRANCH)) {
 //			if (!(tag & TAG_COND_BRANCH) && !(tag & TAG_BRANCH)) {

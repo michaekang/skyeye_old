@@ -3812,7 +3812,7 @@ void InterpreterMainLoop(cpu_t *core)
 		//void * pfunc = NULL;
 		//PFUNC(phys_addr);
 		//if(pfunc){
-		if(is_translated_code(core, phys_addr)){
+		if(is_translated_entry(core, phys_addr)){
 			int rc = JIT_RETURN_NOERR;
 			//printf("enter jit icounter is %lld, pc=0x%x\n", core->icounter, cpu->Reg[15]);
 			SAVE_NZCVT;
