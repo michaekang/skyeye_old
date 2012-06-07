@@ -848,8 +848,22 @@ int DYNCOM_TRANS(cps)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	}
 	#if 1
 	if (BIT(17) == 1) {
-		Value *cpsr_new = OR(AND(R(CPSR_REG), CONST(0xffffffe0)), CONST(BITS(0, 4)));
+		Value* new_mode = CONST(BITS(0, 4));
+		Value *cpsr_new = OR(AND(R(CPSR_REG), CONST(0xffffffe0)), new_mode);
 		LET(CPSR_REG, cpsr_new);
+		switch_mode_IR(cpu,new_mode,bb);
+		bb = cpu->dyncom_engine->bb;
+		Value *nzcv = LSHR(AND(R(CPSR_REG), CONST(0xf0000000)), CONST(28));
+		Value *n = TRUNC1(AND(LSHR(nzcv, CONST(3)), CONST(1)));
+		Value *z = TRUNC1(AND(LSHR(nzcv, CONST(2)), CONST(1)));
+		Value *c = TRUNC1(AND(LSHR(nzcv, CONST(1)), CONST(1)));
+		Value *v = TRUNC1(AND(LSHR(nzcv, CONST(0)), CONST(1)));
+		new StoreInst(n, ptr_N, false, bb);
+		new StoreInst(z, ptr_Z, false, bb);
+		new StoreInst(c, ptr_C, false, bb);
+		new StoreInst(v, ptr_V, false, bb);
+		Value *t = TRUNC1(LSHR(AND(R(CPSR_REG), CONST(1 << THUMB_BIT)), CONST(THUMB_BIT)));
+		new StoreInst(t, ptr_T, false, bb);
 	}
 	#endif
 	return No_exp;
