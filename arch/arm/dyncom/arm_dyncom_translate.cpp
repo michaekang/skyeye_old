@@ -2574,9 +2574,11 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		signed_int = (signed_int) & 0x800000 ? (0x3F000000 | signed_int) : signed_int;
 		signed_int = signed_int << 2;
 		*new_pc = pc + 8 + signed_int + (BIT(24) << 1);
-		/* If not in the same page, so address maybe invalidate. */
-		if ((pc >> 12) != ((*new_pc) >> 12))
-			*new_pc = NEW_PC_NONE;
+		if(is_usermode_func(cpu)){
+			/* If not in the same page, so address maybe invalidate. */
+			if ((pc >> 12) != ((*new_pc) >> 12))
+				*new_pc = NEW_PC_NONE;
+		}
 	}
 	*next_pc = pc + INSTR_SIZE;
 
