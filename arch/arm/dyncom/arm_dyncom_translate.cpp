@@ -1745,9 +1745,11 @@ int DYNCOM_TRANS(smla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	else
 		operand2 = SEXT32(TRUNC16(LSHR(R(RS), CONST(16))));
 	LET(MUL_RD, ADD(MUL(operand1, operand2), R(MUL_RN)));
+	/* FIXME , should set Qflag for overflow */
 	return No_exp;
 }
 int DYNCOM_TRANS(smlad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
+	#if 0
 	int RA = BITS(12, 15);
 	int m	 = BIT(4);
 	Value *Rn = R(RN);
@@ -1774,6 +1776,26 @@ int DYNCOM_TRANS(smlad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	Value* result = ADD(ADD(Product1, Product2), signed_ra);
 	/* FIXME , should check Signed overflow */
 	LET(MUL_RD, AND(result, CONST(0xFFFFFFFF)));
+	#endif
+	int RA = BITS(12, 15);
+	int x	 = BIT(5);
+	Value *Rs = R(RS);
+	Value *Rm = R(RM);
+	Value *Rn = R(MUL_RN);
+	Value* Operand2 = x ? OR(LSHR(Rs, CONST(16)), SHL(Rs, CONST(16))):Rs;
+
+	/* Do 16 bit sign extend */
+	Value* Half_rm = SEXT32(AND(Rm, CONST(0xFFFF)));
+	Value* Half_operand2 = SEXT32(AND(Operand2, CONST(0xFFFF)));
+	Value* Product1 = MUL(Half_rm, Half_operand2);
+
+	Half_rm = SEXT32(LSHR(AND(Rm, CONST(0xFFFF0000)), CONST(16)));
+	Half_operand2 = SEXT32(LSHR(AND(Operand2, CONST(0xFFFF0000)), CONST(16)));
+	Value* Product2 = MUL(Half_rm, Half_operand2);
+
+	Value* result = ADD(ADD(Product1, Product2), Rn);
+	LET(MUL_RD, TRUNC32(result));
+	/* FIXME , should set Qflag for overflow */
 	return No_exp;
 }
 int DYNCOM_TRANS(smlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
