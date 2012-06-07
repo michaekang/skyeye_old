@@ -2583,7 +2583,26 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smull)(unsigned int inst, int index)
 		inst_base->load_r15 = 1;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smulw)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(smulw)(unsigned int inst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
+	smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->m	 = BIT(inst, 6);
+	inst_cream->Rm	 = BITS(inst, 8, 11);
+	inst_cream->Rn	 = BITS(inst, 0, 3);
+	inst_cream->Rd = BITS(inst, 16, 19);
+
+	if (CHECK_RM || CHECK_RN) 
+		inst_base->load_r15 = 1;
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(smusd)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(srs)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(ssat)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
@@ -5553,6 +5572,24 @@ void InterpreterMainLoop(cpu_t *core)
 		GOTO_NEXT_INST;
 	}
 	SMULW_INST:
+		INC_ICOUNTER;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
+//			printf("rm : [%llx] rs : [%llx] rst [%llx]\n", RM, RS, rst);
+			int64_t rm = RM;
+			int64_t rn = RN;
+			if (inst_cream->m)
+				rm = BITS(rm,16 , 31);
+			else
+				rm = BITS(rm,0 , 15);
+			int64_t rst = rm * rn;
+			RD = BITS(rst,  16, 47);
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(smlad_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+
 	SMUSD_INST:
 	SRS_INST:
 	SSAT_INST:
