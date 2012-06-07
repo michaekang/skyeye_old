@@ -97,9 +97,12 @@ typedef struct nandflash_module_option
 int nandflash_module_setup(struct nandflash_device *dev,char *name);
 void nandflash_sb_uninstall(struct nandflash_device* dev);
 void  nandflash_sb_setup(struct nandflash_device* dev);
+void nandflash_sb_K9G8G08_uninstall(struct nandflash_device* dev);
+void  nandflash_sb_K9G8G08_setup(struct nandflash_device* dev);
 static nandflash_module_option nandflash_module_data[]={
 	{"K9F1208U0B",512,16,32,4096,{0xEC,0x76,0xA5,0xC0,0x0},nandflash_sb_setup,nandflash_sb_uninstall},
 	{"K9F1G08U0B",2048,64,64,1024,{0x90,0xF1,0x00,0x95,0x40},nandflash_sb_setup,nandflash_sb_uninstall},
+	{"K9G8G08U0M",2048,64,128,4096,{0xEC,0xd3,0x14,0x25,0x64},nandflash_sb_K9G8G08_setup,nandflash_sb_K9G8G08_uninstall},
 };
 struct flash_option
 {
