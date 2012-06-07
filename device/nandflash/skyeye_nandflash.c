@@ -29,6 +29,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 extern void nandflash_s3c2410_init(struct device_module_set *mod_set);
 extern void nandflash_s3c6410_init(struct device_module_set *mod_set);
+extern void nandflash_K9G8G08_init(struct device_module_set *mod_set);
+
 
 static int
 do_nandflash_option (skyeye_option_t * this_option, int num_params,
@@ -41,6 +43,7 @@ nandflash_init (struct device_module_set *mod_set)
 {
 	nandflash_s3c2410_init (mod_set);
 	nandflash_s3c6410_init (mod_set);
+	nandflash_K9G8G08_init (mod_set);
 }
 
 nandflash_module_option * get_nandflashmd(char *name)
