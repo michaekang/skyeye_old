@@ -447,6 +447,8 @@ typedef struct dyncom_engine{
 	int wb_flag;
 	int need_exclusive;
 	//int exclusive_result_reg;
+	int bl_1_offset;
+	addr_t bl_1_addr;
 
 	Value* read_value;
 	/* arch functions are for each architecture to declare it's own functions
