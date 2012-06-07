@@ -1810,6 +1810,19 @@ int DYNCOM_TRANS(smlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *carry = SELECT(ICMP_ULT(rdlo, result_lo), CONST(1), CONST(0));
 	LET(RDLo, rdlo);
 	LET(RDHi, ADD(ADD(result_hi, R(RDHi)), carry));
+	if(SBIT) {
+                printf("Flag should be update here in %s\n", __FUNCTION__);
+                /*
+                N Flag = RdHi[31]
+                Z Flag = if (RdHi == 0) and (RdLo == 0) then 1 else 0
+                C Flag = unaffected
+                // See "C and V flags" note 
+                V Flag = unaffected
+                // See "C and V flags" note 
+                */
+                exit(-1);
+        }
+
 	return No_exp;
 }
 int DYNCOM_TRANS(smlalxy)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
@@ -2256,6 +2269,20 @@ int DYNCOM_TRANS(umlal)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	Value *carry = SELECT(ICMP_ULT(rdlo, result_lo), CONST(1), CONST(0));
 	LET(RDLo, rdlo);
 	LET(RDHi, ADD(ADD(result_hi, R(RDHi)), carry));
+	if(SBIT) {
+		/* FIXME, flag should be update */
+                printf("Flag should be update here in %s\n", __FUNCTION__);
+                /*
+                N Flag = RdHi[31]
+                Z Flag = if (RdHi == 0) and (RdLo == 0) then 1 else 0
+                C Flag = unaffected
+                // See "C and V flags" note 
+                V Flag = unaffected
+                // See "C and V flags" note 
+                */
+                exit(-1);
+        }
+
 	return No_exp;
 }
 int DYNCOM_TRANS(umull)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
@@ -2289,6 +2316,19 @@ int DYNCOM_TRANS(umull)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 
 	LET(RDLo, tmp_RdLo);
 	LET(RDHi, tmp_RdHi);
+	if(SBIT) {
+		/* FIXME, flag should be update */
+		printf("Flag should be update here in %s\n", __FUNCTION__);
+		/*
+		N Flag = RdHi[31]
+		Z Flag = if (RdHi == 0) and (RdLo == 0) then 1 else 0
+		C Flag = unaffected
+		// See "C and V flags" note 
+		V Flag = unaffected
+		// See "C and V flags" note 
+		*/
+		exit(-1);
+	}
 	return No_exp;
 }
 int DYNCOM_TRANS(uqadd16)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
