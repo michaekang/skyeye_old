@@ -2500,15 +2500,16 @@ int DYNCOM_TRANS(bl_2_thumb)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t 
 	LET(15, ADD(R(14), CONST(imm)));
 	LET(14, OR(ADD(Temp, CONST(2)), CONST(1)));
 	if((pc - cpu->dyncom_engine->bl_1_addr) > 2){
-		printf("In %s, no bl_1 instruction!, pc=0x%x,bl_1_addr=0x%x\n", __FUNCTION__, pc, cpu->dyncom_engine->bl_1_addr, cpu->dyncom_engine->bl_1_addr);
-		exit(-1);
-	}
-	addr_t target = cpu->dyncom_engine->bl_1_offset + imm; 
-	if((target >> 12) != (pc >> 12)){
 		SET_NEW_PAGE(pc);
 	}
 	else{
-		SET_NEW_PAGE_PHYS_PC(pc);	
+		addr_t target = cpu->dyncom_engine->bl_1_offset + imm; 
+		if((target >> 12) != (pc >> 12)){
+			SET_NEW_PAGE(pc);
+		}
+		else{
+			SET_NEW_PAGE_PHYS_PC(pc);	
+		}
 	}
 	return Byte_2;
 }
@@ -3563,11 +3564,15 @@ int DYNCOM_TAG(bl_2_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, ad
  
 	uint32 tinstr = get_thumb_instr(instr, pc);
 	uint32 imm = (tinstr & 0x07FF) << 1;
-	addr_t target = cpu->dyncom_engine->bl_1_offset + imm; 
-	if((target >> 12) != (pc >> 12))
+	if((pc - cpu->dyncom_engine->bl_1_addr) > 2)
 		*new_pc = NEW_PC_NONE;
-	else
-		*new_pc = target;
+	else{
+		addr_t target = cpu->dyncom_engine->bl_1_offset + imm; 
+		if((target >> 12) != (pc >> 12))
+			*new_pc = NEW_PC_NONE;
+		else
+			*new_pc = target;
+	}
 	return instr_size;
 }
 int DYNCOM_TAG(blx_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
