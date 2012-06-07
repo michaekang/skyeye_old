@@ -3516,16 +3516,36 @@ void protect_code_page(uint32_t addr)
 	code_page_set.push_back((uint64_t)mem_ptr);
 }
 
+/* profiling data is used for direct branch only. */
 typedef struct _profiling_data {
+	uint32_t type;
 	uint32_t addr[2];
+	int32_t  vpc[2];
 	uint32_t count[2];
+	uint32_t in_superblock;
 	uint64_t clocktime;
+	uint32_t reference;
+	uint32_t start_of_sb;
+//	bb_stat* bb_count;
 } profiling_data;
 
 /* Allocate memory for profiling data */
-void alloc_profiling_data()
+void alloc_profiling_data(uint32_t type)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(profiling_data));
+
+	profiling_data *prof = (profiling_data *)inst_base->component;
+	prof->type = type;
+	prof->in_superblock = 0;
+	prof->vpc[0] = -1;
+	prof->vpc[1] = -1;
+	prof->count[0] = 0;
+	prof->count[1] = 0;
+	prof->addr[0] = 0;
+	prof->addr[1] = 0;
+	prof->clocktime = 0;
+	prof->reference = 0;
+	prof->start_of_sb = 0;
 }
 
 int InterpreterTranslate(cpu_t *core, int &bb_start, addr_t addr)
@@ -3597,7 +3617,7 @@ translated:
 		}
 		ret = inst_base->br;
 	};
-	alloc_profiling_data();
+	alloc_profiling_data(ret);
 	if (!core->is_user_mode) {
 		//printf("before protect_code_page, pc_start=0x%x\n", pc_start);
 #if CHECK_IN_WRITE
@@ -3671,7 +3691,8 @@ static bool InAPrivilegedMode(arm_core_t *core)
 
 #define THRESHOLD			100
 #define DURATION			25
-#if PROFILE
+#define PROFILE
+#ifdef PROFILE
 void gene_hot_path(uint32_t start_pc, profiling_data *prof, int id)
 {
 	extern uint64_t walltime;
@@ -3752,6 +3773,12 @@ void InterpreterMainLoop(cpu_t *core)
 
 	#define CurrentModeHasSPSR		(cpu->Mode != SYSTEM32MODE) && (cpu->Mode != USER32MODE)
 	#define PC				(cpu->Reg[15])
+	#define CHECK_EXT_INT    		if (!cpu->NirqSig) {                       \
+				                	if (!(cpu->Cpsr & 0x80)) {         \
+								goto END;                  \
+							}                                  \
+						}
+
 	
 
 	//arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
@@ -3805,7 +3832,7 @@ void InterpreterMainLoop(cpu_t *core)
 			cpu->Reg[15] &= 0xfffffffe;
 		} else
 			cpu->Reg[15] &= 0xfffffffc;
-#if PROFILE
+#ifdef PROFILE
 		/* check next instruction address is valid. */
 		last_pc = cpu->Reg[15];
 #endif
@@ -3930,15 +3957,65 @@ void InterpreterMainLoop(cpu_t *core)
 	}
 	PROFILING:
 	{
-#if PROFILE
-		if (PC > 0xc0000000)
-			goto DISPATCH;
+#ifdef PROFILE
 		inst_base = (arm_inst *)&inst_buf[ptr];
 		profiling_data *prof = (profiling_data *)inst_base->component;
-		if (prof->addr[0] == PC)
+		if (prof->type == INDIRECT_BRANCH)
+			goto DISPATCH;
+		if ((PC == prof->addr[0]) && (prof->count[0] > 1) && (prof->vpc[0] != -1)) {
+			ptr = prof->vpc[0];
+			inst_base = (arm_inst *)&inst_buf[ptr];
+			CHECK_EXT_INT;
+			GOTO_NEXT_INST;
+		}
+		else if ((PC == prof->addr[1]) && (prof->count[1] > 1) && (prof->vpc[1] != -1)) {
+			ptr = prof->vpc[1];
+			inst_base = (arm_inst *)&inst_buf[ptr];
+			CHECK_EXT_INT;
+			GOTO_NEXT_INST;
+		}
+		if ((PC >> 12) != (last_pc >> 12))
+			goto DISPATCH;
+		if (prof->addr[0] == PC) {
 			prof->count[0] ++;
-		else if (prof->addr[1] == PC)
+			if (prof->count[0] > 1) {
+			        fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
+				if (fault)
+					goto DISPATCH;
+				if (find_bb(core, phys_addr, ptr) == -1) {
+					printf("phys addr : %x could not be found.\n");
+					goto DISPATCH;
+//					exit(-1);
+				}
+				if (ptr < 0) {
+					printf("ptr < 0\n");
+					exit(-1);
+				}
+				prof->vpc[0] = ptr;
+				inst_base = (arm_inst *)&inst_buf[ptr];
+				GOTO_NEXT_INST;
+			}
+		}
+		else if (prof->addr[1] == PC) {
 			prof->count[1] ++;
+			if (prof->count[1] > 1) {
+			        fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
+				if (fault)
+					goto DISPATCH;
+				if (find_bb(core, phys_addr, ptr) == -1) {
+					printf("phys addr : %x could not be found.\n");
+					goto DISPATCH;
+					exit(-1);
+				}
+				if (ptr < 0) {
+					printf("ptr < 0\n");
+					exit(-1);
+				}
+				prof->vpc[1] = ptr;
+				inst_base = (arm_inst *)&inst_buf[ptr];
+				GOTO_NEXT_INST;
+			}
+		}
 		else {
 			if (prof->count[0] < prof->count[1]) {
 				prof->addr[0] = PC;
@@ -3948,6 +4025,7 @@ void InterpreterMainLoop(cpu_t *core)
 				prof->count[1] = 1;
 			}
 		}
+		#if 0
 		if (prof->count[0] >= THRESHOLD) {
 			gene_hot_path(last_pc, prof, 0);
 			prof->count[0] = 0;
@@ -3957,7 +4035,8 @@ void InterpreterMainLoop(cpu_t *core)
 		//	prof->count[0] = 0;
 			prof->count[1] = 0;
 		}
- #endif
+		#endif
+#endif
 		goto DISPATCH;
 	}
 	ADC_INST:
