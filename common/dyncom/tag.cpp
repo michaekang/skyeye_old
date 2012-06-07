@@ -387,6 +387,8 @@ get_tag(cpu_t *cpu, addr_t a)
 	uint32_t level3_offset = TAG_LEVEL3_OFFSET(a);
 	return cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset];
 }
+
+#if 0
 /**
  * @brief Get the tag of an address and add one to its execution 
  *        count
@@ -421,7 +423,7 @@ check_tag_execution(cpu_t *cpu, addr_t a, uint32_t *counter, uint32_t *entry)
 	}
 	return tag;
 }
-
+#endif
 /**
  * @brief Determine an address is code or not
  *
