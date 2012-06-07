@@ -2722,7 +2722,6 @@ int DYNCOM_TAG(cps)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 //	exit(-1);
 	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 //	arm_tag_stop(cpu, pc, instr, tag, new_pc, next_pc);
-	*tag |= TAG_STOP;
 	if (BIT(17)) {
 		*tag |= TAG_STOP;
 		//arm_tag_stop(cpu, pc, instr, tag, new_pc, next_pc);
