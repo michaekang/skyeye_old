@@ -1503,6 +1503,11 @@ int DYNCOM_TRANS(msr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 			mask = byte_mask & UserMask;
 		}
 		LET(CPSR_REG, OR(AND(R(CPSR_REG), COM(CONST(mask))), AND(operand, CONST(mask))));
+		if(!is_usermode_func(cpu)){
+			Value* new_mode = AND(R(CPSR_REG), CONST(0x1f));
+			switch_mode_IR(cpu, new_mode, bb);
+			bb = cpu->dyncom_engine->bb;
+		}
 		Value *nzcv = LSHR(AND(R(CPSR_REG), CONST(0xf0000000)), CONST(28));
 		Value *n = TRUNC1(AND(LSHR(nzcv, CONST(3)), CONST(1)));
 		Value *z = TRUNC1(AND(LSHR(nzcv, CONST(2)), CONST(1)));
@@ -3029,11 +3034,15 @@ int DYNCOM_TAG(mrs)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 int DYNCOM_TAG(msr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	if ((!BIT(22)) && !is_usermode_func(cpu))
+		*tag |= TAG_NEW_BB;
+        *next_pc = pc + INSTR_SIZE;
+
 //	if (BIT(16)) {
-		arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+		//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
 //	} else {
-//		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-		*tag |= TAG_STOP;
+		//*tag |= TAG_STOP;
 //	}
 	//printf("in %s instruction is not implementated.\n", __FUNCTION__);
 	//exit(-1);
