@@ -3647,8 +3647,7 @@ static bool InAPrivilegedMode(arm_core_t *core)
 
 #define THRESHOLD			100
 #define DURATION			25
-//#define PROFILE
-
+#if PROFILE
 void gene_hot_path(uint32_t start_pc, profiling_data *prof, int id)
 {
 	extern uint64_t walltime;
@@ -3664,7 +3663,7 @@ void gene_hot_path(uint32_t start_pc, profiling_data *prof, int id)
 		//printf("addr1 : %x count : %d\n", prof->addr[1], prof->count[1]);
 	}
 }
-
+#endif
 /* r15 = r15 + 8 */
 void InterpreterMainLoop(cpu_t *core)
 {
@@ -3782,7 +3781,7 @@ void InterpreterMainLoop(cpu_t *core)
 			cpu->Reg[15] &= 0xfffffffe;
 		} else
 			cpu->Reg[15] &= 0xfffffffc;
-#ifdef PROFILE
+#if PROFILE
 		/* check next instruction address is valid. */
 		last_pc = cpu->Reg[15];
 #endif
@@ -3907,7 +3906,7 @@ void InterpreterMainLoop(cpu_t *core)
 	}
 	PROFILING:
 	{
-#ifdef PROFILE
+#if PROFILE
 		if (PC > 0xc0000000)
 			goto DISPATCH;
 		inst_base = (arm_inst *)&inst_buf[ptr];
