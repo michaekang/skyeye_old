@@ -20,7 +20,7 @@ AC_CONFIG_HEADER(ltdlconf.h)
 COMMON_INCLUDES="-I\$(top_srcdir)/common/include -I\$(srcdir)/common/"
 AC_SUBST(COMMON_INCLUDES)
 # some common cflags to be used in building all the files.
-COMMON_CFLAGS="-Werror-implicit-function-declaration -Werror=return-type -Wmissing-field-initializers -Wuninitialized"
+COMMON_CFLAGS="-g -O2 -Werror-implicit-function-declaration -Werror=return-type -Wmissing-field-initializers -Wuninitialized"
 AC_SUBST(COMMON_CFLAGS)
 
 AC_CONFIG_MACRO_DIR([m4])
