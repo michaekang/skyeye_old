@@ -2652,6 +2652,10 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
        
 	if (BITS(20, 27) == 0x12 && BITS(4, 7) == 0x3) {
 		*new_pc = NEW_PC_NONE;
+		if(is_usermode_func(cpu)){
+			/* since the Thumb bit possible is set here */
+			*tag |= TAG_STOP;
+		}
 	}
 	else{
 		int signed_immed_24 = BITS(0, 23);
@@ -2663,6 +2667,8 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 			/* If not in the same page, so address maybe invalidate. */
 			if ((pc >> 12) != ((*new_pc) >> 12))
 				*new_pc = NEW_PC_NONE;
+			/* since the Thumb bit possible is set here */
+			*tag |= TAG_STOP;
 		}
 	}
 	*next_pc = pc + INSTR_SIZE;
@@ -3603,7 +3609,8 @@ int DYNCOM_TAG(blx_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, a
 		else
 			*new_pc = target;
 	}
-	//*tag |= TAG_STOP;
+	/* since the Thumb bit possible is set here */
+	*tag |= TAG_STOP;
 	return instr_size;
 }
 /* Floating point instructions */
