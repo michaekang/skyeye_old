@@ -2883,7 +2883,23 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(swp)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(swpb)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(swpb)(unsigned int inst, int index){
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(swp_inst));
+	swp_inst *inst_cream = (swp_inst *)inst_base->component;
+
+	inst_base->cond  = BITS(inst, 28, 31);
+	inst_base->idx	 = index;
+	inst_base->br	 = NON_BRANCH;
+
+	inst_cream->Rn	 = BITS(inst, 16, 19);
+	inst_cream->Rd	 = BITS(inst, 12, 15);
+	inst_cream->Rm	 = BITS(inst,  0,  3);
+
+	if (inst_cream->Rd == 15) {
+		inst_base->br = INDIRECT_BRANCH;
+	}
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab)(unsigned int inst, int index){
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtab_inst));
 	sxtab_inst *inst_cream = (sxtab_inst *)inst_base->component;
@@ -3274,7 +3290,7 @@ void insert_bb(unsigned int addr, int start)
 #endif
 }
 
-#define TRANS_THRESHOLD                 35000
+#define TRANS_THRESHOLD                 65000
 int find_bb(cpu_t* cpu, unsigned int addr, int &start)
 {
 	int ret = -1;
@@ -6022,6 +6038,33 @@ void InterpreterMainLoop(cpu_t *core)
 		GOTO_NEXT_INST;
 	}
 	SWPB_INST:
+	{
+		INC_ICOUNTER;
+		swp_inst *inst_cream = (swp_inst *)inst_base->component;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			addr = RN;
+			fault = check_address_validity(cpu, addr, &phys_addr, 1);
+			if (fault) goto MMU_EXCEPTION;
+			unsigned int value;
+			fault = interpreter_read_memory(core, addr, phys_addr, value, 8);
+			if (fault) goto MMU_EXCEPTION;
+			fault = interpreter_write_memory(core, addr, phys_addr, (RM & 0xFF), 8);
+			if (fault) goto MMU_EXCEPTION;
+
+			/* FIXME */
+			#if 0
+			if Shared(address) then
+			/* ARMv6 */
+			physical_address = TLB(address)
+			ClearExclusiveByAddress(physical_address,processor_id,1)
+			/* See Summary of operation on page A2-49 */
+			#endif
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(swp_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
 	SXTAB_INST:
 	{
 		INC_ICOUNTER;
