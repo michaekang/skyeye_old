@@ -2680,12 +2680,13 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 int DYNCOM_TAG(bx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	if (RD == 15) {
-		arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
-		*new_pc = NEW_PC_NONE;
-	} else {
-		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
+	*new_pc = NEW_PC_NONE;
+	if(is_usermode_func(cpu)){
+		/* Since thumb bit possibly is changed */
+		*tag |= TAG_STOP;
 	}
+
 	if(instr >> 28 != 0xe)
 		*tag |= TAG_CONDITIONAL;
 	return instr_size;
