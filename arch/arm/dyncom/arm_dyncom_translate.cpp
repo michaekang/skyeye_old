@@ -2818,6 +2818,13 @@ int DYNCOM_TAG(ldr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	int instr_size = INSTR_SIZE;
 	if (RD == 15) {
 		arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
+		uint32_t last_instr = 0xdeadc0de;
+		if(bus_read(32, pc - 4, &last_instr) == 0){
+			/* e1a0e00f        mov     lr, pc */
+			if(last_instr == 0xe1a0e00f){
+				*tag = TAG_CALL;
+			}
+		} 
 		*new_pc = NEW_PC_NONE;
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
