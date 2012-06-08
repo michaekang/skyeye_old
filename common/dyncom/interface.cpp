@@ -411,8 +411,13 @@ cpu_translate_function(cpu_t *cpu, addr_t addr)
 		cpu->dyncom_engine->cur_func->dump();
 
 	/* make sure everything is OK */
-	if (cpu->dyncom_engine->flags_codegen & CPU_CODEGEN_VERIFY)
-		verifyFunction(*cpu->dyncom_engine->cur_func, AbortProcessAction);
+	if (cpu->dyncom_engine->flags_codegen & CPU_CODEGEN_VERIFY){
+		if(verifyFunction(*cpu->dyncom_engine->cur_func, PrintMessageAction) == true){
+			printf("------------------ JIT Function Dump ---------------\n");
+			cpu->dyncom_engine->cur_func->dump();
+			exit(-1);
+		}
+	}
 
 	if (cpu->dyncom_engine->flags_codegen & CPU_CODEGEN_OPTIMIZE) {
 		UPDATE_TIMING(cpu, TIMER_OPT, true);
