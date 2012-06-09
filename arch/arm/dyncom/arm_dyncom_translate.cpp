@@ -2827,6 +2827,10 @@ int DYNCOM_TAG(ldr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 			}
 		} 
 		*new_pc = NEW_PC_NONE;
+
+		/* Since the thumb mode possibly enter */
+		if(is_usermode_func(cpu))
+			*tag |= TAG_STOP;
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
