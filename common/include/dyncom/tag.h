@@ -67,6 +67,7 @@ is_translated_code(cpu_t *cpu, addr_t addr);
 bool is_fast_interp_code(cpu_t* cpu, addr_t addr);
 //addr_t find_bb_start(cpu_t *cpu, addr_t addr);
 tag_t get_tag(cpu_t *cpu, addr_t a);
+void set_tag(cpu_t *cpu, addr_t a, tag_t tag);
 //tag_t check_tag_execution(cpu_t *cpu, addr_t a, uint32_t *counter, uint32_t *entry);
 void clear_tag(cpu_t *cpu, addr_t a);
 void selective_clear_tag(cpu_t *cpu, addr_t a, uint32_t mask);

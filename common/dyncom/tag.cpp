@@ -112,19 +112,7 @@ check_tag_memory_integrity(cpu_t *cpu, addr_t addr)
 bool
 is_translated_code(cpu_t *cpu, addr_t addr)
 {
-	if (!is_tag_level2_table_allocated(cpu, addr)) {
-//		init_tag_level2_table(cpu, addr);
-		return false;
-	}
-	if (!is_tag_level3_table_allocated(cpu, addr)) {
-//		init_tag_level3_table(cpu, addr);
-		return false;
-	}
-	uint32_t level1_offset = TAG_LEVEL1_OFFSET(addr);
-	uint32_t level2_offset = TAG_LEVEL2_OFFSET(addr);
-	uint32_t level3_offset = TAG_LEVEL3_OFFSET(addr);
-	tag_t tag = cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset];
-	if (tag & TAG_TRANSLATED) {
+	if (get_tag(cpu, addr) & TAG_TRANSLATED) {
 		return true;
 	} else
 		return false;
@@ -134,19 +122,7 @@ is_translated_code(cpu_t *cpu, addr_t addr)
 bool
 is_translated_entry(cpu_t *cpu, addr_t addr)
 {
-	if (!is_tag_level2_table_allocated(cpu, addr)) {
-//		init_tag_level2_table(cpu, addr);
-		return false;
-	}
-	if (!is_tag_level3_table_allocated(cpu, addr)) {
-//		init_tag_level3_table(cpu, addr);
-		return false;
-	}
-	uint32_t level1_offset = TAG_LEVEL1_OFFSET(addr);
-	uint32_t level2_offset = TAG_LEVEL2_OFFSET(addr);
-	uint32_t level3_offset = TAG_LEVEL3_OFFSET(addr);
-	tag_t tag = cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset];
-	if (tag & (TAG_TRANSLATED|TAG_ENTRY)) {
+	if (get_tag(cpu, addr) & (TAG_TRANSLATED|TAG_ENTRY)) {
 		return true;
 	} else
 		return false;
@@ -157,19 +133,7 @@ is_translated_entry(cpu_t *cpu, addr_t addr)
 bool
 is_fast_interp_code(cpu_t *cpu, addr_t addr)
 {
-	if (!is_tag_level2_table_allocated(cpu, addr)) {
-//		init_tag_level2_table(cpu, addr);
-		return false;
-	}
-	if (!is_tag_level3_table_allocated(cpu, addr)) {
-//		init_tag_level3_table(cpu, addr);
-		return false;
-	}
-	uint32_t level1_offset = TAG_LEVEL1_OFFSET(addr);
-	uint32_t level2_offset = TAG_LEVEL2_OFFSET(addr);
-	uint32_t level3_offset = TAG_LEVEL3_OFFSET(addr);
-	tag_t tag = cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset];
-	if (tag & TAG_FAST_INTERP) {
+	if (get_tag(cpu, addr) & TAG_FAST_INTERP) {
 		return true;
 	} else
 		return false;
@@ -218,22 +182,9 @@ is_inside_code_area(cpu_t *cpu, addr_t a)
 void
 or_tag(cpu_t *cpu, addr_t a, tag_t t)
 {
-	/* NEW_PC_NONE is not a real address. Some branch/call address could not be known at translate-time*/
-	if (a == NEW_PC_NONE) {
-		return;
-	}
-	check_tag_memory_integrity(cpu, a);
-	uint32_t level1_offset = TAG_LEVEL1_OFFSET(a);
-	uint32_t level2_offset = TAG_LEVEL2_OFFSET(a);
-	uint32_t level3_offset = TAG_LEVEL3_OFFSET(a);
-	cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset] |= t;
-
-	/* If tag is entry, set a counter to null */
-	if ((cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset] & TAG_ENTRY))
-		cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset + TAG_LEVEL3_TABLE_SIZE] = 0;
-	/* Uncomment below if an entry needs to keep its entry point */
-	//else
-	//	cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset + TAG_LEVEL3_TABLE_SIZE] = block_entry;
+	tag_t old_tag = get_tag(cpu, a);
+	set_tag(cpu, a, (old_tag|t));
+	return;
 }
 void
 xor_tag(cpu_t *cpu, addr_t a, tag_t t)
@@ -271,17 +222,7 @@ void clear_tag(cpu_t *cpu, addr_t a)
  */
 void selective_clear_tag(cpu_t *cpu, addr_t a, uint32_t mask)
 {
-	addr_t nitems, i;
-	/* NEW_PC_NONE is not a real address. Some branch/call address could not be known at translate-time*/
-	if (a == NEW_PC_NONE) {
-		return;
-	}
-	check_tag_memory_integrity(cpu, a);
-	uint32_t level1_offset = TAG_LEVEL1_OFFSET(a);
-	uint32_t level2_offset = TAG_LEVEL2_OFFSET(a);
-	uint32_t level3_offset = TAG_LEVEL3_OFFSET(a);
-	cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset] &= ~mask;
-	/* Do not erase execution count. */
+	set_tag(cpu, a, (get_tag(cpu, a) & (~mask)));
 }
 void clear_tag_page(cpu_t *cpu, addr_t a)
 {
@@ -333,7 +274,6 @@ get_bb_prof(cpu_t *cpu, addr_t a, int inc)
         uint32_t level1_offset = TAG_LEVEL1_OFFSET(a);
         uint32_t level2_offset = TAG_LEVEL2_OFFSET(a);
         uint32_t level3_offset = TAG_LEVEL3_OFFSET(a);
-        uint32_t tag = cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset];
         counter = cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset + TAG_LEVEL3_TABLE_SIZE] + inc;
         cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset + TAG_LEVEL3_TABLE_SIZE] = counter;
         return counter;
@@ -360,6 +300,21 @@ get_tag(cpu_t *cpu, addr_t a)
 	uint32_t level2_offset = TAG_LEVEL2_OFFSET(a);
 	uint32_t level3_offset = TAG_LEVEL3_OFFSET(a);
 	return cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset];
+}
+
+void
+set_tag(cpu_t *cpu, addr_t a, tag_t tag)
+{
+	/* NEW_PC_NONE is not a real address. Some branch/call address could not be known at translate-time*/
+	if (a == NEW_PC_NONE) {
+		return;
+	}
+	check_tag_memory_integrity(cpu, a);
+	uint32_t level1_offset = TAG_LEVEL1_OFFSET(a);
+	uint32_t level2_offset = TAG_LEVEL2_OFFSET(a);
+	uint32_t level3_offset = TAG_LEVEL3_OFFSET(a);
+	cpu->dyncom_engine->tag_table[level1_offset][level2_offset][level3_offset] = tag;
+	return;
 }
 
 #if 0
