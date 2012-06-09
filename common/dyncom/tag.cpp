@@ -80,65 +80,15 @@ init_tag_level3_table(cpu_t *cpu, addr_t addr)
 
 	nitems = TAG_LEVEL3_TABLE_SIZE;
 
-	cpu->dyncom_engine->tag = (tag_t*)skyeye_mm_zero(nitems * sizeof(tag_t) * 2);
+	tag_t* tag = (tag_t*)skyeye_mm_zero(nitems * sizeof(tag_t) * 2);
 	for (i = 0; i < nitems; i++) {
-		cpu->dyncom_engine->tag[i] = TAG_UNKNOWN;
-		cpu->dyncom_engine->tag[i + TAG_LEVEL3_TABLE_SIZE] = 0;
+		tag[i] = TAG_UNKNOWN;
+		tag[i + TAG_LEVEL3_TABLE_SIZE] = 0;
 	}
 
 	uint32_t level1_offset = TAG_LEVEL1_OFFSET(addr);
 	uint32_t level2_offset = TAG_LEVEL2_OFFSET(addr);
-	cpu->dyncom_engine->tag_table[level1_offset][level2_offset] = cpu->dyncom_engine->tag;
-
-		#if 0
-	if (!(cpu->flags_codegen & CPU_CODEGEN_TAG_LIMIT)) {
-		/* calculate hash of code */
-		SHA1_CTX ctx;
-		SHA1Init(&ctx);
-		//SHA1Update(&ctx, &cpu->RAM[cpu->code_start - 0x50000000], cpu->code_end - cpu->code_start);
-
-		int32_t offset;
-               printf("cpu->code_start : %x\n", cpu->code_start);
-               if (cpu->code_start > 0x60000000) {
-                       offset = cpu->code_start - 0x60000000;
-               } else
-                       offset = cpu->code_start - 0x50000000;
-
-               SHA1Update(&ctx, &cpu->RAM[offset], cpu->code_end -cpu->code_start);
-
-
-		SHA1Final(cpu->code_digest, &ctx);
-		char ascii_digest[256];
-		char cache_fn[256];
-		ascii_digest[0] = 0;
-		int j; 
-		for (j=0; j<20; j++)
-			sprintf(ascii_digest+strlen(ascii_digest), "%02x", cpu->code_digest[j]);
-		LOG("Code Digest: %s\n", ascii_digest);
-		sprintf(cache_fn, "%slibcpu-%s.entries", get_temp_dir(), ascii_digest);
-		
-		cpu->file_entries = NULL;
-		FILE *f;
-		if ((f = fopen(cache_fn, "r"))) {
-			LOG("info: entry cache found.\n");
-			while(!feof(f)) {
-				addr_t entry = 0;
-				for (i = 0; i < 4; i++) {
-					entry |= fgetc(f) << (i*8);
-				}
-				tag_start(cpu, entry);
-			}
-			fclose(f);
-		} else {
-			LOG("info: entry cache NOT found.\n");
-		}
-		
-		if (!(cpu->file_entries = fopen(cache_fn, "a"))) {
-			printf("error appending to cache file!\n");
-			exit(1);
-		}
-		#endif
-//	}
+	cpu->dyncom_engine->tag_table[level1_offset][level2_offset] = tag;
 }
 
 /**

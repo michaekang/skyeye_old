@@ -511,30 +511,15 @@ void breakpoint() {}
 int
 cpu_run(cpu_t *cpu)
 {
-	addr_t pc = 0, orig_pc = 0, phys_pc = 0;
-	uint64_t icounter, orig_icounter;
+	addr_t pc = 0, phys_pc = 0;
 	uint32_t i;
 	int ret = 0;
-	bool success;
-	bool do_translate = true;
 	fp_t pfunc = NULL;
 
-	/* before running jit, update old_icounter first */
-	cpu->old_icounter = cpu->icounter;
 
 	/* try to find the entry in all functions */
 	while(true) {
 		pc = cpu->f.get_pc(cpu, cpu->rf.grf);
-//		if (cpu->icounter > 1690000) {
-//			printf("in %s\nret is %d current_page_phys is %x\ncurrent_page_effec is %x\n", 
-//			       __FUNCTION__, ret, cpu->current_page_phys, cpu->current_page_effec);
-//		}
-		#if 0
-		if(!is_user_mode(cpu)){
-			cpu->current_page_phys = phys_pc & 0xfffff000;
-			cpu->current_page_effec = pc & 0xfffff000; 
-		}
-		#endif
 		int ret = cpu->mem_ops.effective_to_physical(cpu, pc, &phys_pc);
 		/* if ISI exception happened here, we mush set pc to phys_pc which is
 		 * the exception handler address.*/
@@ -558,21 +543,17 @@ cpu_run(cpu_t *cpu)
 #else
 		fast_map hash_map = cpu->dyncom_engine->fmap;
 		pfunc = (fp_t)hash_map[phys_pc & (HASH_FAST_MAP_SIZE - 1)];
-		//if(pfunc == NULL)
-		//	return JIT_RETURN_FUNCNOTFOUND;
 #endif
 #else
 		fast_map &func_addr = cpu->dyncom_engine->fmap;
 		fast_map::const_iterator it = func_addr.find(pc);
 		if (it != func_addr.end()) {
 			pfunc = (fp_t)it->second;
-			do_translate = false;
 		} else{
 			LOG("jitfunction not found:key=0x%x\n", pc);
 			return JIT_RETURN_FUNCNOTFOUND;
 		}
 #endif
-		UPDATE_TIMING(cpu, TIMER_RUN, true);
 		LOG("******Run jit 0x%x\n", pc);
 		int context_id = (*(uint32_t *)(cpu->rf.context_id)) & 0xFF;
 		#define USER32MODE 16L
@@ -583,12 +564,6 @@ cpu_run(cpu_t *cpu)
 		else
 			ret = pfunc(cpu->dyncom_engine->RAM, cpu->rf.grf, cpu->rf.srf, cpu->rf.frf, cpu->mem_ops.read_memory, cpu->mem_ops.write_memory, (get_tlb(DATA_KERNEL_READ) + offset), get_tlb(DATA_KERNEL_WRITE) + offset, (get_tlb(MIXED_TLB) + offset), get_tlb(IO_TLB) + offset, user_mode);
 
-		if (cpu->icounter > 248765780) {
-//			printf("out of jit ret is %d icounter is %lld\n", ret, cpu->icounter);
-//			return ret;
-		}
-		//cpu->switch_mode(cpu);
-		UPDATE_TIMING(cpu, TIMER_RUN, false);
 		if (ret != JIT_RETURN_FUNCNOTFOUND)
 			return ret;
 	}
