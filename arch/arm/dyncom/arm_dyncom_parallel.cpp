@@ -489,16 +489,32 @@ static int handle_fp_insn(arm_core_t* core){
 	return 1;
 }
 
+#define PROF_FUNC_SIZE 0
 /* This function handles tagging */
 static inline void push_compiled_work(cpu_t* cpu, uint32_t pc, uint8_t func_attr){
 	//printf("In %s, pc=0x%x\n", __FUNCTION__, pc);
 	cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions] = func_attr;
+	cpu->dyncom_engine->func_size[cpu->dyncom_engine->functions] = 0;
 #if CHECK_IN_WRITE
 	inc_jit_num(pc);
 #else
 	protect_code_page(pc);
 #endif
 	cpu_tag(cpu, pc);
+#if PROF_FUNC_SIZE
+	printf("-------------------------------------\n");
+	printf("current func_size[%d] = %d, pc=0x%x, %s, %s\n", cpu->dyncom_engine->functions, cpu->dyncom_engine->func_size[cpu->dyncom_engine->functions], pc, is_usermode_func(cpu)?"usermode":"kernelmode", is_thumb_func(cpu)?"thumb":"arm");
+	/* if the size of a JIT function is below 10, we print it out to see what is wrong. */
+	if(cpu->dyncom_engine->func_size[cpu->dyncom_engine->functions] < 10){
+		uint32_t instr = 0xdeadc0de;
+		addr_t addr = pc;
+		for(int i = 0; i < cpu->dyncom_engine->func_size[cpu->dyncom_engine->functions]; i++)
+			if(bus_read(32, addr + i * 4, &instr) == 0)
+				printf("0x%x:\t0x%x\n", addr + i * 4, instr);
+		printf("-------------------------------------\n");
+		
+	}
+#endif
 	cpu->dyncom_engine->cur_tagging_pos ++;
 	cpu_translate(cpu, pc);
 	return;

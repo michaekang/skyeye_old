@@ -406,6 +406,7 @@ typedef struct dyncom_engine{
 	Module *mod;
 	void *fp[JIT_NUM];
 	uint8_t func_attr[JIT_NUM];
+	uint32_t func_size[JIT_NUM];
 	Function *func[JIT_NUM];
 	Function *cur_func;
 	fast_map fmap;

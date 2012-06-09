@@ -530,6 +530,7 @@ tag_recursive(cpu_t *cpu, addr_t pc, int level)
 
 		/* clear tag when instruction re-transalted. */
 		tag = get_tag(cpu, pc);
+		cpu->dyncom_engine->func_size[cpu->dyncom_engine->functions]++;
 
 		bytes = cpu->f.tag_instr(cpu, pc, &tag, &new_pc, &next_pc);
 		/* temporary fix: in case the previous instr at pc had changed,
