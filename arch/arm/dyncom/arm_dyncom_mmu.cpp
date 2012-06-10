@@ -154,7 +154,11 @@ dyncom_mmu_translate (arm_core_t *core, ARMword virt_addr, ARMword *phys_addr, i
 		}
 
 		/* l1desc = mem_read_word (state, l1addr); */
+		#if FAST_MEMORY
+		mem_read_raw(0, l1addr, l1desc, 32);
+		#else
 		bus_read(32, l1addr, &l1desc);
+		#endif
 		switch (l1desc & 3) {
 		case 0:
 		case 3:
@@ -184,8 +188,11 @@ dyncom_mmu_translate (arm_core_t *core, ARMword virt_addr, ARMword *phys_addr, i
 				l2addr = (l2addr |
 					  ((virt_addr & 0x000FF000) >> 10)) &
 					~3;
-
+				#if FAST_MEMORY
+				mem_read_raw(0, l2addr, l2desc, 32);
+				#else
 				bus_read(32, l2addr, &l2desc);
+				#endif
 				/* chy 2003-09-02 for xscale */
 				*ap = (l2desc >> 4) & 0x3;
 				*sop = 1;	/* page */
