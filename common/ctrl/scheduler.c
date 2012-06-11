@@ -368,7 +368,10 @@ int init_timer_scheduler(){
 	value.it_interval.tv_sec = 0;
 	value.it_interval.tv_usec = 1000;
 
+	/* shenoubang add win32 2012-6-8 */
+#ifndef __WIN32__
 	setitimer(ITIMER_VIRTUAL, &value, &ovalue);
+#endif
 
 	return No_exp;
 }
@@ -474,7 +477,10 @@ int fini_timer_scheduler()
 	struct event *tmp ;
 	struct event *q = NULL;
 
+	/* shenoubang add win32 2012-6-8 */
+#ifndef __WIN32__
 	setitimer(ITIMER_VIRTUAL, &ovalue, NULL);
+#endif
 	
 	LIST_FOREACH(tmp, &timer_head,list_entry){
 			q = tmp;

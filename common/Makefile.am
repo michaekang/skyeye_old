@@ -45,7 +45,7 @@ endif
 
 libcommon_la_LDFLAGS =
 if WIN32
-libcommon_la_LDFLAGS += -no-undefined -shared -Xlinker /mingw/bin/libbfd-2-18-50-20070907.dll -Xlinker /lib/libltdlc.a -Xlinker -lkernel32 -Xlinker -lmsvcrt -Xlinker -lgw32c -Xlinker -lkernel32 -Xlinker -lmsys-1.0 -Xlinker --export-all-symbol
+libcommon_la_LDFLAGS += -no-undefined -shared -Xlinker /mingw/bin/libbfd-2-18-50-20070907.dll -Xlinker /lib/libltdlc.a -Xlinker -lkernel32 -Xlinker -lmsvcrt -Xlinker -lgw32c -Xlinker -lkernel32 -Xlinker --export-all-symbol
 else
 #libcommon_la_LIBADD += -L$(top_builddir)/third-party/readline/
 libcommon_la_LIBADD += -L$(top_builddir)/third-party/bfd/.libs/ -lbfd -L$(top_builddir)/third-party/libiberty/pic -liberty -L${top_builddir}/libltdl/.libs -lltdl
@@ -63,7 +63,7 @@ INCLUDES =  @COMMON_INCLUDES@ -I$(top_srcdir)/third-party/include/ -I$(top_srcdi
 if LLVM_EXIST
 INCLUDES+= `llvm-config --cflags`
 if WIN32
-libcommon_la_LDFLAGS += -Xlinker `llvm-config --libs | sed 's/ / -Xlinker /g'` -L`llvm-config --libdir` -Xlinker /mingw/bin/libbfd-2-18-50-20070907.dll -Xlinker -lstdc++ -Xlinker /lib/libltdlc.a -Xlinker -lkernel32 -Xlinker -lmsys-1.0 -Xlinker -lole32 -Xlinker -lmsvcrt -Xlinker -lmingwex -Xlinker -lpthread -Xlinker -lmoldnamed -Xlinker -limagehlp -Xlinker -lgcc -Xlinker -lpsapi  -Xlinker -lmsys-1.0 -Xliiner -lmoldnamed
+libcommon_la_LDFLAGS += -Xlinker `llvm-config --libs | sed 's/ / -Xlinker /g'` -L`llvm-config --libdir` -Xlinker /mingw/bin/libbfd-2-18-50-20070907.dll -Xlinker -lstdc++ -Xlinker /lib/libltdlc.a -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lmsvcrt -Xlinker -lmingwex -Xlinker -lpthread -Xlinker -lmoldnamed -Xlinker -limagehlp -Xlinker -lgcc -Xlinker -lpsapi -Xlinker -lmoldnamed
 else
 libcommon_la_LDFLAGS += `llvm-config --libs ` -lrt -L`llvm-config --libdir`
 endif #win32
