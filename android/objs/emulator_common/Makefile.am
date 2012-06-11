@@ -11,14 +11,61 @@
 #
 ZLIB_SOURCES = $(top_srcdir)/third-party/distrib/zlib-1.2.3/adler32.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/compress.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/crc32.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/deflate.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/gzio.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/infback.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/inffast.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/inflate.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/inftrees.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/trees.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/uncompr.c $(top_srcdir)/third-party/distrib/zlib-1.2.3/zutil.c
 emulator_common = $(ZLIB_SOURCES) 
+# sources inherited from upstream, but not fully
+# integrated into android emulator
+#
+emulator_libqemu = $(CORE_MISC_SOURCES) \
+    $(top_srcdir)/android/skyeye/json-lexer.c \
+    $(top_srcdir)/android/skyeye/json-parser.c \
+    $(top_srcdir)/android/skyeye/json-streamer.c \
+    $(top_srcdir)/android/skyeye/qjson.c \
+    $(top_srcdir)/android/skyeye/qbool.c \
+    $(top_srcdir)/android/skyeye/qdict.c \
+    $(top_srcdir)/android/skyeye/qfloat.c \
+    $(top_srcdir)/android/skyeye/qint.c \
+    $(top_srcdir)/android/skyeye/qlist.c \
+    $(top_srcdir)/android/skyeye/qstring.c
 
 ###########################################################
 # Android utility functions
 #
 emulator_common += \
+	$(top_srcdir)/android/skyeye/json-lexer.c \
+	$(top_srcdir)/android/skyeye/json-parser.c \
+	$(top_srcdir)/android/skyeye/json-streamer.c \
+	$(top_srcdir)/android/skyeye/qjson.c \
+	$(top_srcdir)/android/skyeye/qbool.c \
+	$(top_srcdir)/android/skyeye/qdict.c \
+	$(top_srcdir)/android/skyeye/qfloat.c \
+	$(top_srcdir)/android/skyeye/qint.c \
+	$(top_srcdir)/android/skyeye/qlist.c \
+	$(top_srcdir)/android/skyeye/qstring.c \
         $(top_srcdir)/android/skyeye/sockets.c \
 	$(top_srcdir)/android/skyeye/user-events-qemu.c \
         $(top_srcdir)/android/skyeye/iolooper-select.c \
+	$(top_srcdir)/android/skyeye/input.c \
+	$(top_srcdir)/android/skyeye/notify.c \
+	$(top_srcdir)/android/skyeye/aio-android.c \
+	$(top_srcdir)/android/skyeye/async.c \
+	$(top_srcdir)/android/skyeye/cbuffer.c \
+	$(top_srcdir)/android/skyeye/charpipe.c \
+	$(top_srcdir)/android/skyeye/console.c \
+	$(top_srcdir)/android/skyeye/cutils.c \
+	$(top_srcdir)/android/skyeye/iohandler.c \
+	$(top_srcdir)/android/skyeye/osdep.c \
+	$(top_srcdir)/android/skyeye/qemu-config.c \
+	$(top_srcdir)/android/skyeye/qemu-error.c \
+	$(top_srcdir)/android/skyeye/qemu-malloc.c \
+	$(top_srcdir)/android/skyeye/qemu-option.c \
+	$(top_srcdir)/android/skyeye/qemu-sockets-android.c \
+	$(top_srcdir)/android/skyeye/qerror.c \
+	$(top_srcdir)/android/skyeye/qemu-char.c \
+	$(top_srcdir)/android/hw-kmsg.c \
+	$(top_srcdir)/android/config.c \
+	$(top_srcdir)/android/core-init-utils.c   \
+	$(top_srcdir)/android/hw-events.c \
+	$(top_srcdir)/android/qemu-setup.c \
+	$(top_srcdir)/android/utils/timezone.c \
         $(top_srcdir)/android/async-console.c \
         $(top_srcdir)/android/async-utils.c \
         $(top_srcdir)/android/charmap.c \

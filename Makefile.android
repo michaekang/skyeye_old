@@ -1,5 +1,5 @@
 SUBDIRS += android/objs/emulator_common
-SUBDIRS += android/objs/emulator_libqemu
+#SUBDIRS += android/objs/emulator_libqemu
 SUBDIRS += android/objs/emulator_libui
 SUBDIRS += android/objs/android
 #SUBDIRS += android/objs/android_common

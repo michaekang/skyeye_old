@@ -125,7 +125,7 @@ main_dir = \
 ##dyn
 #
 libemulator_libui_la_SOURCES = $(emulator_libui) $(main_dir)
-libemulator_libui_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -L$(top_srcdir)/android/objs/emulator_libqemu/ -lemulator_libqemu -L/usr/local/lib -liconv 
+libemulator_libui_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common  -L/usr/local/lib -liconv 
 
 
 pkglib_LTLIBRARIES = libemulator_libui.la
