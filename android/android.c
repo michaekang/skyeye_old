@@ -34,11 +34,28 @@
 #define DEBUG
 #include <skyeye_log.h>
 
+#include <skyeye_android_intf.h>
 #include "android_main.h"
-
+#include "android/skyeye/console.h"
+#include "globals.h"
+#include "android.h"
+#include <skyeye_android_intf.h>
+ 
 static conf_object_t* new_android(char* obj_name){
-	android_main();
-	return NULL;
+	/* registe android callback functions */
+	android_t* ad = skyeye_mm_zero(sizeof(android_t));
+	ad->obj = new_conf_object(obj_name, ad);
+	android_interface_t* android_if = skyeye_mm_zero(sizeof(android_interface_t));
+	android_if->get_android_hw = get_android_hw;
+	android_if->qemu_add_mouse_event_handler = qemu_add_mouse_event_handler;
+	printf("add mouse handler address 0x%x\n",qemu_add_mouse_event_handler);
+	android_if->qemu_add_kbd_event_handler = qemu_add_kbd_event_handler;
+	android_if->graphic_console_init = graphic_console_init;
+	android_if->start_android = android_main;
+	android_if->obj = ad->obj;
+	SKY_register_interface(android_if, obj_name, ANDROID_INTF_NAME);
+
+	return ad->obj;
 }
 
 void free_android(conf_object_t* dev){

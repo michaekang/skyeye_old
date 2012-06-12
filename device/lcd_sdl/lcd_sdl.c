@@ -40,6 +40,7 @@
 #include <skyeye_device.h>
 #define DEBUG
 #include <skyeye_log.h>
+#include <skyeye_android_intf.h>
 
 #include "lcd_sdl.h"
 
@@ -498,34 +499,6 @@ static int lcd_sdl_update(conf_object_t *opaque, lcd_surface_t* surface)
 	return 0; 
 }
 
-static int lcd_sdl_open(conf_object_t *opaque, lcd_surface_t* surface)
-{
-	struct lcd_sdl_device *dev = (lcd_sdl_device*)(opaque->obj);
-        fb_state_t* s = dev->fb;
-	DBG("In %s, width=%d, height=%d, begin_addr=0x%x,end_addr=0x%x\n, ", __FUNCTION__, surface->width, surface->height, surface->lcd_addr_begin, surface->lcd_addr_end);
-	if (dev == NULL || 
-	    surface->width <= 0 || surface->height <= 0) return -1;
-
-#if 0
-	if ((fbmem = (guint32*)get_dma_addr(surface->lcd_addr_begin)) == NULL) {
-		fprintf(stderr, "[GTK_LCD]: Can't find LCD DMA from address 0x%x\n", surface->lcd_addr_begin);
-		return -1;
-	}
-	DBG("In %s, fb_mem=0x%x\n", __FUNCTION__, fbmem);
-
-	lcd->width = surface->width;
-	lcd->virtual_width = surface->width + surface->lcd_line_offset;
-	lcd->height = surface->height;
-	lcd->depth = surface->depth;
-	lcd->update_rect.width = -1;
-	lcd->update_rect.height = -1;
-	lcd->update_all = TRUE;
-#endif
-
-	s->fb_base = surface->lcd_addr_begin;
-	return 0; 
-}
-
 void lcd_sdl_close()
 {
 	return NULL;
@@ -580,6 +553,55 @@ static void events_put_mouse(void *opaque, int dx, int dy, int dz, int buttons_s
 	lcd_ts->touchscreen_update_status(lcd_ts->obj, Pen_buffer);
 }
 
+static int lcd_sdl_open(conf_object_t *opaque, lcd_surface_t* surface)
+{
+	struct lcd_sdl_device *dev = (lcd_sdl_device*)(opaque->obj);
+        fb_state_t* fb = dev->fb;
+	DBG("In %s, width=%d, height=%d, begin_addr=0x%x,end_addr=0x%x\n, ", __FUNCTION__, surface->width, surface->height, surface->lcd_addr_begin, surface->lcd_addr_end);
+	printf("In %s, width=%d, height=%d, begin_addr=0x%x,end_addr=0x%x\n, ", __FUNCTION__, surface->width, surface->height, surface->lcd_addr_begin, surface->lcd_addr_end);
+	if (dev == NULL || 
+	    surface->width <= 0 || surface->height <= 0) return -1;
+
+#if 0
+	if ((fbmem = (guint32*)get_dma_addr(surface->lcd_addr_begin)) == NULL) {
+		fprintf(stderr, "[GTK_LCD]: Can't find LCD DMA from address 0x%x\n", surface->lcd_addr_begin);
+		return -1;
+	}
+	DBG("In %s, fb_mem=0x%x\n", __FUNCTION__, fbmem);
+
+	lcd->width = surface->width;
+	lcd->virtual_width = surface->width + surface->lcd_line_offset;
+	lcd->height = surface->height;
+	lcd->depth = surface->depth;
+	lcd->update_rect.width = -1;
+	lcd->update_rect.height = -1;
+	lcd->update_all = TRUE;
+#endif
+
+	fb->fb_base = surface->lcd_addr_begin;
+	return 0; 
+}
+
+void lcd_sdl_init()
+{
+	conf_object_t* obj = get_conf_obj("lcd_sdl_0");
+        struct lcd_sdl_device *dev = (lcd_sdl_device *)obj->obj;
+        fb_state_t* fb = dev->fb;
+
+	android_interface_t* android_if = SKY_get_interface(obj, ANDROID_INTF_NAME);
+
+        fb->ds = android_if->graphic_console_init(lcd_sdl_update_display,
+                             lcd_sdl_invalidate_display,
+                             NULL,
+                             NULL,
+                             fb);
+
+	printf("in %s,mouse event address 0x%x\n",__func__,events_put_mouse);
+	android_if->qemu_add_mouse_event_handler(events_put_mouse,dev, 1, skyeye_strdup("s3c6410-events"));
+	android_if->qemu_add_kbd_event_handler(events_put_keycode, dev);
+
+}
+
 static conf_object_t* new_lcd_sdl(char* obj_name){
 
 	if (obj_name == NULL) return NULL;
@@ -593,12 +615,6 @@ static conf_object_t* new_lcd_sdl(char* obj_name){
 //	fb->dev = dev;
 
 	dev->fb = fb;
-
-        fb->ds = graphic_console_init(lcd_sdl_update_display,
-                             lcd_sdl_invalidate_display,
-                             NULL,
-                             NULL,
-                             fb);
 
         fb->dpi = 165;  /* XXX: Find better way to get actual value ! */
 
@@ -631,8 +647,13 @@ static conf_object_t* new_lcd_sdl(char* obj_name){
 	SKY_register_interface(refresh_signal, obj_name, SIMPLE_SIGNAL_INTF_NAME);
 	dev->master = refresh_signal;
 
-	qemu_add_kbd_event_handler(events_put_keycode, dev);
-	qemu_add_mouse_event_handler(events_put_mouse,dev, 1, "s3c6410-events");
+//	qemu_add_kbd_event_handler(events_put_keycode, dev);
+//	qemu_add_mouse_event_handler(events_put_mouse,dev, 1, "s3c6410-events");
+
+	android_sdl_control_intf * sdl_control = skyeye_mm_zero(sizeof(android_sdl_control_intf));
+	sdl_control->conf_obj = dev->obj;
+	sdl_control->sdl_ctrl = lcd_sdl_init;
+	SKY_register_interface(sdl_control, obj_name,ANDROID_SDL_CTRL_INTF_NAME);
 
 	/* Register io function to the object */
 	return dev->obj;

@@ -35,6 +35,7 @@
 #include <skyeye_interface.h>
 #include "goldfish_fb.h"
 #include "goldfish_nand.h"
+#include <skyeye_android_intf.h>
 #if 0
 #include "hw/hw.h"
 #include "hw/boards.h"
@@ -2599,6 +2600,10 @@ int main(int argc, char **argv, char **envp)
 #endif
     int show_vnc_port = 0;
     IniFile*  hw_ini = NULL;
+    conf_object_t* conf_obj = get_conf_obj("lcd_sdl_0");
+    android_sdl_control_intf* sdl_control = (android_sdl_control_intf*)SKY_get_interface(conf_obj, ANDROID_SDL_CTRL_INTF_NAME);
+    sdl_control->sdl_ctrl();
+
 #if 0 //modified by xiaoqiao
     STRALLOC_DEFINE(kernel_params);
     STRALLOC_DEFINE(kernel_config);
@@ -3802,6 +3807,7 @@ int main(int argc, char **argv, char **envp)
     }
 
     /* Initialize GPS */
+#if 0 //xiaoqiao
     if (android_op_gps) {
         CharDriverState*  cs = qemu_chr_open("gps", android_op_gps, NULL);
         if (cs == NULL) {
@@ -3815,7 +3821,7 @@ int main(int argc, char **argv, char **envp)
             PANIC("could not initialize qemud 'gps' channel");
         }
     }
-
+#endif
     /* Initialize audio. */
     if (android_op_audio) {
         if ( !audio_check_backend_name( 0, android_op_audio ) ) {

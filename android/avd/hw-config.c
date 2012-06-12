@@ -18,6 +18,10 @@
 
 /* the global variable containing the hardware config for this device */
 AndroidHwConfig   android_hw[1];
+AndroidHwConfig* get_android_hw(void)
+{
+	return android_hw;
+}
 
 static int
 stringToBoolean( const char* value )

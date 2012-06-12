@@ -31,6 +31,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <skyeye_types.h>
+
+typedef struct android_t{
+	conf_object_t* obj;
+}android_t;
 
 /** in vl.c */
 

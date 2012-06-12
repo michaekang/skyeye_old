@@ -42,6 +42,7 @@
 #include <skyeye_uart.h>
 #include <skyeye_mm.h>
 #include <skyeye_signal.h>
+#include <skyeye_android_intf.h>
 
 #ifdef __CYGWIN__
 #include <time.h>
@@ -1255,6 +1256,11 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 
 		if (getenv("ANDROID") != NULL)
 		{
+			conf_object_t* sdl_painter = pre_conf_obj("lcd_sdl_0", "lcd_sdl");
+
+			conf_object_t* android = pre_conf_obj("android_0", "android");
+			android_interface_t* android_if = SKY_get_interface(android, ANDROID_INTF_NAME);
+
 			conf_object_t* keypad = pre_conf_obj("s3c6410_keypad_0", "s3c6410_keypad");
 			memory_space_intf* keypad_io_memory = (memory_space_intf*)SKY_get_interface(keypad, MEMORY_SPACE_INTF_NAME);
 			lcd_keypad_t* lcd_keypad = (lcd_control_intf*)SKY_get_interface(keypad, LCD_KEYPAD_INTF_NAME);
@@ -1264,14 +1270,14 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 				skyeye_log(Error_log, __FUNCTION__, "Can not register io memory for keypad\n");
 			}
 
-
-			conf_object_t* sdl_painter = pre_conf_obj("lcd_sdl_0", "lcd_sdl");
-
 			/* register touchscreen for lcd_gtk */
 			SKY_register_interface(lcd_ts, sdl_painter->objname, LCD_TS_INTF_NAME);
 
 			/* register keypad for lcd_gtk */
 			SKY_register_interface(lcd_keypad, sdl_painter->objname, LCD_KEYPAD_INTF_NAME);
+
+			/* register keypad for lcd_gtk */
+			SKY_register_interface(android_if, sdl_painter->objname, ANDROID_INTF_NAME);
 
 			lcd_control_intf* lcd_ctrl = (lcd_control_intf*)SKY_get_interface(sdl_painter, LCD_CTRL_INTF_NAME);
 			attr_value_t* attr = make_new_attr(Val_ptr);
@@ -1286,12 +1292,12 @@ s3c6410x_mach_init (void *arch_instance, machine_config_t *this_mach)
 			/* connect the signal line, so lcd get notified when gtk finished refresh */
 			refresh_signal->conf_obj = slave_signal->conf_obj;
 			refresh_signal->trigger = slave_signal->trigger;
-			conf_object_t* android = pre_conf_obj("android_0", "android");
 
 			general_signal_intf* keypad_intr_signal = (lcd_control_intf*)SKY_get_interface(keypad, GENERAL_SIGNAL_INTF_NAME);
 			keypad_intr_signal->conf_obj = vic_signal->conf_obj;
 			keypad_intr_signal->raise_signal = vic_signal->raise_signal;
 			keypad_intr_signal->lower_signal = vic_signal->lower_signal;
+			android_if->start_android();
 		}
 		else{
 #ifdef GTK_LCD

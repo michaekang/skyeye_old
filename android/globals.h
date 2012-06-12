@@ -20,6 +20,7 @@
  * wether a data or cache wipe has been in effect.
  */
 extern AvdInfoParams     android_avdParams[1];
+extern AndroidHwConfig* get_android_hw(void); 
 
 /* a pointer to the android virtual device information
  * object, which can be queried for the paths of various

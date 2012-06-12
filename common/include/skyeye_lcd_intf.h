@@ -45,7 +45,7 @@ typedef struct lcd_ctrl{
 
 typedef struct goldfish_fb_ctrl{
 	conf_object_t* conf_obj;
-	void (* fb_ctrl)(void);
+	void (* fb_ctrl)(char * obj_name);
 }goldfish_fb_control_intf;
 #define FB_CTRL_INTF_NAME "goldfish_fb_ctrl"
  

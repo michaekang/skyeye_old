@@ -24,6 +24,7 @@
 #include <skyeye_lcd_intf.h>
 #include <skyeye_interface.h>
 #include "skyeye_mach_goldfish.h"
+#include <skyeye_android_intf.h>
 
 
 
@@ -609,7 +610,9 @@ void goldfish_fb_device_init()
 	conf_object_t* obj = get_conf_obj("goldfish_fb0");
 	dev = (goldfish_fb_device *)obj->obj;
 	fb_state_t* fb = dev->fb;
-	fb->ds = graphic_console_init(goldfish_fb_update_display,
+	conf_object_t* android = get_conf_obj("android_0");
+	android_interface_t* android_if = SKY_get_interface(android, ANDROID_INTF_NAME);
+	fb->ds = android_if->graphic_console_init(goldfish_fb_update_display,
                              goldfish_fb_invalidate_display,
                              NULL,
                              NULL,

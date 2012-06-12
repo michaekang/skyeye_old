@@ -30,6 +30,7 @@
 #include <skyeye_mm.h>
 #include <skyeye_mach.h>
 #include <skyeye_arch.h>
+#include <skyeye_android_intf.h>
 
 #include "goldfish_events.h"
 
@@ -375,7 +376,10 @@ events_clr_bit(int type, int bit)
 void events_dev_init()
 {
     int iomemtype;
-    AndroidHwConfig*  config = android_hw;
+
+    conf_object_t* android = get_conf_obj("android_0");
+    android_interface_t* android_if = SKY_get_interface(android, ANDROID_INTF_NAME);
+    AndroidHwConfig*  config = android_if->get_android_hw();
 
 
     goldfish_events_device* dev;
@@ -538,8 +542,8 @@ void events_dev_init()
 
     //cpu_register_physical_memory(base, 0xfff, iomemtype);
 
-    qemu_add_kbd_event_handler(events_put_keycode, s);
-    qemu_add_mouse_event_handler(events_put_mouse, s, 1, "goldfish-events");
+    android_if->qemu_add_kbd_event_handler(events_put_keycode, s);
+    android_if->qemu_add_mouse_event_handler(events_put_mouse, s, 1, "goldfish-events");
 
 
     s->first = 0;
