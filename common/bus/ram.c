@@ -392,6 +392,16 @@ mem_reset ()
 			}
 		}
 		else{
+			/* shenoubang add win32 2012-6-12 */
+#if __WIN32__
+			global_memory.rom[bank] = skyeye_mm (mb[bank].len);
+			if (!global_memory.rom[bank]) {
+				fprintf (stderr,
+					 "SKYEYE: mem_reset: Error allocating mem for bank number %d.\n", bank);
+				//skyeye_exit (-1);
+				return Malloc_exp;
+			}
+#else
 	                global_memory.rom[bank] = mmap (mb[bank].addr, mb[bank].len, PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED, -1, 0);
                 //tlb_cache = (uint32_t***)mmap(NULL, size, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
         	        if(MAP_FAILED == global_memory.rom[bank]){
@@ -401,6 +411,7 @@ mem_reset ()
         	        printf("mmap DRAM, size=0x%x, return 0x%x\n", mb[bank].len, (unsigned long)global_memory.rom[bank]);
                 	/* directly mmap the same address with guest physical memory */
 	                get_skyeye_exec_info()->mmap_access = 1;
+#endif
 		}
 	#if 1 
 		if (mb[bank].filename

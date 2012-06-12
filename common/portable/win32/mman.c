@@ -37,6 +37,8 @@ void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 	HANDLE handle, file;
 	DWORD nRead = 0;
 	void *retVal = NULL;
+	DWORD dw;
+	LPVOID lpMsgBuf;
 
 	if ((flags & MAP_SHARED) ||
 	    ((prot & PROT_WRITE) && fd != -1) ||
@@ -55,7 +57,22 @@ void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 	/* FIXME: when length is too large, failed as not enough space*/
 	if ((retVal = (LPTSTR)MapViewOfFileEx(handle, FILE_MAP_ALL_ACCESS,
 			                0, 0, length, addr)) == NULL) {
-		perror("windows mmap failed");
+		dw = GetLastError();
+		FormatMessage(
+		     FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		     FORMAT_MESSAGE_FROM_SYSTEM |
+		     FORMAT_MESSAGE_IGNORE_INSERTS,
+		     NULL,
+		     GetLastError(),
+		     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		     (LPTSTR) &lpMsgBuf,
+		     0,
+		     NULL
+		     );
+		    printf("mmap failed: %s\n", (char*)lpMsgBuf);
+		     // Free the buffer.
+		     LocalFree( lpMsgBuf );
+
 		return MAP_FAILED;
 	}
 
