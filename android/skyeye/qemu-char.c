@@ -113,7 +113,7 @@
 #ifdef CONFIG_ANDROID
 #include "charpipe.h"
 //#include "modem_driver.h"
-#include "android/gps.h"
+//#include "android/gps.h"
 #include "android/hw-kmsg.h"
 //#include "android/hw-qemud.h"
 #endif /* CONFIG_ANDROID */
@@ -591,13 +591,13 @@ static CharDriverState *qemu_chr_open_android_modem(QemuOpts* opts)
     qemu_chr_open_charpipe( &cs, &android_modem_cs );
     return cs;
 }
-#endif
 static CharDriverState *qemu_chr_open_android_gps(QemuOpts* opts)
 {
     CharDriverState*  cs;
     qemu_chr_open_charpipe( &cs, &android_gps_cs );
     return cs;
 }
+#endif
 
 static CharDriverState *qemu_chr_open_android_kmsg(QemuOpts* opts)
 {
@@ -2596,7 +2596,7 @@ static const struct {
 //    { .name = "android-qemud", .open = qemu_chr_open_android_qemud },
     { .name = "android-kmsg",  .open = qemu_chr_open_android_kmsg },
 //    { .name = "android-modem", .open = qemu_chr_open_android_modem },
-    { .name = "android-gps",   .open = qemu_chr_open_android_gps },
+//    { .name = "android-gps",   .open = qemu_chr_open_android_gps },
 #endif
 #ifdef CONFIG_BRLAPI
 //    { .name = "braille",   .open = chr_baum_init },

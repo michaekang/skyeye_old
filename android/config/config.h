@@ -4,7 +4,7 @@
  *
  * Do not include directly.
  */
-#include "config-host.h"
+#include "android/skyeye/config-host.h"
 
 #define TARGET_PHYS_ADDR_BITS  32
 #define CONFIG_TRACE 1

@@ -94,10 +94,12 @@ QEMUPutMouseEntry *qemu_add_mouse_event_handler(QEMUPutMouseEvent *func,
 
     s = qemu_mallocz(sizeof(QEMUPutMouseEntry));
 
+    printf("in %s,func address 0x%llx\n",__func__,func);
     s->qemu_put_mouse_event = func;
     s->qemu_put_mouse_event_opaque = opaque;
     s->qemu_put_mouse_event_absolute = absolute;
     s->qemu_put_mouse_event_name = qemu_strdup(name);
+    s->qemu_put_mouse_event_name = qemu_strdup("s3c6410-events");
     s->index = mouse_index++;
 
     QTAILQ_INSERT_TAIL(&mouse_handlers, s, node);
@@ -176,6 +178,7 @@ void kbd_mouse_event(int dx, int dy, int dz, int buttons_state)
         return;
     }
 
+    printf("in %s,mouse_event address 0x%x\n",__func__,mouse_event);
     entry = QTAILQ_FIRST(&mouse_handlers);
 
     mouse_event = entry->qemu_put_mouse_event;

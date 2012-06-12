@@ -2277,11 +2277,13 @@ do_geo_nmea( ControlClient  client, char*  args )
         control_write( client, "KO: NMEA sentence missing, try 'help geo nmea'\r\n" );
         return -1;
     }
+#if 0 //xiaoqiao
     if (!android_gps_cs) {
         control_write( client, "KO: no GPS emulation in this virtual device\r\n" );
         return -1;
     }
     android_gps_send_nmea( args );
+#endif
     return 0;
 }
 
@@ -2405,7 +2407,8 @@ do_geo_fix( ControlClient  client, char*  args )
         stralloc_add_str( s, ",,,*47" );
 
         /* send it, then free */
-        android_gps_send_nmea( stralloc_cstr(s) );
+	//xiaoqiao
+       // android_gps_send_nmea( stralloc_cstr(s) );
         stralloc_reset( s );
     }
     return 0;
