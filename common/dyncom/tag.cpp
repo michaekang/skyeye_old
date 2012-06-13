@@ -581,3 +581,196 @@ tag_start(cpu_t *cpu, addr_t pc)
 
 	tag_recursive(cpu, pc, 0);
 }
+
+static void
+tag_iterative(cpu_t *cpu, vector<uint32_t> &trace, vector<uint32_t> &start_addr)
+{
+	int bytes;
+	tag_t tag;
+	addr_t new_pc, next_pc, pc;
+
+	vector<uint32_t>::iterator it;
+	for(it = trace.begin(); it != trace.end(); ++it) {
+		pc = *it;
+//		printf("in tag, pc : %x\n", pc);
+		if(!cpu->mem_ops.is_inside_page(cpu, pc) && !is_user_mode(cpu))
+			return;
+		if (!is_inside_code_area(cpu, pc)){
+			LOG("In %s pc = %x start = %x end = %x\n",
+					__FUNCTION__, pc, cpu->dyncom_engine->code_start, cpu->dyncom_engine->code_end);
+			return;
+		}
+
+		/* clear tag when instruction re-transalted. */
+		tag = get_tag(cpu, pc);
+
+		bytes = cpu->f.tag_instr(cpu, pc, &tag, &new_pc, &next_pc);
+		/* temporary fix: in case the previous instr at pc had changed,
+		   we remove instr dependant tags. They will be set again anyway */
+		selective_clear_tag(cpu, pc, TAG_BRANCH | TAG_CONDITIONAL | TAG_RET | TAG_STOP | TAG_CONTINUE | TAG_TRAP | TAG_NEW_BB | TAG_END_PAGE);
+		or_tag(cpu, pc, tag | TAG_CODE);
+#ifdef OPT_LOCAL_REGISTERS
+#if 0
+		if (is_inside_code_area(cpu, next_pc)){
+			tag_t tmp_tag;
+			addr_t tmp_newpc, tmp_nextpc;
+			cpu->f.tag_instr(cpu, next_pc, &tmp_tag, &tmp_newpc, &tmp_nextpc);
+			if(tmp_tag & TAG_SYSCALL){
+				or_tag(cpu, pc, TAG_BEFORE_SYSCALL);
+			}
+			if(tag & TAG_SYSCALL){
+				or_tag(cpu, next_pc, TAG_AFTER_SYSCALL);
+			}
+		}
+#endif
+#endif
+		LOG("In %s, pc=0x%x, tag=0x%x\n", __FUNCTION__, pc, tag);
+		if ((tag & TAG_NEW_BB) && !is_user_mode(cpu)) {
+//			or_tag(cpu, next_pc, TAG_AFTER_COND);
+			or_tag(cpu, next_pc, TAG_AFTER_NEW_BB);
+		}
+		if (tag & (TAG_CONDITIONAL))
+			or_tag(cpu, next_pc, TAG_AFTER_COND);
+
+		if (tag & TAG_TRAP)	{
+			/* regular trap - no code after it */
+			if (!(cpu->dyncom_engine->flags_hint & (CPU_HINT_TRAP_RETURNS | CPU_HINT_TRAP_RETURNS_TWICE)))
+				//return;
+				continue;
+			/*
+			 * client hints that a trap will likely return,
+			 * so tag code after it (optimization for usermode
+			 * code that makes syscalls)
+			 */
+			or_tag(cpu, next_pc, TAG_AFTER_TRAP);
+			/*
+			 * client hints that a trap will likely return
+			 * - to the next instruction AND
+			 * - to the instruction after that
+			 * OpenBSD on M88K skips an instruction on a trap
+			 * return if there was an error.
+			 */
+		}
+
+		if (tag & TAG_CALL) {
+			/* tag subroutine, then continue with next instruction */
+			or_tag(cpu, new_pc, TAG_SUBROUTINE);
+			or_tag(cpu, next_pc, TAG_AFTER_CALL);
+//			tag_recursive(cpu, new_pc, level+1);
+		}
+
+		if (tag & (TAG_BRANCH)) {
+			or_tag(cpu, new_pc, TAG_BRANCH_TARGET);
+//			printf("new_pc : %x pc : %x\n", new_pc, pc);
+			if (new_pc != NEW_PC_NONE) {
+				new_pc = (pc & 0xfffff000) + (new_pc & 0xfff);
+//				tag_recursive(cpu, new_pc, level+1);
+			}
+			#if 0
+			if (!(tag & (TAG_CONDITIONAL))) {
+//				return;
+				//break;
+				printf("!cond branch\n");
+				continue;
+			}
+			#endif
+		}
+
+		if (is_translated(cpu, next_pc)) {
+			or_tag(cpu, pc, tag | TAG_STOP | TAG_LAST_INST);
+			continue;
+		}
+		if(cpu->mem_ops.is_page_start(cpu, pc) && !is_user_mode(cpu))
+			or_tag(cpu, pc, tag | TAG_START_PAGE);
+		if(cpu->mem_ops.is_page_end(cpu, pc) && !is_user_mode(cpu)){
+			LOG("In %s. TAG_END_PAGE for pc=0x%x\n", __FUNCTION__, pc);
+			or_tag(cpu, pc, tag | TAG_STOP | TAG_END_PAGE);
+			xor_tag(cpu, pc, TAG_CONTINUE);
+			/* if the memory related insn is located at the end of page,
+				check_mm needs PC to parse the instruction */
+			if(tag & TAG_NEW_BB){
+				LOG("In %s. TAG_NEED_PC for pc=0x%x\n", __FUNCTION__, pc);
+				or_tag(cpu, pc, tag | TAG_NEED_PC);
+			}
+			continue;
+		}
+		if ((tag & TAG_EXCEPTION) && !is_user_mode(cpu)) {
+			or_tag(cpu, next_pc, TAG_AFTER_EXCEPTION);
+			xor_tag(cpu, pc, TAG_CONTINUE);
+			continue;
+		}
+#if 1
+		if (tag & (TAG_RET | TAG_STOP))	/* execution ends here, the follwing location is not reached */
+//			return;
+//			break;
+			continue;
+#endif
+		save_startbb_addr(cpu, pc);
+		pc = next_pc;
+		/* save tag end address */
+	}
+#if 0
+	if (it != trace.end()) {
+		printf("NONO\n");
+		exit(-1);
+	}
+#endif
+	//save_startbb_addr(cpu, pc);
+	#if 0
+	for(it = start_addr.begin(); it != start_addr.end(); ++it) {
+		pc = *it;
+		or_tag(cpu, pc, TAG_ENTRY);
+		save_startbb_addr(cpu, pc);
+	}
+	#endif
+	#if 0
+	it = start_addr.begin();
+	pc = *it;
+	or_tag(cpu, pc, TAG_ENTRY);
+	save_startbb_addr(cpu, pc);
+	#endif
+	cpu->dyncom_engine->tag_end = pc;
+	LOG("tag end at %x\n", pc);
+	LOG("next pc is %x\n", next_pc);
+}
+
+void
+tag_by_trace(cpu_t *cpu, vector<uint32_t> &trace, vector<uint32_t> &start_addr)
+{
+	uint32_t pc;
+	pc = trace.front();
+
+	cpu->dyncom_engine->tags_dirty = true;
+
+	/* for singlestep, we don't need this */
+	if (cpu->dyncom_engine->flags_debug & (CPU_DEBUG_SINGLESTEP | CPU_DEBUG_SINGLESTEP_BB))
+		return;
+
+	/* initialize data structure on demand */
+	check_tag_memory_integrity(cpu, pc);
+
+	LOG("starting tagging at $%02llx\n", (unsigned long long)pc);
+
+	if (!(cpu->dyncom_engine->flags_codegen & CPU_CODEGEN_TAG_LIMIT)) {
+		int i;
+		if (cpu->dyncom_engine->file_entries) {
+			for (i = 0; i < 4; i++)
+				fputc((pc >> (i*8))&0xFF, cpu->dyncom_engine->file_entries);
+			fflush(cpu->dyncom_engine->file_entries);
+		}
+	}
+
+	block_entry = pc;
+	
+	or_tag(cpu, pc, TAG_ENTRY); /* client wants to enter the guest code here */
+	vector<uint32_t>::iterator it;
+	tag_iterative(cpu, trace, start_addr);
+	#if 0
+	if (start_addr.size()) {
+		for(it = start_addr.begin(); it != start_addr.end(); ++it) {
+			tag_recursive(cpu, *it, 0);
+		}
+	}
+	#endif
+}
+
