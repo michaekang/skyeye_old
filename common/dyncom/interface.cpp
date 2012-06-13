@@ -384,7 +384,7 @@ void save_addr_in_func(cpu_t *cpu, void *native_code_func)
  *
  * @param cpu CPU core structure
  */
-static void
+static void *
 cpu_translate_function(cpu_t *cpu, addr_t addr)
 {
 	BasicBlock *bb_ret, *bb_trap, *label_entry, *bb_start, *bb_timeout;
@@ -452,6 +452,7 @@ cpu_translate_function(cpu_t *cpu, addr_t addr)
 		printf("JIT function number is %d, Please set your cache bigger.\n", cpu->dyncom_engine->functions);
 		skyeye_exit(0);
 	}
+	return cpu->dyncom_engine->fp[cpu->dyncom_engine->functions - 1];
 }
 
 /**
@@ -459,10 +460,10 @@ cpu_translate_function(cpu_t *cpu, addr_t addr)
  *
  * @param cpu CPU core structure
  */
-void
+void *
 cpu_translate(cpu_t *cpu, addr_t addr)
 {
-	cpu_translate_function(cpu, addr);
+	return cpu_translate_function(cpu, addr);
 }
 
 //typedef int (*fp_t)(uint8_t *RAM, void *grf, void *frf, read_memory_t readfp, write_memory_t writefp);
