@@ -3554,26 +3554,17 @@ void protect_code_page(uint32_t addr)
 	code_page_set.push_back((uint64_t)mem_ptr);
 }
 
-/* profiling data is used for direct branch only. */
-typedef struct _profiling_data {
-	uint32_t type;
-	uint32_t addr[2];
-	int32_t  vpc[2];
-	uint32_t count[2];
-	uint32_t in_superblock;
-	uint64_t clocktime;
-	uint32_t reference;
-	uint32_t start_of_sb;
-//	bb_stat* bb_count;
-} profiling_data;
 
+extern uint64_t walltime;
 /* Allocate memory for profiling data */
-void alloc_profiling_data(uint32_t type)
+void alloc_profiling_data(uint32_t start, uint32_t type, uint32_t size)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(profiling_data));
 
 	profiling_data *prof = (profiling_data *)inst_base->component;
+	prof->start = start;
 	prof->type = type;
+	prof->size = size;
 	prof->in_superblock = 0;
 	prof->vpc[0] = -1;
 	prof->vpc[1] = -1;
@@ -3581,7 +3572,7 @@ void alloc_profiling_data(uint32_t type)
 	prof->count[1] = 0;
 	prof->addr[0] = 0;
 	prof->addr[1] = 0;
-	prof->clocktime = 0;
+	prof->clocktime = walltime;
 	prof->reference = 0;
 	prof->start_of_sb = 0;
 }
@@ -3598,9 +3589,16 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, addr_t addr)
 	unsigned int inst, inst_size = 4;
 	int idx;
 	int ret = NON_BRANCH;
+	int thumb = 0;
+	/* instruction size of basic block */
+	int size = 0;
 	/* (R15 - 8) ? */
 	//cpu->translate_pc = cpu->Reg[15];
 	bb_start = top;
+
+	if (cpu->TFlag)
+		thumb = THUMB;
+
 	addr_t phys_addr;
 	addr_t pc_start;
 	fault_t fault = NO_FAULT;
@@ -3623,6 +3621,7 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, addr_t addr)
 			return FETCH_EXCEPTION;
 		}*/
 
+		size ++;
 		/* If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction */
 		if (cpu->TFlag){
 		//if(cpu->Cpsr & (1 << THUMB_BIT)){
@@ -3655,7 +3654,15 @@ translated:
 		}
 		ret = inst_base->br;
 	};
-	alloc_profiling_data(ret);
+	/* 
+	   Save <pc, profiling data> pair in ProfileCache.
+	   We use it in gene_hot_path later. 
+	 */
+//	printf("insert profiling data @ %x:%x\n", cpu->Reg[15], pc_start);
+	insert_profiling_data(pc_start, top);
+
+	alloc_profiling_data(pc_start, ret | thumb, size);
+
 	if (!core->is_user_mode) {
 		//printf("before protect_code_page, pc_start=0x%x\n", pc_start);
 #if CHECK_IN_WRITE
