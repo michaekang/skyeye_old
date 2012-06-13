@@ -42,6 +42,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "arm_dyncom_mmu.h"
 #include "arm_dyncom_parallel.h"
 #include "arm_dyncom_run.h"
+#include "dyncom/profiler.h"
 
 static void
 arm_reset_state ()
@@ -237,24 +238,6 @@ extern unsigned VFPInit(arm_core_t* core);
 }
 #endif
 
-#if PROFILE
-void set_timer()
-{
-        struct itimerval itv, oldtv;
-        itv.it_interval.tv_sec = 0;
-        itv.it_interval.tv_usec = 100;
-        itv.it_value.tv_sec = 0;
-        itv.it_value.tv_usec = 100;
-        setitimer(ITIMER_REAL, &itv, &oldtv);
-}
-
-uint64_t walltime;
-
-void update_walltime(int sig)
-{
-	walltime ++;
-}
-#endif
 static bool arm_cpu_init()
 {
 	skyeye_config_t* config = get_current_config();
@@ -305,10 +288,10 @@ static bool arm_cpu_init()
 	cpu->boot_core_id = 0;
 
 	ARMul_EmulateInit(); /* Needed by the interpreter */
-#if PROFILE
-        signal(SIGALRM, update_walltime);
-	set_timer();
-#endif	
+
+	signal(SIGVTALRM, update_walltime);
+	set_profiler_timer();
+
 	return true;
 }
 
