@@ -37,7 +37,7 @@ sdl_lcd = lcd_sdl/lcd_sdl_module.c lcd_sdl/lcd_sdl.c
 #dev_net = net/dev_net_cs8900a.c  net/skyeye_net_tuntap.c net/dev_net_s3c4510b.c
 
 dev_net = net/dev_net_cs8900a.c  net/skyeye_net_tuntap.c \
-net/dev_net_rtl8019.c  net/skyeye_net.c    net/skyeye_net_vnet.c net/net_module.c   net/skyeye_net_vhub.c
+net/dev_net_rtl8019.c net/skyeye_net_vhub.c net/skyeye_net.c net/skyeye_net_vnet.c net/net_module.c
 
 dev_ts = touchscreen/dev_touchscreen_skyeye.c  touchscreen/skyeye_touchscreen.c touchscreen/ts_module.c
 dev_pci = pci/pci_bus/pci.c  pci/pci_bus/pci_module.c
@@ -109,13 +109,36 @@ libts_la_LDFLAGS = -module
 libpci_la_SOURCES = $(dev_pci)
 libpci_la_LDFLAGS = -module
 
-pkglib_LTLIBRARIES = libuart.la libuart_16550.la libflash.la libnandflash.la libsound.la liblcd.la libnet.la libts.la libpci.la
-
 if WIN32
-libuart_la_LDFLAGS +=  -no-undefined -shared -module -Xlinker -L../common/.libs/ -L/mingw/lib -Xlinker -lcommon -Xlinker -L/mingw/ -Xlinker --export-all-symbol
-else
-pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la libtouchscreen_s3c6410.la libsysctrl_s3c6410.la libgpio_s3c6410.la libspi_s3c6410.la libusbhost_s3c6410.la libac97_s3c6410.la libmfc_s3c6410.la libcamif_s3c6410.la librtc_s3c6410.la
+WIN32_LD_DEVICE = -no-undefined -shared -module -Xlinker -L../common/.libs/  -Xlinker -lcommon -L/mingw/lib  -Xlinker -L/mingw/ -Xlinker --export-all-symbol
+libuart_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libuart_16550_la_LDFLAGS += $(WIN32_LD_DEVICE)
+liblcd_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+if GTK_LCD
+libgtk_lcd_la_LDFLAGS += $(WIN32_LD_DEVICE)
 endif
+libsdl_lcd_la_SOURCES += $(WIN32_LD_DEVICE)
+libsdhci_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libtouchscreen_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libsysctrl_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libgpio_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libspi_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libusbhost_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libac97_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libmfc_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+librtc_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libcamif_s3c6410_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libflash_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libnandflash_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libsound_la_LDFLAGS += $(WIN32_LD_DEVICE)
+liblcd_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libnet_la_LDFLAGS += $(WIN32_LD_DEVICE)
+libts_la_LDFLAGS  += $(WIN32_LD_DEVICE)
+libpci_la_LDFLAGS += $(WIN32_LD_DEVICE)
+endif
+
+pkglib_LTLIBRARIES = libuart.la libuart_16550.la libflash.la libnandflash.la libsound.la liblcd.la libnet.la libts.la libpci.la
+pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la libtouchscreen_s3c6410.la libsysctrl_s3c6410.la libgpio_s3c6410.la libspi_s3c6410.la libusbhost_s3c6410.la libac97_s3c6410.la libmfc_s3c6410.la libcamif_s3c6410.la librtc_s3c6410.la
 
 if GTK_LCD
 pkglib_LTLIBRARIES += libgtk_lcd.la
@@ -132,7 +155,14 @@ INCLUDES += -I./nandflash
 
 INCLUDES += @LCD_CFLAGS@
 if WIN32
-INCLUDES +=/mingw/gtk-2.0/
+INCLUDES +=-I/mingw/gtk-2.0/include/gtk-2.0/
+INCLUDES +=-I/mingw/gtk-2.0/include/glib-2.0/
+INCLUDES +=-I/mingw/gtk-2.0/include/cairo/
+INCLUDES +=-I/mingw/gtk-2.0/include/pango-1.0/
+INCLUDES +=-I/mingw/gtk-2.0/include/atk-1.0/
+INCLUDES +=-I/mingw/gtk-2.0/lib/gtk-2.0/include/
+INCLUDES +=-I/mingw/gtk-2.0/lib/glib-2.0/include/
+
 else
 INCLUDES += -I/usr/include/gtk-2.0/ 
 endif
@@ -148,3 +178,5 @@ dev_s3c6410_keypad = s3c6410_keypad/s3c6410_keypad.c s3c6410_keypad/s3c6410_keyp
 libs3c6410_keypad_la_SOURCES = $(dev_s3c6410_keypad)
 libs3c6410_keypad_la_LDFLAGS = -module
 pkglib_LTLIBRARIES += libs3c6410_keypad.la
+
+

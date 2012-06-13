@@ -129,21 +129,10 @@ vhub_wait_packet(struct net_device *net_dev, struct timeval *tv)
 }
 
 #else /* other systems */
-
-#if (defined(__MINGW32__) || defined(__CYGWIN__))
-#define SKYEYE_NET_vhub_SUPPORT
-#include "./skyeye_net_tap_win32.c"
-#endif /* defined(__MINGW32__) || defined(__CYGWIN__) */
-
-#ifdef __BEOS__
-#define SKYEYE_NET_vhub_SUPPORT
-#include "./skyeye_net_tap_beos.c"
-#endif /* __BEOS__ */
-
-#ifndef SKYEYE_NET_vhub_SUPPORT
+#include "skyeye_net.h"
 
 int
-vhub_open(struct net_device *net_dev)s
+vhub_open(struct net_device *net_dev)
 {
 	return -1;
 }
@@ -171,7 +160,5 @@ vhub_wait_packet(struct net_device *net_dev, struct timeval *tv)
 {
 	return -1;
 }
-
-#endif /* SKYEYE_NET_vhub_SUPPORT */
 
 #endif
