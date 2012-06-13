@@ -41,10 +41,15 @@ using namespace std;
 #include "arm_dyncom_translate.h"
 #include "dyncom/tag.h"
 #include "dyncom/phys_page.h"
+#include "dyncom/profiler.h"
 #include "skyeye_ram.h"
 #include "vfp/vfp.h"
 
 #define HYBRID_MODE		1
+#define THRESHOLD			1000
+#define DURATION			500
+#define PROFILE
+//#define PRINT_PROFILE_INFO
 
 #define CHECK_RS 	if(RS == 15) rs += 8
 #define CHECK_RM 	if(RM == 15) rm += 8
@@ -447,12 +452,6 @@ fault_t LnSWoUB(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned
 		addr = CHECK_READ_REG15_WA(cpu, Rn) - OFFSET_12;
 	}
 	//if (Rn == 15) rn += 8;
-	if (cpu->icounter == 249111596) {
-		printf("in %s\n", __FUNCTION__);
-		printf("RN:%d\n", Rn);
-		printf("Rn:%x\n", cpu->Reg[Rn]);
-		printf("OFFSET12:%d\n", OFFSET_12);
-	}
 	virt_addr = addr;
 	fault = check_address_validity(cpu, addr, &phys_addr, rw);
 	return fault;
@@ -997,15 +996,18 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
 #define ISNEG(n)	(n < 0)
 #define ISPOS(n)	(n >= 0)
 
+#if 0
 enum {
-	COND = 1,
-	NON_BRANCH = (1 << 1),
-	DIRECT_BRANCH = (1 << 2),
+	COND            = (1 << 0),
+	NON_BRANCH      = (1 << 1),
+	DIRECT_BRANCH   = (1 << 2),
 	INDIRECT_BRANCH = (1 << 3),
-	CALL = (1 << 4),
-	RET = (1 << 5),
-	END_OF_PAGE = (1 << 6)
+	CALL            = (1 << 4),
+	RET             = (1 << 5),
+	END_OF_PAGE     = (1 << 6),
+	THUMB           = (1 << 7)
 };
+#endif
 
 typedef struct _arm_inst {
 	unsigned int idx;
@@ -3280,6 +3282,7 @@ const transop_fp_t arm_instruction_trans[] = {
 
 typedef map<unsigned int, int> bb_map;
 bb_map CreamCache[65536];
+bb_map ProfileCache[65536];
 
 //#define USE_DUMMY_CACHE
 
@@ -3298,6 +3301,24 @@ void insert_bb(unsigned int addr, int start)
 #endif
 }
 
+void insert_profiling_data(unsigned int addr, int start)
+{
+	ProfileCache[HASH(addr)][addr] = start;
+}
+
+int find_profiling_data(cpu_t *cpu, unsigned int addr, int &start)
+{
+	int ret = -1;
+	bb_map::const_iterator it = ProfileCache[HASH(addr)].find(addr);
+	if (it != ProfileCache[HASH(addr)].end()) {
+		start = static_cast<int>(it->second);
+		ret = 0;
+	} else {
+		ret = -1;
+	}
+	return ret;
+}
+
 #define TRANS_THRESHOLD                 65000
 int find_bb(cpu_t* cpu, unsigned int addr, int &start)
 {
@@ -3314,10 +3335,12 @@ int find_bb(cpu_t* cpu, unsigned int addr, int &start)
 		start = static_cast<int>(it->second);
 		ret = 0;
 #if HYBRID_MODE
+#ifndef PROFILE
 		/* increase the bb counter */
 		if(get_bb_prof(cpu, addr, 1) == TRANS_THRESHOLD){
 			push_to_compiled(cpu, addr);
 		}
+#endif
 #endif
 	} else {
 		ret = -1;
@@ -3450,6 +3473,21 @@ void flush_bb(uint32_t addr)
 				++it;
 		}
 	}
+
+	for (int i = 0; i < 65536; i ++) {
+		for (it = ProfileCache[i].begin(); it != ProfileCache[i].end(); ) {
+			start = static_cast<uint32_t>(it->first);
+			//start = (start >> 12) << 12;
+			start &= 0xfffff000;
+			if (start == addr) {
+				//printf("[ERASE][0x%08x]\n", static_cast<int>(it->first));
+				ProfileCache[i].erase(it ++);
+			} else
+				++it;
+		}
+	}
+
+	printf("flush bb @ %x\n", addr);
 }
 
 static uint32_t get_bank_addr(void *addr)
