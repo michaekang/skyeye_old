@@ -1222,7 +1222,8 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr)
 		 (veclen >> FPSCR_LENGTH_BIT) + 1);
 
 	if (!fop->fn) {
-		printf("VFP: could not find single op %d\n", FEXT_TO_IDX(inst));
+		printf("VFP: could not find single op %d, inst=0x%x@0x%x\n", FEXT_TO_IDX(inst), inst, state->Reg[15]);
+		exit(-1);
 		goto invalid;
 	}
 

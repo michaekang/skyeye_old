@@ -131,7 +131,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 #define vfpinstr_inst 	vmls_inst
 #define VFPLABEL_INST 	VMLS_INST
 #ifdef VFP_DECODE
-{"vmls",        6,      ARMVFP2,        25, 27, 0x1,   23, 23, 1,  11, 11, 0,  8, 9, 0x2,  6, 6, 1,  4, 4, 0},
+{"vmls",        7,      ARMVFP2,    28 , 31, 0xF, 25, 27, 0x1,   23, 23, 1,  11, 11, 0,  8, 9, 0x2,  6, 6, 1,  4, 4, 0},
 #endif
 #ifdef VFP_DECODE_EXCLUSION
 {"vmls",        0,      ARMVFP2, 0},
@@ -1277,7 +1277,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 #define vfpinstr_inst 	vneg_inst
 #define VFPLABEL_INST 	VNEG_INST
 #ifdef VFP_DECODE
-{"vneg",        5,      ARMVFP2,        23, 27, 0x1d,  16, 21, 0x30,    9, 11, 0x5,      6, 7, 1,     4, 4, 0},
+//{"vneg",        5,      ARMVFP2,        23, 27, 0x1d,  16, 21, 0x30,    9, 11, 0x5,      6, 7, 1,     4, 4, 0},
+{"vneg",        5,      ARMVFP2,        23, 27, 0x1d,  17, 21, 0x18,    9, 11, 0x5,      6, 7, 1,     4, 4, 0},
 #endif
 #ifdef VFP_DECODE_EXCLUSION
 {"vneg",        0,      ARMVFP2, 0},
