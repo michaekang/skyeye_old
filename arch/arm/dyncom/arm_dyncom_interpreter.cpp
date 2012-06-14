@@ -3734,26 +3734,205 @@ static bool InAPrivilegedMode(arm_core_t *core)
 						}                                                                  
 						#endif                                                             
 
-#define THRESHOLD			100
-#define DURATION			25
-#define PROFILE
-#ifdef PROFILE
-void gene_hot_path(uint32_t start_pc, profiling_data *prof, int id)
+int gene_hot_path(arm_processor *cpu, uint32_t start_pc, int value, uint64_t time, int type)
 {
 	extern uint64_t walltime;
-	if (prof->clocktime != walltime) {
-//		printf("decay\n");
-		prof->count[0] >>= (walltime - prof->clocktime);
-		prof->count[1] >>= (walltime - prof->clocktime);
-		prof->clocktime = walltime;
+	static int trace = 0;
+	static int isloop = 0;
+	static int max_depth = 0;
+	uint32_t phys_addr;
+	uint32_t next_pc;
+	uint32_t end_pc;
+	uint32_t save_pc = start_pc;
+	profiling_data *prof;
+	uint32_t hotspot_id;
+	int ptr;
+	arm_inst * inst_base;
+	fault_t fault;
+	int ret;
+
+//#ifdef USER_MODE_OPT
+//	phys_addr = start_pc;
+//#else
+#if 0
+	fault = check_address_validity(cpu, start_pc, &phys_addr, 1, INSN_TLB);
+	if (fault) {
+		printf("address fault\n");
+		return -3;
 	}
-	if (prof->count[id] >= THRESHOLD) {
-		//printf("start : %x\n", start_pc);
-		//printf("addr0 : %x count : %d\n", prof->addr[0], prof->count[0]);
-		//printf("addr1 : %x count : %d\n", prof->addr[1], prof->count[1]);
-	}
-}
 #endif
+//#endif
+	phys_addr = start_pc;
+
+	cpu_t *dyncom_cpu = (cpu_t *)cpu->dyncom_cpu->obj;
+	
+	if (find_profiling_data(dyncom_cpu, phys_addr, ptr) == -1) {
+//		printf("no such profiling data %x:%x\n", start_pc, phys_addr);
+//		exit(-1);
+		return -2;
+	}
+	inst_base = (arm_inst *)&inst_buf[ptr];
+	prof = (profiling_data *)(inst_base->component);
+
+	#if 0
+	if (inst_base->br & CALL_BRANCH) {
+		return 0;
+	}
+	#endif
+//	if (prof->in_superblock == total_hotpath && total_hotpath)
+//		return;
+	if (prof->clocktime < time) {
+		prof->count[0] >>= (time - prof->clocktime);
+		prof->count[1] >>= (time - prof->clocktime);
+		prof->clocktime = time;
+	}
+	hotspot_id = get_hotspot_id();
+#if 1
+	if ((prof->count[0] >= value) && (!prof->in_superblock)) {
+//	if ((prof->count[0] >= value) && (!prof->start_of_sb) && (prof->in_superblock != hotspot_id)) {
+		next_pc = prof->addr[0];
+		#ifdef PRINT_PROFILE_INFO
+		printf("count 0 : %d\n", prof->count[0]);
+		printf("addr  0 : %x\n", prof->addr[0]);
+		#endif
+	} else if ((prof->count[1] >= value) && (!prof->in_superblock)) {
+//	} else if ((prof->count[1] >= value) && (!prof->start_of_sb) && (prof->in_superblock != hotspot_id)) {
+		next_pc = prof->addr[1];
+		#ifdef PRINT_PROFILE_INFO
+		printf("count 1 : %d\n", prof->count[1]);
+		printf("addr  1 : %x\n", prof->addr[1]);
+		#endif
+#endif
+	} else {
+
+		#if 1
+		if (trace) {
+			if (prof->in_superblock == hotspot_id) {
+				#ifdef PRINT_PROFILE_INFO
+				printf("LOOP\n");
+				#endif
+				isloop = 1;
+			}
+			else {
+			#ifdef PRINT_PROFILE_INFO
+				printf("bb_start : %x\n", save_pc);
+				printf("bb_end   : %x\n", start_pc - 8);
+			#endif
+				#if 1
+			//	if (!prof->in_superblock) {
+				if (!prof->start_of_sb) {
+					record_trace(prof);
+					prof->in_superblock = hotspot_id;
+				}
+				#endif
+				#if 0
+				if (type == JIT_TYPE_TRACE) {
+					if (!prof->in_superblock) {
+						record_trace(save_pc, start_pc - 8);
+					} else {
+						extern hotspot *find_hotpath(unsigned int addr);
+						hotspot *hs = find_hotpath(save_pc);
+						extern void copy_to_new(hotspot *hs);
+						copy_to_new(hs);
+						extern void explore_more_trace(hotspot* hs);
+						explore_more_trace(hs);
+					}
+				} else if (type == JIT_TYPE_TREE_GROUP){
+					if (prof->in_superblock) {
+						extern hotspot *find_hotpath(unsigned int addr);
+						hotspot *hs = find_hotpath(save_pc);
+						extern void copy_to_new(hotspot *hs);
+						copy_to_new(hs);
+						extern void explore_more_trace(hotspot* hs);
+						explore_more_trace(hs);
+					}
+				}
+				#endif
+			}
+		#ifdef PRINT_PROFILE_INFO
+			printf("----------------------\n");
+		#endif
+			if ((prof->count[0] >= value) || (prof->count[1] >= value)) {
+		#ifdef PRINT_PROFILE_INFO
+				#if 0
+				printf("count 0 : %d\n", prof->count[0]);
+				printf("addr  0 : %x\n", prof->addr[0]);
+				printf("count 1 : %d\n", prof->count[1]);
+				printf("addr  1 : %x\n", prof->addr[1]);
+				printf("in_superblock : %d\n", prof->in_superblock);
+				printf("----------------------\n");
+				#endif
+		#endif
+			}
+			return 0;
+		} else {
+			if (type == JIT_TYPE_TREE_GROUP) {
+				#ifdef PRINT_PROFILE_INFO
+				#if 0
+				printf("count 0 : %d\n", prof->count[0]);
+				printf("addr  0 : %x\n", prof->addr[0]);
+				printf("count 1 : %d\n", prof->count[1]);
+				printf("addr  1 : %x\n", prof->addr[1]);
+				printf("in_superblock : %d\n", prof->in_superblock);
+				#endif
+				#endif
+				//record_trace(save_pc, start_pc - 8);
+			}
+			return -1;
+		}
+		#endif
+	}
+
+	if (trace == 0) {
+//		insert_hotpath(phys_addr);
+//		trace_set.clear();
+//		start_addr.clear();
+		//++total_hotpath;
+		#ifdef PRINT_PROFILE_INFO
+		printf("hot path %d start : \n", hotspot_id);
+		#endif
+//		open_dot_file();
+//		output_header();
+	}
+	/* mark this basicblock in superblock */
+	prof->in_superblock = hotspot_id;
+	if (trace == 0) {
+//		printf("mark %x in superblock %d\n", save_pc, total_hotpath);
+	}
+
+	record_trace(prof);
+
+	++trace;
+
+	ret = gene_hot_path(cpu, next_pc, DURATION, time, type);
+
+	--trace;
+
+	if (trace == 0) {
+		if (ret != 0) {
+			printf("ToT\n");
+			printf("%x\n", phys_addr);
+			return -1;
+		}
+		if (type == JIT_TYPE_TRACE) {
+			prof->start_of_sb = hotspot_id;
+			extern hotspot *gene_native_code(cpu_t *cpu);
+//			print_trace();
+//			print_entry();
+
+			uint8_t func_attr = FUNC_ATTR_NONE;
+			if(cpu->TFlag)
+				func_attr |= FUNC_ATTR_THUMB;
+			if(cpu->Reg[15] < 0xc0000000)
+				func_attr |= FUNC_ATTR_USERMODE;
+			dyncom_cpu->dyncom_engine->func_attr[dyncom_cpu->dyncom_engine->functions] = func_attr;
+
+			gene_native_code(dyncom_cpu);
+		}
+	}
+	return 0;
+}
+
 /* r15 = r15 + 8 */
 void InterpreterMainLoop(cpu_t *core)
 {
@@ -3851,7 +4030,6 @@ void InterpreterMainLoop(cpu_t *core)
 		&&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,&&INIT_INST_LENGTH,&&END
 		};
 
-	int ptr;
 	arm_inst * inst_base;
 	unsigned int lop, rop, dst;
 	unsigned int addr;
@@ -3859,10 +4037,7 @@ void InterpreterMainLoop(cpu_t *core)
 	unsigned int last_pc = 0;
 	fault_t fault;
 	static unsigned int last_physical_base = 0, last_logical_base = 0;
-	#if 0
-	if (use == 1)
-		goto INIT_INST_LENGTH;
-	#endif
+	int ptr;
 
 	LOAD_NZCVT;
 	DISPATCH:
@@ -3912,6 +4087,7 @@ void InterpreterMainLoop(cpu_t *core)
 			int rc = JIT_RETURN_NOERR;
 			//printf("enter jit icounter is %lld, pc=0x%x\n", core->icounter, cpu->Reg[15]);
 			SAVE_NZCVT;
+//			resume_timing();
 			rc = cpu_run(core);
 			LOAD_NZCVT;
 			//printf("out of jit ret is %d icounter is %lld, pc=0x%x\n", rc, core->icounter, cpu->Reg[15]);
@@ -3997,32 +4173,47 @@ void InterpreterMainLoop(cpu_t *core)
 			if (InterpreterTranslate(core, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
 				goto END;
 		}
+		resume_timing();
 		inst_base = (arm_inst *)&inst_buf[ptr];
 		GOTO_NEXT_INST;
 	}
 	PROFILING:
 	{
+		pause_timing();
 #ifdef PROFILE
 		inst_base = (arm_inst *)&inst_buf[ptr];
 		profiling_data *prof = (profiling_data *)inst_base->component;
-		if (prof->type == INDIRECT_BRANCH)
+		if ((PC >> 12) != (last_pc >> 12))
 			goto DISPATCH;
+		if (prof->type & INDIRECT_BRANCH)
+			goto DISPATCH;
+		#if 0
 		if ((PC == prof->addr[0]) && (prof->count[0] > 1) && (prof->vpc[0] != -1)) {
+			prof->count[0] ++;
 			ptr = prof->vpc[0];
 			inst_base = (arm_inst *)&inst_buf[ptr];
+			resume_timing();
 			CHECK_EXT_INT;
 			GOTO_NEXT_INST;
 		}
 		else if ((PC == prof->addr[1]) && (prof->count[1] > 1) && (prof->vpc[1] != -1)) {
+			prof->count[1] ++;
 			ptr = prof->vpc[1];
 			inst_base = (arm_inst *)&inst_buf[ptr];
+			resume_timing();
 			CHECK_EXT_INT;
 			GOTO_NEXT_INST;
 		}
-		if ((PC >> 12) != (last_pc >> 12))
-			goto DISPATCH;
-		if (prof->addr[0] == PC) {
+		#endif
+//		if (prof->addr[0] == PC) {
+		if (prof->addr[0] == (last_physical_base | (PC & 0xfff))) {
+			if (prof->clocktime < walltime) {
+				prof->count[0] >>= (walltime - prof->clocktime);
+				prof->count[1] >>= (walltime - prof->clocktime);
+				prof->clocktime = walltime;
+			}
 			prof->count[0] ++;
+		#if 0
 			if (prof->count[0] > 1) {
 			        fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
 				if (fault)
@@ -4040,9 +4231,16 @@ void InterpreterMainLoop(cpu_t *core)
 				inst_base = (arm_inst *)&inst_buf[ptr];
 				GOTO_NEXT_INST;
 			}
+		#endif
 		}
-		else if (prof->addr[1] == PC) {
+		else if (prof->addr[1] == (last_physical_base | (PC & 0xfff))) {
+			if (prof->clocktime < walltime) {
+				prof->count[0] >>= (walltime - prof->clocktime);
+				prof->count[1] >>= (walltime - prof->clocktime);
+				prof->clocktime = walltime;
+			}
 			prof->count[1] ++;
+		#if 0
 			if (prof->count[1] > 1) {
 			        fault = check_address_validity(cpu, cpu->Reg[15], &phys_addr, 1, INSN_TLB);
 				if (fault)
@@ -4060,27 +4258,34 @@ void InterpreterMainLoop(cpu_t *core)
 				inst_base = (arm_inst *)&inst_buf[ptr];
 				GOTO_NEXT_INST;
 			}
+		#endif
 		}
 		else {
 			if (prof->count[0] < prof->count[1]) {
-				prof->addr[0] = PC;
+				prof->addr[0] = last_physical_base | (PC & 0xfff);
 				prof->count[0] = 1;
 			} else {
-				prof->addr[1] = PC;
+				prof->addr[1] = last_physical_base | (PC & 0xfff);
 				prof->count[1] = 1;
 			}
 		}
-		#if 0
-		if (prof->count[0] >= THRESHOLD) {
-			gene_hot_path(last_pc, prof, 0);
-			prof->count[0] = 0;
-		//	prof->count[1] = 0;
-		} else if (prof->count[1] >= THRESHOLD) {
-			gene_hot_path(last_pc, prof, 1);
-		//	prof->count[0] = 0;
-			prof->count[1] = 0;
-		}
-		#endif
+
+                if (prof->count[0] >= THRESHOLD) {
+                        alloc_hotspot_id();
+//                        if (0 != gene_hot_path(cpu, last_pc, THRESHOLD, walltime, JIT_TYPE_TRACE))
+                        if (0 != gene_hot_path(cpu, last_physical_base | (last_pc & 0xfff), THRESHOLD, walltime, JIT_TYPE_TRACE))
+                                free_hotspot_id();
+			else
+				goto DISPATCH;
+                } else if (prof->count[1] >= THRESHOLD) {
+                        alloc_hotspot_id();
+//                        if (0 != gene_hot_path(cpu, last_pc, THRESHOLD, walltime, JIT_TYPE_TRACE))
+                        if (0 != gene_hot_path(cpu, last_physical_base | (last_pc & 0xfff), THRESHOLD, walltime, JIT_TYPE_TRACE))
+                                free_hotspot_id();
+			else
+				goto DISPATCH;
+                }
+
 #endif
 		goto DISPATCH;
 	}
@@ -6409,11 +6614,13 @@ void InterpreterMainLoop(cpu_t *core)
 		cpu->AbortAddr = addr;
 		cpu->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
 		cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
+		pause_timing();
 		return;
 	}
 	END:
 	{
 		SAVE_NZCVT;
+		pause_timing();
 		return;
 	}
 	INIT_INST_LENGTH:
