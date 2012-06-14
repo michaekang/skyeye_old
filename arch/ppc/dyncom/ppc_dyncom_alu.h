@@ -28,6 +28,7 @@
 #include "llvm/Instructions.h"
 #include <dyncom/dyncom_llvm.h>
 #include <dyncom/frontend.h>
+#include "llvm/Constants.h"
 
 #include "ppc_tools.h"
 #include "ppc_dyncom_run.h"

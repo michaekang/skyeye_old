@@ -45,6 +45,8 @@
 #include "dyncom/defines.h"
 #include "common/mmu/arm1176jzf_s_mmu.h"
 #include "armmmu.h"
+typedef llvm::ArrayRef<llvm::Type*> TypeArray;
+typedef llvm::ArrayRef<llvm::Value*> ValueArray;
 
 static BasicBlock* create_mmu_fault_bb(cpu_t* cpu, int fault, Value* fault_addr){
 	BasicBlock *bb = BasicBlock::Create(_CTX(), "mmu_fault", cpu->dyncom_engine->cur_func, 0);
@@ -87,7 +89,8 @@ static BasicBlock* create_io_read_bb(cpu_t* cpu, Value* addr, int size, BasicBlo
 
 	//Value* phys_addr = get_phys_addr(cpu, bb, addr, 1, cpu->dyncom_engine->bb_trap);
 	#endif
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
@@ -96,7 +99,7 @@ static BasicBlock* create_io_read_bb(cpu_t* cpu, Value* addr, int size, BasicBlo
 	params.push_back(CONST(size));
 	params.push_back(CONST(cpu->dyncom_engine->need_exclusive));
 
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, ValueArray(params), "", bb);
 	new StoreInst(ret, cpu->dyncom_engine->read_value, false, 0, bb);
 	Value* cond = ICMP_EQ(R(CP15_TLB_FAULT_STATUS), CONST(0));
 	//BranchInst::Create(load_store_end, bb);
@@ -136,7 +139,8 @@ static BasicBlock* create_io_write_bb(cpu_t* cpu, Value* addr, Value* value, int
 	if (cpu->dyncom_engine->ptr_func_write_memory == NULL) {
 		return NULL;
 	}
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
@@ -146,7 +150,7 @@ static BasicBlock* create_io_write_bb(cpu_t* cpu, Value* addr, Value* value, int
 	params.push_back(CONST(size));
 	params.push_back(CONST(cpu->dyncom_engine->need_exclusive));
 
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, ValueArray(params), "", bb);
 
 	Value* cond = ICMP_EQ(R(CP15_TLB_FAULT_STATUS), CONST(0));
 	//BranchInst::Create(load_store_end, bb);
@@ -204,14 +208,15 @@ void memory_read(cpu_t* cpu, BasicBlock*bb, Value* addr, uint32_t sign, uint32_t
 		exit(0);
 	}
 	#else
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
 	params.push_back(v_cpu_ptr);
 	params.push_back(phys_addr);
 	params.push_back(CONST(size));
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, params.begin(), params.end(), "", bb);
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, ValueArray(params), "", bb);
 	tmp = ret;
 	#endif
 	//arch_arm_debug_print(cpu, bb, ZEXT64(tmp), R(15), CONST(26));
@@ -291,7 +296,8 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
 			exit(0);
 		}
 		#else
-		Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+		//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+		IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	        Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
         	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	        std::vector<Value *> params;
@@ -300,7 +306,7 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
 		Value* tmp = ZEXT32(real_value);
         	params.push_back(tmp);
 	        params.push_back(CONST(size));
-        	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
+        	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, ValueArray(params), "", bb);
 		#endif
 	}
 	else{
@@ -317,7 +323,8 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
 			exit(0);
 		}
 	#else
-		Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+		//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+		IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 		Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 		Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 		std::vector<Value *> params;
@@ -325,7 +332,7 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
 		params.push_back(phys_addr);
 		params.push_back(value);
 		params.push_back(CONST(size));
-		CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
+		CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, ValueArray(params), "", bb);
 	#endif
 	}
 	//arch_arm_debug_print(cpu, bb, ZEXT64(value), R(15), CONST(16));

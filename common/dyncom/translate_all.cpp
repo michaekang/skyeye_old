@@ -19,6 +19,7 @@
 #include "dyncom/tag.h"
 #include "translate.h"
 #include "dyncom/defines.h"
+#include "llvm/Constants.h"
 //#include "libcpu_run.h"
 
 /**

@@ -24,6 +24,7 @@
 */
 
 #include "llvm/Instructions.h"
+#include "llvm/Constants.h"
 #include "arm_regformat.h"
 #include "skyeye_dyncom.h"
 #include "dyncom/dyncom_llvm.h"

@@ -11,6 +11,7 @@
 #include "skyeye_dyncom.h"
 #include "dyncom/dyncom_llvm.h"
 #include "dyncom/frontend.h"
+#include "llvm/Constants.h"
 
 #define HAS_SPECIAL_FPR0(cpu) ((cpu)->info.common_flags & CPU_FLAG_HARDWIRE_FPR0)
 

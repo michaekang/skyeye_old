@@ -18,6 +18,7 @@
 #include "dyncom/frontend.h"
 #include "dyncom/dyncom_llvm.h"
 #include "dyncom/defines.h"
+#include "llvm/Constants.h"
 #include "bank_defs.h"
 #include "portable/portable.h"
 

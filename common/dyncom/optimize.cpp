@@ -6,8 +6,24 @@
 
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/PassManager.h"
-#include "llvm/Support/StandardPasses.h"
+#include "llvm/Transforms/IPO.h"
+#include "llvm/Analysis/Passes.h"
+//#include "llvm/Support/StandardPasses.h"
 #include "llvm/Target/TargetData.h"
+
+#include "llvm/DerivedTypes.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/JIT.h"
+#include "llvm/LLVMContext.h"
+#include "llvm/Module.h"
+#include "llvm/PassManager.h"
+#include "llvm/Analysis/Verifier.h"
+#include "llvm/Analysis/Passes.h"
+#include "llvm/Target/TargetData.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Support/IRBuilder.h"
+//#include "llvm/Support/TargetSelect.h"
+
 
 #include "skyeye_dyncom.h"
 

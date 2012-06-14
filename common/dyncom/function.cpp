@@ -27,9 +27,10 @@
 // function
 //////////////////////////////////////////////////////////////////////
 
+typedef llvm::ArrayRef<llvm::Type*> TypeArray;
 static StructType *
 get_struct_reg(cpu_t *cpu) {
-	std::vector<const Type*>type_struct_reg_t_fields;
+	std::vector<llvm::Type*>type_struct_reg_t_fields;
 
 	uint32_t count, size;
 	
@@ -47,12 +48,12 @@ get_struct_reg(cpu_t *cpu) {
 
 //	type_struct_reg_t_fields.push_back(getIntegerType(cpu->info.address_size)); /* PC */
 
-	return getStructType(type_struct_reg_t_fields, /*isPacked=*/true);
+	return getStructType(TypeArray(type_struct_reg_t_fields), /*isPacked=*/true);
 }
 
 static StructType *
 get_struct_spr_reg(cpu_t *cpu) {
-	std::vector<const Type*>type_struct_reg_t_fields;
+	std::vector<llvm::Type*>type_struct_reg_t_fields;
 
 	uint32_t count, size;
 
@@ -62,12 +63,12 @@ get_struct_spr_reg(cpu_t *cpu) {
 	for (uint32_t n = 0; n < count; n++)
 		type_struct_reg_t_fields.push_back(getIntegerType(size));
 
-	return getStructType(type_struct_reg_t_fields, /*isPacked=*/true);
+	return getStructType(TypeArray(type_struct_reg_t_fields), /*isPacked=*/true);
 }
 
 static StructType *
 get_struct_fp_reg(cpu_t *cpu) {
-	std::vector<const Type*>type_struct_fp_reg_t_fields;
+	std::vector<llvm::Type*>type_struct_fp_reg_t_fields;
 
 	uint32_t count, size;
 
@@ -96,7 +97,7 @@ get_struct_fp_reg(cpu_t *cpu) {
 		}
 	}
 
-	return getStructType(type_struct_fp_reg_t_fields, /*isPacked=*/true);
+	return getStructType(TypeArray(type_struct_fp_reg_t_fields), /*isPacked=*/true);
 }
 /**
  * @brief Get the pointer of an element of a structure
@@ -107,6 +108,8 @@ get_struct_fp_reg(cpu_t *cpu) {
  *
  * @return pointer to the element
  */
+typedef llvm::ArrayRef<llvm::Value*> ValueArray;
+
 static Value *
 get_struct_member_pointer(Value *s, int index, BasicBlock *bb) {
 	ConstantInt* const_0 = ConstantInt::get(XgetType(Int32Ty), 0);
@@ -115,7 +118,8 @@ get_struct_member_pointer(Value *s, int index, BasicBlock *bb) {
 	SmallVector<Value*, 2> ptr_11_indices;
 	ptr_11_indices.push_back(const_0);
 	ptr_11_indices.push_back(const_index);
-	return (Value*) GetElementPtrInst::Create(s, ptr_11_indices.begin(), ptr_11_indices.end(), "", bb);
+	//return (Value*) GetElementPtrInst::Create(s, ptr_11_indices.begin(), ptr_11_indices.end(), "", bb);
+	return (Value*) GetElementPtrInst::Create(s, ValueArray(ptr_11_indices), "", bb);
 }
 
 static void
@@ -254,7 +258,7 @@ emit_decode_reg(cpu_t *cpu, BasicBlock *bb)
 		cpu->ptr_fpr, bb);
 
 	// PC pointer.
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 #if 0
 	Constant *v_pc = ConstantInt::get(intptr_type, (uintptr_t)cpu->rf.pc);
 	cpu->ptr_PC = ConstantExpr::getIntToPtr(v_pc, PointerType::getUnqual(getIntegerType(cpu->info.address_size)));
@@ -443,19 +447,19 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	// Type Definitions
 	// - struct reg
 	StructType *type_struct_reg_t = get_struct_reg(cpu);
-	cpu->dyncom_engine->mod->addTypeName("struct.reg_t", type_struct_reg_t);
+	//cpu->dyncom_engine->mod->addTypeName("struct.reg_t", type_struct_reg_t);
 	// - struct reg *
 	PointerType *type_pstruct_reg_t = PointerType::get(type_struct_reg_t, 0);
 
 	// - struct spr_reg
 	StructType *type_struct_spr_reg_t = get_struct_spr_reg(cpu);
-	cpu->dyncom_engine->mod->addTypeName("struct.spr_reg_t", type_struct_spr_reg_t);
+	//cpu->dyncom_engine->mod->addTypeName("struct.spr_reg_t", type_struct_spr_reg_t);
 	// - struct spr_reg *
 	PointerType *type_pstruct_spr_reg_t = PointerType::get(type_struct_spr_reg_t, 0);
 
 	// - struct fp_reg
 	StructType *type_struct_fp_reg_t = get_struct_fp_reg(cpu);
-	cpu->dyncom_engine->mod->addTypeName("struct.fp_reg_t", type_struct_fp_reg_t);
+	//cpu->dyncom_engine->mod->addTypeName("struct.fp_reg_t", type_struct_fp_reg_t);
 	// - struct fp_reg *
 	PointerType *type_pstruct_fp_reg_t = PointerType::get(type_struct_fp_reg_t, 0);
 
@@ -464,22 +468,22 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	// - intptr *
 	PointerType *type_intptr = PointerType::get(cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX()), 0);
 	// - uint32_t
-	const IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
-	const IntegerType *type_i64 = IntegerType::get(_CTX(), 64);
+	IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
+	IntegerType *type_i64 = IntegerType::get(_CTX(), 64);
 
 	/* read memory in IR */
-	std::vector<const Type*> type_func_read_memory_args;
+	std::vector<llvm::Type*> type_func_read_memory_args;
 	type_func_read_memory_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_read_memory_args.push_back(type_i32);	/* i32 */
 	type_func_read_memory_args.push_back(type_i32);	/* i32 */
 	type_func_read_memory_args.push_back(type_i32);	/* ex_flag */
 	FunctionType *type_func_read_memory_callout = FunctionType::get(
-		getIntegerType(32),	/* Result */
-		type_func_read_memory_args,	/* Params */
+		Type::getInt32Ty(cpu->dyncom_engine->mod->getContext()),	//return
+		TypeArray(type_func_read_memory_args),	/* Params */
 		false);		      	/* isVarArg */
 	cpu->dyncom_engine->type_pread_memory = PointerType::get(type_func_read_memory_callout, 0);
 	/* write memory in IR */
-	std::vector<const Type*> type_func_write_memory_args;
+	std::vector<llvm::Type*> type_func_write_memory_args;
 	type_func_write_memory_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_write_memory_args.push_back(type_i32);	/* i32 */
 	type_func_write_memory_args.push_back(type_i32);	/* i32 */
@@ -487,12 +491,12 @@ cpu_create_function(cpu_t *cpu, const char *name,
 	type_func_write_memory_args.push_back(type_i32);	/* ex_flag */
 	FunctionType *type_func_write_memory_callout = FunctionType::get(
 		XgetType(VoidTy),	/* Result */
-		type_func_write_memory_args,	/* Params */
+		TypeArray(type_func_write_memory_args),	/* Params */
 		false);		      	/* isVarArg */
 	cpu->dyncom_engine->type_pwrite_memory = PointerType::get(type_func_write_memory_callout, 0);
 
 	// - (*f)(uint8_t *, reg_t *, fp_reg_t *, (*)(...)) [jitmain() function pointer)
-	std::vector<const Type*>type_func_args;
+	std::vector<llvm::Type*>type_func_args;
 	type_func_args.push_back(type_pi8);				/* uint8_t *RAM */
 	type_func_args.push_back(type_pstruct_reg_t);	/* reg_t *reg */
 	type_func_args.push_back(type_pstruct_spr_reg_t);	/* spr_reg_t  */
@@ -507,8 +511,8 @@ cpu_create_function(cpu_t *cpu, const char *name,
 
 	type_func_args.push_back(type_i32);				/* uint32_t user_mode */
 	FunctionType* type_func = FunctionType::get(
-		getIntegerType(32),		/* Result */
-		type_func_args,		/* Params */
+		Type::getInt32Ty(cpu->dyncom_engine->mod->getContext()),	//return
+		TypeArray(type_func_args),		/* Params */
 		false);						/* isVarArg */
 
 	// Function Declarations

@@ -344,12 +344,14 @@ void _ppc_dyncom_exception(cpu_t *cpu, bool cond, uint32 type, uint32 flags, uin
 	if (cond)
 		ppc_exception(core, type, flags, a);
 }
+typedef llvm::ArrayRef<llvm::Type*> TypeArray;
+typedef llvm::ArrayRef<llvm::Value*> ValueArray;
 static void ppc_dyncom_exception_init(cpu_t *cpu){
 	//types
-	std::vector<const Type*> type_func_exception_args;
+	std::vector<llvm::Type*> type_func_exception_args;
 	PointerType *type_intptr = PointerType::get(cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX()), 0);
-	const IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
-	const IntegerType *type_i1 = IntegerType::get(_CTX(), 1);
+	IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
+	IntegerType *type_i1 = IntegerType::get(_CTX(), 1);
 	type_func_exception_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_exception_args.push_back(type_i32);	/* unsinged int */
 	type_func_exception_args.push_back(type_i1);	/* cond */
@@ -358,7 +360,7 @@ static void ppc_dyncom_exception_init(cpu_t *cpu){
 	type_func_exception_args.push_back(type_i32);	/* unsinged int */
 	FunctionType *type_func_exception_callout = FunctionType::get(
 		Type::getVoidTy(cpu->dyncom_engine->mod->getContext()),	//return
-		type_func_exception_args,	/* Params */
+		TypeArray(type_func_exception_args),	/* Params */
 		false);		      	/* isVarArg */
 	Constant *exception_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout4",	//function name
 		type_func_exception_callout);	//return
@@ -374,7 +376,8 @@ arch_ppc_dyncom_exception(cpu_t *cpu, BasicBlock *bb, Value *cond, uint32 type, 
 {
 	if (cpu->dyncom_engine->ptr_arch_func[PPC_DYNCOM_CALLOUT_EXC] == NULL)
 		return;
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
@@ -384,7 +387,7 @@ arch_ppc_dyncom_exception(cpu_t *cpu, BasicBlock *bb, Value *cond, uint32 type, 
 	params.push_back(CONST(type));
 	params.push_back(CONST(flags));
 	params.push_back(CONST(a));
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[PPC_DYNCOM_CALLOUT_EXC], params.begin(), params.end(), "", bb);
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[PPC_DYNCOM_CALLOUT_EXC], ValueArray(params), "", bb);
 }
 
 void _ppc_dyncom_mmu_set_sdr1(cpu_t *cpu, uint32_t rS){
@@ -394,15 +397,15 @@ void _ppc_dyncom_mmu_set_sdr1(cpu_t *cpu, uint32_t rS){
 }
 static void ppc_dyncom_mmu_set_sdr1_init(cpu_t *cpu){
 	//types
-	std::vector<const Type*> type_func_args;
+	std::vector<llvm::Type*> type_func_args;
 	PointerType *type_intptr = PointerType::get(cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX()), 0);
-	const IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
+	IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
 	type_func_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_args.push_back(type_i32);	/* unsinged int */
 	type_func_args.push_back(type_i32);	/* unsinged int */
 	FunctionType *type_func_callout = FunctionType::get(
 		Type::getVoidTy(cpu->dyncom_engine->mod->getContext()),	//return
-		type_func_args,	/* Params */
+		TypeArray(type_func_args),	/* Params */
 		false);		      	/* isVarArg */
 	Constant *func_const = cpu->dyncom_engine->mod->getOrInsertFunction("dyncom_callout1",	//function name
 		type_func_callout);	//return
@@ -418,14 +421,15 @@ arch_ppc_dyncom_mmu_set_sdr1(cpu_t *cpu, BasicBlock *bb, uint32_t rS)
 {
 	if (cpu->dyncom_engine->ptr_arch_func[PPC_DYNCOM_CALLOUT_MMU_SET_SDR1] == NULL)
 		return;
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
 	params.push_back(v_cpu_ptr);
 	params.push_back(CONST(PPC_DYNCOM_CALLOUT_MMU_SET_SDR1));
 	params.push_back(CONST(rS));
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[PPC_DYNCOM_CALLOUT_MMU_SET_SDR1], params.begin(), params.end(), "", bb);
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[PPC_DYNCOM_CALLOUT_MMU_SET_SDR1], ValueArray(params), "", bb);
 }
 void ppc_switch_mode(cpu_t *cpu)
 {

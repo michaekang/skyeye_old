@@ -12,10 +12,19 @@
 
 #include "llvm/Analysis/Verifier.h"
 #include "llvm/ExecutionEngine/JIT.h"
-#include "llvm/LinkAllPasses.h"
 #include "llvm/Module.h"
 #include "llvm/Target/TargetData.h"
-#include "llvm/Target/TargetSelect.h"
+#include "llvm/DerivedTypes.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+
+#include "llvm/LLVMContext.h"
+#include "llvm/PassManager.h"
+#include "llvm/Analysis/Verifier.h"
+#include "llvm/Analysis/Passes.h"
+#include "llvm/Target/TargetData.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Support/IRBuilder.h"
+#include "llvm/Support/TargetSelect.h"
 
 /* project global headers */
 #include "skyeye_dyncom.h"
@@ -613,18 +622,22 @@ extern "C" void debug_output(cpu_t* cpu){
 		cpu->debug_func(cpu);
 }; 
 
+typedef llvm::ArrayRef<llvm::Type*> TypeArray;
 /* 
  * init the global functions.
  * By default the first callout function is debug function
  */
+
 static void debug_func_init(cpu_t *cpu){
 	//types
-	std::vector<const Type*> type_func_debug_args;
+	//std::vector<const Type*> type_func_debug_args;
+	std::vector<llvm::Type*> type_func_debug_args;
 	PointerType *type_intptr = PointerType::get(cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX()), 0);
 	type_func_debug_args.push_back(type_intptr);	/* intptr *cpu */
+	//llvm::ArrayRef<const Type*> func_args = llvm::ArrayRef<const Type*>(type_func_debug_args);
 	FunctionType *type_func_debug_callout = FunctionType::get(
 		Type::getInt32Ty(cpu->dyncom_engine->mod->getContext()),	//return
-		type_func_debug_args,	/* Params */
+		TypeArray(type_func_debug_args),	/* Params */
 		false);		      	/* isVarArg */
 	Constant *debug_const = cpu->dyncom_engine->mod->getOrInsertFunction("debug_output",	//function name
 		type_func_debug_callout);	//return
@@ -643,14 +656,14 @@ extern "C" int syscall_func(cpu_t *cpu, uint32_t num){
 };
 static void syscall_func_init(cpu_t *cpu){
 	//types
-	std::vector<const Type*> type_func_syscall_args;
+	std::vector<llvm::Type*> type_func_syscall_args;
 	PointerType *type_intptr = PointerType::get(cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX()), 0);
-	const IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
+	IntegerType *type_i32 = IntegerType::get(_CTX(), 32);
 	type_func_syscall_args.push_back(type_intptr);	/* intptr *cpu */
 	type_func_syscall_args.push_back(type_i32);	/* unsinged int */
 	FunctionType *type_func_syscall_callout = FunctionType::get(
 		Type::getVoidTy(cpu->dyncom_engine->mod->getContext()),	//return
-		type_func_syscall_args,	/* Params */
+		TypeArray(type_func_syscall_args),	/* Params */
 		false);		      	/* isVarArg */
 	Constant *syscall_const = cpu->dyncom_engine->mod->getOrInsertFunction("syscall_func",	//function name
 		type_func_syscall_callout);	//return

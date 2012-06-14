@@ -31,6 +31,7 @@
 #include "skyeye_obj.h"
 #include "dyncom/dyncom_llvm.h"
 #include "dyncom/frontend.h"
+#include "llvm/Constants.h"
 #include "arm_internal.h"
 #include "arm_types.h"
 #include "dyncom/tag.h"
@@ -778,10 +779,11 @@ int DYNCOM_TRANS(clrex)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	LET(EXCLUSIVE_STATE, CONST(0x0));
 	return No_exp;
 }
+typedef llvm::ArrayRef<llvm::Type*> TypeArray;
 int DYNCOM_TRANS(clz)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
-	Type const *ty = getIntegerType(32);
-	Value* intrinsic_ctlz = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::ctlz, &ty, 1);
+	llvm::Type *ty = getIntegerType(32);
+	Value* intrinsic_ctlz = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::ctlz, TypeArray(ty));
 	Value* result = CallInst::Create(intrinsic_ctlz, R(RM), "", bb);
 	LET(RD, result);
 	return No_exp;

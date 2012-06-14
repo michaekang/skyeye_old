@@ -199,7 +199,6 @@ AM_CONDITIONAL([LLVM_EXIST], [test x$LLVM = xllvm && test "${ENABLE_DYNCOM}" = "
 	;;
 	*)
 	AC_MSG_WARN(llvm should be 2.8 If you want to compile skyeye with other version!)
-	AC_MSG_ERROR(Delete me from configuer.in!)
 	;;
 	esac
 	fi

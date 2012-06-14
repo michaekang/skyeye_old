@@ -217,8 +217,10 @@ Value *
 arch_put_reg_by_ptr(cpu_t *cpu, void *reg, Value *v, uint32_t bits, bool sext,
 	BasicBlock *bb)
 {
-	Type const *int32ptr_type = Type::getInt32Ty(_CTX());
-	Type const *int64ptr_type = Type::getInt64Ty(_CTX());
+	//Type const *int32ptr_type = Type::getInt32Ty(_CTX());
+	IntegerType *int32ptr_type = IntegerType::get(_CTX(), 32);
+	//Type const *int64ptr_type = Type::getInt64Ty(_CTX());
+	IntegerType *int64ptr_type = IntegerType::get(_CTX(), 64);
 	Constant *v_reg = NULL;
 	Value *v_reg_ptr = NULL;
 	if(bits == 32){
@@ -237,8 +239,10 @@ arch_put_reg_by_ptr(cpu_t *cpu, void *reg, Value *v, uint32_t bits, bool sext,
 Value *
 arch_get_reg_by_ptr(cpu_t *cpu, void *reg, uint32_t bits, BasicBlock *bb)
 {
-	Type const *int32ptr_type = Type::getInt32Ty(_CTX());
-	Type const *int64ptr_type = Type::getInt64Ty(_CTX());
+	//Type const *int32ptr_type = Type::getInt32Ty(_CTX());
+	//Type const *int64ptr_type = Type::getInt64Ty(_CTX());
+	IntegerType *int32ptr_type = IntegerType::get(_CTX(), 32);
+	IntegerType *int64ptr_type = IntegerType::get(_CTX(), 64);
 	Constant *v_reg = NULL;
 	Value *v_reg_ptr = NULL;
 	Value *v;
@@ -473,17 +477,20 @@ arch_store(Value *v, Value *a, BasicBlock *bb)
 
 //////////////////////////////////////////////////////////////////////
 
+typedef llvm::ArrayRef<llvm::Type*> TypeArray;
+typedef llvm::ArrayRef<llvm::Value*> ValueArray;
+
 Value *
 arch_bswap(cpu_t *cpu, size_t width, Value *v, BasicBlock *bb) {
-	Type const *ty = getIntegerType(width);
-	Value* intrinsic_bswap = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::bswap, &ty, 1);
+	llvm::Type *ty = getIntegerType(width);
+	Value* intrinsic_bswap = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::bswap, TypeArray(ty));
 	return CallInst::Create(intrinsic_bswap, (Value*)v, "", bb);
  }
 
 Value *
 arch_ctlz(cpu_t *cpu, size_t width, Value *v, BasicBlock *bb) {
-	Type const *ty = getIntegerType(width);
-	Value* intrinsic_ctlz = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::ctlz, &ty, 1);
+	llvm::Type *ty = getIntegerType(width);
+	Value* intrinsic_ctlz = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::ctlz, TypeArray(ty));
 	return CallInst::Create(intrinsic_ctlz, (Value*)v, "", bb);
  }
 
@@ -680,7 +687,9 @@ arch_debug_me(cpu_t *cpu, BasicBlock *bb, BasicBlock *exit_bb)
 #endif
 	if (cpu->dyncom_engine->ptr_arch_func[0] == NULL)
 		return bb;
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	// XXX synchronize cpu context!
@@ -695,7 +704,8 @@ static void io_write_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock* load_store_end, 
 	if (cpu->dyncom_engine->ptr_func_write_memory == NULL) {
 		return;
 	}
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
@@ -703,7 +713,7 @@ static void io_write_bb(cpu_t* cpu, BasicBlock* bb, BasicBlock* load_store_end, 
 	params.push_back(addr);
 	params.push_back(value);
 	params.push_back(CONST(size));
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, params.begin(), params.end(), "", bb);
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, ValueArray(params), "", bb);
 	BranchInst::Create(load_store_end, bb);
 	return;
 }
@@ -814,13 +824,15 @@ arch_syscall(cpu_t *cpu, BasicBlock *bb, uint32_t num)
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 #endif
-	Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	//Type const *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+	IntegerType *intptr_type = cpu->dyncom_engine->exec_engine->getTargetData()->getIntPtrType(_CTX());
+
 	Constant *v_cpu = ConstantInt::get(intptr_type, (uintptr_t)cpu);
 	Value *v_cpu_ptr = ConstantExpr::getIntToPtr(v_cpu, PointerType::getUnqual(intptr_type));
 	std::vector<Value *> params;
 	params.push_back(v_cpu_ptr);
 	params.push_back(CONST(num));
 	// XXX synchronize cpu context!
-	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[1], params.begin(), params.end(), "", bb);
+	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_arch_func[1], ValueArray(params), "", bb);
 	//CallInst::Create(cpu->dyncom_engine->ptr_arch_func[1], v_cpu_ptr, "", bb);
 }

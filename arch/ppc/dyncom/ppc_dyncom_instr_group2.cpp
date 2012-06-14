@@ -711,6 +711,7 @@ static int opc_mfspr_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 			__LINE__, instr, spr1, spr2);
 	return 0;
 }
+typedef llvm::ArrayRef<llvm::Type*> TypeArray;
 /*
  *	cntlzwx		Count Leading Zeros Word
  *	.447
@@ -721,8 +722,8 @@ static int opc_cntlzwx_translate(cpu_t *cpu, uint32_t instr, BasicBlock *bb)
 	int rS, rA, rB;
 	PPC_OPC_TEMPL_X(instr, rS, rA, rB);
 	PPC_OPC_ASSERT(rB==0);
-	Type const *ty = getIntegerType(32);
-	Value* intrinsic_ctlz = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::ctlz, &ty, 1);
+	llvm::Type *ty = getIntegerType(32);
+	Value* intrinsic_ctlz = (Value*)Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::ctlz, TypeArray(ty));
 	Value* result = CallInst::Create(intrinsic_ctlz, R(rS), "", bb);
 	LET(rA, result);
 	if (instr & PPC_OPC_Rc) {
