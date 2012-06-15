@@ -108,7 +108,8 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -116,7 +117,54 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
-
+	int m;
+	int n;
+	int d ;
+	int add = (BIT(6) == 0);
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPMUL(nn,mm);
+		if(!add)
+			tmp = FPNEG32(tmp);
+		mm = FR32(d);
+		tmp = FPADD(mm,tmp);
+		//LETS(d,tmp);
+		LETFPS(d,tmp);
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		//mm = SITOFP(32,RSPR(m));
+		//LETS(d,tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * m)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
+		tmp = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(tmp);
+		tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
+		nn = OR(SHL(nn,CONST64(32)),tmp);
+		nn = FPBITCAST64(nn);
+		tmp = FPMUL(nn,mm);
+		if(!add)
+			tmp = FPNEG64(tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * d)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * d  + 1)));
+		mm = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(mm);
+		tmp = FPADD(mm,tmp);
+		mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
+		nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));	
+		LETFPS(2*d ,FPBITCAST32(nn));
+		LETFPS(d*2 + 1 , FPBITCAST32(mm));
+	}
 	return No_exp;
 }
 #endif
@@ -207,7 +255,8 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -215,6 +264,54 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s VMLS instruction is executed out of here.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int m;
+	int n;
+	int d ;
+	int add = (BIT(6) == 0);
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPMUL(nn,mm);
+		if(!add)
+			tmp = FPNEG32(tmp);
+		mm = FR32(d);
+		tmp = FPADD(mm,tmp);
+		//LETS(d,tmp);
+		LETFPS(d,tmp);
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		//mm = SITOFP(32,RSPR(m));
+		//LETS(d,tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * m)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
+		tmp = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(tmp);
+		tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
+		nn = OR(SHL(nn,CONST64(32)),tmp);
+		nn = FPBITCAST64(nn);
+		tmp = FPMUL(nn,mm);
+		if(!add)
+			tmp = FPNEG64(tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * d)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * d  + 1)));
+		mm = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(mm);
+		tmp = FPADD(mm,tmp);
+		mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
+		nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));	
+		LETFPS(2*d ,FPBITCAST32(nn));
+		LETFPS(d*2 + 1 , FPBITCAST32(mm));
+	}	
 	return No_exp;
 }
 #endif
@@ -312,7 +409,8 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -320,6 +418,54 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s VNMLA instruction is executed out of here.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int m;
+	int n;
+	int d ;
+	int add = (BIT(6) == 0);
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPMUL(nn,mm);
+		if(!add)
+			tmp = FPNEG32(tmp);
+		mm = FR32(d);
+		tmp = FPADD(FPNEG32(mm),tmp);
+		//LETS(d,tmp);
+		LETFPS(d,tmp);
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		//mm = SITOFP(32,RSPR(m));
+		//LETS(d,tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * m)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
+		tmp = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(tmp);
+		tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
+		nn = OR(SHL(nn,CONST64(32)),tmp);
+		nn = FPBITCAST64(nn);
+		tmp = FPMUL(nn,mm);
+		if(!add)
+			tmp = FPNEG64(tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * d)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * d  + 1)));
+		mm = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(mm);
+		tmp = FPADD(FPNEG64(mm),tmp);
+		mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));	
+		nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));
+		LETFPS(2*d ,FPBITCAST32(nn));
+		LETFPS(d*2 + 1 , FPBITCAST32(mm));
+	}
 	return No_exp;
 }
 #endif
@@ -410,14 +556,63 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//arch_arm_undef(cpu, bb, instr);
+	int m;
+	int n;
+	int d ;
+	int add = (BIT(6) == 0);
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPMUL(nn,mm);
+		if(!add)
+			tmp = FPNEG32(tmp);
+		mm = FR32(d);
+		tmp = FPADD(FPNEG32(mm),tmp);
+		//LETS(d,tmp);
+		LETFPS(d,tmp);
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		//mm = SITOFP(32,RSPR(m));
+		//LETS(d,tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * m)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
+		tmp = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(tmp);
+		tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
+		nn = OR(SHL(nn,CONST64(32)),tmp);
+		nn = FPBITCAST64(nn);
+		tmp = FPMUL(nn,mm);
+		if(!add)
+			tmp = FPNEG64(tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * d)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * d  + 1)));
+		mm = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(mm);
+		tmp = FPADD(FPNEG64(mm),tmp);
+		mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
+		nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));	
+		LETFPS(2*d ,FPBITCAST32(nn));
+		LETFPS(d*2 + 1 , FPBITCAST32(mm));
+	}	
 	return No_exp;
 }
 #endif
@@ -508,14 +703,53 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
-}
+}		
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//arch_arm_undef(cpu, bb, instr);
+	int m;
+	int n;
+	int d ;
+	int add = (BIT(6) == 0);
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPMUL(nn,mm);
+		//LETS(d,tmp);
+		LETFPS(d,FPNEG32(tmp));
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		//mm = SITOFP(32,RSPR(m));
+		//LETS(d,tmp);
+		mm = ZEXT64(IBITCAST32(FR32(2 * m)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
+		tmp = OR(SHL(nn,CONST64(32)),mm);
+		mm = FPBITCAST64(tmp);
+		tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
+		nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
+		nn = OR(SHL(nn,CONST64(32)),tmp);
+		nn = FPBITCAST64(nn);
+		tmp = FPMUL(nn,mm);
+		tmp = FPNEG64(tmp);
+		mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
+		nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));	
+		LETFPS(2*d ,FPBITCAST32(nn));
+		LETFPS(d*2 + 1 , FPBITCAST32(mm));
+	}
 	return No_exp;
 }
 #endif
@@ -606,16 +840,67 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	printf("\n\n\t\tin %s instruction is executed out.\n\n", __FUNCTION__);
-	
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//printf("\n\n\t\tin %s instruction is executed out.\n\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int m;
+	int n;
+	int d ;
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		//mm = SITOFP(32,FR(m));
+		//nn = SITOFP(32,FRn));
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPMUL(nn,mm);
+		//LETS(d,tmp);
+		LETFPS(d,tmp);
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		//mm = SITOFP(32,RSPR(m));
+		//LETS(d,tmp);
+		Value *lo = FR32(2 * m);
+		Value *hi = FR32(2 * m + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		Value *hi64 = ZEXT64(hi);
+		Value* lo64 = ZEXT64(lo);
+		Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		Value* m0 = FPBITCAST64(v64);
+		lo = FR32(2 * n);
+		hi = FR32(2 * n + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		hi64 = ZEXT64(hi);
+		lo64 = ZEXT64(lo);
+		v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		Value *n0 = FPBITCAST64(v64); 
+		tmp = FPMUL(n0,m0);
+		Value *val64 = IBITCAST64(tmp);
+		hi = LSHR(val64,CONST64(32));
+		lo = AND(val64,CONST64(0xffffffff));
+		hi = TRUNC32(hi);
+		lo  = TRUNC32(lo);
+		hi = FPBITCAST32(hi);
+		lo = FPBITCAST32(lo);		
+		LETFPS(2*d ,lo);
+		LETFPS(d*2 + 1 , hi);
+	}
 	return No_exp;
 }
 #endif
@@ -705,8 +990,9 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -714,6 +1000,52 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction will implement out of JIT.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int m;
+	int n;
+	int d ;
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPADD(nn,mm);
+		LETFPS(d,tmp);
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		Value *lo = FR32(2 * m);
+		Value *hi = FR32(2 * m + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		Value *hi64 = ZEXT64(hi);
+		Value* lo64 = ZEXT64(lo);
+		Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		Value* m0 = FPBITCAST64(v64);
+		lo = FR32(2 * n);
+		hi = FR32(2 * n + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		hi64 = ZEXT64(hi);
+		lo64 = ZEXT64(lo);
+		v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		Value *n0 = FPBITCAST64(v64); 
+		tmp = FPADD(n0,m0);
+		Value *val64 = IBITCAST64(tmp);
+		hi = LSHR(val64,CONST64(32));
+		lo = AND(val64,CONST64(0xffffffff));
+		hi = TRUNC32(hi);
+		lo  = TRUNC32(lo);
+		hi = FPBITCAST32(hi);
+		lo = FPBITCAST32(lo);		
+		LETFPS(2*d ,lo);
+		LETFPS(d*2 + 1 , hi);
+	}
 	return No_exp;
 }
 #endif
@@ -803,15 +1135,61 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	DBG("\t\tin %s instr=0x%x, instruction is executed out of JIT.\n", __FUNCTION__, instr);
 	//arch_arm_undef(cpu, bb, instr);
+	int m;
+	int n;
+	int d ;
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPSUB(nn,mm);
+		LETFPS(d,tmp);
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		Value *lo = FR32(2 * m);
+		Value *hi = FR32(2 * m + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		Value *hi64 = ZEXT64(hi);
+		Value* lo64 = ZEXT64(lo);
+		Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		Value* m0 = FPBITCAST64(v64);
+		lo = FR32(2 * n);
+		hi = FR32(2 * n + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		hi64 = ZEXT64(hi);
+		lo64 = ZEXT64(lo);
+		v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		Value *n0 = FPBITCAST64(v64); 
+		tmp = FPSUB(n0,m0);
+		Value *val64 = IBITCAST64(tmp);
+		hi = LSHR(val64,CONST64(32));
+		lo = AND(val64,CONST64(0xffffffff));
+		hi = TRUNC32(hi);
+		lo  = TRUNC32(lo);
+		hi = FPBITCAST32(hi);
+		lo = FPBITCAST32(lo);		
+		LETFPS(2*d ,lo);
+		LETFPS(d*2 + 1 , hi);
+	} 
 	return No_exp;
 }
 #endif
@@ -901,15 +1279,62 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
+	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int m;
+	int n;
+	int d ;
+	int s = BIT(8) == 0;
+	Value *mm;
+	Value *nn;
+	Value *tmp;
+	if(s){
+		m = BIT(5) | BITS(0,3) << 1;
+		n = BIT(7) | BITS(16,19) << 1;
+		d = BIT(22) | BITS(12,15) << 1;
+		mm = FR32(m);
+		nn = FR32(n);
+		tmp = FPDIV(nn,mm);
+		LETFPS(d,tmp);
+	}else {
+		m = BITS(0,3) | BIT(5) << 4;
+		n = BITS(16,19) | BIT(7) << 4;
+		d = BIT(22) << 4 | BITS(12,15);
+		Value *lo = FR32(2 * m);
+		Value *hi = FR32(2 * m + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		Value *hi64 = ZEXT64(hi);
+		Value* lo64 = ZEXT64(lo);
+		Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		Value* m0 = FPBITCAST64(v64);
+		lo = FR32(2 * n);
+		hi = FR32(2 * n + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		hi64 = ZEXT64(hi);
+		lo64 = ZEXT64(lo);
+		v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		Value *n0 = FPBITCAST64(v64); 
+		tmp = FPDIV(n0,m0);
+		Value *val64 = IBITCAST64(tmp);
+		hi = LSHR(val64,CONST64(32));
+		lo = AND(val64,CONST64(0xffffffff));
+		hi = TRUNC32(hi);
+		lo  = TRUNC32(lo);
+		hi = FPBITCAST32(hi);
+		lo = FPBITCAST32(lo);		
+		LETFPS(2*d ,lo);
+		LETFPS(d*2 + 1 , hi);
+	} 		
 	return No_exp;
 }
 #endif
@@ -1033,7 +1458,27 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//arch_arm_undef(cpu, bb, instr);
+	int single = (BIT(8) == 0);
+	int d;
+	int imm32;
+	Value *v;
+	Value *tmp;
+	v = CONST32(BITS(0,3) | BITS(16,19) << 4);
+	//v = CONST64(0x3ff0000000000000);
+	if(single){
+		d = BIT(22) | BITS(12,15) << 1;
+	}else {
+		d = BITS(12,15) | BIT(22) << 4;
+	}
+	if(single){
+		LETFPS(d,FPBITCAST32(v));
+	}else {
+		//v = UITOFP(64,v);
+		//tmp = IBITCAST64(v);
+		LETFPS(d*2 ,FPBITCAST32(TRUNC32(AND(v,CONST64(0xffffffff)))));
+		LETFPS(d * 2 + 1,FPBITCAST32(TRUNC32(LSHR(v,CONST64(32)))));
+	}
 	return No_exp;
 }
 #endif
@@ -1152,18 +1597,18 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s VMOV \n", __FUNCTION__);
 	int single   = BIT(8) == 0;
-	int d        = (single ? BITS(12,15)<<1 | BIT(22) : BITS(12,15) | BIT(22)<<4);
+	int d        = (single ? BITS(12,15)<<1 | BIT(22) : BIT(22) << 4 | BITS(12,15));
 	int m        = (single ? BITS(0, 3)<<1 | BIT(5) : BITS(0, 3) | BIT(5)<<4);
 
 	if (single)
 	{
-		LETS(d, RSPR(m));
+		LETFPS(d, FR32(m));
 	}
 	else
 	{
 		/* Check endian please */
-		LETS((d*2 + 1), RSPR(m*2 + 1));
-		LETS((d * 2), RSPR(m * 2));
+		LETFPS((d*2 + 1), FR32(m*2 + 1));
+		LETFPS((d * 2), FR32(m * 2));
 	}
 	return No_exp;
 }
@@ -1255,7 +1700,8 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -1263,6 +1709,38 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int single   = BIT(8) == 0;
+	int d        = (single ? BITS(12,15)<<1 | BIT(22) : BIT(22) << 4 | BITS(12,15));
+	int m        = (single ? BITS(0, 3)<<1 | BIT(5) : BITS(0, 3) | BIT(5)<<4);
+	Value* m0;
+	if (single)
+	{
+		m0 =  FR32(m);
+		m0 = SELECT(FPCMP_OLT(m0,FPCONST32(0.0)),FPNEG32(m0),m0);
+		LETFPS(d,m0);
+	}
+	else
+	{
+		/* Check endian please */
+		Value *lo = FR32(2 * m);
+		Value *hi = FR32(2 * m + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		Value *hi64 = ZEXT64(hi);
+		Value* lo64 = ZEXT64(lo);
+		Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		m0 = FPBITCAST64(v64);
+		m0 = SELECT(FPCMP_OLT(m0,FPCONST64(0.0)),FPNEG64(m0),m0);
+		Value *val64 = IBITCAST64(m0);
+		hi = LSHR(val64,CONST64(32));
+		lo = AND(val64,CONST64(0xffffffff));
+		hi = TRUNC32(hi);
+		lo  = TRUNC32(lo);
+		hi = FPBITCAST32(hi);
+		lo = FPBITCAST32(lo);		
+		LETFPS(2*d ,lo);
+		LETFPS(d*2 + 1 , hi);
+	}
 	return No_exp;
 }
 #endif
@@ -1354,14 +1832,47 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//arch_arm_undef(cpu, bb, instr);
+	int single   = BIT(8) == 0;
+	int d        = (single ? BITS(12,15)<<1 | BIT(22) : BIT(22) << 4 | BITS(12,15));
+	int m        = (single ? BITS(0, 3)<<1 | BIT(5) : BITS(0, 3) | BIT(5)<<4);
+	Value* m0;
+	if (single)
+	{
+		m0 =  FR32(m);
+		m0 = FPNEG32(m0);
+		LETFPS(d,m0);
+	}
+	else
+	{
+		/* Check endian please */
+		Value *lo = FR32(2 * m);
+		Value *hi = FR32(2 * m + 1);
+		hi = IBITCAST32(hi);
+		lo = IBITCAST32(lo);
+		Value *hi64 = ZEXT64(hi);
+		Value* lo64 = ZEXT64(lo);
+		Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
+		m0 = FPBITCAST64(v64);
+		m0 = FPNEG64(m0);
+		Value *val64 = IBITCAST64(m0);
+		hi = LSHR(val64,CONST64(32));
+		lo = AND(val64,CONST64(0xffffffff));
+		hi = TRUNC32(hi);
+		lo  = TRUNC32(lo);
+		hi = FPBITCAST32(hi);
+		lo = FPBITCAST32(lo);		
+		LETFPS(2*d ,lo);
+		LETFPS(d*2 + 1 , hi);
+	}
 	return No_exp;
 }
 #endif
@@ -1452,14 +1963,35 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 {
 	int instr_size = INSTR_SIZE;
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-	arch_arm_undef(cpu, bb, instr);
+	//arch_arm_undef(cpu, bb, instr);
+	int dp_op = (BIT(8) == 1);
+	int d = dp_op ? BITS(12,15) | BIT(22) << 4 : BIT(22) | BITS(12,15) << 1;
+	int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
+	Value* v;
+	Value* tmp;
+	if(dp_op){
+		v = SHL(ZEXT64(IBITCAST32(FR32(2 * m + 1))),CONST64(32));
+		tmp = ZEXT64(IBITCAST32(FR32(2 * m)));
+		v = OR(v,tmp);
+		v = FPSQRT(FPBITCAST64(v));
+		tmp = TRUNC32(LSHR(IBITCAST64(v),CONST64(32)));
+		v = TRUNC32(AND(IBITCAST64(v),CONST64( 0xffffffff)));		
+		LETFPS(2 * d , FPBITCAST32(v));
+		LETFPS(2 * d + 1, FPBITCAST32(tmp));
+	}else {
+		v = FR32(m);
+		v = FPSQRT(FPEXT(64,v));
+		v = FPTRUNC(32,v);
+		LETFPS(d,v);
+	}
 	return No_exp;
 }
 #endif
@@ -1549,7 +2081,8 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -1557,6 +2090,54 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is executed out of JIT.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int dp_op = (BIT(8) == 1);
+	int d = dp_op ? BITS(12,15) | BIT(22) << 4 : BIT(22) | BITS(12,15) << 1;
+	int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
+	Value* v;
+	Value* tmp;
+	Value* n;
+	Value* z;
+	Value* c;
+	Value* vt;
+	Value* v1;
+	Value* nzcv;
+	if(dp_op){
+		v = SHL(ZEXT64(IBITCAST32(FR32(2 * m + 1))),CONST64(32));
+		tmp = ZEXT64(IBITCAST32(FR32(2 * m)));
+		v1 = OR(v,tmp);
+		v = SHL(ZEXT64(IBITCAST32(FR32(2 * d + 1))),CONST64(32));
+		tmp = ZEXT64(IBITCAST32(FR32(2 * d)));
+		v = OR(v,tmp);
+		z = FPCMP_OEQ(FPBITCAST64(v),FPBITCAST64(v1));
+		n = FPCMP_OLT(FPBITCAST64(v),FPBITCAST64(v1));
+		c = FPCMP_OGE(FPBITCAST64(v),FPBITCAST64(v1)); 
+		tmp =  FPCMP_UNO(FPBITCAST64(v),FPBITCAST64(v1));
+		v1 = tmp;
+		c = OR(c,tmp);
+		n = SHL(ZEXT32(n),CONST32(31));
+		z = SHL(ZEXT32(z),CONST32(30));
+		c = SHL(ZEXT32(c),CONST32(29));
+		v1 = SHL(ZEXT32(v1),CONST(28));
+		nzcv = OR(OR(OR(n,z),c),v1);	
+		v = R(VFP_FPSCR);
+		tmp = OR(nzcv,AND(v,CONST32(0x0fffffff)));
+		LET(VFP_FPSCR,tmp);
+	}else {
+		z = FPCMP_OEQ(FR32(d),FR32(m));
+		n = FPCMP_OLT(FR32(d),FR32(m));
+		c = FPCMP_OGE(FR32(d),FR32(m)); 
+		tmp = FPCMP_UNO(FR32(d),FR32(m));
+		c = OR(c,tmp);
+		v1 = tmp;
+		n = SHL(ZEXT32(n),CONST32(31));
+		z = SHL(ZEXT32(z),CONST32(30));
+		c = SHL(ZEXT32(c),CONST32(29));
+		v1 = SHL(ZEXT32(v1),CONST(28));
+		nzcv = OR(OR(OR(n,z),c),v1);	
+		v = R(VFP_FPSCR);
+		tmp = OR(nzcv,AND(v,CONST32(0x0fffffff)));
+		LET(VFP_FPSCR,tmp);
+	}
 	return No_exp;
 }
 #endif
@@ -1646,7 +2227,8 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -1654,6 +2236,54 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction will executed out of JIT.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int dp_op = (BIT(8) == 1);
+	int d = dp_op ? BITS(12,15) | BIT(22) << 4 : BIT(22) | BITS(12,15) << 1;
+	//int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
+	Value* v;
+	Value* tmp;
+	Value* n;
+	Value* z;
+	Value* c;
+	Value* vt;
+	Value* v1;
+	Value* nzcv;
+	if(dp_op){
+		v1 = CONST64(0);
+		v = SHL(ZEXT64(IBITCAST32(FR32(2 * d + 1))),CONST64(32));
+		tmp = ZEXT64(IBITCAST32(FR32(2 * d)));
+		v = OR(v,tmp);
+		z = FPCMP_OEQ(FPBITCAST64(v),FPBITCAST64(v1));
+		n = FPCMP_OLT(FPBITCAST64(v),FPBITCAST64(v1));
+		c = FPCMP_OGE(FPBITCAST64(v),FPBITCAST64(v1)); 
+		tmp =  FPCMP_UNO(FPBITCAST64(v),FPBITCAST64(v1));
+		v1 = tmp;
+		c = OR(c,tmp);
+		n = SHL(ZEXT32(n),CONST32(31));
+		z = SHL(ZEXT32(z),CONST32(30));
+		c = SHL(ZEXT32(c),CONST32(29));
+		v1 = SHL(ZEXT32(v1),CONST(28));
+		nzcv = OR(OR(OR(n,z),c),v1);	
+		v = R(VFP_FPSCR);
+		tmp = OR(nzcv,AND(v,CONST32(0x0fffffff)));
+		LET(VFP_FPSCR,tmp);
+	}else {
+		v1 = CONST(0);
+		v1 = FPBITCAST32(v1);
+		z = FPCMP_OEQ(FR32(d),v1);
+		n = FPCMP_OLT(FR32(d),v1);
+		c = FPCMP_OGE(FR32(d),v1); 
+		tmp = FPCMP_UNO(FR32(d),v1);
+		c = OR(c,tmp);
+		v1 = tmp;
+		n = SHL(ZEXT32(n),CONST32(31));
+		z = SHL(ZEXT32(z),CONST32(30));
+		c = SHL(ZEXT32(c),CONST32(29));
+		v1 = SHL(ZEXT32(v1),CONST(28));
+		nzcv = OR(OR(OR(n,z),c),v1);	
+		v = R(VFP_FPSCR);
+		tmp = OR(nzcv,AND(v,CONST32(0x0fffffff)));
+		LET(VFP_FPSCR,tmp);
+	}
 	return No_exp;
 }
 #endif
@@ -1743,7 +2373,8 @@ DYNCOM_FILL_ACTION(vfpinstr),
 int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = INSTR_SIZE;
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -1751,6 +2382,28 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s instruction is executed out.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	int dp_op = (BIT(8) == 1);
+	int d = dp_op ? BITS(12,15) | BIT(22) << 4 : BIT(22) | BITS(12,15) << 1;
+	int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
+	int d2s = dp_op;
+	Value* v;
+	Value* tmp;
+	Value* v1;
+	if(d2s){
+		v = SHL(ZEXT64(IBITCAST32(FR32(2 * m + 1))),CONST64(32));
+		tmp = ZEXT64(IBITCAST32(FR32(2 * m)));
+		v1 = OR(v,tmp);
+		tmp = FPTRUNC(32,FPBITCAST64(v1));
+		LETFPS(d,tmp);	
+	}else {
+		v = FR32(m);
+		tmp = FPEXT(64,v);
+		v = IBITCAST64(tmp);
+		tmp = TRUNC32(AND(v,CONST64(0xffffffff)));
+		v1 = TRUNC32(LSHR(v,CONST64(32)));
+		LETFPS(2 * d, FPBITCAST32(tmp) );
+		LETFPS(2 * d + 1, FPBITCAST32(v1));
+	}
 	return No_exp;
 }
 #endif
@@ -1941,7 +2594,8 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 	int instr_size = INSTR_SIZE;
 	//DBG("\t\tin %s instruction is not implemented.\n", __FUNCTION__);
 	DBG("\t\tin %s, instruction will be executed out of JIT.\n", __FUNCTION__);
-	arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	//arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
+	arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	return instr_size;
 }
 #endif
@@ -1949,6 +2603,74 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	DBG("\t\tin %s, instruction will be executed out of JIT.\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
+	unsigned int opc2 = BITS(16,18);
+	int to_integer = ((opc2 >> 2) == 1);	
+	int dp_op =  (BIT(8) == 1);
+	unsigned int op = BIT(7);
+	int m,d;
+	Value* v;
+	Value* hi;
+	Value* lo;
+	Value* v64; 
+	if(to_integer){
+		d = BIT(22) | (BITS(12,15) << 1);
+		if(dp_op)
+			m = BITS(0,3) | BIT(5) << 4;
+		else
+			m = BIT(5) | BITS(0,3) << 1;
+	}else {
+		m = BIT(5) | BITS(0,3) << 1;
+		if(dp_op)
+			d = BITS(12,15) | BIT(22) << 4;
+ 		else
+			d  = BIT(22) | BITS(12,15) << 1;		
+	}
+	if(to_integer){
+		if(dp_op){
+			lo = FR32(m * 2);
+		        hi = FR32(m * 2 + 1);	
+			hi = ZEXT64(IBITCAST32(hi));
+			lo = ZEXT64(IBITCAST32(lo));
+			v64 = OR(SHL(hi,CONST64(32)),lo);	
+			if(BIT(16)){
+				v = FPTOSI(32,FPBITCAST64(v64));
+			}
+			else
+				v = FPTOUI(32,FPBITCAST64(v64));
+				
+				v = FPBITCAST32(v);
+				LETFPS(d,v);
+		}else {
+			v = FR32(m);
+			if(BIT(16)){
+				
+				v = FPTOSI(32,v);
+			}
+			else
+				v = FPTOUI(32,v);
+				LETFPS(d,FPBITCAST32(v));
+		}
+	}else {
+		if(dp_op){	
+			v = IBITCAST32(FR32(m));
+			if(BIT(7))
+				v64 = SITOFP(64,v); 
+			else
+				v64 = UITOFP(64,v);
+			v = IBITCAST64(v64);
+			hi = FPBITCAST32(TRUNC32(LSHR(v,CONST64(32))));
+			lo = FPBITCAST32(TRUNC32(AND(v,CONST64(0xffffffff))));
+			LETFPS(2 * d , lo);
+			LETFPS(2 * d + 1, hi);
+		}else {
+			v = IBITCAST32(FR32(m));
+			if(BIT(7))
+				v = SITOFP(32,v);
+			else
+				v = UITOFP(32,v);
+				LETFPS(d,v);
+		}
+	}
 	return No_exp;
 }
 
@@ -2100,12 +2822,12 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	if (to_arm)
 	{
 		DBG("\tr%d <= s%d\n", t, n);
-		LET(t, RSPR(n));
+		LET(t, IBITCAST32(FR32(n)));
 	}
 	else
 	{
 		DBG("\ts%d <= r%d\n", n, t);
-		LETS(n, R(t));
+		LETFPS(n, FPBITCAST32(R(t)));
 	}
 	return No_exp;
 }
@@ -2901,12 +3623,12 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	int t2       = BITS(16, 19);
 	int n        = BIT(5)<<4 | BITS(0, 3);
 	if(to_arm){
-		LET(t, RSPR(n * 2));
-		LET(t2, RSPR(n * 2 + 1));
+		LET(t, IBITCAST32(FR32(n * 2)));
+		LET(t2, IBITCAST32(FR32(n * 2 + 1)));
 	}
 	else{
-		LETS(n * 2, R(t));
-		LETS(n * 2 + 1, R(t2));
+		LETFPS(n * 2, FPBITCAST32(R(t)));
+		LETFPS(n * 2 + 1, FPBITCAST32(R(t2)));
 	}
 	return No_exp;
 }
@@ -3089,7 +3811,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	int single = BIT(8) == 0;
 	int add	   = BIT(23);
 	int imm32  = BITS(0,7) << 2;
-	int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4);
+	int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
 	int n	   = BITS(16, 19);
 
 	Value* base = (n == 15) ? ADD(AND(R(n), CONST(0xFFFFFFFC)), CONST(8)): R(n);
@@ -3106,7 +3828,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d), 32);
 		#endif
-		memory_write(cpu, bb, Addr, RSPR(d), 32);
+		//memory_write(cpu, bb, Addr, RSPR(d), 32);
+		memory_write(cpu, bb, Addr, IBITCAST32(FR32(d)), 32);
 		bb = cpu->dyncom_engine->bb;
 	}
 	else{
@@ -3115,14 +3838,17 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d * 2), 32);
 		#endif
-		memory_write(cpu, bb, Addr, RSPR(d * 2), 32);
+		//memory_write(cpu, bb, Addr, RSPR(d * 2), 32);
+		memory_write(cpu, bb, Addr, IBITCAST32(FR32(d * 2)), 32);
 		bb = cpu->dyncom_engine->bb;
 		#if 0
 		phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
 		bb = cpu->dyncom_engine->bb;
 		arch_write_memory(cpu, bb, phys_addr, RSPR(d * 2 + 1), 32);
 		#endif
-		memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR(d * 2 + 1), 32);
+		//memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR(d * 2 + 1), 32);
+		memory_write(cpu, bb, ADD(Addr, CONST(4)), IBITCAST32(FR32(d * 2 + 1)), 32);
+		bb = cpu->dyncom_engine->bb;
 	}
 	return No_exp;
 }
@@ -3306,7 +4032,7 @@ int DYNCOM_TAG(vfpinstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	int single  = BIT(8) == 0;
-	int d       = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4);
+	int d       = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
 	int imm32   = BITS(0, 7)<<2;
 	int regs    = (single ? BITS(0, 7) : BITS(1, 7));
 
@@ -3328,7 +4054,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR(d + i), 32);
 			#endif
-			memory_write(cpu, bb, Addr, RSPR(d + i), 32);
+			//memory_write(cpu, bb, Addr, RSPR(d + i), 32);
+			memory_write(cpu, bb, Addr, IBITCAST32(FR32(d + i)), 32);
 			bb = cpu->dyncom_engine->bb;
 			Addr = ADD(Addr, CONST(4));
 		}
@@ -3340,14 +4067,16 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2), 32);
 			#endif
-			memory_write(cpu, bb, Addr, RSPR((d + i) * 2), 32);
+			//memory_write(cpu, bb, Addr, RSPR((d + i) * 2), 32);
+			memory_write(cpu, bb, Addr, IBITCAST32(FR32((d + i) * 2)), 32);
 			bb = cpu->dyncom_engine->bb;
 			#if 0
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2 + 1), 32);
 			#endif
-			memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
+			//memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
+			memory_write(cpu, bb, ADD(Addr, CONST(4)), IBITCAST32(FR32((d + i) * 2 + 1)), 32);
 			bb = cpu->dyncom_engine->bb;
 
 			Addr = ADD(Addr, CONST(8));
@@ -3556,7 +4285,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	int single = BIT(8) == 0;
 	int add    = BIT(23);
 	int wback  = BIT(21);
-	int d      = single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4;
+	int d      = single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4);
 	int n      = BITS(16, 19);
 	int imm32  = BITS(0, 7)<<2;
 	int regs   = single ? BITS(0, 7) : BITS(1, 7);
@@ -3582,7 +4311,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR(d + i), 32);
 			#endif
-			memory_write(cpu, bb, Addr, RSPR(d + i), 32);
+			//memory_write(cpu, bb, Addr, RSPR(d + i), 32);
+			memory_write(cpu, bb, Addr, IBITCAST32(FR32(d + i)),32);
 			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
@@ -3597,7 +4327,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2), 32);
 			#endif
-			memory_write(cpu, bb, Addr, RSPR((d + i) * 2), 32);
+			//memory_write(cpu, bb, Addr, RSPR((d + i) * 2), 32);
+			memory_write(cpu, bb, Addr, IBITCAST32(FR32((d + i) * 2)),32);
 			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 
@@ -3607,7 +4338,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			bb = cpu->dyncom_engine->bb;
 			arch_write_memory(cpu, bb, phys_addr, RSPR((d + i) * 2 + 1), 32);
 			#endif
-			memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
+			//memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
+			memory_write(cpu, bb, ADD(Addr, CONST(4)), IBITCAST32(FR32((d + i) * 2 + 1)), 32);
 			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
@@ -3668,7 +4400,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vfpinstr)(unsigned int inst, int index)
 	inst_base->load_r15 = 0;
 
 	inst_cream->single  = BIT(inst, 8) == 0;
-	inst_cream->d       = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
+	inst_cream->d       = (inst_cream->single ? (BITS(inst, 12, 15)<<1)|BIT(inst, 22) : BITS(inst, 12, 15)|(BIT(inst, 22)<<4));
 	inst_cream->imm32   = BITS(inst, 0, 7)<<2;
 	inst_cream->regs    = (inst_cream->single ? BITS(inst, 0, 7) : BITS(inst, 1, 7));
 	
@@ -3819,7 +4551,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	DBG("\t\tin %s instruction .\n", __FUNCTION__);
 	//arch_arm_undef(cpu, bb, instr);
 	int single  = BIT(8) == 0;
-	int d       = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4);
+	int d       = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
 	int imm32   = BITS(0, 7)<<2;
 	int regs    = (single ? BITS(0, 7) : BITS(1, 7));
 
@@ -3847,7 +4579,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
 			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-			LETS(d + i, val);
+			LETFPS(d + i, FPBITCAST32(val));
 			Addr = ADD(Addr, CONST(4));
 		}
 		else
@@ -3861,7 +4593,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
 			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-			LETS((d + i) * 2, val);
+			LETFPS((d + i) * 2, FPBITCAST32(val));
 			#if 0
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
 			bb = cpu->dyncom_engine->bb;
@@ -3870,7 +4602,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			memory_read(cpu, bb, ADD(Addr, CONST(4)), 0, 32);
 			bb = cpu->dyncom_engine->bb;
 			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-			LETS((d + i) * 2 + 1, val);
+			LETFPS((d + i) * 2 + 1, FPBITCAST32(val));
 
 			Addr = ADD(Addr, CONST(8));
 		}
@@ -4060,7 +4792,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	int single = BIT(8) == 0;
 	int add    = BIT(23);
 	int wback  = BIT(21);
-	int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4);
+	int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
 	int n      = BITS(16, 19);
 	int imm32  = BITS(0, 7)<<2;
 	int regs   = (single ? BITS(0, 7) : BITS(1, 7));
@@ -4085,7 +4817,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		memory_read(cpu, bb, Addr, 0, 32);
 		bb = cpu->dyncom_engine->bb;
 		val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-		LETS(d, val);
+		//LETS(d, val);
+		LETFPS(d,FPBITCAST32(val));
 	}
 	else{
 		#if 0
@@ -4096,7 +4829,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		memory_read(cpu, bb, Addr, 0, 32);
 		bb = cpu->dyncom_engine->bb;
 		val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-		LETS(d * 2, val);
+		//LETS(d * 2, val);
+		LETFPS(d * 2,FPBITCAST32(val));
 		#if 0
 		phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
 		bb = cpu->dyncom_engine->bb;
@@ -4105,7 +4839,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		memory_read(cpu, bb, ADD(Addr, CONST(4)), 0,32);
 		bb = cpu->dyncom_engine->bb;
 		val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-		LETS(d * 2 + 1, val);
+		//LETS(d * 2 + 1, val);
+		LETFPS( d * 2 + 1,FPBITCAST32(val));
 	}
 
 	return No_exp;
@@ -4333,7 +5068,8 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
 			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-			LETS(d + i, val);
+			//LETS(d + i, val);
+			LETFPS(d + i, FPBITCAST32(val));
 			//if (fault) goto MMU_EXCEPTION;
 			//DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
 			Addr = ADD(Addr, CONST(4));
@@ -4348,7 +5084,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
 			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-			LETS((d + i) * 2, val);
+			LETFPS((d + i) * 2, FPBITCAST32(val));
 			#if 0
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 1);
 			bb = cpu->dyncom_engine->bb;
@@ -4357,7 +5093,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			memory_read(cpu, bb, Addr, 0, 32);
 			bb = cpu->dyncom_engine->bb;
 			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-			LETS((d + i) * 2 + 1, val);
+			LETFPS((d + i) * 2 + 1, FPBITCAST32(val));
 
 			//fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 			//DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
