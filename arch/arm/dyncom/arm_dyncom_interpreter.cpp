@@ -46,9 +46,9 @@ using namespace std;
 #include "vfp/vfp.h"
 
 #define HYBRID_MODE		1
+
 #define THRESHOLD			1000
 #define DURATION			500
-#define PROFILE
 //#define PRINT_PROFILE_INFO
 
 #define CHECK_RS 	if(RS == 15) rs += 8
@@ -3335,7 +3335,8 @@ int find_bb(cpu_t* cpu, unsigned int addr, int &start)
 		start = static_cast<int>(it->second);
 		ret = 0;
 #if HYBRID_MODE
-#ifndef PROFILE
+#if PROFILE
+#else
 		/* increase the bb counter */
 		if(get_bb_prof(cpu, addr, 1) == TRANS_THRESHOLD){
 			push_to_compiled(cpu, addr);
@@ -3487,7 +3488,7 @@ void flush_bb(uint32_t addr)
 		}
 	}
 
-	printf("flush bb @ %x\n", addr);
+	//printf("flush bb @ %x\n", addr);
 }
 
 static uint32_t get_bank_addr(void *addr)
@@ -4052,7 +4053,7 @@ void InterpreterMainLoop(cpu_t *core)
 			cpu->Reg[15] &= 0xfffffffe;
 		} else
 			cpu->Reg[15] &= 0xfffffffc;
-#ifdef PROFILE
+#if PROFILE
 		/* check next instruction address is valid. */
 		last_pc = cpu->Reg[15];
 #endif
@@ -4173,14 +4174,16 @@ void InterpreterMainLoop(cpu_t *core)
 			if (InterpreterTranslate(core, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
 				goto END;
 		}
+#if PROFILE
 		resume_timing();
+#endif
 		inst_base = (arm_inst *)&inst_buf[ptr];
 		GOTO_NEXT_INST;
 	}
 	PROFILING:
 	{
+#if PROFILE
 		pause_timing();
-#ifdef PROFILE
 		inst_base = (arm_inst *)&inst_buf[ptr];
 		profiling_data *prof = (profiling_data *)inst_base->component;
 		if ((PC >> 12) != (last_pc >> 12))

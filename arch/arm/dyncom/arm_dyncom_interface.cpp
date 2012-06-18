@@ -288,10 +288,10 @@ static bool arm_cpu_init()
 	cpu->boot_core_id = 0;
 
 	ARMul_EmulateInit(); /* Needed by the interpreter */
-
+#if PROFILE
 	signal(SIGVTALRM, update_walltime);
 	set_profiler_timer();
-
+#endif
 	return true;
 }
 
