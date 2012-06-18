@@ -1806,12 +1806,12 @@ int DYNCOM_TRANS(smlad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	Value* Operand2 = x ? OR(LSHR(Rs, CONST(16)), SHL(Rs, CONST(16))):Rs;
 
 	/* Do 16 bit sign extend */
-	Value* Half_rm = SEXT32(AND(Rm, CONST(0xFFFF)));
-	Value* Half_operand2 = SEXT32(AND(Operand2, CONST(0xFFFF)));
+	Value* Half_rm = SEXT32(TRUNC16(Rm));
+	Value* Half_operand2 = SEXT32(TRUNC16(Operand2));
 	Value* Product1 = MUL(Half_rm, Half_operand2);
 
-	Half_rm = SEXT32(LSHR(AND(Rm, CONST(0xFFFF0000)), CONST(16)));
-	Half_operand2 = SEXT32(LSHR(AND(Operand2, CONST(0xFFFF0000)), CONST(16)));
+	Half_rm = SEXT32(TRUNC16(LSHR(Rm, CONST(16))));
+	Half_operand2 = SEXT32(TRUNC16(LSHR(Operand2, CONST(16))));
 	Value* Product2 = MUL(Half_rm, Half_operand2);
 
 	Value* result = ADD(ADD(Product1, Product2), Rn);
