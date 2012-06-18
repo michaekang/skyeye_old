@@ -3951,6 +3951,7 @@ void InterpreterMainLoop(cpu_t *core)
 	#define SET_PC				(cpu->Reg[15] = cpu->Reg[15] + 8 + inst_cream->signed_immed_24)
 	#define SHIFTER_OPERAND			inst_cream->shtop_func(cpu, inst_cream->shifter_operand)
 
+	#if ENABLE_ICOUNTER
 	#define INC_ICOUNTER			cpu->icounter++;                                                   \
 						if(cpu->Reg[15] > 0xc0000000) 					\
 							cpu->kernel_icounter++;
@@ -3958,6 +3959,10 @@ void InterpreterMainLoop(cpu_t *core)
 							if (core->check_int_flag)                                  \
 								goto END
 						//printf("icounter is %llx line is %d pc is %x\n", cpu->icounter, __LINE__, cpu->Reg[15])
+	#else
+	#define INC_ICOUNTER			;                                                   
+	#endif
+
 	#define FETCH_INST			if (inst_base->br != NON_BRANCH)                                   \
 							goto PROFILING;                                             \
 						inst_base = (arm_inst *)&inst_buf[ptr]                             

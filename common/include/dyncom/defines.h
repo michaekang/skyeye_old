@@ -48,12 +48,7 @@
 #define FAST_MEMORY 1
 
 #define ENABLE_DEBUG_ME 0
-/* Running kernel should set ENABLE_ICOUNTER */
-#if USER_MODE_OPT
 #define ENABLE_ICOUNTER 0
-#else
-#define ENABLE_ICOUNTER 1
-#endif
 
 /* Micros of time prifile */
 #define THREAD_CLOCK 0
