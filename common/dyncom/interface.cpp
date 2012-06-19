@@ -42,6 +42,10 @@
 
 #include "skyeye_log.h"
 #include "skyeye.h"
+#include "bank_defs.h"
+extern "C" {
+#include "skyeye_disas.h"
+}
 
 static void debug_func_init(cpu_t *cpu);
 static void syscall_func_init(cpu_t *cpu);
@@ -378,6 +382,64 @@ void save_addr_in_func(cpu_t *cpu, void *native_code_func)
 		cpu->dyncom_engine->fmap[i->first] = native_code_func;
 #endif
 }
+
+void disas_insn_in_jit(cpu_t *cpu)
+{
+	vector<addr_t> addrset = cpu->dyncom_engine->insns_in_jit;
+
+	uint32_t insn;
+	uint32_t given;
+	uint8_t func_attrs = cpu->dyncom_engine->func_attr[cpu->dyncom_engine->functions];
+	int size = 4;
+	printf("-----disas begin-----\n");
+	if (func_attrs & FUNC_ATTR_THUMB) {
+		set_thumb_mode(1);
+		size = 2;
+		printf("thumb\n");
+	}
+
+	vector<addr_t>::iterator it = addrset.begin();
+	for (; it != addrset.end(); ++it) {
+		insn = 0;
+		given = 0;
+		if (is_start_of_basicblock(cpu, *it)) {
+			printf("%x:\n", *it);
+		}
+		if (func_attrs & FUNC_ATTR_THUMB) {
+			size = 2;
+			bus_read(16, *it, &insn);
+			if ((insn & 0xF800) == 0xF800
+			      || (insn & 0xF800) == 0xF000
+			      || (insn & 0xF800) == 0xE800) {
+				bus_read(16, *it + 2, &given);
+				size = 4;
+				/* skip next thumb insn */
+		//		++it;
+				insn = (insn << 16) | (given & 0xffff);
+				disas(stdout, &insn, size, *it);
+
+#if 1
+				if ((it + 1) != addrset.end()) {
+					if (*(it + 1) == *it + 2)
+						++it;
+				}
+#endif
+			} else
+				disas(stdout, &insn, size, *it);
+		}
+		else {
+			bus_read(32, *it, &insn);
+			size = 4;
+			disas(stdout, &insn, size, *it);
+		}
+//		printf("%x\n", insn);
+	}
+
+	if (func_attrs & FUNC_ATTR_THUMB)
+		set_thumb_mode(0);
+	printf("-----disas end-----\n");
+}
+
 /**
  * @brief Create llvm JIT Function and translate instructions to fill the JIT Function.
  *	Optimize the llvm IR and save the function and its entry address to map.
@@ -419,6 +481,8 @@ cpu_translate_function(cpu_t *cpu, addr_t addr)
 	if (cpu->dyncom_engine->flags_debug & CPU_DEBUG_PRINT_IR)
 		cpu->dyncom_engine->cur_func->dump();
 
+	if (cpu->dyncom_engine->flags_debug & CPU_DEBUG_PRINT_DISAS)
+		disas_insn_in_jit(cpu);
 	/* make sure everything is OK */
 	if (cpu->dyncom_engine->flags_codegen & CPU_CODEGEN_VERIFY){
 		if(verifyFunction(*cpu->dyncom_engine->cur_func, PrintMessageAction) == true){

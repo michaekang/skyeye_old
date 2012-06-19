@@ -385,6 +385,7 @@ typedef struct dyncom_engine{
 	/* the lock for the compiled thread and running thread */
 	pthread_rwlock_t rwlock;
 
+	vector<addr_t> insns_in_jit;
 	addr_t code_start;
 	addr_t code_end;
 	addr_t code1_start;
@@ -573,6 +574,7 @@ enum {
 #define CPU_DEBUG_PRINT_IR_OPTIMIZED	(1<<3)
 #define CPU_DEBUG_LOG					(1<<4)
 #define CPU_DEBUG_PROFILE				(1<<5)
+#define CPU_DEBUG_PRINT_DISAS				(1<<6)
 #define CPU_DEBUG_ALL 0xFFFFFFFF
 
 //////////////////////////////////////////////////////////////////////

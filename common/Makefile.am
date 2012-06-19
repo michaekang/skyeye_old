@@ -17,6 +17,7 @@ common_core = core/skyeye_arch.c
 common_device = device/skyeye_device.c device/pen_buffer.c device/skyeye_uart_ops.c device/skyeye_signal.c
 common_mach = mach/skyeye_mach.c
 common_callback = callback/callback.c
+common_disas= disas/disas.c disas/arm-dis.c
 common_dyncom= dyncom/translate_singlestep_bb.cpp dyncom/translate_singlestep.cpp dyncom/translate_all.cpp dyncom/translate.cpp dyncom/timings.cpp dyncom/tag.cpp dyncom/stat.cpp dyncom/sha1.cpp dyncom/optimize.cpp dyncom/interface.cpp dyncom/function.cpp dyncom/frontend.cpp dyncom/fp.cpp dyncom/disasm.cpp dyncom/basicblock.cpp dyncom/tlb.cpp dyncom/phys_page.cpp dyncom/profiler.cpp
 
 pkglib_LTLIBRARIES = libcommon.la
@@ -32,9 +33,9 @@ include_HEADERS = ./include/sim_control.h ./include/skyeye_callback.h \
 ./include/portable/mman.h ./include/portable/usleep.h ./include/skyeye_ram.h \
 ./include/skyeye_queue.h ./include/skyeye_signal.h ./include/skyeye_lock.h\
 ./include/skyeye_sched.h ./include/skyeye_addr_space.h ./include/bank_defs.h \
-./include/skyeye_io.h
+./include/skyeye_io.h ./include/skyeye_disas.h
 
-libcommon_la_SOURCES = $(common_module) $(common_misc) $(common_breakpoint) $(common_ctrl) $(common_portable) $(common_preference) $(common_core) $(common_conf_parser) $(common_log) $(common_cli) $(common_mm) $(common_mach) $(common_device) $(common_memory) $(common_loader) $(common_callback) $(common_profile) $(common_checkpoint)
+libcommon_la_SOURCES = $(common_module) $(common_misc) $(common_breakpoint) $(common_ctrl) $(common_portable) $(common_preference) $(common_core) $(common_conf_parser) $(common_log) $(common_cli) $(common_mm) $(common_mach) $(common_device) $(common_memory) $(common_loader) $(common_callback) $(common_profile) $(common_checkpoint) $(common_disas)
 
 libcommon_la_LIBADD =
 

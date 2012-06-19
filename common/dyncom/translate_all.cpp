@@ -37,6 +37,11 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 	// find all instructions that need labels and create basic blocks for them
 	int bbs = 0;
 	addr_t pc;
+
+	/* reset instruction contaioner. */
+	vector<addr_t> &addrset = cpu->dyncom_engine->insns_in_jit;
+	addrset.clear();
+
 	int cur_pos = cpu->dyncom_engine->functions;
 	vector<addr_t>::iterator i = cpu->dyncom_engine->startbb[cur_pos].begin();
 	for(; i < cpu->dyncom_engine->startbb[cur_pos].end(); i++){
@@ -183,6 +188,7 @@ cpu_translate_all(cpu_t *cpu, BasicBlock *bb_ret, BasicBlock *bb_trap, BasicBloc
 				emit_store_pc_end_page(cpu, tag, cur_bb, next_pc);
 			}
 			bb_cont = translate_instr(cpu, pc, next_pc, tag, bb_target, bb_trap, bb_next, bb_ret, cur_bb);
+			addrset.push_back(pc);
 			if (!is_user_mode(cpu) && bb_cont && (tag & TAG_NEW_BB) && !(tag & TAG_BRANCH)) {
 				if (!bb_cont->getTerminator()) {
 					BranchInst::Create(bb_next, bb_cont);
