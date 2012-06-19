@@ -1912,14 +1912,14 @@ int DYNCOM_TRANS(smull)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 	return No_exp;
 }
 int DYNCOM_TRANS(smulw)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-	Value* rm;
+	Value* rs;
 	if(BIT(6)){
-		rm = LSHR(R(RM), CONST(16));
+		rs = LSHR(R(RS), CONST(16));
 	}
 	else
-		rm = AND(R(RM), CONST(0xFFFF));
-	Value* result = MUL(SEXT64(rm), SEXT64(R(RN)));
-	LET(RD, TRUNC32(AND(LSHR(result, CONST64(16)), CONST64(0xFFFFFFFF))));
+		rs = AND(R(RS), CONST(0xFFFF));
+	Value* result = MUL(SEXT64(rs), SEXT64(R(RM)));
+	LET(MUL_RD, TRUNC32(AND(LSHR(result, CONST64(16)), CONST64(0xFFFFFFFF))));
 	return No_exp;
 }
 int DYNCOM_TRANS(smusd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
