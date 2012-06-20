@@ -365,9 +365,12 @@ void save_addr_in_func(cpu_t *cpu, void *native_code_func)
 		cpu->dyncom_engine->fmap[HASH_MAP_INDEX_L1(i->first)][HASH_MAP_INDEX_L2(i->first)][HASH_MAP_INDEX_L3(i->first)] =
 			native_code_func;
 	}
+	/* shenoubang add win32 2012-6-14 */
+#ifndef __WIN32__
 	if(pthread_rwlock_unlock(&(cpu->dyncom_engine->rwlock))){
 		fprintf(stderr, "unlock error\n");
 	}
+#endif
 #else
 	bbaddr_map &bb_addr = cpu->dyncom_engine->func_bb[cpu->dyncom_engine->cur_func];
 	bbaddr_map::iterator i = bb_addr.begin();

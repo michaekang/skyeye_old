@@ -45,7 +45,12 @@
 #define OPT_LOCAL_REGISTERS 1
 //#endif
 
+/* shenoubang add win32 2012-6-14 */
+#ifdef __WIN32__
+#define FAST_MEMORY 0
+#else
 #define FAST_MEMORY 1
+#endif
 
 #define ENABLE_DEBUG_ME 0
 #define ENABLE_ICOUNTER 0

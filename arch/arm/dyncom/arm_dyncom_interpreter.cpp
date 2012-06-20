@@ -44,6 +44,10 @@ using namespace std;
 #include "dyncom/profiler.h"
 #include "skyeye_ram.h"
 #include "vfp/vfp.h"
+/* shenoubang 2012-6-14 */
+#ifdef __WIN32__
+#include "bank_defs.h"
+#endif
 
 #define HYBRID_MODE		1
 
@@ -3621,7 +3625,19 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, addr_t addr)
 	pc_start = phys_addr;
 	//phys_addr = get_dma_addr(phys_addr);
 	while(ret == NON_BRANCH) {
+		/* shenoubang add win32 2012-6-14 */
+#ifdef __WIN32__
+               mem_bank_t* bank;
+               if (bank = bank_ptr(addr)) {
+                       bank->bank_read(32, phys_addr, &inst);
+               }
+               else {
+                       printf("SKYEYE: Read physical addr 0x%x error!!\n", phys_addr);
+                       return FETCH_FAILURE;
+               }
+#else
 		inst = *(uint32_t *)(phys_addr & 0xFFFFFFFC);
+#endif
 		or_tag(core, phys_addr,  TAG_FAST_INTERP);
 
 		/*if (ret == FETCH_FAILURE) {

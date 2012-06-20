@@ -186,7 +186,8 @@ void memory_read(cpu_t* cpu, BasicBlock*bb, Value* addr, uint32_t sign, uint32_t
 		LET(EXCLUSIVE_STATE, CONST(1));
 	}
 	Value* tmp;
-	#if 1
+	/* shenoubang add win32 2012-6-14 */
+	#ifndef __WIN32__
 	if(size == 8){
 		tmp = arch_load8(cpu, phys_addr, bb);
 		if(sign)
@@ -216,6 +217,8 @@ void memory_read(cpu_t* cpu, BasicBlock*bb, Value* addr, uint32_t sign, uint32_t
 	params.push_back(v_cpu_ptr);
 	params.push_back(phys_addr);
 	params.push_back(CONST(size));
+	/* shenoubang 2012-6-14 */
+	params.push_back(CONST(cpu->dyncom_engine->need_exclusive));
 	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_read_memory, ValueArray(params), "", bb);
 	tmp = ret;
 	#endif
@@ -304,13 +307,16 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
         	params.push_back(v_cpu_ptr);
 	        params.push_back(phys_addr);
 		Value* tmp = ZEXT32(real_value);
-        	params.push_back(tmp);
+	        params.push_back(tmp);
 	        params.push_back(CONST(size));
+		/* shenoubang 2012-6-14 */
+		params.push_back(CONST(cpu->dyncom_engine->need_exclusive));
         	CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, ValueArray(params), "", bb);
 		#endif
 	}
 	else{
-	#if 1
+		/* shenoubang add win32 2012-6-14 */
+	#ifndef __WIN32__
 		//arch_arm_debug_print(cpu, bb, ZEXT64(phys_addr), R(15), CONST(17));
 		if(size == 8)
 			STORE8(value, phys_addr);
@@ -332,6 +338,8 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
 		params.push_back(phys_addr);
 		params.push_back(value);
 		params.push_back(CONST(size));
+		/* shenoubang 2012-6-14 */
+		params.push_back(CONST(cpu->dyncom_engine->need_exclusive));
 		CallInst *ret = CallInst::Create(cpu->dyncom_engine->ptr_func_write_memory, ValueArray(params), "", bb);
 	#endif
 	}
