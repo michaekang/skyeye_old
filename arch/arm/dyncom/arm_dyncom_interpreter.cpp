@@ -4898,8 +4898,11 @@ void InterpreterMainLoop(cpu_t *core)
 			fault = interpreter_read_memory(core, addr, phys_addr, value, 32);
 			if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
 				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-			else
-				cpu->Reg[BITS(inst_cream->inst, 12, 15)] = ROTATE_RIGHT_32(value,(8*(addr&0x3))) ;
+			else {
+                                value = ROTATE_RIGHT_32(value,(8*(addr&0x3)));
+                                cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+                        }
+
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				/* For armv5t, should enter thumb when bits[0] is non-zero. */
 				cpu->TFlag = value & 0x1;
