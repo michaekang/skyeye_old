@@ -169,7 +169,7 @@ void memory_read(cpu_t* cpu, BasicBlock*bb, Value* addr, uint32_t sign, uint32_t
 	Value* tlb_entry = new LoadInst(a, "", false, bb);
 	//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(15));
 	//new StoreInst(tlb_entry, cpu->dyncom_engine->tlb_entry, false, 0, bb);
-	Value* result = ICMP_EQ(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000)), CONST64(32))), va);
+	Value* result = ICMP_EQ(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000LL)), CONST64(32))), va);
 	BasicBlock *memory_read_bb = BasicBlock::Create(_CTX(), "memory_read", cpu->dyncom_engine->cur_func, 0);
 	BasicBlock* load_store_end = BasicBlock::Create(_CTX(), "load_store_end", cpu->dyncom_engine->cur_func, 0);
 	//cpu->dyncom_engine->bb_load_store = load_store_bb;
@@ -236,7 +236,7 @@ void memory_write(cpu_t* cpu, BasicBlock*bb, Value* addr, Value* value, uint32_t
 #if DIFF_WRITE
 	Value* result = CONST1(0);
 #else
-	Value* result = ICMP_EQ(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000)), CONST64(32))), va);
+	Value* result = ICMP_EQ(TRUNC32(LSHR(AND(tlb_entry, CONST64(0xFFFFFFFF00000000LL)), CONST64(32))), va);
 #endif
 	//Value *cond = ICMP_NE(result, CONST1(1));
 	//arch_arm_debug_print(cpu, bb, ZEXT64(addr), R(15), CONST(15));

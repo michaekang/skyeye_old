@@ -156,6 +156,8 @@ void skyeye_backtrace(){
 	void *buffer[SIZE];
 	char **strings;
 
+	/* shenoubang add win32 2012-6-12 */
+#ifndef __WIN32__
 	nptrs = backtrace(buffer, SIZE);
 	printf("backtrace() returned %d addresses\n", nptrs);
 
@@ -172,6 +174,7 @@ void skyeye_backtrace(){
 		printf("%s\n", strings[j]);
 
 	free(strings);
+#endif
 }
 
 /**

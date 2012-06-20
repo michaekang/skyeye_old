@@ -36,7 +36,10 @@
 #include "dyncom/tag.h"
 #include "dyncom/defines.h"
 #include "skyeye_ram.h"
+/* shenoubang add win32 2102-6-12 */
+#ifndef __WIN32__
 #include <execinfo.h>
+#endif
 
 #if FAST_MEMORY
 static inline void mem_read_raw(void *mem_ptr, uint32_t offset, uint32_t &value, int size)

@@ -3502,6 +3502,8 @@ static uint32_t get_bank_addr(void *addr)
 	return 0;
 }
 
+/* shenoubang add win32 2012-6-12 */
+#ifndef __WIN32__
 static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
 {
 	printf("in %s, addr=0x%llx\n", __FUNCTION__, si->si_addr);
@@ -3530,11 +3532,12 @@ static void flush_code_cache(int signal_number, siginfo_t *si, void *unused)
 #endif
 	#endif
 }
+#endif /* shenoubang */
 
 void protect_code_page(uint32_t addr)
 {
 	void *mem_ptr = (void *)get_dma_addr(addr);
-	mem_ptr = (void *)((long long int)mem_ptr & 0xfffffffffffff000);
+	mem_ptr = (void *)((long long int)mem_ptr & 0xfffffffffffff000LL);
 
 	const vector<uint64_t>::iterator it = find(code_page_set.begin(), 
 						   code_page_set.end(),
@@ -3543,6 +3546,8 @@ void protect_code_page(uint32_t addr)
 		return;
 	}
 	//printf("[mprotect][ADDR:0x%08llx]\n", mem_ptr);
+	/* shenoubang add win32 2012-6-12 */
+#ifndef __WIN32__
 	struct sigaction sa;
 
 	memset(&sa, 0, sizeof(sa));
@@ -3553,6 +3558,7 @@ void protect_code_page(uint32_t addr)
 	//mprotect(mem_ptr, 4096, PROT_READ);
 
 	code_page_set.push_back((uint64_t)mem_ptr);
+#endif /* shenoubang */
 }
 
 
@@ -5837,7 +5843,7 @@ void InterpreterMainLoop(cpu_t *core)
 		
 			long long int product2 = half_rn * half_operand2;
 
-			long long int signed_ra = (ra & 0x80000000)? (0xFFFFFFFF00000000) | ra : ra;
+			long long int signed_ra = (ra & 0x80000000)? (0xFFFFFFFF00000000LL) | ra : ra;
 			long long int result = product1 + product2 + signed_ra;
 			cpu->Reg[inst_cream->Rd] = result & 0xFFFFFFFF;
 			/* FIXME , should check Signed overflow */
@@ -5856,10 +5862,10 @@ void InterpreterMainLoop(cpu_t *core)
 			long long int rm = RM;
 			long long int rs = RS;
 			if (BIT(rm, 31)) {
-				rm |= 0xffffffff00000000;
+				rm |= 0xffffffff00000000LL;
 			}
 			if (BIT(rs, 31)) {
-				rs |= 0xffffffff00000000;
+				rs |= 0xffffffff00000000LL;
 			}
 			long long int rst = rm * rs;
 			long long int rdhi32 = RDHI;
@@ -5917,10 +5923,10 @@ void InterpreterMainLoop(cpu_t *core)
 			int64_t rm = RM;
 			int64_t rs = RS;
 			if (BIT(rm, 31)) {
-				rm |= 0xffffffff00000000;
+				rm |= 0xffffffff00000000LL;
 			}
 			if (BIT(rs, 31)) {
-				rs |= 0xffffffff00000000;
+				rs |= 0xffffffff00000000LL;
 			}
 			int64_t rst = rm * rs;
 			RDHI = BITS(rst, 32, 63);
