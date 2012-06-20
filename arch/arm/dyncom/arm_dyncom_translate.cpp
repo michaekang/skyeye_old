@@ -1815,7 +1815,7 @@ int DYNCOM_TRANS(smlad)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
 	Value* Product2 = MUL(Half_rm, Half_operand2);
 
 	Value* result = ADD(ADD(Product1, Product2), Rn);
-	LET(MUL_RD, TRUNC32(result));
+	LET(MUL_RD, result);
 	/* FIXME , should set Qflag for overflow */
 	return No_exp;
 }
