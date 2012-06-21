@@ -127,7 +127,7 @@ INCLUDES += -I./nandflash
 
 
 INCLUDES += @LCD_CFLAGS@
-INCLUDES +=/usr/include/gtk-2.0/ 
+INCLUDES += -I/usr/include/gtk-2.0/ 
 if GTK_LCD
 liblcd_la_SOURCES += lcd/skyeye_lcd_gtk.c
 endif # GTK_LCD
