@@ -57,7 +57,11 @@ libgtk_lcd_la_LDFLAGS = -module $(LCD_LIBS)
 endif
 
 libsdl_lcd_la_SOURCES = $(sdl_lcd) 
+if WIN32
+libsdl_lcd_la_LDFLAGS = -module -Xlinker -L../android/objs/emulator_libui/.libs/ -Xlinker -lemulator_libui
+else
 libsdl_lcd_la_LDFLAGS = -module -L../android/objs/emulator_libui -lemulator_libui
+endif
 
 
 libsdhci_s3c6410_la_SOURCES = $(dev_sdhci_s3c6410)

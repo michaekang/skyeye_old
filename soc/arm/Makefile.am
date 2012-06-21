@@ -98,16 +98,28 @@ libgoldfish_timer_la_SOURCES = $(goldfish_timer)
 libgoldfish_timer_la_LDFLAGS = -module
 
 libgoldfish_nand_la_SOURCES = $(goldfish_nand)
+if WIN32
+libgoldfish_nand_la_LDFLAGS = -module -Xlinker -L$(top_srcdir)/android/objs/emulator_common/.libs/ -Xlinker -lemulator_common
+else
 libgoldfish_nand_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_common -lemulator_common
+endif
 
 libgoldfish_tty_la_SOURCES = $(goldfish_tty)
 libgoldfish_tty_la_LDFLAGS = -module
 
 libgoldfish_fb_la_SOURCES = $(goldfish_fb)
+if WIN32
+libgoldfish_fb_la_LDFLAGS = -module -Xlinker -L$(top_srcdir)/android/objs/emulator_libui/.libs/ -Xlinker -lemulator_libui -L$(top_srcdir)/android/objs/emulator_libqemu/.libs/ -Xlinker -lemulator_libqemu
+else
 libgoldfish_fb_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_libui -lemulator_libui
+endif
 
 libgoldfish_events_la_SOURCES = $(goldfish_events)
+if WIN32
+libgoldfish_events_la_LDFLAGS = -module -Xlinker -L$(top_srcdir)/android/objs/emulator_libui/.libs/ -Xlinker -lemulator_libui -L$(top_srcdir)/android/objs/emulator_common/.libs/ -Xlinker -lemulator_common
+else
 libgoldfish_events_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_libui -lemulator_libui
+endif
 
 libgoldfish_bus_la_SOURCES = $(goldfish_bus)
 libgoldfish_bus_la_LDFLAGS = -module 
@@ -138,6 +150,14 @@ libps7500_la_LDFLAGS +=  $(WIN32_LD_COMMON)
 libimx9238_la_LDFLAGS += $(WIN32_LD_COMMON)
 libs3c4510b_la_LDFLAGS += $(WIN32_LD_COMMON)
 libomap4460_la_LDFLAGS += $(WIN32_LD_COMMON)
+libgoldfish_la_LDFLAGS += $(WIN32_LD_COMMON)
+libgoldfish_interrupt_la_LDFLAGS += $(WIN32_LD_COMMON)
+libgoldfish_timer_la_LDFLAGS += $(WIN32_LD_COMMON)
+libgoldfish_nand_la_LDFLAGS += $(WIN32_LD_COMMON)
+libgoldfish_tty_la_LDFLAGS += $(WIN32_LD_COMMON)
+libgoldfish_fb_la_LDFLAGS += $(WIN32_LD_COMMON)
+libgoldfish_events_la_LDFLAGS += $(WIN32_LD_COMMON)
+libgoldfish_bus_la_LDFLAGS += $(WIN32_LD_COMMON)
 endif
 
 pkglib_LTLIBRARIES = libs3c6410.la libs3c2410.la libat91rm92.la libat91.la libcs89712.la \
