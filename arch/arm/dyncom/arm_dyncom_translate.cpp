@@ -2656,7 +2656,7 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		*new_pc = NEW_PC_NONE;
 		if(is_usermode_func(cpu)){
 			/* since the Thumb bit possible is set here */
-			*tag |= TAG_STOP;
+			//*tag |= TAG_STOP;
 		}
 	}
 	else{
@@ -2670,9 +2670,13 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 			if ((pc >> 12) != ((*new_pc) >> 12))
 				*new_pc = NEW_PC_NONE;
 			/* since the Thumb bit possible is set here */
-			*tag |= TAG_STOP;
+			//*tag |= TAG_STOP;
 		}
 	}
+	/* since the mode possibly will be switched. so we have to stop here */
+	*new_pc = NEW_PC_NONE;
+	//*tag |= TAG_STOP;
+
 	*next_pc = pc + INSTR_SIZE;
 
 	if(instr >> 28 != 0xe && ((instr >> 28) != 0xF))
@@ -2686,7 +2690,7 @@ int DYNCOM_TAG(bx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *ne
 	*new_pc = NEW_PC_NONE;
 	if(is_usermode_func(cpu)){
 		/* Since thumb bit possibly is changed */
-		*tag |= TAG_STOP;
+		//*tag |= TAG_STOP;
 	}
 
 	if(instr >> 28 != 0xe)
@@ -2831,8 +2835,10 @@ int DYNCOM_TAG(ldr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		*new_pc = NEW_PC_NONE;
 
 		/* Since the thumb mode possibly enter */
+		#if 0
 		if(is_usermode_func(cpu))
 			*tag |= TAG_STOP;
+		#endif
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	}
@@ -3362,7 +3368,7 @@ int DYNCOM_TAG(sub)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		arm_tag_branch(cpu, pc, instr, tag, new_pc, next_pc);
 		*next_pc = pc + instr_size;
 		*new_pc = NEW_PC_NONE;
-		*tag = TAG_STOP;
+		//*tag = TAG_STOP;
 		*tag |= TAG_BRANCH;
 	} else {
 		arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
@@ -3624,7 +3630,8 @@ int DYNCOM_TAG(blx_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, a
 			*new_pc = target;
 	}
 	/* since the Thumb bit possible is set here */
-	*tag |= TAG_STOP;
+	*new_pc = NEW_PC_NONE;
+	//*tag |= TAG_STOP;
 	return instr_size;
 }
 /* Floating point instructions */
