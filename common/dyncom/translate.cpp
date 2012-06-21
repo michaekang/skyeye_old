@@ -104,11 +104,13 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
                         BranchInst::Create(bb_cond, bb_ret, c, cur_bb);
 		}
 		else{
+			#if 0
 			if (tag & TAG_BEFORE_SYSCALL){
 				emit_store_pc(cpu, cur_bb, next_pc);
 				BranchInst::Create(bb_cond, bb_trap, c, cur_bb);
 			}
 			else
+			#endif
 				BranchInst::Create(bb_cond, bb_next, c, cur_bb);
 		}
 		cur_bb = bb_cond;
@@ -152,6 +154,7 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 	}
 
 #if OPT_LOCAL_REGISTERS
+#if 0
 	if (tag & TAG_BEFORE_SYSCALL) {//bb_instr needs a terminator inst.
 		/* the branch instruction before syscall */
 		if((tag & TAG_BRANCH)){ 
@@ -167,6 +170,7 @@ translate_instr(cpu_t *cpu, addr_t pc, addr_t next_pc, tag_t tag,
 		emit_store_pc_return(cpu, cur_bb, pc + instr_length, bb_ret);
 		cur_bb = NULL;
 	}
+#endif
 #endif
 
 	if (tag & TAG_CONTINUE)
