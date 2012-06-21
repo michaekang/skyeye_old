@@ -19,10 +19,10 @@
 #include <process.h>
 #endif
 
+#include "console.h"
+
 #include <SDL.h>
 #include <SDL_syswm.h>
-
-#include "console.h"
 
 #include "android/utils/debug.h"
 #include "android/utils/path.h"
@@ -39,6 +39,7 @@
 #include "android/skin/keyboard.h"
 #include "android/skin/file.h"
 #include "android/skin/window.h"
+
 
 
 

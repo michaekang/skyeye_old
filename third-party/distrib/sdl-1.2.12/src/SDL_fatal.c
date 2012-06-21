@@ -60,6 +60,7 @@ void SDL_InstallParachute(void)
 {
 	/* Set a handler for any fatal signal not already handled */
 	int i;
+#ifndef __WIN32 /* shenoubang FIXME: not implemented */
 #ifdef HAVE_SIGACTION
 	struct sigaction action;
 
@@ -88,6 +89,7 @@ void SDL_InstallParachute(void)
 		}
 	}
 #endif /* HAVE_SIGACTION */
+#endif /* __WIN32 shenoubang */
 	return;
 }
 
@@ -95,6 +97,7 @@ void SDL_UninstallParachute(void)
 {
 	/* Remove a handler for any fatal signal handled */
 	int i;
+#ifndef __WIN32 /* shenoubang FIXME: not implemented */
 #ifdef HAVE_SIGACTION
 	struct sigaction action;
 
@@ -115,6 +118,7 @@ void SDL_UninstallParachute(void)
 		}
 	}
 #endif /* HAVE_SIGACTION */
+#endif /* __WIN32 shenoubang */
 }
 
 #else

@@ -95,6 +95,11 @@ emulator_common += \
         $(top_srcdir)/android/utils/vector.c
 ######static
 #
+if WIN32
+emulator_common += \
+       $(top_srcdir)/android/skyeye/os-win32.c \
+	$(top_srcdir)/android/skyeye/qemu_iothread.c
+endif
 
 #$(top_srcdir)/android/libemulator_common.a: 
 #noinst_LIBRARIES = libemulator_common.a 
@@ -104,10 +109,19 @@ emulator_common += \
 #
 #$(top_srcdir)/android/libemulator_common.so:
 libemulator_common_la_SOURCES = $(emulator_common)
-libemulator_common_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -lrt 
+libemulator_common_la_LDFLAGS = -module
+if WIN32
+libemulator_common_la_LDFLAGS += -no-undefined -shared -module -Xlinker -L$(top_srcdir)/common/.libs/ -Xlinker -lcommon -Xlinker -lwinmm -Xlinker -lmsvcrt -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lkernel32 -Xlinker -lgdi32 -Xlinker-luuid -Xlinker -luser32  -Xlinker -lshell32 -Xlinker -lws2_32 -Xlinker --export-all-symbol
+else
+libemulator_common_la_LDFLAGS += -module -L$(top_srcdir)/common -lcommon -lrt
+endif
 pkglib_LTLIBRARIES = libemulator_common.la
 
+if WIN32
+INCLUDES = -I$(top_srcdir)/android/config/windows/
+else
 INCLUDES = -I$(top_srcdir)/android/config/linux-x86/
+endif
 INCLUDES += -I$(top_srcdir)/common/include/
 INCLUDES += -I$(top_srcdir)/android/skyeye/
 INCLUDES += -I$(top_srcdir)/android/

@@ -75,12 +75,12 @@ base_termios_exit (void)
 	//tcsetattr (STDIN_FILENO, TCSANOW, &(state->base_termios));
 }
 
-extern int init_register_type();
+extern int init_register_type(void);
 /**
  *  Initialize all the gloval variable
  */
 static int
-init ()
+init (void)
 {
 	static int done = 0;
 	int ret = -1;
@@ -291,7 +291,7 @@ void sim_resume(int step){
 
 
 void
-usage ()
+usage (void)
 {	printf("%s\n",PACKAGE_STRING);
 	printf("Bug report: %s\n", PACKAGE_BUGREPORT);
 
@@ -337,14 +337,14 @@ void skyeye_exit(int ret)
 }
 #endif
 #ifdef __MINGW32__
-static BOOL init_win32_socket()
+static BOOL init_win32_socket(void)
 {
 	WSADATA wsdData;
 	if(WSAStartup(0x202, &wsdData) != 0 || LOBYTE(wsdData.wVersion) != 2 || HIBYTE(wsdData.wVersion) != 2) return FALSE;
 	return TRUE;
 }
 
-static void cancel_win32_socket()
+static void cancel_win32_socket(void)
 {
 	WSACleanup();
 }
@@ -544,7 +544,7 @@ loop_exit:
 			info->exec_envc = exec_envc;
 		
 			/* read complementary information */
-			retrieve_info(pref->exec_file, NULL);
+			retrieve_info((pref->exec_file), NULL);
 		
 			info->mmap_access = mmap_access;
 		}
@@ -608,6 +608,9 @@ void write_android_options(int argc,char ** argv)
 /**
  *  The main function of skyeye
  */
+#ifdef __WIN32
+extern int setenv(const char *name, const char *value, int overwrite);
+#endif
 
 int
 main (int argc, char **argv)

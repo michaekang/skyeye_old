@@ -34,6 +34,12 @@ CORE_MISC_SOURCES = \
     $(top_srcdir)/android/hw-events.c \
     $(top_srcdir)/android/qemu-setup.c \
     $(top_srcdir)/android/utils/timezone.c
+if WIN32
+CORE_MISC_SOURCES += \
+    $(top_srcdir)/android/skyeye/os-win32.c \
+    $(top_srcdir)/android/skyeye/qemu_iothread.c
+endif
+
 
 #$(top_srcdir)/android/hw-lcd.c \
 #$(top_srcdir)/qemu-setup.c 
@@ -73,7 +79,12 @@ emulator_libqemu = $(CORE_MISC_SOURCES) \
 #
 #$(top_srcdir)/android/libemulator_libqemu.so:
 libemulator_libqemu_la_SOURCES = $(emulator_libqemu)
-libemulator_libqemu_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -lrt
+libemulator_libqemu_la_LDFLAGS = -module
+if WIN32
+libemulator_libqemu_la_LDFLAGS +=  -no-undefined -shared -module -Xlinker -L$(top_srcdir)/common/.libs/ -Xlinker -lcommon -Xlinker -L$(top_srcdir)/android/objs/emulator_common/.libs/ -Xlinker -lemulator_common -Xlinker -lmsvcrt -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lkernel32 -Xlinker -lgdi32 -Xlinker -luuid -Xlinker -luser32  -Xlinker -lshell32 -Xlinker --export-all-symbol
+else
+libemulator_libqemu_la_LDFLAGS += -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -lrt
+endif
 pkglib_LTLIBRARIES = libemulator_libqemu.la
 
 INCLUDES = -I$(top_srcdir)/common/include/
@@ -82,6 +93,10 @@ INCLUDES += -I$(top_srcdir)/android/
 INCLUDES += -I$(top_srcdir)/android/utils/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/libpng-1.2.19/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
-INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/include/
+if WIN32
+INCLUDES += -I$(top_srcdir)/android/config/windows/
+else
+INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
+endif
 

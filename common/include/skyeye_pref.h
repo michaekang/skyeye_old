@@ -9,30 +9,30 @@
 #endif 
 
 void set_exec_file(const char *filename);
-char *get_exec_file();
+char *get_exec_file(void);
 
 void set_exec_load_base(const generic_address_t addr);
-generic_address_t get_exec_load_base();
+generic_address_t get_exec_load_base(void);
 
 void set_exec_load_mask(const uint32_t addr);
-uint32_t get_exec_load_mask();
+uint32_t get_exec_load_mask(void);
 
 void set_conf_filename(const char *filename);
-char *get_conf_filename();
+char *get_conf_filename(void);
 
 void set_interactive_mode(const bool_t mode);
-bool_t get_interactive_mode();
+bool_t get_interactive_mode(void);
 
 void set_endian(const endian_t endian);
-bool_t get_endian();
+bool_t get_endian(void);
 
 void set_autoboot(const bool_t value);
-bool_t get_autoboot();
+bool_t get_autoboot(void);
 
 void set_uart_port(const uint32_t value);
-uint32_t get_uart_port();
+uint32_t get_uart_port(void);
 
-bool_t get_user_mode();
+bool_t get_user_mode(void);
 void set_user_mode(const uint32_t value);
 struct _sky_pref_s{
 	//generic_address_t elf_load_base;
@@ -75,8 +75,8 @@ struct _sky_pref_s{
 };
 typedef struct _sky_pref_s sky_pref_t;
 
-sky_pref_t * get_skyeye_pref();
-char* get_conf_filename();
+sky_pref_t * get_skyeye_pref(void);
+char* get_conf_filename(void);
 
 #ifdef __cplusplus
 }

@@ -87,9 +87,9 @@ typedef struct machine_config
 typedef	void (*mach_init_t) (void * state, struct machine_config * this_mach);	/*should be called when machine initialization */
 void register_mach(const char* mach_name, mach_init_t mach_init);
 machine_config_t * get_mach(const char* mach_name);
-machine_config_t * get_current_mach();
+machine_config_t * get_current_mach(void);
 
-machine_config_t * get_mach_list();
+machine_config_t * get_mach_list(void);
 #ifdef __cplusplus
 }
 #endif

@@ -382,6 +382,8 @@ path_get_size( const char*  path, uint64_t  *psize )
         errno = ENOENT;
         return -1;
     }
+    /* shenoubang 2012-5-18 FIXME: not implemented kernel32 */
+#if 0
     if (!GetFileSizeEx(file, &size)) {
         /* maybe we tried to get the size of a pipe or something like that ? */
         *psize = 0;
@@ -389,6 +391,7 @@ path_get_size( const char*  path, uint64_t  *psize )
     else {
         *psize = (uint64_t) size.QuadPart;
     }
+#endif
     CloseHandle(file);
     return 0;
 #else

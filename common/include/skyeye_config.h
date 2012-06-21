@@ -133,7 +133,8 @@ typedef struct common_config
 } common_config_t;
 
 /*config file option struct*/
-int do_dummy_option ();
+int do_dummy_option (skyeye_option_t * this_option, int num_params,
+		                const char *params[]);
 //int do_arch_option ();
 #if 0
 int do_cpu_option ();
@@ -168,17 +169,17 @@ int do_dbct_test_speed_sec();
 typedef struct
 {
 	char *arch_name;
-	void (*init) ();
-	void (*reset) ();
-	void (*step_once) ();
+	void (*init) (void);
+	void (*reset) (void);
+	void (*step_once) (void);
 	void (*set_pc) (generic_address_t addr);
-	generic_address_t (*get_pc)();
-	uint32 (*get_step)();
+	generic_address_t (*get_pc)(void);
+	uint32 (*get_step)(void);
 	int (*ICE_write_byte) (generic_address_t addr, uint8_t data);
 	int (*ICE_read_byte)(generic_address_t addr, uint8_t *pv);
 	uint32 (*get_regval_by_id)(int id);
         exception_t (*set_regval_by_id)(int id, uint32 value);
-	uint32 (*get_regnum)();
+	uint32 (*get_regnum)(void);
 	char* (*get_regname_by_id)(int id);
 
 	int (*parse_cpu) (const char *param[]);
@@ -292,7 +293,7 @@ static skyeye_option_t skyeye_options[] = {
 
 
 exception_t skyeye_read_config (char* conf_filename);
-skyeye_config_t* get_current_config();
+skyeye_config_t* get_current_config(void);
 
 #ifdef __cplusplus
 }

@@ -12,17 +12,17 @@
 /*
  * initialization of simulator.
  */
-void SIM_init();
+void SIM_init(void);
 
 /*
  * read and parse the specific config file and initilization the data.
  */
-void SIM_start();
+void SIM_start(void);
 
 /*
  * Launch the simulator.
  */
-void SIM_run();
+void SIM_run(void);
 
 /*
  * Enters the main loop of SkyEye and never returns. It should only be called
@@ -47,10 +47,10 @@ void SIM_continue(generic_arch_t* arch_instance);
  */
 void SIM_stop(generic_arch_t* arch_instance);
 
-bool_t SIM_is_running();
+bool_t SIM_is_running(void);
 
-void SIM_fini();
-void skyeye_loop();
+void SIM_fini(void);
+void skyeye_loop(generic_arch_t *arch_instance);
 void skyeye_stepi(int steps);
 #ifdef __cplusplus
 }

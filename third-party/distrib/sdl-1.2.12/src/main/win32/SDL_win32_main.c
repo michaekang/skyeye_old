@@ -214,7 +214,8 @@ int console_main(int argc, char *argv[])
 	SDL_SetModuleHandle(GetModuleHandle(NULL));
 
 	/* Run the application main() code */
-	status = SDL_main(argc, argv);
+	/* shenoubang 2012-5-18 FIXME: not right */
+	//status = SDL_main(argc, argv);
 
 	/* Exit cleanly, calling atexit() functions */
 	exit(status);

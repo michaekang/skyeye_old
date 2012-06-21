@@ -12,17 +12,17 @@
 typedef struct generic_arch_s
 {
 	char* arch_name;
-	void (*init) ();
-	void (*reset) ();
-	void (*step_once) ();
+	void (*init) (void);
+	void (*reset) (void);
+	void (*step_once) (void);
 	void (*set_pc)(generic_address_t addr);
-	generic_address_t (*get_pc)();
-	uint32 (*get_step)();
+	generic_address_t (*get_pc)(void);
+	uint32 (*get_step)(void);
 	//chy 2004-04-15 
 	//int (*ICE_write_byte) (generic_address_t addr, uint8_t v);
 	//int (*ICE_read_byte)(generic_address_t addr, uint8_t *pv);
 	uint32 (*get_regval_by_id)(int id);
-	uint32 (*get_regnum)();
+	uint32 (*get_regnum)(void);
 	char* (*get_regname_by_id)(int id);
 	exception_t (*set_regval_by_id)(int id, uint32 value);
 	/*
@@ -48,13 +48,13 @@ typedef struct generic_arch_s
 typedef struct generic_core_s
 {
 	char* core_name;
-	void (*init) ();
-	void (*reset) ();
-	void (*step_once) ();
-	int (*get_current_cycles)();
-	int (*get_current_steps)();
+	void (*init) (void);
+	void (*reset) (void);
+	void (*step_once) (void);
+	int (*get_current_cycles)(void);
+	int (*get_current_steps)(void);
 	void (*set_pc)(generic_address_t addr);
-	generic_address_t (*get_pc)();
+	generic_address_t (*get_pc)(void);
 	uint32 (*get_regval_by_id)(int id);
 	exception_t (*set_register_by_id)(int id, uint32 value);
 	endian_t endianess;
@@ -65,7 +65,7 @@ typedef struct generic_core_s
  */
 void register_arch(arch_config_t * arch);
 generic_arch_t * get_arch_instance(const char* arch_name);
-generic_arch_t* get_default_arch();
+generic_arch_t* get_default_arch(void);
 #ifdef __cplusplus
 }
 #endif

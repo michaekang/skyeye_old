@@ -43,9 +43,12 @@
 #include <sys/time.h>
 #include <zlib.h>
 #include <sys/ioctl.h>//xiaoqiao
+/* shenoubang 2012-5-11 */
 //#include <linux/ppdev.h>//xiaoqiao
+#ifndef __WIN32
 #include <linux/parport.h>//xiaoqiao
 #include <pty.h>//xiaoqiao
+#endif
 
 //#include <stdlib.h>//xiaoqiao
 //#define _XOPEN_SOURCE       /* See feature_test_macros(7) */

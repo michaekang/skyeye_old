@@ -2,6 +2,7 @@
 #define __SKYEYE_EXEC_INFO_H__
 
 #include "skyeye_types.h"
+#include <elf.h>
 
 #ifdef __cplusplus
  extern "C" {
@@ -28,11 +29,11 @@ struct _sky_exec_info_s{
 };
 typedef struct _sky_exec_info_s sky_exec_info_t;
 
-sky_exec_info_t* get_skyeye_exec_info();
+sky_exec_info_t* get_skyeye_exec_info(void);
 
-void retrieve_info();
+void retrieve_info(char * exec_file, Elf32_Ehdr* elf_header);
 
-void exec_stack_init();
+void exec_stack_init(void);
 
 #ifdef __cplusplus
 }

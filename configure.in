@@ -51,7 +51,7 @@ case $host in
     #dbct=true
     ;;
   *-*-mingw32*)
-    CFLAGS="$CFLAGS -mms-bitfields"
+    CFLAGS="$CFLAGS -mms-bitfields -DWINVER=0x0501"
     LIBS="$LIBS -Xlinker -lmsvcrt -Xlinker -lws2_32 -Xlinker -lwinmm -Xlinker -ladvapi32"
     #dbct=true
     ;;

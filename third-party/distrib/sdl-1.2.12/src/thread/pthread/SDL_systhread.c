@@ -24,6 +24,11 @@
 #include <pthread.h>
 #include <signal.h>
 
+#if __WIN32__
+/* shenoubang 2012-5-14 */
+#include <x11/signal.h>
+#endif
+
 #include "SDL_thread.h"
 #include "../SDL_thread_c.h"
 #include "../SDL_systhread.h"

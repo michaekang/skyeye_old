@@ -33,7 +33,8 @@
 #include "config-host.h"
 
 #if defined(CONFIG_MADVISE) || defined(CONFIG_POSIX_MADVISE)
-#include <sys/mman.h>
+/* shenoubang 2012-5-11 */
+#include <portable/mman.h>
 #endif
 
 #ifdef CONFIG_SOLARIS

@@ -41,15 +41,40 @@ SDL_SOURCES =  \
         $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/stdlib/SDL_qsort.c \
         $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/stdlib/SDL_stdlib.c \
         $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/stdlib/SDL_string.c \
-	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/cpuinfo/SDL_cpuinfo.c \
-	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/loadso/dlopen/SDL_sysloadso.c \
-	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/SDL_thread.c \
+	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/cpuinfo/SDL_cpuinfo.c
+if WIN32
+SDL_SOURCES +=  \
+	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/loadso/win32/SDL_sysloadso_win32.c
+else
+SDL_SOURCES +=  \
+	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/loadso/dlopen/SDL_sysloadso.c
+endif
+SDL_SOURCES +=  \
+	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/SDL_thread.c
+
+if WIN32
+SDL_SOURCES += \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/win32/SDL_sysmutex_win32.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/win32/SDL_syssem_win32.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/win32/SDL_systhread_win32.c
+else
+SDL_SOURCES +=  \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/pthread/SDL_syscond.c \
         $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/pthread/SDL_sysmutex.c \
         $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/pthread/SDL_syssem.c \
-        $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/pthread/SDL_systhread.c \
-	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/timer/SDL_timer.c \
-	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/timer/unix/SDL_systimer.c \
+        $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/thread/pthread/SDL_systhread.c
+endif
+SDL_SOURCES +=  \
+	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/timer/SDL_timer.c
+if WIN32
+SDL_SOURCES +=  \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/timer/win32/SDL_systimer_win32.c
+else
+SDL_SOURCES +=  \
+	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/timer/unix/SDL_systimer.c
+endif
+
+SDL_SOURCES +=  \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_RLEaccel.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_blit.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_blit_0.c \
@@ -67,7 +92,21 @@ SDL_SOURCES =  \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_yuv_sw.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/dummy/SDL_nullevents.c \
         $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/dummy/SDL_nullmouse.c \
-        $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/dummy/SDL_nullvideo.c \
+        $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/dummy/SDL_nullvideo.c
+
+if WIN32
+SDL_SOURCES += \
+       $(top_srcdir)/android/utils/setenv.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/windib/SDL_dibevents.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/windib/SDL_dibvideo.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/wincommon/SDL_sysevents.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/wincommon/SDL_sysmouse.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/wincommon/SDL_syswm.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/wincommon/SDL_wingl.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/SDL_video.c \
+       $(top_srcdir)/third-party/distrib/sdl-1.2.12/src/main/win32/SDL_win32_main.c
+else
+SDL_SOURCES +=  \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11dyn.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11events.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/x11/SDL_x11gamma.c \
@@ -84,10 +123,18 @@ SDL_SOURCES =  \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/Xext/Xinerama/Xinerama.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/video/Xext/Xv/Xv.c \
 	$(top_srcdir)/third-party/distrib/sdl-1.2.12/src/main/dummy/SDL_dummy_main.c
+endif
 
+if WIN32
+SDL_LDLIBS = -Xlinker -luser32 -Xlinker -lgdi32
+else
 SDL_LDLIBS = -ldl
+endif
 INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/include/
 
+if WIN32
+INCLUDES += -I /MinGW/GnuWin32/include/
+endif
 
 # the skin support sources
 #
@@ -125,7 +172,11 @@ main_dir = \
 ##dyn
 #
 libemulator_libui_la_SOURCES = $(emulator_libui) $(main_dir)
-libemulator_libui_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common  -L/usr/local/lib -liconv 
+if WIN32
+libemulator_libui_la_LDFLAGS = -no-undefined -shared -module  -Xlinker --enable-auto-import -Xlinker -L$(top_srcdir)/common/.libs/ -Xlinker -lcommon -Xlinker -L$(top_srcdir)/android/objs/emulator_common/.libs/ -Xlinker -lemulator_common -Xlinker -L$(top_srcdir)/android/objs/emulator_libqemu/.libs/ -Xlinker -lemulator_libqemu -Xlinker -L/MinGW/GnuWin32/bin -Xlinker -llibiconv2 -Xlinker -lgdi32 -Xlinker -lws2_32 -Xlinker -lkernel32 -Xlinker --export-all-symbol
+else
+libemulator_libui_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common  -L/usr/local/lib -liconv
+endif
 
 
 pkglib_LTLIBRARIES = libemulator_libui.la
@@ -136,9 +187,11 @@ INCLUDES += -I$(top_srcdir)/android/
 INCLUDES += -I$(top_srcdir)/android/utils/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/libpng-1.2.19/
 INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
-INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
 INCLUDES += -I$(top_srcdir)/soc/arm/goldfish/
-INCLUDES += -I/usr/local/include/
 if WIN32
-INCLUDES += -I/MinGW/GnuWin32/include/
+INCLUDES += -I$(top_srcdir)/android/config/windows/ \
+	 -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/
+else
+INCLUDES += -I$(top_srcdir)/android/config/linux-x86/ \
+	 -I/usr/local/include/
 endif

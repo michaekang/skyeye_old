@@ -12,7 +12,11 @@ android_dir = \
 ###dyn
 #
 libandroid_la_SOURCES = $(android_dir)
+if WIN32
+libandroid_la_LDFLAGS =  -no-undefined -shared -module -Xlinker -L$(top_srcdir)/common/.libs/ -Xlinker -lcommon -Xlinker -L$(top_srcdir)/android/objs/emulator_libui/.libs/ -Xlinker -lemulator_libui -Xlinker --export-all-symbol
+else
 libandroid_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon  -L$(top_srcdir)/android/objs/emulator_libui -lemulator_libui
+endif
 pkglib_LTLIBRARIES = libandroid.la
 
 #libandroid_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon  -L$(top_srcdir)/android/objs/emulator_libui -lemulator_libui -L$(top_srcdir)/android/objs/emulator_libqemu/ -lemulator_libqemu  -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -lrt  -liconv

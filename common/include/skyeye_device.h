@@ -167,7 +167,7 @@ int register_device_module (char *name,
 				   int (*setup) (struct device_desc * dev));
 int register_device_module_set (struct device_module_set *mod_set);
 
-void initialize_all_devices ();
+void initialize_all_devices (void);
 void set_device_default (struct device_desc *dev,
 				struct device_default_value *def);
 int setup_device_option (char *option_name, void *dev_option,
@@ -184,7 +184,7 @@ int setup_device_option (char *option_name, void *dev_option,
 //extern void touchscreen_register();
 //extern void sound_register();
 void register_pen_buffer(int* pen_buffer);
-int* get_pen_buffer();
+int* get_pen_buffer(void);
 
 #define ADDR_NOHIT		0	/* address no hit */
 #define ADDR_HIT		1	/* address hit */

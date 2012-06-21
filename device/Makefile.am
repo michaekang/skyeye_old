@@ -108,7 +108,7 @@ libpci_la_LDFLAGS = -module
 pkglib_LTLIBRARIES = libuart.la libuart_16550.la libflash.la libnandflash.la libsound.la liblcd.la libnet.la libts.la libpci.la
 
 if WIN32
-libuart_la_LDFLAGS +=  -no-undefined -shared -module -Xlinker -L../common/.libs/ -L/mingw/lib -Xlinker -lcommon -Xlinker --export-all-symbol
+libuart_la_LDFLAGS +=  -no-undefined -shared -module -Xlinker -L../common/.libs/ -L/mingw/lib -Xlinker -lcommon -Xlinker -L/mingw/ -Xlinker --export-all-symbol
 else
 pkglib_LTLIBRARIES += liblcd_s3c6410.la libsdhci_s3c6410.la libtouchscreen_s3c6410.la libsysctrl_s3c6410.la libgpio_s3c6410.la libspi_s3c6410.la libusbhost_s3c6410.la libac97_s3c6410.la libmfc_s3c6410.la libcamif_s3c6410.la librtc_s3c6410.la
 endif
@@ -127,7 +127,11 @@ INCLUDES += -I./nandflash
 
 
 INCLUDES += @LCD_CFLAGS@
+if WIN32
+INCLUDES +=/mingw/gtk-2.0/
+else
 INCLUDES += -I/usr/include/gtk-2.0/ 
+endif
 if GTK_LCD
 liblcd_la_SOURCES += lcd/skyeye_lcd_gtk.c
 endif # GTK_LCD

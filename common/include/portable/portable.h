@@ -4,6 +4,7 @@
 
 #ifdef __WIN32__
 #include <search.h>
+#include <sys/time.h>
 #include <sys/unistd.h>
 #include <stdlib.h>
 typedef unsigned int uint;

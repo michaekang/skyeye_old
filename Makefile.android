@@ -7,5 +7,7 @@ SUBDIRS += android/objs/android
 
 bin_PROGRAMS = emulator
 emulator_SOURCES = utils/main/android_emulator.c
+emulator_SOURCES += android/utils/setenv.c
+
 emulator_LDADD =  -L./common -lcommon
 

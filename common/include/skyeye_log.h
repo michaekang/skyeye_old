@@ -62,7 +62,7 @@ typedef enum {
 void skyeye_printf_in_color(COLOR_TYPE type, char *format, ...);
 void skyeye_log_in_color(log_level_t log_level,const char* func_name, char* format, ...);
 void skyeye_log(log_level_t log_level, const char* func_name, char* format,...);
-char* get_front_message();
+char* get_front_message(void);
 
 char* get_exp_str(exception_t exp);
 void skyeye_info(char* format, ...);
