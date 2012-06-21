@@ -195,10 +195,10 @@ AM_CONDITIONAL([LLVM_EXIST], [test x$LLVM = xllvm && test "${ENABLE_DYNCOM}" = "
 	if test x$LLVM = xllvm ; then
 	AC_CACHE_CHECK(for llvm version, version_cv_, llvm-config --version)
 	case `llvm-config --version` in
-	2.8)
+	3.0)
 	;;
 	*)
-	AC_MSG_WARN(llvm should be 2.8 If you want to compile skyeye with other version!)
+	AC_MSG_WARN(llvm should be 3.0 If you want to compile skyeye with other version!)
 	;;
 	esac
 	fi

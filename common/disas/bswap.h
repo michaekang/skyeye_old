@@ -11,7 +11,8 @@
 #include <machine/bswap.h>
 #else
 
-#ifdef CONFIG_BYTESWAP_H
+/* shenoubang add win32 2012-6-20 */
+#if defined(CONFIG_BYTESWAP_H) && (!defined(__WIN32__))
 #include <byteswap.h>
 #else
 

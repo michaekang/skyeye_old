@@ -198,6 +198,8 @@ void update_walltime(int sig)
 }
 void set_profiler_timer()
 {
+	/* shenoubang add win32 2012-6-20 */
+#ifndef __WIN32__
         struct itimerval itv, oldtv;
         itv.it_interval.tv_sec = 0;
         itv.it_interval.tv_usec = 1000;
@@ -205,6 +207,8 @@ void set_profiler_timer()
         itv.it_value.tv_usec = 1000;
 //        setitimer(ITIMER_REAL, &itv, &oldtv);
         setitimer(ITIMER_VIRTUAL, &itv, &oldtv);
+#endif
+	return ;
 }
 
 void resume_timing() {

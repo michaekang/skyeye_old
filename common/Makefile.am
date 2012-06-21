@@ -63,7 +63,7 @@ INCLUDES =  @COMMON_INCLUDES@ -I$(top_srcdir)/third-party/include/ -I$(top_srcdi
 if LLVM_EXIST
 INCLUDES+= `llvm-config --cflags`
 if WIN32
-libcommon_la_LDFLAGS += -Xlinker `llvm-config --libs | sed 's/ / -Xlinker /g'` -L`llvm-config --libdir` -Xlinker /mingw/bin/libbfd-2-18-50-20070907.dll -Xlinker -lstdc++ -Xlinker /lib/libltdlc.a -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lmsvcrt -Xlinker -lmingwex -Xlinker -lpthread -Xlinker -lmoldnamed -Xlinker -limagehlp -Xlinker -lgcc -Xlinker -lpsapi -Xlinker -lmoldnamed
+libcommon_la_LDFLAGS += -Xlinker `llvm-config --libs | sed 's/ / -Xlinker /g'` -L`llvm-config --libdir` -Xlinker /mingw/bin/libbfd-2-18-50-20070907.dll -Xlinker -lstdc++ -Xlinker /lib/libltdlc.a -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lmsvcrt -Xlinker -lmingwex -Xlinker -lmingw32 -Xlinker -lpthread -Xlinker -lmoldnamed -Xlinker -limagehlp -Xlinker -lgcc -Xlinker -lpsapi -Xlinker -lmoldnamed -Xlinker -lshell32
 else
 libcommon_la_LDFLAGS += `llvm-config --libs ` -lrt -L`llvm-config --libdir`
 endif #win32
