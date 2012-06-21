@@ -3629,6 +3629,7 @@ int InterpreterTranslate(cpu_t *core, int &bb_start, addr_t addr)
 			uint32_t arm_inst;
 			tdstate state;
 			state = decode_thumb_instr(cpu, inst, phys_addr, &arm_inst, &inst_size, &inst_base);
+			or_tag(core, phys_addr, TAG_THUMB);
 			//printf("In thumb state, arm_inst=0x%x, inst_size=0x%x, pc=0x%x\n", arm_inst, inst_size, cpu->translate_pc);
 			/* we have translated the branch instruction of thumb in thumb decoder */
 			if(state == t_branch){

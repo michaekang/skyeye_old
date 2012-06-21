@@ -234,6 +234,14 @@ int arch_arm_tag_instr(cpu_t *cpu, addr_t pc, tag_t *tag, addr_t *new_pc, addr_t
 	if(is_thumb_func(cpu)){
 		/* Get the corresponding arm instruction for thumb instruction */
 		uint32 arm_inst;
+		if(!(get_tag(cpu, pc) & TAG_THUMB)){
+			/* something wrong , there is not a thumb according to the fast_interpreter */
+			printf("Probably thumb decode on arm instruction in %s\n", __FUNCTION__);
+			printf("************************************************\n");
+			skyeye_printf_in_color(RED, "cpu->TFlag =0x%x, core->Cpsr=0x%x, tag@0x%x=0x%x, instr=0x%x\n\n", core->TFlag, core->Cpsr, pc, get_tag(cpu, pc), instr);
+			printf("************************************************\n");
+			//exit(-1);
+		}
 
 		current_state = decode_dyncom_thumb_instr(core, instr, &arm_inst, pc, &index);
 		DBG("In %s, thumb instruction , index=%d\n", __FUNCTION__, index);
@@ -247,6 +255,12 @@ int arch_arm_tag_instr(cpu_t *cpu, addr_t pc, tag_t *tag, addr_t *new_pc, addr_t
 			ret = DECODE_SUCCESS;
 	}
 	else{
+		if((get_tag(cpu, pc) & TAG_THUMB)){
+			/* something wrong , there is not a thumb according to the fast_interpreter */
+			printf("Probably arm decode on thumb instruction in %s\n", __FUNCTION__);
+			exit(-1);
+		}
+
 		ret = decode_arm_instr(instr, &index);
 	}
 
