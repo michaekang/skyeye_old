@@ -219,8 +219,8 @@ static inline int is_thumb32_inst(uint32 inst){
 	return ((op == 0x1d) || (op = 0x1e) || (op = 0x1f));
 }
 
-#define BIT(n) ((instr >> (n)) & 1)
-#define BITS(a,b) ((instr >> (a)) & ((1 << (1+(b)-(a)))-1))
+//#define BIT(n) ((instr >> (n)) & 1)
+//#define BITS(a,b) ((instr >> (a)) & ((1 << (1+(b)-(a)))-1))
 int arch_arm_tag_instr(cpu_t *cpu, addr_t pc, tag_t *tag, addr_t *new_pc, addr_t *next_pc) {
 	//arm_core_t* core = (arm_core_t*)get_cast_conf_obj(cpu->cpu_data, "arm_core_t");
 	arm_core_t* core = (arm_core_t*)(cpu->cpu_data->obj);
@@ -260,8 +260,8 @@ int arch_arm_tag_instr(cpu_t *cpu, addr_t pc, tag_t *tag, addr_t *new_pc, addr_t
 
         return instr_size;
 }
-#undef BITS
-#undef BIT
+//#undef BITS
+//#undef BIT
 
 #define DEBUG_FLAGS 0
 
@@ -401,7 +401,7 @@ thumb_translate_cond(cpu_t *cpu, uint32_t instr, BasicBlock *bb) {
 			return FALSE;
 		default:
 			assert(0 && "Cannot happen");
-      return FALSE;
+		return FALSE;
 	}
 }
 
@@ -3579,7 +3579,7 @@ int DYNCOM_TAG(bl_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, ad
 	//arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
 	*tag = TAG_CONTINUE;
 	/* some times bl_1 will be located at the end of page */
-	if((pc & 0xFFFFFFFE) == 0xFFFFFFFE)
+	if((pc & 0xFFF) == 0xFFE)
 		*tag |= TAG_NEED_PC;
 	*next_pc = pc + INSTR_SIZE;
 	return instr_size;
