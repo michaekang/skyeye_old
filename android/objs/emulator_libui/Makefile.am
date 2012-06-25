@@ -173,7 +173,7 @@ main_dir = \
 #
 libemulator_libui_la_SOURCES = $(emulator_libui) $(main_dir)
 if WIN32
-libemulator_libui_la_LDFLAGS = -no-undefined -shared -module  -Xlinker --enable-auto-import -Xlinker -L$(top_srcdir)/common/.libs/ -Xlinker -lcommon -Xlinker -L$(top_srcdir)/android/objs/emulator_common/.libs/ -Xlinker -lemulator_common -Xlinker -L$(top_srcdir)/android/objs/emulator_libqemu/.libs/ -Xlinker -lemulator_libqemu -Xlinker -L/MinGW/GnuWin32/bin -Xlinker -llibiconv2 -Xlinker -lgdi32 -Xlinker -lws2_32 -Xlinker -lkernel32 -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lkernel32 -Xlinker -lgdi32 -Xlinker -luuid -Xlinker -luser32 -Xlinker -lshell32 -Xlinker --export-all-symbol
+libemulator_libui_la_LDFLAGS = -no-undefined -shared -module  -Xlinker --enable-auto-import -Xlinker -L$(top_srcdir)/common/.libs/ -Xlinker -lcommon -Xlinker -L$(top_srcdir)/android/objs/emulator_common/.libs/ -Xlinker -lemulator_common -Xlinker -L/MinGW/GnuWin32/bin -Xlinker -llibiconv2 -Xlinker -lgdi32 -Xlinker -lws2_32 -Xlinker -lkernel32 -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lkernel32 -Xlinker -lgdi32 -Xlinker -luuid -Xlinker -luser32 -Xlinker -lshell32 -Xlinker --export-all-symbol
 else
 libemulator_libui_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common  -L/usr/local/lib -liconv
 endif

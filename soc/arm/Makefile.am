@@ -109,7 +109,7 @@ libgoldfish_tty_la_LDFLAGS = -module
 
 libgoldfish_fb_la_SOURCES = $(goldfish_fb)
 if WIN32
-libgoldfish_fb_la_LDFLAGS = -module -Xlinker -L$(top_srcdir)/android/objs/emulator_libui/.libs/ -Xlinker -lemulator_libui -L$(top_srcdir)/android/objs/emulator_libqemu/.libs/ -Xlinker -lemulator_libqemu
+libgoldfish_fb_la_LDFLAGS = -module -Xlinker -L$(top_srcdir)/android/objs/emulator_libui/.libs/ -Xlinker -lemulator_libui
 else
 libgoldfish_fb_la_LDFLAGS = -module -L$(top_srcdir)/android/objs/emulator_libui -lemulator_libui
 endif

@@ -144,7 +144,6 @@ if WIN32
 	cp -a $(top_builddir)/common/.libs/libcommon-0.dll $(prefix)/bin/
 	cp -a $(top_builddir)/android/objs/emulator_common/.libs/libemulator_common-0.dll $(prefix)/bin/
 	cp -a $(top_builddir)/android/objs/emulator_libui/.libs/libemulator_libui-0.dll $(prefix)/bin/
-	cp -a $(top_builddir)/android/objs/emulator_libqemu/.libs/libemulator_libqemu-0.dll $(prefix)/bin/
 endif
 	cp -a $(top_srcdir)/testsuite/arm_hello $(prefix)/testsuite/arm_hello/
 	cp -a $(top_srcdir)/utils/pycli/*.py $(prefix)/bin/
