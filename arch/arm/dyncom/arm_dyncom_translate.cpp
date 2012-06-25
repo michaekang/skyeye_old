@@ -3769,7 +3769,7 @@ const INSTRACT arm_instruction_action[] = {
 	DYNCOM_FILL_ACTION(pkhtb),
 	DYNCOM_FILL_ACTION(pkhbt),
 	DYNCOM_FILL_ACTION(smul),
-	DYNCOM_FILL_ACTION(smlal),
+	DYNCOM_FILL_ACTION(smlalxy), /* smlal xy */
 	DYNCOM_FILL_ACTION(smla),
 	DYNCOM_FILL_ACTION(mcrr),
 	DYNCOM_FILL_ACTION(mrrc),
@@ -3780,7 +3780,7 @@ const INSTRACT arm_instruction_action[] = {
 	DYNCOM_FILL_ACTION(smull),
 	DYNCOM_FILL_ACTION(umull),
 	DYNCOM_FILL_ACTION(umlal),
-	DYNCOM_FILL_ACTION(smlal),
+	DYNCOM_FILL_ACTION(smlal), /* smlal */
 	DYNCOM_FILL_ACTION(mul),
 	DYNCOM_FILL_ACTION(mla),
 	DYNCOM_FILL_ACTION(ssat),
