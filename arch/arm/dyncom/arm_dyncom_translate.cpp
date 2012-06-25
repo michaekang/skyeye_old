@@ -705,6 +705,7 @@ int DYNCOM_TRANS(bbl)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 int DYNCOM_TRANS(bic)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
 {
 	/* for 0x1c 0x2d */
+	//Value *op1 = CHECK_RN_PC;
 	Value *op1 = R(RN);
 	Value *op2 = SCO_OPERAND(SBIT ? ptr_C : NULL);
 	Value *ret = AND(op1,COM(op2));
@@ -2620,7 +2621,7 @@ int DYNCOM_TAG(bbl)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		} else if (BITS(20, 27) >= 0xb0 && BITS(20, 27) <=0xb7) {
 			target = pc + 8 + BOPERAND;
 		}
-		*tag = TAG_CALL;
+		*tag = TAG_BRANCH;
 	} else {
 		if(BIT(23)) {
 			target = pc + 8 - BOPERAND;
@@ -2630,15 +2631,15 @@ int DYNCOM_TAG(bbl)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	}
 	*new_pc = target;
 	/* If not in the same page, so address maybe invalidate. */
-	if(is_usermode_func(cpu)){
+	//if(is_usermode_func(cpu)){
 		if ((pc >> 12) != (*new_pc >> 12))
 			*new_pc = NEW_PC_NONE;
-	}
-	else{
+	//}
+	//else{
 		/* here we think the kernel tlb is never changed */
-		if ((pc >> 12) != (*new_pc >> 12)){
-		}
-	}
+	//	if ((pc >> 12) != (*new_pc >> 12)){
+	//	}
+	//}
 	*next_pc = pc + INSTR_SIZE;
 
 	if(instr >> 28 != 0xe && ((instr >> 28) != 0xF))
@@ -2664,7 +2665,7 @@ int DYNCOM_TAG(blx)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 	int instr_size = INSTR_SIZE;
 //	printf("pc is %x in %s instruction is not implementated.\n", pc ,__FUNCTION__);
         uint32_t opc = instr;
-        *tag = TAG_CALL;
+        *tag = TAG_BRANCH;
        
 	if (BITS(20, 27) == 0x12 && BITS(4, 7) == 0x3) {
 		*new_pc = NEW_PC_NONE;
@@ -2843,7 +2844,7 @@ int DYNCOM_TAG(ldr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *n
 		if(bus_read(32, pc - 4, &last_instr) == 0){
 			/* e1a0e00f        mov     lr, pc */
 			if(last_instr == 0xe1a0e00f){
-				*tag = TAG_CALL;
+				*tag = TAG_BRANCH;
 			}
 		} 
 		*new_pc = NEW_PC_NONE;
@@ -3607,7 +3608,7 @@ int DYNCOM_TAG(bl_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, ad
 int DYNCOM_TAG(bl_2_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
 {
 	int instr_size = 2;
-	*tag = TAG_CALL;
+	*tag = TAG_BRANCH;
 	/* FIXME, should optimize a definite address */
 	*next_pc = pc + INSTR_SIZE;
  
@@ -3629,7 +3630,7 @@ int DYNCOM_TAG(blx_1_thumb)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, a
 	int instr_size = 2;
 	/* FIXME, should optimize a definite address */
 	*next_pc = pc + INSTR_SIZE;
-	*tag = TAG_CALL;
+	*tag = TAG_BRANCH;
 
 	uint32 tinstr = get_thumb_instr(instr, pc);
 	uint32 imm = (tinstr & 0x07FF) << 1;
