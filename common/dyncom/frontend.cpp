@@ -16,6 +16,7 @@
 #include "llvm/Support/IRBuilder.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/Target/TargetData.h"
+#include "llvm/Function.h"
 
 #include "skyeye_dyncom.h"
 #include "dyncom/dyncom_llvm.h"
@@ -651,9 +652,14 @@ arch_flags_decode(cpu_t *cpu, Value *flags, BasicBlock *bb)
 
 Value *
 arch_sqrt(cpu_t *cpu, size_t width, Value *v, BasicBlock *bb) {
-	Type const *ty = getFloatType(width);
-	return CallInst::Create(v, "", bb);
-	//return CallInst::Create(Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::sqrt, &ty, 1), v, "", bb);
+	Type *ty = getFloatType(width);
+	std::vector<Type *> types;
+	types.push_back(ty);
+	Function *sqrt = Intrinsic::getDeclaration(cpu->dyncom_engine->mod, Intrinsic::sqrt, TypeArray(types));
+	unsigned id = sqrt->getIntrinsicID();
+	std::vector<Value *> params;
+	params.push_back(v);
+	return CallInst::Create(sqrt, ValueArray(params), "llvm_sqrt", bb);
 }
 /**
  * @brief Generate the llvm instruction to increase ICOUNTER
