@@ -334,6 +334,7 @@ mem_write_word (uint32_t addr, uint32_t data)
  * allocate memory space for the banks
  */
 
+#define GOLDFISH_MALLOC 1
 /**
 * @brief The memory initialization that do memory allocation
 *
@@ -392,8 +393,9 @@ mem_reset ()
 			}
 		}
 		else{
-			/* shenoubang add win32 2012-6-12 */
-#if __WIN32__
+			/* shenoubang add win32  2012-6-12
+			 * goldfish specifies dram from 0x0*/
+#if (__WIN32__ || GOLDFISH_MALLOC)
 			global_memory.rom[bank] = skyeye_mm (mb[bank].len);
 			if (!global_memory.rom[bank]) {
 				fprintf (stderr,
