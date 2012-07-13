@@ -187,11 +187,11 @@ goldfish_io_reset (generic_arch_t* arch_instance)
 void
 goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 {
-	conf_object_t *pci_obj;
+	conf_object_t *pic_obj;
 	goldfish_pic_device* goldfish_pic;
-	pci_obj = pre_conf_obj("goldfish_interrupt_controller0","goldfish_pic");
-	printf("pci class name %s\n",pci_obj->class_name);
-	goldfish_pic = (goldfish_pic_device *)pci_obj->obj;
+	pic_obj = pre_conf_obj("goldfish_interrupt_controller0","goldfish_pic");
+	printf("pic class name %s\n",pic_obj->class_name);
+	goldfish_pic = (goldfish_pic_device *)pic_obj->obj;
 
 	conf_object_t *bus_obj;
 	goldfish_bus_device_t* goldfish_bus;
@@ -200,7 +200,7 @@ goldfish_mach_init (void *arch_instance, machine_config_t *this_mach)
 	goldfish_bus->line_no = BUS0_IRQ;
 	goldfish_bus->master = goldfish_pic->slave;
 	goldfish_bus->signal_target = goldfish_pic->obj;
-	goldfish_bus->add_device->add_device(bus_obj, pci_obj, -1, 0xff000000, 0x1000, 0, 1);
+	goldfish_bus->add_device->add_device(bus_obj, pic_obj, -1, 0xff000000, 0x1000, 0, 1);
  
 	conf_object_t *timer_obj;
 	goldfish_timer_device* goldfish_timer;
