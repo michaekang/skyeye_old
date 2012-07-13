@@ -1339,6 +1339,13 @@ typedef struct _sxtab_inst {
 	unsigned rotate;
 } sxtab_inst;
 
+typedef struct _sxtah_inst {
+	unsigned int Rd;
+	unsigned int Rn;
+	unsigned int Rm;
+	unsigned int rotate;
+} sxtah_inst;
+
 typedef struct _sxth_inst {
 	unsigned int Rd;
 	unsigned int Rm;
@@ -2931,7 +2938,23 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab)(unsigned int inst, int index){
 	return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab16)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
-ARM_INST_PTR INTERPRETER_TRANSLATE(sxtah)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
+ARM_INST_PTR INTERPRETER_TRANSLATE(sxtah)(unsigned int inst, int index){
+	printf("in func %s, SXTAH untested\n", __func__);
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtah_inst));
+	sxtah_inst *inst_cream = (sxtah_inst *)inst_base->component;
+
+	inst_base->cond = BITS(inst, 28, 31);
+	inst_base->idx   = index;
+	inst_base->br    = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rd     = BITS(inst, 12, 15);
+	inst_cream->rotate = BITS(inst, 10, 11);
+	inst_cream->Rm     = BITS(inst,  0,  3);
+	inst_cream->Rn     = BITS(inst, 16, 19);
+
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(sxtb16)(unsigned int inst, int index){printf("in func %s\n", __FUNCTION__);exit(-1);}
 ARM_INST_PTR INTERPRETER_TRANSLATE(teq)(unsigned int inst, int index)
 {
@@ -6460,6 +6483,25 @@ void InterpreterMainLoop(cpu_t *core)
 	}
 	SXTAB16_INST:
 	SXTAH_INST:
+	{
+		INC_ICOUNTER;
+		sxtah_inst *inst_cream = (sxtah_inst *)inst_base->component;
+		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+			/* R15 should be check */
+			if(inst_cream->Rn == 15 || inst_cream->Rm == 15 || inst_cream->Rd ==15){
+				exit(-1);
+			}
+			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) 
+				& 0xff;
+			/* sign extend for byte */
+			operand2 = (0x80 & operand2)? (0xFFFF0000 | operand2):operand2;
+			RD = RN + operand2;
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(uxtah_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
 	SXTB16_INST:
 	TEQ_INST:
 	{
