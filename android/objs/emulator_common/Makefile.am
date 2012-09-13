@@ -113,7 +113,7 @@ libemulator_common_la_LDFLAGS = -module
 if WIN32
 libemulator_common_la_LDFLAGS += -no-undefined -shared -module -Xlinker -L$(top_srcdir)/common/.libs/ -Xlinker -lcommon -Xlinker -lwinmm -Xlinker -lmsvcrt -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lkernel32 -Xlinker -lgdi32 -Xlinker-luuid -Xlinker -luser32  -Xlinker -lshell32 -Xlinker -lws2_32 -Xlinker --export-all-symbol
 else
-libemulator_common_la_LDFLAGS += -module -L$(top_srcdir)/common -lcommon -lrt
+libemulator_common_la_LDFLAGS += -module -L$(top_srcdir)/common -lcommon -lrt -L$(top_builddir)/third-party/libiberty/pic
 endif
 pkglib_LTLIBRARIES = libemulator_common.la
 
