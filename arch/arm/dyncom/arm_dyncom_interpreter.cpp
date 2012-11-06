@@ -6491,14 +6491,13 @@ void InterpreterMainLoop(cpu_t *core)
 			if(inst_cream->Rn == 15 || inst_cream->Rm == 15 || inst_cream->Rd ==15){
 				exit(-1);
 			}
-			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) 
-				& 0xff;
-			/* sign extend for byte */
-			operand2 = (0x80 & operand2)? (0xFFFF0000 | operand2):operand2;
+			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) & 0xffff;
+			/* sign extend for half */
+			operand2 = (0x8000 & operand2)? (0xFFFF0000 | operand2):operand2;
 			RD = RN + operand2;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
-		INC_PC(sizeof(uxtah_inst));
+		INC_PC(sizeof(sxtah_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
 	}
