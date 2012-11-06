@@ -3,7 +3,7 @@
 SUBDIRS =  common/
 include Makefile.android
 
-SUBDIRS +=  common/ device/ utils/
+SUBDIRS +=  device/ utils/
 if BUILD_ARM
 SUBDIRS += arch/arm
 SUBDIRS += soc/arm
