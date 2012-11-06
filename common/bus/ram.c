@@ -334,7 +334,7 @@ mem_write_word (uint32_t addr, uint32_t data)
  * allocate memory space for the banks
  */
 
-#define GOLDFISH_MALLOC 1
+#define GOLDFISH_MALLOC 0
 /**
 * @brief The memory initialization that do memory allocation
 *
