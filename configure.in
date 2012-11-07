@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.60)
-AC_INIT(SkyEye, 1.3.4, skyeye-developer@lists.sourceforge.net, skyeye)
+AC_INIT(SkyEye, 1.3.5, skyeye-developer@lists.sourceforge.net, skyeye)
 
 AC_CANONICAL_SYSTEM
 AC_ARG_PROGRAM
