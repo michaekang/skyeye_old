@@ -164,7 +164,7 @@ INCLUDES +=-I/mingw/gtk-2.0/lib/gtk-2.0/include/
 INCLUDES +=-I/mingw/gtk-2.0/lib/glib-2.0/include/
 
 else
-INCLUDES += -I/usr/include/gtk-2.0/ 
+INCLUDES += -I/usr/include/gtk-2.0/ -I/usr/include/glib-2.0/
 endif
 if GTK_LCD
 liblcd_la_SOURCES += lcd/skyeye_lcd_gtk.c
@@ -178,5 +178,3 @@ dev_s3c6410_keypad = s3c6410_keypad/s3c6410_keypad.c s3c6410_keypad/s3c6410_keyp
 libs3c6410_keypad_la_SOURCES = $(dev_s3c6410_keypad)
 libs3c6410_keypad_la_LDFLAGS = -module
 pkglib_LTLIBRARIES += libs3c6410_keypad.la
-
-
