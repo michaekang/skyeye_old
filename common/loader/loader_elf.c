@@ -99,7 +99,10 @@ write_virt (uint32 addr, uint8_t * buffer, int size)
 	sky_pref_t* pref = get_skyeye_pref();
 	unsigned long load_base = pref->exec_load_base;
 	unsigned long load_mask = pref->exec_load_mask;
-	addr = (addr & load_mask)|load_base;
+	if(load_mask == 0x0)
+		addr = addr | load_base;
+	else
+		addr = (addr & load_mask)|load_base;
 	for (i = 0; i < size; i++) {
 		/*
 		if(arch_instance->ICE_write_byte)
