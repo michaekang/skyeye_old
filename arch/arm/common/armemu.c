@@ -548,9 +548,9 @@ ARMul_Emulate26 (ARMul_State * state)
 	instr = ARMul_LoadInstrN (state, pc, isize);
 	state->last_instr = state->CurrInstr;
 	state->CurrInstr = instr;
+#if 0
 	if((state->NumInstrs % 10000000) == 0)
 		printf("---|%p|---  %lld\n", pc, state->NumInstrs);
-#if 0
 	if(state->NumInstrs > (3000000000)){
 		static int flag = 0;
 		if(pc == 0x8032ccc4){
