@@ -146,6 +146,7 @@ if WIN32
 	cp -a $(top_builddir)/android/objs/emulator_libui/.libs/libemulator_libui-0.dll $(prefix)/bin/
 endif
 	cp -a $(top_srcdir)/testsuite/arm_hello $(prefix)/testsuite/arm_hello/
+	cp -a $(top_srcdir)/testsuite/sparc_hello $(prefix)/testsuite/sparc_hello/
 	cp -a $(top_srcdir)/utils/pycli/*.py $(prefix)/bin/
 #	rm -f -r $(prefix)/conf && mkdir $(prefix)/conf
 #	cp -a $(top_srcdir)/conf/* $(prefix)/conf
