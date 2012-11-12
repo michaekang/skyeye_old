@@ -39,8 +39,8 @@ SUBDIRS += arch/x86
 endif
 
 if BUILD_DEFAULT
-SUBDIRS += arch/ppc arch/arm soc/arm
-default_targets=arm, ppc
+SUBDIRS += arch/ppc arch/arm soc/arm arch/sparc
+default_targets=arm, ppc, sparc
 endif
 
 if BUILD_ALL
