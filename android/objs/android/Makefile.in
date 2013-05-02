@@ -15,6 +15,13 @@
 
 @SET_MAKE@
 
+##############################################################################
+##############################################################################
+###
+###  android: LAUNCHER FOR TARGET-SPECIFIC EMULATOR
+###
+###
+
 VPATH = @srcdir@
 am__make_dryrun = \
   { \
@@ -52,7 +59,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = arch/bfin
+subdir = android/objs/android
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -95,15 +102,13 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-libbfin_la_LIBADD =
-am__objects_1 = bfin_arch_interface.lo bfin-dis.lo iomem.lo \
-	bfin_module.lo
-am__objects_2 = bf533_io.lo bf537_io.lo
-am_libbfin_la_OBJECTS = $(am__objects_1) $(am__objects_2)
-libbfin_la_OBJECTS = $(am_libbfin_la_OBJECTS)
-libbfin_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+libandroid_la_LIBADD =
+am__objects_1 = android.lo android_module.lo
+am_libandroid_la_OBJECTS = $(am__objects_1)
+libandroid_la_OBJECTS = $(am_libandroid_la_OBJECTS)
+libandroid_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(libbfin_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(libandroid_la_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/libltdl/config/depcomp
 am__depfiles_maybe = depfiles
@@ -117,8 +122,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libbfin_la_SOURCES)
-DIST_SOURCES = $(libbfin_la_SOURCES)
+SOURCES = $(libandroid_la_SOURCES)
+DIST_SOURCES = $(libandroid_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -262,13 +267,28 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-bfin_mach = mach/bf533_io.c  mach/bf537_io.c
-bfin_comm = common/bfin_arch_interface.c  common/bfin-dis.c  common/iomem.c common/bfin_module.c
-libbfin_la_SOURCES = $(bfin_comm) $(bfin_mach)
-pkglib_LTLIBRARIES = libbfin.la
-# we will link the common module with main
-libbfin_la_LDFLAGS = -module
-INCLUDES = -I./common -I./mach @COMMON_INCLUDES@
+android_dir = \
+	$(top_srcdir)/android/android.c \
+	$(top_srcdir)/android/android_module.c
+
+
+###dyn
+#
+libandroid_la_SOURCES = $(android_dir)
+@WIN32_FALSE@libandroid_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon  -L$(top_srcdir)/android/objs/emulator_libui -lemulator_libui -L$(top_builddir)/third-party/libiberty/pic
+@WIN32_TRUE@libandroid_la_LDFLAGS = -no-undefined -shared -module -Xlinker -L$(top_srcdir)/common/.libs/ -Xlinker -lcommon -Xlinker -L$(top_srcdir)/android/objs/emulator_libui/.libs/ -Xlinker -lemulator_libui -Xlinker -L$(top_srcdir)/android/objs/emulator_common/.libs/ -Xlinker -lemulator_common -Xlinker -lmsvcrt -Xlinker -lkernel32 -Xlinker -lole32 -Xlinker -lkernel32 -Xlinker -lgdi32 -Xlinker -luuid -Xlinker -lshell32 -Xlinker --export-all-symbol
+pkglib_LTLIBRARIES = libandroid.la
+
+#libandroid_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon  -L$(top_srcdir)/android/objs/emulator_libui -lemulator_libui -L$(top_srcdir)/android/objs/emulator_libqemu/ -lemulator_libqemu  -L$(top_srcdir)/android/objs/emulator_common/ -lemulator_common -lrt  -liconv
+#libandroid_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon  $(top_srcdir)/android/objs/emulator_libui/libemulator_libui.a
+#libandroid_la_LDFLAGS = -module -L$(top_srcdir)/common -lcommon 
+###static
+#
+#$(top_srcdir)/android/libandroid.a:
+#noinst_LIBRARIES += libandroid.a 
+#libandroid_a_SOURCES = $(android_dir)
+#libandroid_a_LDFLAGS =  $(top_srcdir)/android/libemulator_common.a -L$(top_srcdir)/common -lcommon  -liconv
+INCLUDES = -I$(top_srcdir)/common/include/ -I$(top_srcdir)/android/
 all: all-am
 
 .SUFFIXES:
@@ -282,9 +302,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu arch/bfin/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu android/objs/android/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu arch/bfin/Makefile
+	  $(AUTOMAKE) --gnu android/objs/android/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -335,8 +355,8 @@ clean-pkglibLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libbfin.la: $(libbfin_la_OBJECTS) $(libbfin_la_DEPENDENCIES) $(EXTRA_libbfin_la_DEPENDENCIES) 
-	$(libbfin_la_LINK) -rpath $(pkglibdir) $(libbfin_la_OBJECTS) $(libbfin_la_LIBADD) $(LIBS)
+libandroid.la: $(libandroid_la_OBJECTS) $(libandroid_la_DEPENDENCIES) $(EXTRA_libandroid_la_DEPENDENCIES) 
+	$(libandroid_la_LINK) -rpath $(pkglibdir) $(libandroid_la_OBJECTS) $(libandroid_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -344,12 +364,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bf533_io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bf537_io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bfin-dis.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bfin_arch_interface.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bfin_module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iomem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/android.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/android_module.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -372,47 +388,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-bfin_arch_interface.lo: common/bfin_arch_interface.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bfin_arch_interface.lo -MD -MP -MF $(DEPDIR)/bfin_arch_interface.Tpo -c -o bfin_arch_interface.lo `test -f 'common/bfin_arch_interface.c' || echo '$(srcdir)/'`common/bfin_arch_interface.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/bfin_arch_interface.Tpo $(DEPDIR)/bfin_arch_interface.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='common/bfin_arch_interface.c' object='bfin_arch_interface.lo' libtool=yes @AMDEPBACKSLASH@
+android.lo: $(top_srcdir)/android/android.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT android.lo -MD -MP -MF $(DEPDIR)/android.Tpo -c -o android.lo `test -f '$(top_srcdir)/android/android.c' || echo '$(srcdir)/'`$(top_srcdir)/android/android.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/android.Tpo $(DEPDIR)/android.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/android/android.c' object='android.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bfin_arch_interface.lo `test -f 'common/bfin_arch_interface.c' || echo '$(srcdir)/'`common/bfin_arch_interface.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o android.lo `test -f '$(top_srcdir)/android/android.c' || echo '$(srcdir)/'`$(top_srcdir)/android/android.c
 
-bfin-dis.lo: common/bfin-dis.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bfin-dis.lo -MD -MP -MF $(DEPDIR)/bfin-dis.Tpo -c -o bfin-dis.lo `test -f 'common/bfin-dis.c' || echo '$(srcdir)/'`common/bfin-dis.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/bfin-dis.Tpo $(DEPDIR)/bfin-dis.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='common/bfin-dis.c' object='bfin-dis.lo' libtool=yes @AMDEPBACKSLASH@
+android_module.lo: $(top_srcdir)/android/android_module.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT android_module.lo -MD -MP -MF $(DEPDIR)/android_module.Tpo -c -o android_module.lo `test -f '$(top_srcdir)/android/android_module.c' || echo '$(srcdir)/'`$(top_srcdir)/android/android_module.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/android_module.Tpo $(DEPDIR)/android_module.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/android/android_module.c' object='android_module.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bfin-dis.lo `test -f 'common/bfin-dis.c' || echo '$(srcdir)/'`common/bfin-dis.c
-
-iomem.lo: common/iomem.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT iomem.lo -MD -MP -MF $(DEPDIR)/iomem.Tpo -c -o iomem.lo `test -f 'common/iomem.c' || echo '$(srcdir)/'`common/iomem.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/iomem.Tpo $(DEPDIR)/iomem.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='common/iomem.c' object='iomem.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o iomem.lo `test -f 'common/iomem.c' || echo '$(srcdir)/'`common/iomem.c
-
-bfin_module.lo: common/bfin_module.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bfin_module.lo -MD -MP -MF $(DEPDIR)/bfin_module.Tpo -c -o bfin_module.lo `test -f 'common/bfin_module.c' || echo '$(srcdir)/'`common/bfin_module.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/bfin_module.Tpo $(DEPDIR)/bfin_module.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='common/bfin_module.c' object='bfin_module.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bfin_module.lo `test -f 'common/bfin_module.c' || echo '$(srcdir)/'`common/bfin_module.c
-
-bf533_io.lo: mach/bf533_io.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bf533_io.lo -MD -MP -MF $(DEPDIR)/bf533_io.Tpo -c -o bf533_io.lo `test -f 'mach/bf533_io.c' || echo '$(srcdir)/'`mach/bf533_io.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/bf533_io.Tpo $(DEPDIR)/bf533_io.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mach/bf533_io.c' object='bf533_io.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bf533_io.lo `test -f 'mach/bf533_io.c' || echo '$(srcdir)/'`mach/bf533_io.c
-
-bf537_io.lo: mach/bf537_io.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bf537_io.lo -MD -MP -MF $(DEPDIR)/bf537_io.Tpo -c -o bf537_io.lo `test -f 'mach/bf537_io.c' || echo '$(srcdir)/'`mach/bf537_io.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/bf537_io.Tpo $(DEPDIR)/bf537_io.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mach/bf537_io.c' object='bf537_io.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bf537_io.lo `test -f 'mach/bf537_io.c' || echo '$(srcdir)/'`mach/bf537_io.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o android_module.lo `test -f '$(top_srcdir)/android/android_module.c' || echo '$(srcdir)/'`$(top_srcdir)/android/android_module.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -626,6 +614,12 @@ uninstall-am: uninstall-pkglibLTLIBRARIES
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-pkglibLTLIBRARIES
 
+#INCLUDES += -I$(top_srcdir)/android/skyeye/
+#INCLUDES += -I$(top_srcdir)/android/utils/
+#INCLUDES += -I$(top_srcdir)/third-party/distrib/libpng-1.2.19/
+#INCLUDES += -I$(top_srcdir)/third-party/distrib/zlib-1.2.3/
+#INCLUDES += -I$(top_srcdir)/android/config/linux-x86/
+#INCLUDES += -I$(top_srcdir)/third-party/distrib/sdl-1.2.12/include/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
