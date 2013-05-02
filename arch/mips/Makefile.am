@@ -7,7 +7,7 @@ mips_syscall = linux_syscall/mips_syscall.c
 
 libmips_la_SOURCES = $(mips_mach) $(mips_comm) $(mips_syscall)
 if LLVM_EXIST
-libmips_la_SOURCES += $(mips_dyncom)
+#libmips_la_SOURCES += $(mips_dyncom)
 endif
 pkglib_LTLIBRARIES = libmips.la
 
