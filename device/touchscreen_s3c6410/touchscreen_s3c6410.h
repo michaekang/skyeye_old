@@ -1,7 +1,6 @@
 #ifndef __TOUCHSCREEN_S3C6410_H__
 #define __TOUCHSCREEN_S3C6410_H__
 
-#include <gtk/gtk.h>
 #include "skyeye_lcd_intf.h"
 #include "skyeye_log.h"
 
