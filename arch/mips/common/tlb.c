@@ -166,6 +166,7 @@ probe_tlb(MIPS_State* mstate, VA va)
 		}
 		return NULL;
 	}
+	return NULL;
 }
 
 TLBEntry *
@@ -266,6 +267,7 @@ translate_vaddr(MIPS_State* mstate, VA va, int type, PA * pa)
 		//printf("Get pa 0x%x by entry %d,entry.lo=0x%x,lo << 2=0x%x,va=0x%x\n", *pa, entry->index, lo, (lo << 6), va);
 		return TLB_SUCC;
 	}
+	return TLB_EXP;
 }
 
 // Perform a full TLB lookup.

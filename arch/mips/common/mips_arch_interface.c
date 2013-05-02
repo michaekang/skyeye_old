@@ -469,7 +469,7 @@ mips_write_byte64(UInt64 addr, UInt8 data)
 static unsigned char 
 mips_read_byte64(UInt64 addr)
 {
-
+	return 0;
 }
 
 extern void nedved_mach_init(void * state, machine_config_t * mach);

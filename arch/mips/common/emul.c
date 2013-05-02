@@ -383,6 +383,7 @@ sign_extend_UInt32(UInt32 x, int n)
 	    		return clear_bits(x, 8 * sizeof(UInt32) - 1, n);
 
     	}
+	return 0;
 }
 
 inline Int64 
@@ -415,6 +416,7 @@ sign_extend_UInt64(UInt64 x, int n)
 		else
 		    	return clear_bits(x, 8 * sizeof(UInt64) - 1, n);
     	}
+	return 0;
 }
 
 // Specialisations for 32 and 64 bit types.

@@ -88,6 +88,7 @@ read_cp0(MIPS_State* mstate, int n, int sel)
 				return mstate->cp0[n];
 	    }
 	}
+	return 0;
 }
 
 UInt32 
@@ -171,7 +172,7 @@ read_cp0_mt(MIPS_State* mstate, int n, int sel)
 
 				default:
 					printf("Reg=0x%x,sel=0x%x, pc = %x, not implemented instruction in %s\n",n, sel, mstate->pc, __FUNCTION__);
-					return;
+					return 0;
 			}
 		}
 
@@ -193,7 +194,7 @@ read_cp0_mt(MIPS_State* mstate, int n, int sel)
 
 				default:
 					printf("Reg=0x%x,sel=0x%x, pc = %x, not implemented instruction in %s\n",n, sel, mstate->pc, __FUNCTION__);
-					return;
+					return 0;
 			}
 		}
 
@@ -212,7 +213,7 @@ read_cp0_mt(MIPS_State* mstate, int n, int sel)
 					return curVPE->cp0_config3;
 				default:
 					printf("Reg=0x%x,sel=0x%x, pc = %x, not implemented instruction in %s\n",n, sel, mstate->pc, __FUNCTION__);
-					return;
+					return 0;
 			}
 		}
 
@@ -229,7 +230,7 @@ read_cp0_mt(MIPS_State* mstate, int n, int sel)
 					return curVPE->cp0_config4;
 				default:
 					printf("Reg=0x%x,sel=0x%x, pc = %x, not implemented instruction in %s\n",n, sel, mstate->pc, __FUNCTION__);
-					return;
+					return 0;
 			}
 		}
 
@@ -244,7 +245,7 @@ read_cp0_mt(MIPS_State* mstate, int n, int sel)
 					return curVPE->cp0_SRSConf4;
 				default:
 					printf("Reg=0x%x,sel=0x%x, pc = %x, not implemented instruction in %s\n",n, sel, mstate->pc, __FUNCTION__);
-					return;
+					return 0;
 			}
 		}
 
@@ -257,7 +258,7 @@ read_cp0_mt(MIPS_State* mstate, int n, int sel)
 					return curTC->cp0_TCSche;
 				default:
 					printf("Reg=0x%x,sel=0x%x, pc = %x, not implemented instruction in %s\n",n, sel, mstate->pc, __FUNCTION__);
-					return;
+					return 0;
 			}
 		}
 
@@ -272,7 +273,7 @@ read_cp0_mt(MIPS_State* mstate, int n, int sel)
 					return curTC->cp0_TCOpt;
 				default:
 					printf("Reg=0x%x,sel=0x%x, pc = %x, not implemented instruction in %s\n",n, sel, mstate->pc, __FUNCTION__);
-					return;
+					return 0;
 			}
 		}
 
@@ -282,6 +283,7 @@ read_cp0_mt(MIPS_State* mstate, int n, int sel)
 
 		}
 	}
+	return 0;
 }
 
 void 
@@ -723,6 +725,7 @@ decode_cop0(MIPS_State* mstate, Instr instr)
 		}
 		return nothing_special;
 	}
+	return nothing_special;
 }
 
 
